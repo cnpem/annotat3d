@@ -1,0 +1,7 @@
+{
+  "name": "annotat3d",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
