@@ -1,4 +1,4 @@
-import { IonButtons, IonContent, IonHeader, IonMenuButton, IonPage, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButtons, IonContent, IonFooter, IonHeader, IonMenuButton, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 import { useParams } from 'react-router';
 import ExploreContainer from '../components/ExploreContainer';
 import './Page.css';
@@ -10,9 +10,10 @@ const Page: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
+
+        <IonToolbar color="primary">
           <IonButtons slot="start">
-            <IonMenuButton />
+            <IonMenuButton/>
           </IonButtons>
           <IonTitle>{name}</IonTitle>
         </IonToolbar>
@@ -26,6 +27,11 @@ const Page: React.FC = () => {
         </IonHeader>
         <ExploreContainer name={name} />
       </IonContent>
+
+    <IonFooter>
+        <span>My Footer</span>
+    </IonFooter>
+
     </IonPage>
   );
 };
