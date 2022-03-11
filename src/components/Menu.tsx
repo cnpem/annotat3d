@@ -11,12 +11,30 @@ import {
     IonListHeader,
     IonMenu,
     IonMenuToggle,
-    IonNote,
+    IonHeader,
+    IonNote, IonSearchbar, IonTitle,
+    IonToggle, IonToolbar
 } from '@ionic/react';
 
-import { useLocation } from 'react-router-dom';
-import { archiveOutline, archiveSharp, bookmarkOutline, heartOutline, heartSharp, mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, trashOutline, trashSharp, warningOutline, warningSharp } from 'ionicons/icons';
+import {useLocation} from 'react-router-dom';
+import {
+    documentOutline,
+    documentSharp,
+    archiveOutline,
+    archiveSharp,
+    heartOutline,
+    heartSharp,
+    paperPlaneOutline,
+    paperPlaneSharp,
+    trashOutline,
+    trashSharp,
+    warningOutline,
+    warningSharp
+} from 'ionicons/icons';
 import './Menu.css';
+
+import ThemeToggle from "./ThemeToggle";
+import React, {useState} from "react";
 
 interface AppPage {
     url: string;
@@ -27,13 +45,13 @@ interface AppPage {
 
 const appPages: AppPage[] = [
     {
-        title: 'Inbox',
+        title: 'File',
         url: '/page/Inbox',
-        iosIcon: mailOutline,
-        mdIcon: mailSharp
+        iosIcon: documentOutline,
+        mdIcon: documentSharp
     },
     {
-        title: 'Outbox',
+        title: 'To IndeX \u00AE',
         url: '/page/Outbox',
         iosIcon: paperPlaneOutline,
         mdIcon: paperPlaneSharp
@@ -64,38 +82,45 @@ const appPages: AppPage[] = [
     }
 ];
 
-const labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
-
 const Menu: React.FC = () => {
     const location = useLocation();
+    const [searchText, setSearchText] = useState('');
+
+    const filteredPages = appPages.filter(
+        (page) => {
+            return(
+                searchText === '' ? page : page.title.toLowerCase().includes(searchText.toLowerCase())
+            );
+        }
+    );
 
     return (
-        <IonMenu contentId="main" type="overlay" swipeGesture={true} style={ {'--width': '1000px'} } >
-
+        <IonMenu contentId="main" type="overlay" swipeGesture={true} style={{'--width': '500px'}}>
+            <IonHeader>
+                <IonToolbar>
+                    <IonTitle size={"large"} className={"ion-text-center"}>Annotat3D</IonTitle>
+                    <IonTitle style={{"--color":"grey"}} size={"small"} className={"ion-text-center"}>web version 1.0.0</IonTitle>
+                </IonToolbar>
+            </IonHeader>
+            <IonToolbar>
+                <IonSearchbar value={searchText} onIonChange={e => setSearchText(e.detail.value!)}></IonSearchbar>
+            </IonToolbar>
+            <IonToolbar style={{"--padding-start": "25px"}}>
+                <ThemeToggle/>
+            </IonToolbar>
             <IonContent>
                 <IonList id="inbox-list">
-                    <IonListHeader>Annotat3D</IonListHeader>
-                    <IonNote>web version</IonNote>
-                    {appPages.map((appPage, index) => {
+                    {filteredPages.map((appPage, index) => {
                         return (
-                            <IonMenuToggle autoHide={false}  key={index}>
-                                <IonItem className={location.pathname === appPage.url ? 'selected' : ''} routerLink={appPage.url} routerDirection="none" lines="none" detail={false}>
-                                    <IonIcon slot="start" ios={appPage.iosIcon} md={appPage.mdIcon} />
+                            <IonMenuToggle autoHide={false} key={index}>
+                                <IonItem className={location.pathname === appPage.url ? 'selected' : ''}
+                                         routerLink={appPage.url} routerDirection="none" lines="none" detail={false}>
+                                    <IonIcon slot="start" ios={appPage.iosIcon} md={appPage.mdIcon}/>
                                     <IonLabel>{appPage.title}</IonLabel>
                                 </IonItem>
                             </IonMenuToggle>
                         );
                     })}
-                </IonList>
-
-                <IonList id="labels-list">
-                    <IonListHeader>Labels</IonListHeader>
-                    {labels.map((label, index) => (
-                        <IonItem lines="none" key={index}>
-                            <IonIcon slot="start" icon={bookmarkOutline} />
-                            <IonLabel>{label}</IonLabel>
-                        </IonItem>
-                    ))}
                 </IonList>
             </IonContent>
         </IonMenu>
