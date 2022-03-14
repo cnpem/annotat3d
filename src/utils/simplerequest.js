@@ -1,13 +1,34 @@
 import npyjs from "npyjs";
 import pako from "pako"; 
 
+const BACKEND_HOST = 'http://0.0.0.0:5000';
+
+function isValidHttpUrl(string) {
+  let url;
+  try {
+    url = new URL(string);
+  } catch (_) {
+    return false; 
+  }
+  return url.protocol === "http:" || url.protocol === "https:";
+}
+
 function sxhr(method, url, callback, data = '', responseType = '') {
+
+    let fullURL;
+
+    try {
+        fullURL = new URL(url);
+    } catch (_) {
+        fullURL = new URL(url, BACKEND_HOST);
+    }
+
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4 && xhr.status === 200)
             callback(xhr.response);
     }
-    xhr.open(method, url, true);
+    xhr.open(method, fullURL.href, true);
     xhr.setRequestHeader('content-type', 'application/json');
     xhr.responseType = responseType;
     xhr.send(data);
@@ -61,7 +82,18 @@ async function responseToNdArray(response) {
  */
 function sfetch(method, url, data = '', responseType = '') {
 
-    return fetch(url, {
+    let fullURL;
+
+    try {
+        fullURL = new URL(url);
+    } catch (_) {
+        fullURL = new URL(url, BACKEND_HOST);
+    }
+
+    console.log(fullURL);
+    console.log(typeof fullURL.href)
+
+    return fetch(fullURL.href, {
         method: method,
         headers: {
             //'Accept': 'application/json',

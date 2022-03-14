@@ -1,9 +1,14 @@
 import {useState, Component, Ref, createRef} from 'react';
 import * as PIXI from 'pixi.js';
+//warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+// https://stackoverflow.com/questions/42789896/webgl-error-arraybuffer-not-big-enough-for-request-in-case-of-gl-luminance
+// this fix is on the import on utils/pixibufferloader
+import '../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
 //import npyjs from 'npyjs';
 import { NdArray, TypedArray } from 'ndarray';
 import { mean, std } from '../utils/math';
+import { sfetch } from '../utils/simplerequest';
 
 import './Canvas.css';
 
@@ -112,7 +117,7 @@ class Annotation {
 
     canvas: HTMLCanvasElement;
     context: CanvasRenderingContext2D;
-    
+
     sprite: PIXI.Sprite;
 
     constructor() {
@@ -275,6 +280,7 @@ class Canvas {
             type: PIXI.TYPES.UNSIGNED_BYTE,
             format: pformat,
         });
+        console.log(texture);
         return texture;
     }
 
@@ -315,21 +321,28 @@ class Canvas {
     setImage(img_slice: NdArray<TypedArray>) {
 
         let uint8data: Uint8Array;
+        
+        const x = img_slice.shape[1];
+        const y = img_slice.shape[0];
+
+        const len = x*y;
 
         if (img_slice.dtype == 'uint8') {
             uint8data = img_slice.data as Uint8Array;
         } else {
-            uint8data = new Uint8Array(img_slice.data.length);
-            for (let i = 0; i < img_slice.data.length; ++i) {
+            uint8data = new Uint8Array(len);
+            for (let i = 0; i < len; ++i) {
                 const x = 255 * (1 - (65535.0 - img_slice.data[i]) / 65535);
-                //console.log(x);
                 uint8data[i] = x;
+                //console.log(uint8data[i]);
             }
         }
 
-        const x = img_slice.shape[1];
-        const y = img_slice.shape[0];
+
         console.log(x, y);
+        console.log(len);
+        console.log(mean(uint8data));
+
         const texture = this.textureFromSlice(uint8data, x, y);
         this.slice.texture = texture;
     }
@@ -341,7 +354,7 @@ class Canvas {
         console.log("I am setting superpixel hue hue huei: ", x, y);
         console.log(mean(uint8data), std(uint8data));
         const texture = this.textureFromSlice(uint8data, x, y);
-        this.superpixelSlice.texture = texture;    
+        this.superpixelSlice.texture = texture;
     }
 
     destroyImage() {
@@ -369,8 +382,12 @@ class Canvas {
     }
 }
 
-class CanvasContainer extends Component {
-    
+interface ICanvasProps {
+    z: number
+}
+
+class CanvasContainer extends Component<ICanvasProps> {
+
     pixi_container: HTMLDivElement | null;
     canvas: Canvas | null;
 
@@ -378,6 +395,35 @@ class CanvasContainer extends Component {
         super(props);
         this.pixi_container = null;
         this.canvas = null;
+    }
+
+
+    get_superpixel_slice() {
+   
+    const params = {
+        'z': this.props.z,
+    };
+
+    sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray')
+        .then((superpixelSlice) => {
+            console.log("superpixel response");
+            console.log(superpixelSlice.shape);
+            this.canvas!!.setSuperpixelImage(superpixelSlice);
+        });
+}
+
+    get_image_slice() {
+        console.log('get image slice hue');
+        const z = this.props.z;
+        const params = {
+            'z': z,
+        };
+
+        sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
+            .then(imgSlice => {
+                console.log(imgSlice);
+                this.canvas!!.setImage(imgSlice);
+            });
     }
 
     componentDidMount() {
@@ -395,7 +441,19 @@ class CanvasContainer extends Component {
                 console.log('resize ', evt);
                 this.canvas!.resize();
             });
+
+            this.get_image_slice();
+            this.get_superpixel_slice();
+
+            const gl = document.createElement("canvas").getContext("webgl")!!;
+            console.log("WEBGL");
+            console.log(gl.getParameter(gl.VERSION));
+            console.log(gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
+            console.log(gl.getParameter(gl.VENDOR));
+
         }
+
+
     }
 
     render() {
@@ -409,12 +467,12 @@ class CanvasContainer extends Component {
 
 //const CanvasContainer: React.FC = () => {
 
-    //const [canvas, setCanvas] = useState<Canvas>(new Canvas());
+//const [canvas, setCanvas] = useState<Canvas>(new Canvas());
 
-    //return (
-        //<div id="Canvas">
-        //</div>
-    //);
+//return (
+//<div id="Canvas">
+//</div>
+//);
 //};
 
 export default CanvasContainer;

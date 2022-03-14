@@ -28,7 +28,7 @@ const Page: React.FC = () => {
           </IonToolbar>
         </IonHeader>
           { /* <ExploreContainer name={name} /> */ }
-          <CanvasContainer/>
+          <CanvasContainer z={12}/>
       </IonContent>
 
     <IonFooter>
