@@ -3,6 +3,8 @@ import { useParams } from 'react-router';
 import ExploreContainer from '../components/ExploreContainer';
 import './Page.css';
 
+import CanvasContainer from '../components/Canvas';
+
 const Page: React.FC = () => {
 
   const { name } = useParams<{ name: string; }>();
@@ -25,7 +27,8 @@ const Page: React.FC = () => {
             <IonTitle size="large">{name}</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <ExploreContainer name={name} />
+          { /* <ExploreContainer name={name} /> */ }
+          <CanvasContainer/>
       </IonContent>
 
     <IonFooter>

@@ -1,0 +1,6 @@
+flask
+numpy
+sscIO
+sscAnnotat3d
+sscPySpin
+ssc-remotevis

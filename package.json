@@ -14,12 +14,17 @@
     "@testing-library/react": "^11.2.5",
     "@testing-library/user-event": "^12.6.3",
     "@types/jest": "^26.0.20",
+    "@types/ndarray": "^1.0.11",
     "@types/node": "^12.19.15",
     "@types/react": "^16.14.3",
     "@types/react-dom": "^16.9.10",
     "@types/react-router": "^5.1.11",
     "@types/react-router-dom": "^5.1.7",
     "ionicons": "^5.4.0",
+    "ndarray": "^1.0.19",
+    "npyjs": "^0.2.1",
+    "pixi-viewport": "^4.34.4",
+    "pixi.js": "^6.2.2",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router": "^5.2.0",
@@ -67,5 +72,6 @@
   "devDependencies": {
     "@capacitor/cli": "3.4.3"
   },
-  "description": "An Ionic project"
+  "description": "An Ionic project",
+  "proxy": "http://localhost:5000"
 }
