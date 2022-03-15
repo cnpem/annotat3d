@@ -1,8 +1,8 @@
-import React, {useState} from "react";
+import React from "react";
 import {
     IonIcon, IonInput, IonItem,
     IonSelect, IonSelectOption, IonTitle,
-    IonItemDivider, IonButton, IonCol, IonRow
+    IonButton, IonCol, IonRow
 } from "@ionic/react";
 
 /*Icons import*/
@@ -11,22 +11,41 @@ import {eyeOutline} from "ionicons/icons";
 import {contrastOutline} from "ionicons/icons";
 
 /**
- * @todo i need this function need to get
- * @todo need to remove the option "Your Selection"
- * @param args
- * @constructor
+ * Interface component with the respective variable and setter
  */
-const ClippingPlane: React.FC<{numberVal: number; titleName: string}> = (args) => {
+interface ToolbarComp{
+    numberVal: number; onNumberVal: (val: number) => void;
+    sliceAxis: string; onSliceAxis: (slice: string) => void;
+    presentVal: string; onPresentVal: (presentVal: string) => void;
+    titleName: string;
+}
 
-    const [_, setNumber] = useState<number>();
-    const [presentVal, setPresentVal] = useState<string>("Original");
-    const [sliceAxis, setSliceAxis] = useState<string>("XY");
+/**
+ * Component that creates the Clipping Plane toolbar
+ * @todo i need to implement the action buttons
+ * @param args a list that contains the toolbar components
+ * @constructor
+ * @return This component returns the Clipping Plane toolbar
+ */
+const ClippingPlane: React.FC<ToolbarComp> = (args) => {
+
+    const inputNumberVal = (event: CustomEvent) => {
+        args.onNumberVal(parseInt(event.detail.value!));
+    }
+
+    const inputSliceAxis = (event: CustomEvent) => {
+        args.onSliceAxis(event.detail.value!);
+    }
+
+    const inputPresentVal = (e: CustomEvent) => {
+        args.onPresentVal(e.detail.value!);
+    }
 
     return(
         <React.Fragment>
             <IonTitle>{args.titleName!}</IonTitle>
             <IonItem>
-                <IonInput type={"number"} value={args.numberVal!} placeholder={"0"} onIonChange={e => setNumber(parseInt(e.detail.value!, 10))}/>
+                <IonInput type={"number"} value={args.numberVal!} placeholder={"0"} onIonChange={inputNumberVal}/>
 
                 <IonButton>
                     <IonIcon icon={lockClosed}/>
@@ -40,7 +59,7 @@ const ClippingPlane: React.FC<{numberVal: number; titleName: string}> = (args) =
 
             <IonRow>
                 <IonCol>
-                    <IonSelect value={sliceAxis} okText="Okay" placeholder={"XY"} cancelText="Cancel" onIonChange={e => setSliceAxis(e.detail.value)}>
+                    <IonSelect value={args.sliceAxis} okText="Okay" placeholder={"XY"} cancelText="Cancel" onIonChange={inputSliceAxis}>
                         <IonSelectOption value="XY">XY</IonSelectOption>
                         <IonSelectOption value="XZ">XZ</IonSelectOption>
                         <IonSelectOption value="YZ">YZ</IonSelectOption>
@@ -49,7 +68,7 @@ const ClippingPlane: React.FC<{numberVal: number; titleName: string}> = (args) =
                 </IonCol>
 
                 <IonCol>
-                    <IonSelect value={presentVal} okText="Okay" placeholder={"Original"} cancelText="Cancel" onIonChange={e => setPresentVal(e.detail.value)}>
+                    <IonSelect value={args.presentVal} okText="Okay" placeholder={"Original"} cancelText="Cancel" onIonChange={inputPresentVal}>
                         <IonSelectOption value="Original">Original</IonSelectOption>
                     </IonSelect>
                 </IonCol>
@@ -60,10 +79,6 @@ const ClippingPlane: React.FC<{numberVal: number; titleName: string}> = (args) =
                     </IonButton>
                 </IonCol>
             </IonRow>
-
-            <IonItemDivider>Your Selections</IonItemDivider>
-            <IonItem>Slice selected : {sliceAxis}</IonItem>
-            <IonItem>Present Value : {presentVal}</IonItem>
         </React.Fragment>
     );
 

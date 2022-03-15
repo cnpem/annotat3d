@@ -1,11 +1,11 @@
 import React from "react";
 import {
-    IonButtons, IonCard, IonContent,
-    IonFooter, IonHeader, IonItemDivider,
-    IonList, IonMenuButton, IonPage,
+    IonButtons, IonContent,
+    IonFooter, IonHeader,
+    IonMenuButton, IonPage,
     IonTitle, IonToolbar
 } from '@ionic/react';
-import { useParams } from 'react-router';
+import {useParams} from 'react-router';
 import './Page.css';
 
 /*Components imports*/
@@ -20,7 +20,7 @@ import SideMenuAnnot from "../components/SideMenuAnnot";
  */
 const Page: React.FC = () => {
 
-    const { name } = useParams<{ name: string; }>();
+    const {name} = useParams<{name: string}>();
 
     return (
         <IonPage>

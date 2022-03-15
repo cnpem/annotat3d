@@ -1,25 +1,32 @@
-import React, {useState} from "react";
+import React from "react";
 import {IonButton, IonIcon, IonInput, IonItem, IonTitle} from "@ionic/react";
 
 /*Icon import*/
 import {eyeOutline} from "ionicons/icons";
 
+interface ToolbarComp{
+    numberVal: number; onNumberVal: (val: number) => void;
+    titleName: string;
+}
+
 /**
  * React module that create the sub-windows with a dynamic placeholder
  * @param args a object that contains a number with the value of the placeholder and the tile string box
- * @todo i need to make numberVal change in this function
+ * @todo i need to implement the button action
  * @constructor
  * @return returns the React file to create the site /inbox
  */
-const SlicesSubMenu: React.FC<{numberVal: number; titleName: string}> = (args) => {
+const SlicesSubMenu: React.FC<ToolbarComp> = (args) => {
 
-    const [_, setNumber] = useState<number>();
+    const inputNumberVal = (event: CustomEvent) => {
+        args.onNumberVal(parseInt(event.detail.value!));
+    }
 
     return (
         <React.Fragment>
             <IonTitle>{args.titleName!}</IonTitle>
             <IonItem>
-                <IonInput type={"number"} value={args.numberVal!} placeholder={"0"} onIonChange={e => setNumber(parseInt(e.detail.value!, 10))}/>
+                <IonInput type={"number"} value={args.numberVal!} placeholder={"0"} onIonChange={inputNumberVal}/>
 
                 <IonButton>
                     <IonIcon icon={eyeOutline}/>

@@ -1,8 +1,17 @@
-import React from "react";
+import React, {useState} from "react";
 import {IonCard, IonItemDivider, IonList} from "@ionic/react";
 import SlicesSubMenu from "./SlicesSubMenu";
-import {useParams} from "react-router";
 import ClippingPlane from "./ClippingPlane";
+import OutputsVis from "./OutputsVis";
+import LabelTable from "./LabelTable";
+
+/**
+ *
+ */
+interface LabelProp {
+    color: string;
+    labelName: string;
+}
 
 /**
  * @todo i need to remove the slices variables later
@@ -10,19 +19,53 @@ import ClippingPlane from "./ClippingPlane";
  */
 const SideMenuAnnot: React.FC = () => {
 
-    const sliceXY = useParams<number>();
-    const sliceXZ = useParams<number>();
-    const sliceYZ = useParams<number>();
-    const clipPlane = useParams<number>();
+    const [sliceXY, setSliceXY] = useState<number>(0);
+    const [sliceXZ, setSliceXZ] = useState<number>(0);
+    const [sliceYZ, setSliceYZ] = useState<number>(0);
+    const [clipPlane, setClipPlane] = useState<number>(0);
+    const [sliceAxis, setSliceAxis] = useState<string>("XY");
+    const [presentVal, setPresentVal] = useState<string>("Original");
+    const [labelList, setLabelList] = useState<LabelProp[]>([{color: "", labelName: ""}]);
+
+    const selectSliceHandlerXY = (slice: number) => {
+        setSliceXY(slice);
+    }
+
+    const selectSliceHandlerXZ = (slice: number) => {
+        setSliceXZ(slice);
+    }
+
+    const selectSliceHandlerYZ = (slice: number) => {
+        setSliceYZ(slice);
+    }
+
+    const selectClipPlane = (plane: number) => {
+        setClipPlane(plane)
+    }
+
+    const selectSliceAxis = (slice: string) => {
+        setSliceAxis(slice);
+    }
+
+    const selectPresentVal = (val: string) => {
+        setPresentVal(val);
+    }
+
+    const selectLabelList = (labelElement: LabelProp) => {
+        setLabelList((vec) => [...vec, labelElement]);
+    }
 
     return(
         <IonCard>
             <IonList>
-                <SlicesSubMenu numberVal={sliceXY} titleName={"Slice XY"}/>
-                <SlicesSubMenu numberVal={sliceXZ} titleName={"Slice XZ"}/>
-                <SlicesSubMenu numberVal={sliceYZ} titleName={"Slice YZ"}/>
-                <ClippingPlane numberVal={clipPlane} titleName={"Clipping Plane"}/>
+                <SlicesSubMenu numberVal={sliceXY} onNumberVal={selectSliceHandlerXY} titleName={"Slice XY"}/>
+                <SlicesSubMenu numberVal={sliceXZ} onNumberVal={selectSliceHandlerXZ} titleName={"Slice XZ"}/>
+                <SlicesSubMenu numberVal={sliceYZ} onNumberVal={selectSliceHandlerYZ} titleName={"Slice YZ"}/>
+                <ClippingPlane numberVal={clipPlane} onNumberVal={selectClipPlane} sliceAxis={sliceAxis} onSliceAxis={selectSliceAxis} presentVal={presentVal} onPresentVal={selectPresentVal} titleName={"Clipping Plane"}/>
                 <IonItemDivider/>
+                <OutputsVis sliceXY={sliceXY} sliceXZ={sliceXZ} sliceYZ={sliceYZ} clipPlane={clipPlane} sliceAxis={sliceAxis} presentVal={presentVal}/>
+                <IonItemDivider/>
+                <LabelTable labelList={labelList} onLabelList={selectLabelList}/>
             </IonList>
         </IonCard>
     )

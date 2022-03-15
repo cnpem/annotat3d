@@ -1,9 +1,5 @@
 import {
-    IonButton,
-    IonButtons,
     IonContent,
-    IonFab,
-    IonFabButton,
     IonIcon,
     IonItem,
     IonLabel,
@@ -14,10 +10,14 @@ import {
     IonNote,
 } from '@ionic/react';
 
-import { useLocation } from 'react-router-dom';
-import { archiveOutline, archiveSharp, bookmarkOutline, heartOutline, heartSharp, mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, trashOutline, trashSharp, warningOutline, warningSharp } from 'ionicons/icons';
+import {useLocation} from 'react-router-dom';
+import {archiveOutline, archiveSharp, bookmarkOutline, heartOutline, heartSharp, mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, trashOutline, trashSharp, warningOutline, warningSharp} from 'ionicons/icons';
 import './Menu.css';
 
+/**
+ * An interface that contains all the AppPages
+ * @todo i prob need to remove this script later
+ */
 interface AppPage {
     url: string;
     iosIcon: string;
