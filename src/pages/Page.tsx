@@ -3,7 +3,7 @@ import { useParams } from 'react-router';
 import ExploreContainer from '../components/ExploreContainer';
 import './Page.css';
 
-import CanvasContainer from '../components/Canvas';
+import CanvasContainer from '../components/CanvasContainer';
 import {useState} from 'react';
 
 const Page: React.FC = () => {
