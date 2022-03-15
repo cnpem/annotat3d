@@ -3,7 +3,14 @@ import {MenuItem} from "./MenuItems";
 import {colorPaletteOutline, colorPaletteSharp} from "ionicons/icons";
 import {IonAccordion, IonIcon, IonItem, IonLabel, IonList, IonRadioGroup, IonRadio, IonItemDivider} from "@ionic/react";
 
+/**
+ * Colormap selector component
+ * @constructor
+ */
 const Colormap : React.FC = () => {
+    /**
+     * colormap list
+     */
     const items : MenuItem = {
         title: 'Colormap',
         subItems: [

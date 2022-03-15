@@ -18,25 +18,30 @@ import Remote from "./Remote";
 
 import React, {useState} from "react";
 
+/**
+ * Menu component
+ * @constructor
+ */
 const Menu: React.FC = () => {
     useLocation();
+    /**
+     * Search bar state
+     */
+    // TODO: make real search over menu items
     const [searchText, setSearchText] = useState('');
 
     return (
-        <IonMenu contentId="main" type="overlay" swipeGesture={true} style={{'--width': '600px'}}>
+        <IonMenu contentId="main" type="overlay" swipeGesture={true}>
             <IonHeader>
                 <IonToolbar>
                     <IonTitle size={"large"} className={"ion-text-center"}>Annotat3D</IonTitle>
-                    <IonTitle style={{"--color": "grey"}} size={"small"} className={"ion-text-center"}>web version
-                        1.0.0</IonTitle>
+                    <IonTitle size={"small"} className={"menu-subtitle ion-text-center"}>web version 1.0.0</IonTitle>
                 </IonToolbar>
             </IonHeader>
             <IonToolbar>
                 <IonSearchbar value={searchText} onIonChange={e => setSearchText(e.detail.value!)}></IonSearchbar>
             </IonToolbar>
-            <IonToolbar style={{"--padding-start": "25px"}}>
-                <ThemeToggle/>
-            </IonToolbar>
+            <ThemeToggle/>
             <IonContent>
                 <IonAccordionGroup>
                     <File/>

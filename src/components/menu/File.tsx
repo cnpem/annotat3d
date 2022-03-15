@@ -1,9 +1,18 @@
 import React from "react";
-import {MenuItem} from "./MenuItems";
 import {documentOutline, documentSharp} from "ionicons/icons";
 import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
 
+import {MenuItem} from "./MenuItems";
+import FileDialog from "./FileDialog";
+
+/**
+ * File I/O component
+ * @constructor
+ */
 const File: React.FC = () => {
+    /**
+     * file items
+     */
     const items: MenuItem = {
         title: 'File',
         subItems: [
@@ -22,7 +31,10 @@ const File: React.FC = () => {
             <IonList slot={"content"}>
                 {items.subItems.map((subItem) => {
                     return (
-                        <IonItem button>{subItem}</IonItem>
+                        <>
+                        {/*<IonItem button>{subItem}</IonItem>*/}
+                        <FileDialog name={subItem}></FileDialog>
+                        </>
                     );
                 })}
             </IonList>

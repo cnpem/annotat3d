@@ -3,7 +3,15 @@ import {MenuItem} from "./MenuItems";
 import {layersOutline, layersSharp} from "ionicons/icons";
 import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
 
+/**
+ * Deep Learning component
+ * @constructor
+ */
 const DeepLearning: React.FC = () => {
+    /**
+     * component items
+     * TODO: maybe rethink this whole item's design
+     */
     const items: MenuItem = {
         title: 'Deep Learning',
         subItems: [

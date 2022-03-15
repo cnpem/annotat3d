@@ -3,12 +3,19 @@ import {MenuItem} from "./MenuItems";
 import {paperPlaneOutline, paperPlaneSharp} from "ionicons/icons";
 import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
 
+/**
+ * Remote visualization component
+ * @constructor
+ */
 const Remote: React.FC = () => {
+    /**
+     * Items of Remote Accordion
+     */
     const items: MenuItem = {
-        title: 'Remote',
+        title: 'Remote Visualization',
         subItems: [
-            'To IndeX \u00AE',
-            'To SDumont'
+            'To IndeX \u00AE'
+            // 'To SDumont'
         ],
         iosIcon: paperPlaneOutline,
         mdIcon: paperPlaneSharp
