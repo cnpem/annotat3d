@@ -3,6 +3,7 @@ import { useParams } from 'react-router';
 import ExploreContainer from '../components/ExploreContainer';
 import './Page.css';
 
+import MenuFabButton from '../components/MenuFabButton'
 import CanvasContainer from '../components/CanvasContainer';
 import {useState} from 'react';
 
@@ -33,6 +34,7 @@ const Page: React.FC = () => {
           <IonInput type="number" value={sliceXY} onIonChange={(e) => { setSliceXY(+e.detail.value!) } } />
           { /* <ExploreContainer name={name} /> */ }
           <CanvasContainer z={sliceXY}/>
+          <MenuFabButton></MenuFabButton>
       </IonContent>
 
     <IonFooter>
