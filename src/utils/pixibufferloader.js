@@ -2,9 +2,6 @@ import * as PIXI from 'pixi.js';
 
 PIXI.BufferResource.prototype.upload = function (renderer, baseTexture, glTexture) {
   var gl = renderer.gl;
-  
-    console.log(gl);
-    console.log(gl.pixelStorei);
 
   //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, baseTexture.alphaMode === exports.ALPHA_MODES.UNPACK);
   // https://stackoverflow.com/questions/42789896/webgl-error-arraybuffer-not-big-enough-for-request-in-case-of-gl-luminance

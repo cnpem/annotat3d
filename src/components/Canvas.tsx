@@ -1,4 +1,7 @@
 import {useState, Component, Ref, createRef} from 'react';
+import {IonButton, IonFab, IonFabButton, IonIcon} from '@ionic/react';
+import { expand, brush, browsers } from 'ionicons/icons';
+import { debounce } from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 // https://stackoverflow.com/questions/42789896/webgl-error-arraybuffer-not-big-enough-for-request-in-case-of-gl-luminance
@@ -11,6 +14,7 @@ import { mean, std } from '../utils/math';
 import { sfetch } from '../utils/simplerequest';
 
 import './Canvas.css';
+import {InteractionEvent} from 'pixi.js';
 
 class Brush {
 
@@ -132,7 +136,7 @@ class Annotation {
         this.sprite.texture = PIXI.Texture.from(this.canvas);
     }
 
-    draw(slice: TypedArray) {
+    draw(slice: NdArray<TypedArray>) {
         // colors = ["red", "blue", "yellow", "magenta", "green", "indigo", "darkorange", "cyan", "pink", "yellowgreen"]
         const colors = [
             [255, 0, 0],
@@ -147,14 +151,19 @@ class Annotation {
             [154, 205, 50],
         ];
 
+        this.canvas.width = slice.shape[1];
+        this.canvas.height = slice.shape[0];
+
+        //console.log("draw slice: ", mean(slice), std(slice));
+
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
         const data = imageData.data;
-        for (let i = 0; i < slice.length; i++) {
-            if (slice[i] >= 0) {
-                const color = colors[(slice[i]) % colors.length];
+        for (let i = 0; i < slice.data.length; i++) {
+            if (slice.data[i] >= 0) {
+                const color = colors[(slice.data[i]) % colors.length];
                 data[i * 4] = color[0];
                 data[i * 4 + 1] = color[1];
                 data[i * 4 + 2] = color[2];
@@ -186,6 +195,9 @@ class Canvas {
     labelSlice: PIXI.Sprite;
     superpixelSlice: PIXI.Sprite;
 
+    x: number;
+    y: number;
+
     constructor(div: HTMLDivElement) {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
@@ -203,6 +215,7 @@ class Canvas {
         this.viewport.pinch();
 
         this.slice = new PIXI.Sprite();
+        this.slice.visible = true;
 
         this.labelSlice = new PIXI.Sprite();
 
@@ -210,7 +223,10 @@ class Canvas {
         this.superpixelSlice.tint = 0xff00ff
         this.superpixelSlice.alpha = 0.3;
         this.superpixelSlice.blendMode = PIXI.BLEND_MODES.ADD;
-        //this.superpixelSlice.scale = 0.5;
+        this.superpixelSlice.scale.x = 0.5;
+        this.superpixelSlice.scale.y = 0.5;
+        this.superpixelSlice.visible = true;
+
 
         this.annotation = new Annotation();
         this.brush = new Brush();
@@ -225,8 +241,102 @@ class Canvas {
         this.viewport.addChild(this.annotation.sprite);
         this.viewport.addChild(this.brush.cursor);
 
+        this.viewport.on('pointerdown', (e) => this.onPointerDown(e));
+        this.viewport.on('pointerup', (e) => this.onPointerUp(e));
+        this.viewport.on('pointerout', (e) => this.onPointerUp(e));
+        this.viewport.on('pointermove', (e) => this.onPointerMove(e));
+        this.viewport.on('wheel', (e) => this.onPointerMove(e.event));
+
         this.div = div;
         this.div.appendChild(this.app.view);
+
+        this.x = this.y = 0;
+
+        //this.setSuperpixelVisibility(false);
+        this.setLabelVisibility(true);
+    }
+
+
+    onPointerDown(event: any) {
+        if (event.data.pointerType == 'mouse') {
+            if (event.data.button != 0) return;
+        } else if (event.data.pointerType == 'touch') {
+            this.viewport.plugins.pause('drag');
+            // canvas.brush.cursor.visible = false
+        }
+
+        console.log("down");
+
+        this.isPainting = true;
+
+        this.prevPosition = this.viewport.toWorld(event.data.global);
+    }
+
+
+    onPointerMove(event: any) {
+
+        let currPosition;
+
+        if (event.type == 'wheel') {
+            this.viewport.plugins.resume('drag');
+            currPosition = this.viewport.toWorld(event.offsetX, event.offsetY);
+        } else {
+            currPosition = this.viewport.toWorld(event.data.global);
+            if (event.data.pointerType == 'touch' && event.data.originalEvent.touches.length > 1) {
+                this.isPainting = false;
+                return;
+            }
+        }
+
+        //document.getElementById('brush_x').value = currPosition.x;
+        //document.getElementById('brush_y').value = currPosition.y;
+
+        this.brush.cursor.position.x = currPosition.x - this.brush.size / 2;
+        this.brush.cursor.position.y = currPosition.y - this.brush.size / 2;
+
+        if (!this.isPainting) return;
+
+        //const checked = Array.from(brushModeElm).find((radio) => radio.checked)?.value ? true : false;
+
+        const checked = 'draw_brush';
+
+        const data = {
+            'coords': this.draw(currPosition, checked),
+            'z': 0,
+            'size': this.brush.size,
+            'label': this.brush.label,
+            'mode': checked,
+        };
+        //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
+
+        this.prevPosition = currPosition;
+    }
+
+
+    onPointerUp(event: any) {
+
+        this.viewport.plugins.resume('drag');
+
+        const currPosition = this.viewport.toWorld(event.data.global);
+        this.prevPosition = currPosition;
+
+        //const checked = Array.from(brushModeElm).find((radio) => radio.checked).value;
+
+        const checked = 'draw_brush';
+
+        if (this.isPainting) {
+            const data = {
+                'coords': this.draw(currPosition, checked),
+                'z': 0,
+                'size': this.brush.size,
+                'label': this.brush.label,
+                'mode': checked,
+            };
+            //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
+        }
+
+        console.log("up");
+        this.isPainting = false;
     }
 
     distanceBetween(point1: PIXI.Point, point2: PIXI.Point) {
@@ -238,6 +348,7 @@ class Canvas {
     }
 
     draw(currPosition: PIXI.Point, mode: string) {
+
         if (mode == 'erase_brush') {
             this.annotation.context.globalCompositeOperation = 'destination-out';
         } else {
@@ -280,15 +391,20 @@ class Canvas {
             type: PIXI.TYPES.UNSIGNED_BYTE,
             format: pformat,
         });
-        console.log(texture);
         return texture;
     }
 
     setLabelImage(labelSlice: NdArray<TypedArray>) {
         const x = labelSlice.shape[1];
         const y = labelSlice.shape[0];
+
+        //console.log("set label image: ", labelSlice);
+        //console.log(mean(labelSlice.data), std(labelSlice.data));
+
         const len = labelSlice.data.length;
         let rgbaData = new Uint8Array(len * 4);
+
+        //change to use the annotat3d npy colormaps
         const colors = [
             [255, 0, 0],
             [0, 0, 255],
@@ -311,22 +427,22 @@ class Canvas {
             rgbaData[idx] = color[0];
             rgbaData[idx + 1] = color[1];
             rgbaData[idx + 2] = color[2];
-            rgbaData[idx + 3] = 32;
+            rgbaData[idx + 3] = 128;
         }
         const texture = this.textureFromSlice(rgbaData, x, y, PIXI.FORMATS.RGBA);
         this.labelSlice.texture = texture;
-
     }
 
     setImage(img_slice: NdArray<TypedArray>) {
 
         let uint8data: Uint8Array;
-        
+
         const x = img_slice.shape[1];
         const y = img_slice.shape[0];
 
         const len = x*y;
 
+        //TODO: implement for another dtypes
         if (img_slice.dtype == 'uint8') {
             uint8data = img_slice.data as Uint8Array;
         } else {
@@ -338,10 +454,8 @@ class Canvas {
             }
         }
 
-
-        console.log(x, y);
-        console.log(len);
-        console.log(mean(uint8data));
+        this.x = x;
+        this.y = y;
 
         const texture = this.textureFromSlice(uint8data, x, y);
         this.slice.texture = texture;
@@ -351,8 +465,8 @@ class Canvas {
         const uint8data = superpixel_slice.data.map(x => x * 255) as Uint8Array;
         const x = superpixel_slice.shape[1];
         const y = superpixel_slice.shape[0];
-        console.log("I am setting superpixel hue hue huei: ", x, y);
-        console.log(mean(uint8data), std(uint8data));
+        //console.log("I am setting superpixel hue hue huei: ", x, y);
+        //console.log(mean(uint8data), std(uint8data));
         const texture = this.textureFromSlice(uint8data, x, y);
         this.superpixelSlice.texture = texture;
     }
@@ -376,7 +490,7 @@ class Canvas {
         this.viewport.moveCenter(center);
     }
 
-    recenter(w: number, h: number) {
+    recenter(w: number = this.x, h: number = this.y) {
         this.viewport.moveCenter(w / 2, h / 2);
         this.viewport.fit(true, w, h);
     }
@@ -386,7 +500,12 @@ interface ICanvasProps {
     z: number
 }
 
-class CanvasContainer extends Component<ICanvasProps> {
+interface ICanvasState {
+    brush_mode: string
+}
+
+class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
+
 
     pixi_container: HTMLDivElement | null;
     canvas: Canvas | null;
@@ -395,41 +514,79 @@ class CanvasContainer extends Component<ICanvasProps> {
         super(props);
         this.pixi_container = null;
         this.canvas = null;
+        this.state = { 'brush_mode': 'draw_brush' };
+
     }
 
+    fetchAllDebounced = debounce( () => {
+        console.log("update ...", this.props.z);
+        this.getImageSlice()
+            .then(() => {
+                //this.canvas!.recenter()
+                this.getSuperpixelSlice();
+                this.getAnnotSlice();
+                this.get_label_slice();
+            });
+        }, 250);
 
-    get_superpixel_slice() {
-   
-    const params = {
-        'z': this.props.z,
-    };
+    getSuperpixelSlice() {
 
-    sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray')
+        const params = {
+            'z': this.props.z,
+        };
+
+        sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray')
         .then((superpixelSlice) => {
-            console.log("superpixel response");
-            console.log(superpixelSlice.shape);
+            //console.log("superpixel response");
+            //console.log(superpixelSlice.shape);
             this.canvas!!.setSuperpixelImage(superpixelSlice);
         });
-}
+    }
 
-    get_image_slice() {
-        console.log('get image slice hue');
+    getImageSlice() {
+        //console.log('get image slice hue');
         const z = this.props.z;
         const params = {
             'z': z,
         };
 
-        sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
-            .then(imgSlice => {
-                console.log(imgSlice);
-                this.canvas!!.setImage(imgSlice);
+        return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
+        .then(imgSlice => {
+            //console.log(imgSlice);
+            this.canvas!!.setImage(imgSlice);
+            //this.canvas!!.recenter();
+        });
+    }
+
+    getAnnotSlice() {
+
+        const data = {
+            'z': this.props.z,
+        };
+
+        sfetch('POST', '/get_annot_slice', JSON.stringify(data), 'gzip/numpyndarray')
+        .then((slice) => {
+            this.canvas!!.annotation.draw(slice);
+        });
+    }
+
+    get_label_slice() {
+
+        const params = {
+            'z': this.props.z,
+        };
+
+        sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
+            .then(labelSlice => {
+                this.canvas!!.setLabelImage(labelSlice);
             });
+
     }
 
     componentDidMount() {
         // the element is the DOM object that we will use as container to add pixi stage(canvas)
-        console.log("update pixi");
-        console.log(this);
+        //console.log("create pixi");
+        //console.log(this);
         const elem = this.pixi_container;
         if (this && elem) {
             this.canvas = new Canvas(elem);
@@ -442,24 +599,27 @@ class CanvasContainer extends Component<ICanvasProps> {
                 this.canvas!.resize();
             });
 
-            this.get_image_slice();
-            this.get_superpixel_slice();
-
-            const gl = document.createElement("canvas").getContext("webgl")!!;
-            console.log("WEBGL");
-            console.log(gl.getParameter(gl.VERSION));
-            console.log(gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
-            console.log(gl.getParameter(gl.VENDOR));
-
+            this.fetchAllDebounced();
         }
 
+    }
 
+    componentDidUpdate() {
+        this.fetchAllDebounced();
     }
 
     render() {
         return (
-            <div id="root" className="canvas" ref={elem => this.pixi_container = elem}>
-                <h1>Hue hue BR A</h1>
+            <div id="root" className="canvas" style={ {"backgroundColor": "transparent"}  } ref={elem => this.pixi_container = elem} >
+                <IonFab vertical="bottom" horizontal="start">
+                    <IonFabButton color="medium" onClick={() => this.canvas?.recenter()}><IonIcon icon={expand}/></IonFabButton>
+                </IonFab>
+
+                <IonFab vertical="bottom" horizontal="end">
+                    <IonFabButton size={this.state.brush_mode === 'erase_brush' ? undefined : "small"} color={this.state.brush_mode === 'erase_brush' ? "primary" : "outline"}  onClick={() => this.setState({'brush_mode': 'erase_brush'})}><IonIcon icon={browsers}/></IonFabButton>
+
+                    <IonFabButton size={this.state.brush_mode === 'draw_brush' ? undefined : "small"} color={this.state.brush_mode === 'draw_brush' ? "primary" : "outline"}  onClick={() => this.setState({'brush_mode': 'draw_brush'})}><IonIcon icon={brush}/></IonFabButton>
+                </IonFab>
             </div>
         );
     }

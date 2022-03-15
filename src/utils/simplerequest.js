@@ -90,9 +90,6 @@ function sfetch(method, url, data = '', responseType = '') {
         fullURL = new URL(url, BACKEND_HOST);
     }
 
-    console.log(fullURL);
-    console.log(typeof fullURL.href)
-
     return fetch(fullURL.href, {
         method: method,
         headers: {
@@ -101,11 +98,7 @@ function sfetch(method, url, data = '', responseType = '') {
         },
         body: data
     }).then(function(response) {
-        console.log('process this sheeeit');
-        console.log("ResponseType is ", responseType);
         switch (responseType) {
-            case 'lz4/ndarray':
-                return responseToNdArray(response);
             case 'gzip/numpyndarray':
                 return responseToNdArray(response);
             case 'gzip/uint8array':

@@ -70,7 +70,7 @@ const Menu: React.FC = () => {
     const location = useLocation();
 
     return (
-        <IonMenu contentId="main" type="overlay" swipeGesture={true} style={ {'--width': '1000px'} } >
+        <IonMenu contentId="main" type="overlay" swipeGesture={true} style={ {'--width': '300px'} } >
 
             <IonContent>
                 <IonList id="inbox-list">

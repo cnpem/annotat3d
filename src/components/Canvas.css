@@ -1,3 +1,13 @@
 canvas {
     overflow: hidden;
+    cursor: none;
 }
+
+div #root {
+    border:1px solid red;
+    height: 100%;
+}
+
+/*div:empty {*/
+    /*display:none*/
+/*}*/
