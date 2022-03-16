@@ -1,0 +1,7 @@
+html, body {
+  overflow: hidden;
+}
+
+body > #root > div {
+  height: 100%;
+}
