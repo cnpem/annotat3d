@@ -15,6 +15,7 @@ import { sfetch } from '../utils/simplerequest';
 
 import './CanvasContainer.css';
 import {InteractionEvent} from 'pixi.js';
+import MenuFabButton from './MenuFabButton';
 
 class Brush {
 
@@ -504,13 +505,24 @@ interface ICanvasState {
     brush_mode: string
 }
 
+const brushList = [
+    {
+        id: 'draw_brush',
+        logo: brush
+    },
+    {
+        id: 'erase_brush',
+        logo: browsers
+    }
+];
+
 class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
 
     pixi_container: HTMLDivElement | null;
     canvas: Canvas | null;
 
-    constructor(props: any) {
+    constructor(props: ICanvasProps) {
         super(props);
         this.pixi_container = null;
         this.canvas = null;
@@ -521,13 +533,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     fetchAllDebounced = debounce( () => {
         console.log("update ...", this.props.z);
         this.getImageSlice()
-            .then(() => {
-                //this.canvas!.recenter()
-                this.getSuperpixelSlice();
-                this.getAnnotSlice();
-                this.get_label_slice();
-            });
-        }, 250);
+        .then(() => {
+            //this.canvas!.recenter()
+            this.getSuperpixelSlice();
+            this.getAnnotSlice();
+            this.get_label_slice();
+        });
+    }, 250);
 
     getSuperpixelSlice() {
 
@@ -577,9 +589,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
-            .then(labelSlice => {
-                this.canvas!!.setLabelImage(labelSlice);
-            });
+        .then(labelSlice => {
+            this.canvas!!.setLabelImage(labelSlice);
+        });
 
     }
 
@@ -604,7 +616,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
+        if (prevProps.z === this.props.z)
+            return;
         this.fetchAllDebounced();
     }
 
@@ -612,27 +626,16 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         return (
             <div id="root" className="canvas" style={ {"backgroundColor": "transparent"}  } ref={elem => this.pixi_container = elem} >
                 <IonFab vertical="bottom" horizontal="start">
-                    <IonFabButton color="medium" onClick={() => this.canvas?.recenter()}><IonIcon icon={expand}/></IonFabButton>
+                    <IonFabButton color="medium" onClick={() => this.canvas?.recenter()}>
+                        <IonIcon icon={expand}/>
+                    </IonFabButton>
                 </IonFab>
-
                 <IonFab vertical="bottom" horizontal="end">
-                    <IonFabButton size={this.state.brush_mode === 'erase_brush' ? undefined : "small"} color={this.state.brush_mode === 'erase_brush' ? "primary" : "outline"}  onClick={() => this.setState({'brush_mode': 'erase_brush'})}><IonIcon icon={browsers}/></IonFabButton>
-
-                    <IonFabButton size={this.state.brush_mode === 'draw_brush' ? undefined : "small"} color={this.state.brush_mode === 'draw_brush' ? "primary" : "outline"}  onClick={() => this.setState({'brush_mode': 'draw_brush'})}><IonIcon icon={brush}/></IonFabButton>
+                    <MenuFabButton buttonsList={brushList} onChange={ (b) => {this.setState({'brush_mode': b.id})} } />
                 </IonFab>
             </div>
         );
     }
 };
-
-//const CanvasContainer: React.FC = () => {
-
-//const [canvas, setCanvas] = useState<Canvas>(new Canvas());
-
-//return (
-//<div id="Canvas">
-//</div>
-//);
-//};
 
 export default CanvasContainer;

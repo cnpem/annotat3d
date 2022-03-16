@@ -1,9 +1,11 @@
-import { IonButtons, IonContent, IonFooter, IonHeader, IonInput, IonMenuButton, IonPage, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButtons, IonContent, IonFooter, IonHeader, IonInput, IonMenuButton, IonPage, IonSplitPane, IonTitle, IonToolbar } from '@ionic/react';
 import { useParams } from 'react-router';
 import './Page.css';
 
 import CanvasContainer from '../components/CanvasContainer';
 import React, {useState} from 'react';
+
+
 
 const Page: React.FC = () => {
   const { name } = useParams<{ name: string; }>();
