@@ -3,11 +3,7 @@ import {IonButton, IonIcon, IonInput, IonItem, IonTitle} from "@ionic/react";
 
 /*Icon import*/
 import {eyeOutline} from "ionicons/icons";
-
-interface ToolbarComp{
-    numberVal: number; onNumberVal: (val: number) => void;
-    titleName: string;
-}
+import {SliceSubMenuInterface} from "./TypeScriptFiles/Interfaces/SliceSubMenuInterface";
 
 /**
  * React module that create the sub-windows with a dynamic placeholder
@@ -16,7 +12,7 @@ interface ToolbarComp{
  * @constructor
  * @return returns the React file to create the site /inbox
  */
-const SlicesSubMenu: React.FC<ToolbarComp> = (args) => {
+const SlicesSubMenu: React.FC<SliceSubMenuInterface> = (args) => {
 
     const inputNumberVal = (event: CustomEvent) => {
         args.onNumberVal(parseInt(event.detail.value!));

@@ -9,16 +9,7 @@ import {
 import {lockClosed} from "ionicons/icons";
 import {eyeOutline} from "ionicons/icons";
 import {contrastOutline} from "ionicons/icons";
-
-/**
- * Interface component with the respective variable and setter
- */
-interface ToolbarComp{
-    numberVal: number; onNumberVal: (val: number) => void;
-    sliceAxis: string; onSliceAxis: (slice: string) => void;
-    presentVal: string; onPresentVal: (presentVal: string) => void;
-    titleName: string;
-}
+import {ToolbarCompClip} from "./TypeScriptFiles/Interfaces/ClippingPlaneInterface";
 
 /**
  * Component that creates the Clipping Plane toolbar
@@ -27,7 +18,7 @@ interface ToolbarComp{
  * @constructor
  * @return This component returns the Clipping Plane toolbar
  */
-const ClippingPlane: React.FC<ToolbarComp> = (args) => {
+const ClippingPlane: React.FC<ToolbarCompClip> = (args) => {
 
     const inputNumberVal = (event: CustomEvent) => {
         args.onNumberVal(parseInt(event.detail.value!));

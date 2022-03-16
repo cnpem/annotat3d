@@ -4,14 +4,7 @@ import SlicesSubMenu from "./SlicesSubMenu";
 import ClippingPlane from "./ClippingPlane";
 import OutputsVis from "./OutputsVis";
 import LabelTable from "./LabelTable";
-
-/**
- *
- */
-interface LabelProp {
-    color: string;
-    labelName: string;
-}
+import {LabelProp} from "./TypeScriptFiles/Interfaces/LabelsInterface";
 
 /**
  * @todo i need to remove the slices variables later
@@ -25,7 +18,8 @@ const SideMenuAnnot: React.FC = () => {
     const [clipPlane, setClipPlane] = useState<number>(0);
     const [sliceAxis, setSliceAxis] = useState<string>("XY");
     const [presentVal, setPresentVal] = useState<string>("Original");
-    const [labelList, setLabelList] = useState<LabelProp[]>([{color: "", labelName: ""}]);
+    const [labelList, setLabelList] = useState<LabelProp[]>([]);
+    const [idGenerator, setIdGenerator] = useState<number>(0);
 
     const selectSliceHandlerXY = (slice: number) => {
         setSliceXY(slice);
@@ -55,6 +49,18 @@ const SideMenuAnnot: React.FC = () => {
         setLabelList((vec) => [...vec, labelElement]);
     }
 
+    const removeLabel = (labelId: number) => {
+        setLabelList(labelList.filter(label => labelId !== label.id));
+    }
+
+    /**
+     * @todo i need to implement a exception if the user tries to add more labels. I'll use this as example https://www.tektutorialshub.com/typescript/typescript-number-min-max-safe-values/
+     * @param id
+     */
+    const incrementId = (id: number) => {
+        setIdGenerator(id + 1);
+    }
+
     return(
         <IonCard>
             <IonList>
@@ -65,7 +71,7 @@ const SideMenuAnnot: React.FC = () => {
                 <IonItemDivider/>
                 <OutputsVis sliceXY={sliceXY} sliceXZ={sliceXZ} sliceYZ={sliceYZ} clipPlane={clipPlane} sliceAxis={sliceAxis} presentVal={presentVal}/>
                 <IonItemDivider/>
-                <LabelTable labelList={labelList} onLabelList={selectLabelList}/>
+                <LabelTable labelList={labelList} onLabelList={selectLabelList} onRemoveLabel={removeLabel} idGenerator={idGenerator} onIdGenerator={incrementId}/>
             </IonList>
         </IonCard>
     )

@@ -1,28 +1,16 @@
 import React from "react";
 import * as ReactBootStrap from "react-bootstrap";
-import {IonTitle, IonRow, IonCol, IonButton} from "@ionic/react";
+import {IonTitle, IonRow, IonCol} from "@ionic/react";
 import InputLabel from "./InputLabel";
-
-interface LabelProp{
-    color: string;
-    labelName: string;
-}
-
-interface ToolbarComp{
-    labelList: LabelProp[]; onLabelList: (labelElement: LabelProp) => void;
-}
+import OptionsIcons from "./OptionsIcons";
+import {ToolbarCompLabel, LabelProp} from "./TypeScriptFiles/Interfaces/LabelsInterface";
 
 /**
  *
- * @param args
+ * @param args a list the parameters that contains the components
  * @constructor
  */
-const LabelTable: React.FC<ToolbarComp> = (args) => {
-
-    /*I'll write the code for add a label here*/
-    const inputLabelList = () => {
-        return;
-    }
+const LabelTable: React.FC<ToolbarCompLabel> = (args) => {
 
     const RenderLabels = (labelElement: LabelProp, index: number) => {
 
@@ -30,6 +18,10 @@ const LabelTable: React.FC<ToolbarComp> = (args) => {
             <tr key={index}>
                 <td>{labelElement.labelName}</td>
                 <td>{labelElement.color}</td>
+                <td>{labelElement.id}</td>
+                <td>
+                    <OptionsIcons labelList={args.labelList} onRemoveLabel={args.onRemoveLabel} removeId={labelElement.id}/>
+                </td>
             </tr>
         );
 
@@ -40,7 +32,7 @@ const LabelTable: React.FC<ToolbarComp> = (args) => {
             <IonTitle>Label card</IonTitle>
             <IonRow>
                 <IonCol>
-                    <InputLabel labelList={args.labelList} onLabelList={args.onLabelList}/>
+                    <InputLabel labelList={args.labelList} onLabelList={args.onLabelList} onRemoveLabel={args.onRemoveLabel} idGenerator={args.idGenerator} onIdGenerator={args.onIdGenerator}/>
                 </IonCol>
             </IonRow>
             <ReactBootStrap.Table striped bordered hover>
@@ -48,6 +40,7 @@ const LabelTable: React.FC<ToolbarComp> = (args) => {
                 <tr>
                     <th>Label Name</th>
                     <th>Label Color</th>
+                    <th>Label id</th>
                     <th>Options</th>
                 </tr>
                 </thead>

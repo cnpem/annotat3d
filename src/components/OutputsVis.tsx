@@ -1,17 +1,6 @@
 import {IonItem, IonTitle} from "@ionic/react";
 import React from "react";
-
-/**
- * Interface module
- */
-interface ToolbarComp{
-    sliceXY: number;
-    sliceXZ: number;
-    sliceYZ: number;
-    clipPlane: number;
-    sliceAxis: string;
-    presentVal: string;
-}
+import {OutputVisInterface} from "./TypeScriptFiles/Interfaces/OutputVisInterface";
 
 /**
  * This component does the output of the selected values from the user. Maybe this will be used only for debugging
@@ -19,7 +8,7 @@ interface ToolbarComp{
  * @constructor
  * @return Return the React component with the values typed by the user
  */
-const OutputsVis: React.FC<ToolbarComp> = (args) => {
+const OutputsVis: React.FC<OutputVisInterface> = (args) => {
 
     return(
         <React.Fragment>

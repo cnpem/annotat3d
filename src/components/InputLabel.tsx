@@ -1,36 +1,41 @@
 import React from "react";
-import {IonButton, IonModal, IonContent} from "@ionic/react";
+import {IonButton, IonButtons, IonIcon} from "@ionic/react";
+import {ToolbarCompLabel} from "./TypeScriptFiles/Interfaces/LabelsInterface";
 
-/**
- * Child component for the ToobarComp
- */
-interface LabelProp{
-    color: string;
-    labelName: string;
-}
-
-/**
- * Interface component with the respective variable and setter
- */
-interface ToolbarComp{
-    labelList: LabelProp[]; onLabelList: (labelElement: LabelProp) => void;
-}
+/*Icons import*/
+import {addOutline, trashOutline} from "ionicons/icons";
 
 /**
  * This component creates the option for add any label in the label section
- * @todo i need to finish this implementation
+ * @todo The add Button is now working. I need to customize better the name for each label
+ * @todo i need to create a function that deletes all elements of a vector
  * @param args a list that contains the toolbar components
  * @constructor
  * @return This function returns the a window for the user add a label name and color a vector with this new label
  */
-const InputLabel: React.FC<ToolbarComp> = (args) => {
+const InputLabel: React.FC<ToolbarCompLabel> = (args) => {
+
+    const addNewLabel = () => {
+        args.onLabelList({color: "red", labelName: "label " + (args.labelList.length + 1), id: args.idGenerator});
+        args.onIdGenerator(args.idGenerator);
+    }
+
+    const removeAllLabels = () => {
+        const n = args.labelList.splice(0, args.labelList.length);
+        console.log(n);
+    }
+
     return(
-        <React.Fragment>
-            <IonButton className={"ion-text-right"} id={"trigger-button"}/>
-            <IonModal trigger={"trigger-button"}>
-                <IonContent>dadad</IonContent>
-            </IonModal>
-        </React.Fragment>
+        <IonButtons>
+            <IonButton className={"ion-text-right"} onClick={addNewLabel}>
+                <IonIcon icon={addOutline}/>
+            </IonButton>
+
+            <IonButton className={"ion-text-right"} slot={"end"} onClick={removeAllLabels}>
+                <IonIcon icon={trashOutline} slot={"end"}/>
+                Delete all labels
+            </IonButton>
+        </IonButtons>
     );
 };
 
