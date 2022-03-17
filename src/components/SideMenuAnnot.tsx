@@ -7,7 +7,6 @@ import LabelTable from "./LabelTable";
 import {LabelProp} from "./TypeScriptFiles/Interfaces/LabelsInterface";
 
 /**
- * @todo i need to remove the slices variables later
  * @constructor
  */
 const SideMenuAnnot: React.FC = () => {
@@ -19,7 +18,6 @@ const SideMenuAnnot: React.FC = () => {
     const [sliceAxis, setSliceAxis] = useState<string>("XY");
     const [presentVal, setPresentVal] = useState<string>("Original");
     const [labelList, setLabelList] = useState<LabelProp[]>([]);
-    const [idGenerator, setIdGenerator] = useState<number>(0);
 
     const selectSliceHandlerXY = (slice: number) => {
         setSliceXY(slice);
@@ -45,30 +43,13 @@ const SideMenuAnnot: React.FC = () => {
         setPresentVal(val);
     }
 
-    const selectLabelList = (labelElement: LabelProp) => {
-        setLabelList((vec) => [...vec, labelElement]);
+    const selectLabelList = (labelVec: LabelProp[]) => {
+        setLabelList(labelVec);
     }
 
     const updateLabelName = (labelName: string, labelId: number) => {
         setLabelList(labelList.map(elementList => elementList.id === labelId ?
             {...elementList, labelName: labelName} : {...elementList}));
-    }
-
-    const removeLabel = (labelId: number) => {
-        setLabelList(labelList.filter(label => labelId !== label.id));
-    }
-
-    const removeAllLabels = () => {
-        setLabelList(labelList.filter(l => "" === l.labelName));
-        setIdGenerator(0);
-    }
-
-    /**
-     * @todo i need to implement a exception if the user tries to add more labels. I'll use this as example https://www.tektutorialshub.com/typescript/typescript-number-min-max-safe-values/
-     * @param id
-     */
-    const incrementId = (id: number) => {
-        setIdGenerator(id + 1);
     }
 
     return(
@@ -81,7 +62,7 @@ const SideMenuAnnot: React.FC = () => {
                 <IonItemDivider/>
                 <OutputsVis sliceXY={sliceXY} sliceXZ={sliceXZ} sliceYZ={sliceYZ} clipPlane={clipPlane} sliceAxis={sliceAxis} presentVal={presentVal}/>
                 <IonItemDivider/>
-                <LabelTable labelList={labelList} onLabelList={selectLabelList} onRemoveLabel={removeLabel} onRemoveAllLabels={removeAllLabels} idGenerator={idGenerator} onIdGenerator={incrementId}/>
+                <LabelTable labelList={labelList} onLabelList={selectLabelList}/>
             </IonList>
         </IonCard>
     )

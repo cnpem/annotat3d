@@ -14,7 +14,6 @@ export interface LabelProp{
 /**
  * Interface component with the respective variable and setter
  */
-export interface ToolbarCompLabel{
-    labelList: LabelProp[]; onLabelList: (labelElement: LabelProp) => void; onRemoveLabel: (labelId: number) => void; onRemoveAllLabels: () => void;
-    idGenerator: number; onIdGenerator: (id: number) => void;
+export interface LabelTableInterface{
+    labelList: LabelProp[]; onLabelList: (labelVec: LabelProp[]) => void;
 }

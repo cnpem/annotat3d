@@ -1,26 +1,31 @@
-import React from "react";
+import React, {useState} from "react";
 import * as ReactBootStrap from "react-bootstrap";
 import {IonTitle, IonRow, IonCol} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
-import {ToolbarCompLabel, LabelProp} from "./TypeScriptFiles/Interfaces/LabelsInterface";
+import {LabelProp, LabelTableInterface} from "./TypeScriptFiles/Interfaces/LabelsInterface";
 
 /**
  *
  * @param args a list the parameters that contains the components
  * @constructor
  */
-const LabelTable: React.FC<ToolbarCompLabel> = (args) => {
+const LabelTable: React.FC<LabelTableInterface> = (args) => {
+
+    const [idGenerator, setIdGenerator] = useState<number>(0);
+
+    const selectIdGenerator = (id: number) => {
+        setIdGenerator(id + 1);
+    }
 
     const RenderLabels = (labelElement: LabelProp, index: number) => {
 
         return(
             <tr key={index}>
                 <td>{labelElement.labelName}</td>
-                <td>{labelElement.color}</td>
                 <td>{labelElement.id}</td>
                 <td>
-                    <OptionsIcons labelList={args.labelList} onRemoveLabel={args.onRemoveLabel} removeId={labelElement.id}/>
+                    <OptionsIcons labelList={args.labelList} onRemoveLabel={args.onLabelList} onIdGenerator={selectIdGenerator} removeId={args.labelList[index].id}/>
                 </td>
             </tr>
         );
@@ -32,14 +37,13 @@ const LabelTable: React.FC<ToolbarCompLabel> = (args) => {
             <IonTitle>Label card</IonTitle>
             <IonRow>
                 <IonCol>
-                    <InputLabel labelList={args.labelList} onLabelList={args.onLabelList} onRemoveLabel={args.onRemoveLabel} idGenerator={args.idGenerator} onIdGenerator={args.onIdGenerator} onRemoveAllLabels={args.onRemoveAllLabels}/>
+                    <InputLabel labelList={args.labelList} onLabelList={args.onLabelList} idGenerator={idGenerator} onIdGenerator={selectIdGenerator}/>
                 </IonCol>
             </IonRow>
             <ReactBootStrap.Table striped bordered hover>
                 <thead>
                 <tr>
                     <th>Label Name</th>
-                    <th>Label Color</th>
                     <th>Label id</th>
                     <th>Options</th>
                 </tr>

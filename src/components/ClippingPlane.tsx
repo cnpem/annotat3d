@@ -9,7 +9,7 @@ import {
 import {lockClosed} from "ionicons/icons";
 import {eyeOutline} from "ionicons/icons";
 import {contrastOutline} from "ionicons/icons";
-import {ToolbarCompClip} from "./TypeScriptFiles/Interfaces/ClippingPlaneInterface";
+import {ClipplingPlaneInterface} from "./TypeScriptFiles/Interfaces/ClipplingPlaneInterface";
 
 /**
  * Component that creates the Clipping Plane toolbar
@@ -18,7 +18,7 @@ import {ToolbarCompClip} from "./TypeScriptFiles/Interfaces/ClippingPlaneInterfa
  * @constructor
  * @return This component returns the Clipping Plane toolbar
  */
-const ClippingPlane: React.FC<ToolbarCompClip> = (args) => {
+const ClippingPlane: React.FC<ClipplingPlaneInterface> = (args) => {
 
     const inputNumberVal = (event: CustomEvent) => {
         args.onNumberVal(parseInt(event.detail.value!));
@@ -50,7 +50,7 @@ const ClippingPlane: React.FC<ToolbarCompClip> = (args) => {
 
             <IonRow>
                 <IonCol>
-                    <IonSelect value={args.sliceAxis} okText="Okay" placeholder={"XY"} cancelText="Cancel" onIonChange={inputSliceAxis}>
+                    <IonSelect value={args.sliceAxis} placeholder={"XY"} interface={"popover"} onIonChange={inputSliceAxis}>
                         <IonSelectOption value="XY">XY</IonSelectOption>
                         <IonSelectOption value="XZ">XZ</IonSelectOption>
                         <IonSelectOption value="YZ">YZ</IonSelectOption>
@@ -59,7 +59,7 @@ const ClippingPlane: React.FC<ToolbarCompClip> = (args) => {
                 </IonCol>
 
                 <IonCol>
-                    <IonSelect value={args.presentVal} okText="Okay" placeholder={"Original"} cancelText="Cancel" onIonChange={inputPresentVal}>
+                    <IonSelect value={args.presentVal} placeholder={"Original"} interface={"popover"} onIonChange={inputPresentVal}>
                         <IonSelectOption value="Original">Original</IonSelectOption>
                     </IonSelect>
                 </IonCol>
