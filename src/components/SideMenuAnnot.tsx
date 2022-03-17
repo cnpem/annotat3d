@@ -49,8 +49,18 @@ const SideMenuAnnot: React.FC = () => {
         setLabelList((vec) => [...vec, labelElement]);
     }
 
+    const updateLabelName = (labelName: string, labelId: number) => {
+        setLabelList(labelList.map(elementList => elementList.id === labelId ?
+            {...elementList, labelName: labelName} : {...elementList}));
+    }
+
     const removeLabel = (labelId: number) => {
         setLabelList(labelList.filter(label => labelId !== label.id));
+    }
+
+    const removeAllLabels = () => {
+        setLabelList(labelList.filter(l => "" === l.labelName));
+        setIdGenerator(0);
     }
 
     /**
@@ -71,7 +81,7 @@ const SideMenuAnnot: React.FC = () => {
                 <IonItemDivider/>
                 <OutputsVis sliceXY={sliceXY} sliceXZ={sliceXZ} sliceYZ={sliceYZ} clipPlane={clipPlane} sliceAxis={sliceAxis} presentVal={presentVal}/>
                 <IonItemDivider/>
-                <LabelTable labelList={labelList} onLabelList={selectLabelList} onRemoveLabel={removeLabel} idGenerator={idGenerator} onIdGenerator={incrementId}/>
+                <LabelTable labelList={labelList} onLabelList={selectLabelList} onRemoveLabel={removeLabel} onRemoveAllLabels={removeAllLabels} idGenerator={idGenerator} onIdGenerator={incrementId}/>
             </IonList>
         </IonCard>
     )

@@ -32,7 +32,7 @@ const LabelTable: React.FC<ToolbarCompLabel> = (args) => {
             <IonTitle>Label card</IonTitle>
             <IonRow>
                 <IonCol>
-                    <InputLabel labelList={args.labelList} onLabelList={args.onLabelList} onRemoveLabel={args.onRemoveLabel} idGenerator={args.idGenerator} onIdGenerator={args.onIdGenerator}/>
+                    <InputLabel labelList={args.labelList} onLabelList={args.onLabelList} onRemoveLabel={args.onRemoveLabel} idGenerator={args.idGenerator} onIdGenerator={args.onIdGenerator} onRemoveAllLabels={args.onRemoveAllLabels}/>
                 </IonCol>
             </IonRow>
             <ReactBootStrap.Table striped bordered hover>
