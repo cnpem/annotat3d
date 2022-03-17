@@ -6,9 +6,10 @@ import OptionsIcons from "./OptionsIcons";
 import {LabelProp, LabelTableInterface} from "./TypeScriptFiles/Interfaces/LabelsInterface";
 
 /**
- *
+ * Component that creates the label table
  * @param args a list the parameters that contains the components
  * @constructor
+ * @return this components returns the label table
  */
 const LabelTable: React.FC<LabelTableInterface> = (args) => {
 

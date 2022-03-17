@@ -7,7 +7,6 @@ import {addOutline, trashOutline} from "ionicons/icons";
 
 /**
  * This component creates the option for add any label in the label section
- * @todo The add Button is now working. I need to customize better the name for each label
  * @param args a list that contains the toolbar components
  * @constructor
  * @return This function returns the a window for the user add a label name and color a vector with this new label

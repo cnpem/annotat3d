@@ -8,7 +8,7 @@ import {SliceSubMenuInterface} from "./TypeScriptFiles/Interfaces/SliceSubMenuIn
 /**
  * React module that create the sub-windows with a dynamic placeholder
  * @param args a object that contains a number with the value of the placeholder and the tile string box
- * @todo i need to implement the button action
+ * @todo i'll change this window to stay equal to Sarmento's annotat3d
  * @constructor
  * @return returns the React file to create the site /inbox
  */
@@ -23,10 +23,6 @@ const SlicesSubMenu: React.FC<SliceSubMenuInterface> = (args) => {
             <IonTitle>{args.titleName!}</IonTitle>
             <IonItem>
                 <IonInput type={"number"} value={args.numberVal!} placeholder={"0"} onIonChange={inputNumberVal}/>
-
-                <IonButton>
-                    <IonIcon icon={eyeOutline}/>
-                </IonButton>
             </IonItem>
         </React.Fragment>
     );

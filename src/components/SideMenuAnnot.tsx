@@ -7,7 +7,11 @@ import LabelTable from "./LabelTable";
 import {LabelProp} from "./TypeScriptFiles/Interfaces/LabelsInterface";
 
 /**
+ * Component that creates the lateral bar menu
+ * @todo i need to create another slicer fro the viz menu
+ * @todo i need to make this component more small
  * @constructor
+ * @return this function return a list of all lateral components
  */
 const SideMenuAnnot: React.FC = () => {
 
@@ -45,11 +49,6 @@ const SideMenuAnnot: React.FC = () => {
 
     const selectLabelList = (labelVec: LabelProp[]) => {
         setLabelList(labelVec);
-    }
-
-    const updateLabelName = (labelName: string, labelId: number) => {
-        setLabelList(labelList.map(elementList => elementList.id === labelId ?
-            {...elementList, labelName: labelName} : {...elementList}));
     }
 
     return(

@@ -13,7 +13,7 @@ import {ClipplingPlaneInterface} from "./TypeScriptFiles/Interfaces/ClipplingPla
 
 /**
  * Component that creates the Clipping Plane toolbar
- * @todo i need to implement the action buttons
+ * @todo i'll remove this component, since this isn't important rn
  * @param args a list that contains the toolbar components
  * @constructor
  * @return This component returns the Clipping Plane toolbar
