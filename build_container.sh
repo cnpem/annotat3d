@@ -4,6 +4,5 @@ docker build -t gccdockers/annotat3d:cuda-11.2 --build-arg GCC_PYPI_SERVER="$GCC
 
 echo "docker done"
 
-#singularity build Annotat3DWeb.sif Singularity
+singularity build Annotat3DWeb.sif Singularity
 
-echo "$GCC_PYPI_HOST"

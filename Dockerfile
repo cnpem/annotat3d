@@ -37,7 +37,7 @@ run ln -snf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime && echo $TZ > /
 #run dpkg --configure -a
 run apt-get -y update
 run apt-get -y -f upgrade
-run apt-get install -y -f curl libnss3 nvidia-modprobe python3-numpy libhdf5-dev libpython3-dev libpython3-dev vim git python3 gdb python3-dev python3-pip build-essential virtualenvwrapper libglib2.0-0 fontconfig libxss1 wget
+run apt-get install -y -f curl netbase libnss3 nvidia-modprobe python3-numpy libhdf5-dev libpython3-dev libpython3-dev vim git python3 gdb python3-dev python3-pip build-essential virtualenvwrapper libglib2.0-0 fontconfig libxss1 wget
 
 #RDMA stuff
 run apt-get install -y -f doxygen libwebsockets-dev rdmacm-utils infiniband-diags libpsm-infinipath1-dev libibverbs-dev libibverbs1 librdmacm-dev ibacm mstflint opensm patch qperf pciutils
@@ -56,9 +56,9 @@ run printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOS
 
 run conda install -c conda-forge mpi4py openmpi
 
-run python3 -m pip install --upgrade pip==19.3.1 setuptools wheel
+run python3 -m pip install --upgrade pip==22.0.4 setuptools==59.8.0 wheel
 run python3 -m pip install --upgrade cmake==3.17.3 cython cmake-setuptools
-run python3 -m pip install --upgrade blinker nibabel scikit-image #deepsirius dependencies fix later
+run python3 -m pip install --upgrade blinker nibabel opencv-python-headless scikit-image #some dependencies fix later
 
 #rapids
 #run apt-get install -y libboost-all-dev
