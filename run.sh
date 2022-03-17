@@ -15,7 +15,8 @@ trap intexit INT
 
 #/usr/bin/env bash
 
-bash -c "sleep 10 && ls -1" &
-bash -c "sleep 5 && echo hue" &
+python3 backend/app.py &
+ionic serve &
+
 wait
 echo "all done"
