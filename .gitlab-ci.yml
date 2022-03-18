@@ -14,7 +14,7 @@ build:
         - export MAKEFLAGS="-j64"
         - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
         - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
-        - mkdir ~/.pip/
+        - mkdir -p ~/.pip/
         - printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOST\nextra-index-url = https://pypi.python.org/simple" > ~/.pip/pip.conf
         - cat ~/.pip/pip.conf
         #- xargs --max-args=1 --max-procs=64 python3 -m pip install < requirements.txt

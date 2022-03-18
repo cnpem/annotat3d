@@ -5,7 +5,7 @@ from gccdockers/tensorflow:cuda-11.2_tf-2.7.0_trt-8.0.0.3
 #env LD_LIBRARY_PATH="$MPI_DIR/lib:$LD_LIBRARY_PATH"
 
 arg img_cuda_version="11.2"
-
+#leave the following variables empty in the version we upload to dockerhub
 arg GCC_PYPI_SERVER
 
 arg GCC_PYPI_HOST
