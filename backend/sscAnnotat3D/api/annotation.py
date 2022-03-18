@@ -1,7 +1,8 @@
 from flask import Blueprint, request
 import numpy as np
+import pickle
 
-from repository import data_repo
+from sscAnnotat3D.repository import data_repo
 
 app = Blueprint('annotation', __name__)
 

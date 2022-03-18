@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 import numpy as np
 
-from repository import data_repo
+from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import superpixels
 
 app = Blueprint('superpixel', __name__)

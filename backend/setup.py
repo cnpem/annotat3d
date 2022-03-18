@@ -102,9 +102,9 @@ setup(
         'build_ext': build_ext,
         'install': PostInstallCommand,
     },
-    packages=[
-        'sscAnnotat3D.colormaps', 'sscAnnotat3D.help',
-        'sscAnnotat3D.res'
+    packages=[ 
+        'sscAnnotat3D.colormaps',
+        'sscAnnotat3D.help'
     ],
     package_data={
         'sscAnnotat3D.colormaps': ['*.npy'],
@@ -114,6 +114,8 @@ setup(
     python_requires='>=3.6',
     ext_modules=cythonize([
         *extension_modules('sscAnnotat3D'),
+        *extension_modules('sscAnnotat3D.repository'),
+        *extension_modules('sscAnnotat3D.api'),
         *extension_modules('sscAnnota3D.modules'),
         *extension_modules('sscAnnotat3D.deeplearning'),
         *extension_modules('sscAnnotat3D.cython', language='c++')

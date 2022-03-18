@@ -71,4 +71,7 @@ run python --version
 run curl -sL https://deb.nodesource.com/setup_16.x  | bash -
 run apt-get -y install nodejs
 
-run npm install -g ionic
+run npm install -g ionic yarn serve
+
+add backend/app.py /opt/Annotat3D/
+add dist/ /opt/Annotat3D/

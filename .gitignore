@@ -32,3 +32,10 @@ package-lock.json
 backend/*.pyc
 
 *.sif
+*.so
+*.c
+
+__pycache__
+*.egg-info
+backend/build
+backend/dist

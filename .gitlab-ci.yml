@@ -26,34 +26,13 @@ build:x86_64:
         - cuda11
     artifacts:
       paths:
-          - .backend/dist/*whl
+          - backend/dist/*whl
+          - dist/ 
       expire_in: 1 day
-
-test:x86_64:
-    image: gccdockers/annotat3d:cuda-11.2
-    stage: test
-    script:
-        - export MAKEFLAGS="-j64"
-        - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
-        - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
-        - mkdir ~/.pip/
-        - printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOST\nextra-index-url = https://pypi.python.org/simple" > ~/.pip/pip.conf
-
-        - python3 -m pip install dist/*x86_64.whl
-        - python3 -m pip --version
-        - cat requirements.txt
-
-        #- xargs --max-args=1 --max-procs=64 python3 -m pip install < requirements.txt
-        - python3 -m pip install -r requirements.txt
-        - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/conda/lib #it is needed now, I tought conda would do it itself
-        - python3 tests/test_imports.py
-    tags:
-        - x86_64
-        - cuda11
 
 deploy:x86_64:
     image: gccdockers/sind
-    stage: deploy
+    stage: deplo
     script:
         - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
         - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
@@ -64,8 +43,8 @@ deploy:x86_64:
         - twine upload ./dist/*.whl  --repository-url="$GCC_PYPI_SERVER"
 
         # --privileged is necessary to build singularity in docker (sind)
-        - SINGULARITYENV_GCC_PYPI_SERVER=$GCC_PYPI_SERVER SINGULARITYENV_GCC_PYPI_HOST=$GCC_PYPI_HOST singularity build Annotat3D.sif container/Singularity
-        - cp Annotat3D.sif "${GCC_APPS}"/Annotat3D-dev-cuda11.sif
+        - ./build_container.sh
+        - cp Annotat3DWeb.sif "${GCC_APPS}"/Annotat3D-web-dev.sif
     tags:
         - x86_64
         - cuda11
