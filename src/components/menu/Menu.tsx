@@ -7,10 +7,10 @@ import {
 } from '@ionic/react';
 
 import {useLocation} from 'react-router-dom';
-import './Menu.css';
+import '../styles/Menu.css';
 
 import ThemeToggle from "./ThemeToggle";
-import File from "./File";
+import File from "./file/File";
 import Colormap from "./Colormap";
 import Classification from "./Classification";
 import DeepLearning from "./DeepLearning";

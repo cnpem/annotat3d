@@ -13,7 +13,7 @@ import { NdArray, TypedArray } from 'ndarray';
 import { mean, std } from '../utils/math';
 import { sfetch } from '../utils/simplerequest';
 
-import './CanvasContainer.css';
+import './styles/CanvasContainer.css';
 import {InteractionEvent} from 'pixi.js';
 import MenuFabButton from './MenuFabButton';
 
