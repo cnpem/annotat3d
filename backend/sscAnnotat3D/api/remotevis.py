@@ -3,7 +3,7 @@ import numpy as np
 
 from ssc_remote_vis import remote_visualization as rv
 
-from repository import data_repo
+from sscAnnotat3D.repository import data_repo
 
 middleware_host = 'index.lnls.br'
 middleware_port = 31000

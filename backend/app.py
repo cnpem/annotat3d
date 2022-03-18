@@ -7,14 +7,10 @@ import numpy as np
 import skimage.io
 from flask import *
 
-import api.annotation
-import api.io
-import api.superpixel
-import api.modules.superpixel_segmentation_module
-import api.remotevis
-from repository import data_repo
+from sscAnnotat3D.api import annotation, io as apiio, superpixel, remotevis
+from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import superpixels, utils
-
+from sscAnnotat3D.modules import superpixel_segmentation_module
 from flask_cors import CORS, cross_origin
 
 
@@ -26,11 +22,10 @@ CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 # pdb.set_trace()
-app.register_blueprint(api.io.app)
-app.register_blueprint(api.annotation.app)
-app.register_blueprint(api.superpixel.app)
-app.register_blueprint(api.modules.superpixel_segmentation_module.app)
-app.register_blueprint(api.remotevis.app)
+app.register_blueprint(apiio.app)
+app.register_blueprint(annotation.app)
+app.register_blueprint(superpixel.app)
+app.register_blueprint(remotevis.app)
 
 image = None
 image_path = None

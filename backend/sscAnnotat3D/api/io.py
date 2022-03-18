@@ -4,7 +4,7 @@ from sscIO import io
 import pickle
 import zlib
 
-from repository import data_repo
+from sscAnnotat3D.repository import data_repo
 
 app = Blueprint('io', __name__)
 

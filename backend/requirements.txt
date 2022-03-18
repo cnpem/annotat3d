@@ -1,5 +1,8 @@
 flask
+flask-cors
+jinja2
 numpy
+opencv-python-headless #to avoid opencv gui is installed
 sscIO
 sscAnnotat3d
 sscPySpin

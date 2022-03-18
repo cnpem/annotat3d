@@ -1,0 +1,55 @@
+#gitlab extends is introduced only in gitlab 11.3
+#it means no templates now, sorry
+
+#TODO: check if we can upgrade gitlab
+
+stages:
+    - build
+    - test
+    - deploy
+
+build:
+    image: gccdockers/annotat3d:cuda-11.2
+    stage: build
+    script:
+        - export MAKEFLAGS="-j64"
+        - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
+        - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
+        - mkdir ~/.pip/
+        - printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOST\nextra-index-url = https://pypi.python.org/simple" > ~/.pip/pip.conf
+        - cat ~/.pip/pip.conf
+        #- xargs --max-args=1 --max-procs=64 python3 -m pip install < requirements.txt
+        - cd backend && python3 -m pip install -r requirements.txt
+        - cd backend && python3 setup.py build_ext -j64 bdist_wheel
+    tags:
+        - x86_64
+        - cuda11
+    artifacts:
+      paths:
+          - backend/dist/*whl
+          - dist/ 
+      expire_in: 1 day
+
+deploy:
+    image: gccdockers/sind
+    stage: deplo
+    script:
+        - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
+        - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
+
+        - python3 -m pip install keyring==12.0.0 keyrings.alt
+        - python3 -m pip install twine==2.0.0 passlib
+        - ls ./dist/*
+        - twine upload ./dist/*.whl  --repository-url="$GCC_PYPI_SERVER"
+
+        # --privileged is necessary to build singularity in docker (sind)
+        - ./build_container.sh
+        - cp Annotat3DWeb.sif "${GCC_APPS}"/Annotat3D-web-dev.sif
+    tags:
+        - x86_64
+        - cuda11
+    only:
+        - tags
+    dependencies:
+        - build
+

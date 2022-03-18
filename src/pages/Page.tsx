@@ -35,7 +35,7 @@ const Page: React.FC = () => {
       </IonContent>
 
     <IonFooter>
-        <span>{sliceXY}</span>
+        <span>{0}</span>
     </IonFooter>
 
     </IonPage>
