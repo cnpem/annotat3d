@@ -1,12 +1,11 @@
 import React, {useState} from "react";
 import {
     IonButton, IonButtons,
-    IonCol, IonIcon,
-    IonRow,
+    IonCol, IonRow, IonIcon
 } from "@ionic/react";
 
 /*Icons import*/
-import {pencilOutline, closeOutline, text} from "ionicons/icons";
+import {pencilOutline, closeOutline, text, pin} from "ionicons/icons";
 
 /*Interfaces import*/
 import {OptionsIconsInterface} from "./TypeScriptFiles/Interfaces/OptionsIconsInterface";
@@ -29,8 +28,7 @@ const OptionsIcons: React.FC<OptionsIconsInterface> = (args) => {
         console.log("labelId : ", args.removeId);
         args.onRemoveLabel(removeLabel);
 
-        if(removeLabel.length == 0)
-        {
+        if(removeLabel.length == 0) {
 
             args.onIdGenerator(-1);
 
@@ -43,7 +41,6 @@ const OptionsIcons: React.FC<OptionsIconsInterface> = (args) => {
         return(
             <IonRow>
                 <IonCol>
-
                 </IonCol>
             </IonRow>
         );
