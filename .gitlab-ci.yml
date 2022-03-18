@@ -30,7 +30,7 @@ build:
           - dist/ 
       expire_in: 1 day
 
-deploy:x86_64:
+deploy:
     image: gccdockers/sind
     stage: deplo
     script:
