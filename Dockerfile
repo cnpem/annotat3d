@@ -42,7 +42,7 @@ run apt-get install -y -f curl netbase libnss3 nvidia-modprobe python3-numpy lib
 #RDMA stuff
 run apt-get install -y -f doxygen libwebsockets-dev rdmacm-utils infiniband-diags libpsm-infinipath1-dev libibverbs-dev libibverbs1 librdmacm-dev ibacm mstflint opensm patch qperf pciutils
 
-run mkdir ~/.pip
+run mkdir -p ~/.pip
 run printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOST\nextra-index-url = https://pypi.python.org/simple" > ~/.pip/pip.conf
 
 #add https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.4.tar.bz2 .
