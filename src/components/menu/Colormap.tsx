@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {MenuItem} from "./MenuItems";
 import {colorPaletteOutline, colorPaletteSharp} from "ionicons/icons";
-import {IonAccordion, IonIcon, IonItem, IonLabel, IonList, IonRadioGroup, IonRadio, IonItemDivider} from "@ionic/react";
+import {IonAccordion, IonIcon, IonItem, IonLabel, IonList, IonRadioGroup, IonRadio, IonItemDivider, IonChip} from "@ionic/react";
 
 /**
  * Colormap selector component
@@ -14,8 +14,8 @@ const Colormap : React.FC = () => {
     const items : MenuItem = {
         title: 'Colormap',
         subItems: [
-            'Viridis',
             'Grey',
+            'Viridis',
             'Hot',
             'Cool',
             'Spring',
@@ -26,13 +26,13 @@ const Colormap : React.FC = () => {
         mdIcon: colorPaletteSharp
     };
 
-    const [selected, setSelected] = useState<string>('Grey');
+    const [selected, setSelected] = useState<string>("Grey");
 
     return (
         <IonAccordion>
             <IonItem slot={"header"}>
                 <IonIcon slot={"start"} ios={items.iosIcon} md={items.mdIcon}/>
-                <IonLabel>{items.title}</IonLabel>
+                <IonLabel>{items.title}  <IonChip hidden={!selected} color="tertiary">{selected}</IonChip> </IonLabel>
             </IonItem>
             <IonList slot={"content"}>
                 <IonRadioGroup value={selected} onIonChange={e => setSelected(e.detail.value)}>
@@ -45,8 +45,6 @@ const Colormap : React.FC = () => {
                         );
                     })}
                 </IonRadioGroup>
-                <IonItemDivider>Your Selection</IonItemDivider>
-                <IonItem>{selected ?? '(none selected)'}</IonItem>
             </IonList>
         </IonAccordion>
     );

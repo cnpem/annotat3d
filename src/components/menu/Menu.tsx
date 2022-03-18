@@ -41,7 +41,6 @@ const Menu: React.FC = () => {
             <IonToolbar>
                 <IonSearchbar value={searchText} onIonChange={e => setSearchText(e.detail.value!)}></IonSearchbar>
             </IonToolbar>
-            <ThemeToggle/>
             <IonContent>
                 <IonAccordionGroup>
                     <File/>
@@ -51,6 +50,7 @@ const Menu: React.FC = () => {
                     <Remote/>
                 </IonAccordionGroup>
             </IonContent>
+            <ThemeToggle/>
         </IonMenu>
     );
 };
