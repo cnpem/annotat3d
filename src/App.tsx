@@ -1,13 +1,8 @@
 import {
     IonApp,
-    IonButton,
-    IonGrid,
-    IonHeader,
     IonRouterOutlet,
-    IonRow,
-    IonCol,
     IonSplitPane,
-    setupIonicReact, IonTitle, IonContent
+    setupIonicReact
 } from '@ionic/react';
 import {IonReactRouter} from '@ionic/react-router';
 import {Redirect, Route} from 'react-router-dom';

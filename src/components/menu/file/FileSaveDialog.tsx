@@ -72,7 +72,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     });
     const [path, setPath] = useState<string>();
     const [dtype, setDtype] = useState<string>();
-    const [kind, setKind] = useState<string>();
+    const [, setKind] = useState<string>();
 
     /**
      * Clean up popover dialog

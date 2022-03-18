@@ -79,7 +79,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         open: false,
         event: undefined,
     });
-    const [kind, setKind] = useState<string>();
+    const [, setKind] = useState<string>();
     const [path, setPath] = useState<string>();
     const [shape, setShape] = useState(new Array(3))
     const [dtype, setDtype] = useState<string>();
