@@ -1,5 +1,5 @@
 import React from "react";
-import {IonButton, IonButtons, IonItem, IonItemDivider, IonTitle} from "@ionic/react";
+import {IonButton, IonButtons, IonTitle} from "@ionic/react";
 
 /**
  * Module that create the Segmentation options

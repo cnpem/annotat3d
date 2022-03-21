@@ -1,6 +1,7 @@
 import React, {useState} from "react";
 import {SlicesMenuInterface} from "./TypeScriptFiles/Interfaces/SlicesMenuInterface";
 import {
+    IonButton, IonButtons,
     IonIcon, IonInput, IonItem,
     IonLabel, IonRange, IonSegment,
     IonSegmentButton, IonTitle
@@ -15,6 +16,7 @@ import {albumsOutline} from "ionicons/icons";
 const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
 
     const [sliceName, setSliceName] = useState<string>("XY");
+    const [nameButtonSlice, setNameButtonSlice] = useState<string>("Z");
     const [sliceValue, setSliceValue] = useState<number>(0);
     const [maxValSlider, setMaxValSlider] = useState<number>(args.imageProps.z);
 
@@ -27,16 +29,18 @@ const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
     const handleSliceName = (e: CustomEvent) => {
         setSliceName(e.detail.value);
 
-        if(sliceName === "XY")
+        if(e.detail.value === "XY")
         {
 
+            setNameButtonSlice("Z");
             setMaxValSlider(args.imageProps.z);
 
         }
 
-        else if(sliceName == "XZ")
+        else if(e.detail.value == "XZ")
         {
 
+            setNameButtonSlice("Y");
             setMaxValSlider(args.imageProps.y);
 
         }
@@ -44,6 +48,7 @@ const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
         else
         {
 
+            setNameButtonSlice("X");
             setMaxValSlider(args.imageProps.x);
 
         }
@@ -72,8 +77,10 @@ const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
                     <IonIcon size={"big"} slot={"start"} icon={albumsOutline}/>
                 </IonRange>
             </IonItem>
-
             <IonItem>
+                <IonButtons>
+                    <IonButton disabled={true} color={"dark"} size={"default"}>{nameButtonSlice}</IonButton>
+                </IonButtons>
                 <IonInput type={"number"} min={0} max={maxValSlider} clearInput value={sliceValue} onIonChange={handleSliceValue}/>
             </IonItem>
         </React.Fragment>

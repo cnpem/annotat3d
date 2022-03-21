@@ -10,6 +10,7 @@ import './Page.css';
 
 /*Components imports*/
 import SideMenuAnnot from "../components/SideMenuAnnot";
+import SideMenu from "../components/SideMenu";
 
 /**
  * Module that contains the initial page of Annotat3D web
@@ -39,7 +40,7 @@ const Page: React.FC = () => {
                     </IonToolbar>
                 </IonHeader>
 
-                <SideMenuAnnot/>
+                <SideMenu/>
             </IonContent>
 
             <IonFooter>

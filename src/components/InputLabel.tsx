@@ -9,7 +9,7 @@ import {addOutline, trashOutline} from "ionicons/icons";
  * This component creates the option for add any label in the label section
  * @param args a list that contains the toolbar components
  * @constructor
- * @return This function returns the a window for the user add a label name and color a vector with this new label
+ * @return This function returns a window for the user add a label name and color a vector with this new label
  */
 const InputLabel: React.FC<InputLabelInterface> = (args) => {
 
