@@ -1,11 +1,8 @@
-import React, {useState} from "react";
-import {
-    IonButton, IonButtons,
-    IonCol, IonRow, IonIcon, IonInput
-} from "@ionic/react";
+import React from "react";
+import {IonButton, IonButtons, IonIcon} from "@ionic/react";
 
 /*Icons import*/
-import {pencilOutline, closeOutline, eyedropOutline, brushOutline} from "ionicons/icons";
+import {closeOutline} from "ionicons/icons";
 
 /*Interfaces import*/
 import {OptionsIconsInterface} from "./TypeScriptFiles/Interfaces/OptionsIconsInterface";
@@ -36,18 +33,6 @@ const OptionsIcons: React.FC<OptionsIconsInterface> = (args) => {
         <IonButtons>
             <IonButton onClick={removeTheListElement}>
                 <IonIcon icon={closeOutline}/>
-            </IonButton>
-
-            <IonButton onClick={removeTheListElement}>
-                <IonIcon icon={pencilOutline}/>
-            </IonButton>
-
-            <IonButton onClick={removeTheListElement}>
-                <IonIcon icon={eyedropOutline}/>
-            </IonButton>
-
-            <IonButton onClick={removeTheListElement}>
-                <IonIcon icon={brushOutline}/>
             </IonButton>
         </IonButtons>
     );

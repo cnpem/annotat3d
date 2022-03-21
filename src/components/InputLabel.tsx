@@ -14,7 +14,8 @@ import {addOutline, trashOutline} from "ionicons/icons";
 const InputLabel: React.FC<InputLabelInterface> = (args) => {
 
     const addNewLabel = () => {
-        const newLabel = (args.idGenerator > 0) ? { labelName: "label " + args.idGenerator, color: "red", id: args.idGenerator} : { labelName: "background", color: "red", id: args.idGenerator};
+        const newColor = String(Math.floor(Math.random() * 255)) + "," + String(Math.floor(Math.random() * 255)) + "," + String(Math.floor(Math.random() * 255));
+        const newLabel = (args.idGenerator > 0) ? { labelName: "label " + args.idGenerator, color: newColor, id: args.idGenerator} : { labelName: "background", color: "229,16,249", id: args.idGenerator}; // The background color is pink
         args.onLabelList([...args.labelList, newLabel]);
         args.onIdGenerator(args.idGenerator);
     }
