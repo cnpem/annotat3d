@@ -9,7 +9,6 @@ import {useParams} from 'react-router';
 import './Page.css';
 
 /*Components imports*/
-import ExploreContainer from '../components/ExploreContainer';
 import SideMenuAnnot from "../components/SideMenuAnnot";
 
 /**
@@ -41,7 +40,6 @@ const Page: React.FC = () => {
                 </IonHeader>
 
                 <SideMenuAnnot/>
-                <ExploreContainer name={name}/>
             </IonContent>
 
             <IonFooter>

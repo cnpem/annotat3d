@@ -4,6 +4,7 @@ import LabelTable from "./LabelTable";
 import {LabelProp} from "./TypeScriptFiles/Interfaces/LabelsInterface";
 import SlicesMenu from "./SlicesMenu";
 import {ImagePropsInterface} from "./TypeScriptFiles/Interfaces/ImagePropsInterface";
+import SegmentationButtons from "./SegmentationButtons";
 
 /**
  * Component that creates the lateral bar menu
@@ -31,6 +32,8 @@ const SideMenuAnnot: React.FC = () => {
                 <SlicesMenu imageProps={imageSlice} onImageProps={selectImageSlice}/>
                 <IonItemDivider/>
                 <LabelTable labelList={labelList} onLabelList={selectLabelList}/>
+                <IonItemDivider/>
+                <SegmentationButtons/>
             </IonList>
         </IonCard>
     )

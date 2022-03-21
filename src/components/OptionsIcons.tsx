@@ -1,11 +1,11 @@
 import React, {useState} from "react";
 import {
     IonButton, IonButtons,
-    IonCol, IonRow, IonIcon
+    IonCol, IonRow, IonIcon, IonInput
 } from "@ionic/react";
 
 /*Icons import*/
-import {pencilOutline, closeOutline, text, pin} from "ionicons/icons";
+import {pencilOutline, closeOutline, eyedropOutline, brushOutline} from "ionicons/icons";
 
 /*Interfaces import*/
 import {OptionsIconsInterface} from "./TypeScriptFiles/Interfaces/OptionsIconsInterface";
@@ -13,15 +13,11 @@ import {OptionsIconsInterface} from "./TypeScriptFiles/Interfaces/OptionsIconsIn
 /**
  * Component that creates the buttons in the table label
  * @todo i need to implement the edit name
+ * @todo i need to implement the draw label option. Prob i'll need to ask help for Peixinho or Matheus
+ * @todo i need to implement a radius option for the brush
  * @constructor
  */
 const OptionsIcons: React.FC<OptionsIconsInterface> = (args) => {
-
-    const [labelNameInput, setLabelNameInput] = useState<string>("");
-
-    const selectLabelNameInput = () => {
-        setLabelNameInput(labelNameInput);
-    }
 
     const removeTheListElement = () => {
         const removeLabel = args.labelList.filter(label => args.removeId !== label.id)
@@ -36,24 +32,22 @@ const OptionsIcons: React.FC<OptionsIconsInterface> = (args) => {
 
     }
 
-    const updateLabelName = () => {
-
-        return(
-            <IonRow>
-                <IonCol>
-                </IonCol>
-            </IonRow>
-        );
-    }
-
     return(
         <IonButtons>
-            <IonButton onClick={updateLabelName}>
+            <IonButton onClick={removeTheListElement}>
+                <IonIcon icon={closeOutline}/>
+            </IonButton>
+
+            <IonButton onClick={removeTheListElement}>
                 <IonIcon icon={pencilOutline}/>
             </IonButton>
 
             <IonButton onClick={removeTheListElement}>
-                <IonIcon icon={closeOutline}/>
+                <IonIcon icon={eyedropOutline}/>
+            </IonButton>
+
+            <IonButton onClick={removeTheListElement}>
+                <IonIcon icon={brushOutline}/>
             </IonButton>
         </IonButtons>
     );

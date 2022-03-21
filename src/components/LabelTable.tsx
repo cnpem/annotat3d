@@ -8,6 +8,7 @@ import {LabelProp, LabelTableInterface} from "./TypeScriptFiles/Interfaces/Label
 /**
  * Component that creates the label table
  * @param args a list the parameters that contains the components
+ * @todo i need to place a color for each label i create
  * @constructor
  * @return this components returns the label table
  */
