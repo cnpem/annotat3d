@@ -8,15 +8,13 @@ import {LabelProp} from "./TypeScriptFiles/Interfaces/LabelsInterface";
 /**
  * Component that creates the label table
  * @param args a list the parameters that contains the components
- * @todo i need to place a color for each label i create
- * @todo i need to implement a efficient method to get colors
  * @constructor
  * @return this components returns the label table
  */
 const LabelTable: React.FC = (args) => {
 
-    const [idGenerator, setIdGenerator] = useState<number>(0);
-    const [labelList, setLabelList] = useState<LabelProp[]>([]);
+    const [idGenerator, setIdGenerator] = useState<number>(1);
+    const [labelList, setLabelList] = useState<LabelProp[]>([{ labelName: "Background", color: "229,16,249", id: 0}]); // The background color is pink]);
 
     const selectLabelList = (labelVec: LabelProp[]) => {
         setLabelList(labelVec);

@@ -15,15 +15,15 @@ const InputLabel: React.FC<InputLabelInterface> = (args) => {
 
     const addNewLabel = () => {
         const newColor = String(Math.floor(Math.random() * 255)) + "," + String(Math.floor(Math.random() * 255)) + "," + String(Math.floor(Math.random() * 255));
-        const newLabel = (args.idGenerator > 0) ? { labelName: "label " + args.idGenerator, color: newColor, id: args.idGenerator} : { labelName: "background", color: "229,16,249", id: args.idGenerator}; // The background color is pink
+        const newLabel = { labelName: "label " + args.idGenerator, color: newColor, id: args.idGenerator}; // The background color is pink
         args.onLabelList([...args.labelList, newLabel]);
         args.onIdGenerator(args.idGenerator);
     }
 
     const removeAllLabels = () => {
-        const newVec = args.labelList.filter(lab => lab.labelName === "");
+        const newVec = args.labelList.filter(lab => lab.labelName === "Background");
         args.onLabelList(newVec);
-        args.onIdGenerator(-1); // This value resets the id generator
+        args.onIdGenerator(0); // This value resets the id generator
     }
 
     return(
