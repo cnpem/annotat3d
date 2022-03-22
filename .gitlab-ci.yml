@@ -37,7 +37,6 @@ deploy:
     image: gccdockers/sind
     stage: deploy
     script:
-        - export GCC_PYPI_SERVER="http://gcc.lnls.br:3128"
         - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
         - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
 
