@@ -3,9 +3,12 @@ import {ImagePropsInterface} from "./TypeScriptFiles/Interfaces/ImagePropsInterf
 import InputMenu from "./InputMenu";
 import SideMenuAnnot from "./SideMenuAnnot";
 import SideMenuVis from "./SideMenuVis";
-import {IonButton, IonContent, IonHeader, IonItem, IonList, IonMenu, IonTitle, IonToolbar} from "@ionic/react";
 
-const SideMenu:React.FC = () => {
+interface SideMenuInterface{
+    hideMenu: boolean
+}
+
+const SideMenu:React.FC<SideMenuInterface> = (args) => {
 
     const [menuOp, setMenuOp] = useState<"Visualization" | "Annotation">("Annotation");
     const [imageSlice, setImageSlice] = useState<ImagePropsInterface>({x: 200, y: 200, z: 5000});
@@ -18,10 +21,18 @@ const SideMenu:React.FC = () => {
         setMenuOp(op);
     }
 
+    const ShowMenu:React.FC = () => {
+        return(
+            <React.Fragment>
+                <InputMenu selectVal={menuOp} onSelectVal={selectMenuOp}/>
+                {menuOp === "Annotation" ? <SideMenuAnnot imageSlice={imageSlice} onImageSlice={selectImageSlice}/> : <SideMenuVis imageSlice={imageSlice} onImageSlice={selectImageSlice}/>}
+            </React.Fragment>
+        );
+    }
+
     return(
         <React.Fragment>
-            <InputMenu selectVal={menuOp} onSelectVal={selectMenuOp}/>
-            {menuOp === "Annotation" ? <SideMenuAnnot imageSlice={imageSlice} onImageSlice={selectImageSlice}/> : <SideMenuVis imageSlice={imageSlice} onImageSlice={selectImageSlice}/>}
+            {args.hideMenu && <ShowMenu/>}
         </React.Fragment>
 
     );

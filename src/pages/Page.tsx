@@ -1,9 +1,8 @@
-import React from "react";
+import React, {useState} from "react";
 import {
-    IonButtons, IonContent,
-    IonFooter, IonHeader,
-    IonMenuButton, IonPage,
-    IonTitle, IonToolbar
+    IonButton, IonButtons, IonContent,
+    IonFooter, IonHeader, IonIcon,
+    IonMenuButton, IonPage, IonTitle, IonToolbar
 } from '@ionic/react';
 import {useParams} from 'react-router';
 import './Page.css';
@@ -11,6 +10,7 @@ import './Page.css';
 /*Components imports*/
 import SideMenuAnnot from "../components/SideMenuAnnot";
 import SideMenu from "../components/SideMenu";
+import {buildOutline} from "ionicons/icons";
 
 /**
  * Module that contains the initial page of Annotat3D web
@@ -21,6 +21,11 @@ import SideMenu from "../components/SideMenu";
 const Page: React.FC = () => {
 
     const {name} = useParams<{name: string}>();
+    const [showEditOp, setShowEditOp] = useState<boolean>(true);
+
+    const handleEditOp = () => {
+        setShowEditOp(!showEditOp);
+    }
 
     return (
         <IonPage>
@@ -28,6 +33,9 @@ const Page: React.FC = () => {
                 <IonToolbar color="primary">
                     <IonButtons slot="start">
                         <IonMenuButton/>
+                        <IonButton onClick={handleEditOp}>
+                            <IonIcon icon={buildOutline}/>
+                        </IonButton>
                     </IonButtons>
                     <IonTitle>{name}</IonTitle>
                 </IonToolbar>
@@ -40,7 +48,7 @@ const Page: React.FC = () => {
                     </IonToolbar>
                 </IonHeader>
 
-                <SideMenu/>
+                <SideMenu hideMenu={showEditOp}/>
             </IonContent>
 
             <IonFooter>
