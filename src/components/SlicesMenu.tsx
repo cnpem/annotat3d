@@ -1,10 +1,8 @@
 import React, {useState} from "react";
 import {SlicesMenuInterface} from "./TypeScriptFiles/Interfaces/SlicesMenuInterface";
-import {
-    IonButton, IonButtons,
-    IonIcon, IonInput, IonItem,
-    IonLabel, IonRange, IonSegment,
-    IonSegmentButton, IonTitle
+import {IonButton, IonButtons, IonIcon,
+    IonInput, IonItem, IonLabel,
+    IonRange, IonSegment, IonSegmentButton, IonTitle
 } from "@ionic/react";
 import {albumsOutline} from "ionicons/icons";
 

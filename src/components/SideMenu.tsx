@@ -2,6 +2,7 @@ import React, {useState} from "react";
 import {ImagePropsInterface} from "./TypeScriptFiles/Interfaces/ImagePropsInterface";
 import InputMenu from "./InputMenu";
 import SideMenuAnnot from "./SideMenuAnnot";
+import SideMenuVis from "./SideMenuVis";
 
 const SideMenu:React.FC = () => {
 
@@ -19,7 +20,7 @@ const SideMenu:React.FC = () => {
     return(
         <React.Fragment>
             <InputMenu selectVal={menuOp} onSelectVal={selectMenuOp}/>
-            <SideMenuAnnot imageSlice={imageSlice} onImageSlice={selectImageSlice}/>
+            {menuOp === "Annotation" ? <SideMenuAnnot imageSlice={imageSlice} onImageSlice={selectImageSlice}/> : <SideMenuVis imageSlice={imageSlice} onImageSlice={selectImageSlice}/>}
         </React.Fragment>
 
     );
