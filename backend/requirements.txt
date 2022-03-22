@@ -3,7 +3,6 @@ flask-cors
 jinja2
 numpy
 sscIO
-sscAnnotat3d
 sscPySpin
 sscDeepsirius
 ssc-remotevis
