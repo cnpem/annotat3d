@@ -8,4 +8,3 @@ sscDeepsirius
 ssc-remotevis
 sentry-sdk
 opencv-python
-SharedArray==3.2.0 #some weird dependency fix with sscIO

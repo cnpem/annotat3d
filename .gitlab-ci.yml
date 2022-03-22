@@ -16,7 +16,6 @@ build:
         - yarn build
         #backend
         - export MAKEFLAGS="-j64"
-        - export GCC_PYPI_SERVER="http://gcc.lnls.br:3128"
         - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
         - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
         - mkdir -p ~/.pip/
@@ -38,13 +37,11 @@ deploy:
     image: gccdockers/sind
     stage: deploy
     script:
-        - export GCC_PYPI_SERVER="http://gcc.lnls.br:3128"
         - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
         - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
 
         - python3 -m pip install keyring==12.0.0 keyrings.alt
         - python3 -m pip install twine==2.0.0 passlib
-        - ls ./dist/*
         - twine upload ./backend/dist/*.whl  --repository-url="$GCC_PYPI_SERVER"
 
         # --privileged is necessary to build singularity in docker (sind)
