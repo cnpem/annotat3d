@@ -1,5 +1,5 @@
-import {useState, Component, Ref, createRef} from 'react';
-import {IonButton, IonFab, IonFabButton, IonIcon} from '@ionic/react';
+import {Component} from 'react';
+import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
 import { expand, brush, browsers } from 'ionicons/icons';
 import { debounce } from "lodash";
 import * as PIXI from 'pixi.js';
@@ -10,11 +10,10 @@ import '../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
 //import npyjs from 'npyjs';
 import { NdArray, TypedArray } from 'ndarray';
-import { mean, std } from '../utils/math';
+//import { mean, std } from '../utils/math';
 import { sfetch } from '../utils/simplerequest';
 
-import './CanvasContainer.css';
-import {InteractionEvent} from 'pixi.js';
+import './styles/CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
 
 class Brush {
@@ -259,9 +258,9 @@ class Canvas {
 
 
     onPointerDown(event: any) {
-        if (event.data.pointerType == 'mouse') {
-            if (event.data.button != 0) return;
-        } else if (event.data.pointerType == 'touch') {
+        if (event.data.pointerType === 'mouse') {
+            if (event.data.button !== 0) return;
+        } else if (event.data.pointerType === 'touch') {
             this.viewport.plugins.pause('drag');
             // canvas.brush.cursor.visible = false
         }
@@ -278,12 +277,12 @@ class Canvas {
 
         let currPosition;
 
-        if (event.type == 'wheel') {
+        if (event.type === 'wheel') {
             this.viewport.plugins.resume('drag');
             currPosition = this.viewport.toWorld(event.offsetX, event.offsetY);
         } else {
             currPosition = this.viewport.toWorld(event.data.global);
-            if (event.data.pointerType == 'touch' && event.data.originalEvent.touches.length > 1) {
+            if (event.data.pointerType === 'touch' && event.data.originalEvent.touches.length > 1) {
                 this.isPainting = false;
                 return;
             }
@@ -299,15 +298,15 @@ class Canvas {
 
         //const checked = Array.from(brushModeElm).find((radio) => radio.checked)?.value ? true : false;
 
-        const checked = 'draw_brush';
+        //const checked = 'draw_brush';
 
-        const data = {
-            'coords': this.draw(currPosition, checked),
-            'z': 0,
-            'size': this.brush.size,
-            'label': this.brush.label,
-            'mode': checked,
-        };
+        //const data = {
+            //'coords': this.draw(currPosition, checked),
+            //'z': 0,
+            //'size': this.brush.size,
+            //'label': this.brush.label,
+            //'mode': checked,
+        //};
         //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
 
         this.prevPosition = currPosition;
@@ -323,18 +322,18 @@ class Canvas {
 
         //const checked = Array.from(brushModeElm).find((radio) => radio.checked).value;
 
-        const checked = 'draw_brush';
+        //const checked = 'draw_brush';
 
-        if (this.isPainting) {
-            const data = {
-                'coords': this.draw(currPosition, checked),
-                'z': 0,
-                'size': this.brush.size,
-                'label': this.brush.label,
-                'mode': checked,
-            };
+        //if (this.isPainting) {
+            //const data = {
+                //'coords': this.draw(currPosition, checked),
+                //'z': 0,
+                //'size': this.brush.size,
+                //'label': this.brush.label,
+                //'mode': checked,
+            //};
             //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
-        }
+        //}
 
         console.log("up");
         this.isPainting = false;
@@ -350,13 +349,13 @@ class Canvas {
 
     draw(currPosition: PIXI.Point, mode: string) {
 
-        if (mode == 'erase_brush') {
+        if (mode === 'erase_brush') {
             this.annotation.context.globalCompositeOperation = 'destination-out';
         } else {
             this.annotation.context.globalCompositeOperation = 'source-over';
         }
 
-        if (currPosition == this.prevPosition) {
+        if (currPosition === this.prevPosition) {
             const x = Math.round(this.prevPosition.x - this.brush.size / 2);
             const y = Math.round(this.prevPosition.y - this.brush.size / 2);
             this.annotation.context.drawImage(this.brush.canvas, x, y, this.brush.size, this.brush.size);
@@ -444,7 +443,7 @@ class Canvas {
         const len = x*y;
 
         //TODO: implement for another dtypes
-        if (img_slice.dtype == 'uint8') {
+        if (img_slice.dtype === 'uint8') {
             uint8data = img_slice.data as Uint8Array;
         } else {
             uint8data = new Uint8Array(len);

@@ -2,8 +2,9 @@ import React from "react";
 import {documentOutline, documentSharp} from "ionicons/icons";
 import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
 
-import {MenuItem} from "./MenuItems";
-import FileDialog from "./FileDialog";
+import {MenuItem} from "../MenuItems";
+import FileLoadDialog from "./FileLoadDialog";
+import FileSaveDialog from "./FileSaveDialog";
 
 /**
  * File I/O component
@@ -29,14 +30,8 @@ const File: React.FC = () => {
                 <IonLabel>{items.title}</IonLabel>
             </IonItem>
             <IonList slot={"content"}>
-                {items.subItems.map((subItem) => {
-                    return (
-                        <>
-                        {/*<IonItem button>{subItem}</IonItem>*/}
-                        <FileDialog name={subItem}></FileDialog>
-                        </>
-                    );
-                })}
+                    <FileLoadDialog name={items.subItems[0]}/>
+                    <FileSaveDialog name={items.subItems[1]}/>
             </IonList>
         </IonAccordion>
     );

@@ -7,10 +7,10 @@ import {
 } from '@ionic/react';
 
 import {useLocation} from 'react-router-dom';
-import './Menu.css';
+import '../styles/Menu.css';
 
 import ThemeToggle from "./ThemeToggle";
-import File from "./File";
+import File from "./file/File";
 import Colormap from "./Colormap";
 import Classification from "./Classification";
 import DeepLearning from "./DeepLearning";
@@ -31,7 +31,7 @@ const Menu: React.FC = () => {
     const [searchText, setSearchText] = useState('');
 
     return (
-        <IonMenu contentId="main" type="overlay" swipeGesture={true}>
+        <IonMenu contentId="main" type="overlay" side="start"  swipeGesture={true}>
             <IonHeader>
                 <IonToolbar>
                     <IonTitle size={"large"} className={"ion-text-center"}>Annotat3D</IonTitle>
@@ -41,7 +41,6 @@ const Menu: React.FC = () => {
             <IonToolbar>
                 <IonSearchbar value={searchText} onIonChange={e => setSearchText(e.detail.value!)}></IonSearchbar>
             </IonToolbar>
-            <ThemeToggle/>
             <IonContent>
                 <IonAccordionGroup>
                     <File/>
@@ -51,6 +50,7 @@ const Menu: React.FC = () => {
                     <Remote/>
                 </IonAccordionGroup>
             </IonContent>
+            <ThemeToggle/>
         </IonMenu>
     );
 };

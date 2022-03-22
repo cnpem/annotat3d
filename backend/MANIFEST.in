@@ -1,0 +1,2 @@
+recursive-include sscAnnotat3D/templates *
+recursive-include sscAnnotat3D/static *

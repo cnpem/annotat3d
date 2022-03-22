@@ -908,8 +908,8 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         return params
 
-    def get_classifier_parameters_widget(self, window):
-        return SuperpixelSegmentationParamWidget(window)
+    # def get_classifier_parameters_widget(self, window):
+        # return SuperpixelSegmentationParamWidget(window)
 
     def get_classifier(self):
         return self._classifier_params['classifier_type']

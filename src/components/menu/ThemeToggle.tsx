@@ -14,8 +14,8 @@ const ThemeToggle: React.FC = () => {
      * Toggle event handler
      */
     const toggleDarkModeHandler = () => {
-    document.body.classList.toggle("dark");
-  };
+        document.body.classList.toggle("dark");
+    };
     return (
         <IonToolbar style={{"--padding-start": "25px"}}>
             <IonIcon slot="start" ios={moonOutline} md={moonSharp}/>

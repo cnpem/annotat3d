@@ -3,16 +3,6 @@ import pako from "pako";
 
 const BACKEND_HOST = 'http://0.0.0.0:5000';
 
-function isValidHttpUrl(string) {
-  let url;
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false; 
-  }
-  return url.protocol === "http:" || url.protocol === "https:";
-}
-
 function sxhr(method, url, callback, data = '', responseType = '') {
 
     let fullURL;

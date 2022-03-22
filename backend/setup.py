@@ -104,7 +104,9 @@ setup(
     },
     packages=[ 
         'sscAnnotat3D.colormaps',
-        'sscAnnotat3D.help'
+        'sscAnnotat3D.help',
+        'sscAnnotat3D.static',
+        'sscAnnotat3D.templates'
     ],
     package_data={
         'sscAnnotat3D.colormaps': ['*.npy'],
@@ -116,10 +118,11 @@ setup(
         *extension_modules('sscAnnotat3D'),
         *extension_modules('sscAnnotat3D.repository'),
         *extension_modules('sscAnnotat3D.api'),
-        *extension_modules('sscAnnota3D.modules'),
+        *extension_modules('sscAnnotat3D.modules'),
         *extension_modules('sscAnnotat3D.deeplearning'),
         *extension_modules('sscAnnotat3D.cython', language='c++')
     ],
                           language_level="3",
                           nthreads=32,
-                          compiler_directives={'boundscheck': False}))
+                          compiler_directives={ 'boundscheck': False,
+                              'always_allow_keywords': True }))
