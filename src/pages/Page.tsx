@@ -5,7 +5,6 @@ import { add } from 'ionicons/icons';
 
 import CanvasContainer from '../components/CanvasContainer';
 import React, {useState} from 'react';
-import SuperpixelModuleCard from '../components/SuperpixelModuleCard';
 
 
 
@@ -41,7 +40,6 @@ const Page: React.FC = () => {
         </IonHeader>
           <IonInput type="number" value={sliceXY} onIonChange={(e) => { setSliceXY(+e.detail.value!) } } />
           <CanvasContainer z={sliceXY}/>
-          <SuperpixelModuleCard></SuperpixelModuleCard>
       </IonContent>
 
     <IonFooter>
