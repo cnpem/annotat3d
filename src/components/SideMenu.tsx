@@ -3,6 +3,7 @@ import {ImagePropsInterface} from "./TypeScriptFiles/Interfaces/ImagePropsInterf
 import InputMenu from "./InputMenu";
 import SideMenuAnnot from "./SideMenuAnnot";
 import SideMenuVis from "./SideMenuVis";
+import {IonButton, IonContent, IonHeader, IonItem, IonList, IonMenu, IonTitle, IonToolbar} from "@ionic/react";
 
 const SideMenu:React.FC = () => {
 

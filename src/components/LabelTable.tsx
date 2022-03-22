@@ -28,7 +28,7 @@ const LabelTable: React.FC = () => {
         return(
             <tr key={index}>
                 <td>{labelElement.labelName}</td>
-                <td style={{background: `rgb(${labelElement.color})` }}/>
+                <td style={{background: `rgb(${labelElement.color})`}}/>
                 <td>{labelElement.id}</td>
                 <td>
                     <OptionsIcons labelList={labelList} onRemoveLabel={selectLabelList} onIdGenerator={selectIdGenerator} removeId={labelList[index].id}/>
