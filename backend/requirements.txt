@@ -2,7 +2,7 @@ flask
 flask-cors
 jinja2
 numpy
-sscIO==0.1.4.4
+sscIO
 sscPySpin
 sscDeepsirius
 ssc-remotevis
