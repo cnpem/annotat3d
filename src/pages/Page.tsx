@@ -1,8 +1,6 @@
-import { IonButtons, IonContent, IonIcon, IonFooter, IonHeader, IonInput, IonMenuButton, IonPage, IonTitle, IonToolbar, IonSelect, IonSelectOption } from '@ionic/react';
+import { IonButtons, IonContent, IonFooter, IonHeader, IonInput, IonMenuButton, IonPage, IonTitle, IonToolbar, IonSelect, IonSelectOption } from '@ionic/react';
 import { useParams } from 'react-router';
 import './Page.css';
-import { add } from 'ionicons/icons';
-
 import CanvasContainer from '../components/CanvasContainer';
 import React, {useState} from 'react';
 
