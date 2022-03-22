@@ -6,7 +6,7 @@ import SideMenuVis from "./SideMenuVis";
 
 const SideMenu:React.FC = () => {
 
-    const [menuOp, setMenuOp] = useState<"Visualization" | "Annotation">("Visualization");
+    const [menuOp, setMenuOp] = useState<"Visualization" | "Annotation">("Annotation");
     const [imageSlice, setImageSlice] = useState<ImagePropsInterface>({x: 200, y: 200, z: 5000});
 
     const selectImageSlice = (image: ImagePropsInterface) => {

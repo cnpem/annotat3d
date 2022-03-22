@@ -7,11 +7,10 @@ import {LabelProp} from "./TypeScriptFiles/Interfaces/LabelsInterface";
 
 /**
  * Component that creates the label table
- * @param args a list the parameters that contains the components
  * @constructor
  * @return this components returns the label table
  */
-const LabelTable: React.FC = (args) => {
+const LabelTable: React.FC = () => {
 
     const [idGenerator, setIdGenerator] = useState<number>(1);
     const [labelList, setLabelList] = useState<LabelProp[]>([{ labelName: "Background", color: "229,16,249", id: 0}]); // The background color is pink]);

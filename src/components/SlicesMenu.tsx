@@ -1,13 +1,12 @@
 import React, {useState} from "react";
 import {SlicesMenuInterface} from "./TypeScriptFiles/Interfaces/SlicesMenuInterface";
 import {IonButton, IonButtons, IonIcon,
-    IonInput, IonItem, IonLabel,
-    IonRange, IonSegment, IonSegmentButton, IonTitle
+        IonInput, IonItem, IonLabel,
+        IonRange, IonSegment, IonSegmentButton, IonTitle
 } from "@ionic/react";
 import {albumsOutline} from "ionicons/icons";
 
 /**
- * @todo i need this component to update the X, Y and Z slice
  * @param args
  * @constructor
  */
@@ -19,8 +18,6 @@ const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
     const [maxValSlider, setMaxValSlider] = useState<number>(args.imageProps.z);
 
     const handleSliceValue = (e: CustomEvent) => {
-        const val = +e.detail.value!;
-        console.log(val);
         setSliceValue(+e.detail.value!);
     }
 
@@ -33,6 +30,13 @@ const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
             setNameButtonSlice("Z");
             setMaxValSlider(args.imageProps.z);
 
+            if(sliceValue > args.imageProps.z)
+            {
+
+                setSliceValue(args.imageProps.z);
+
+            }
+
         }
 
         else if(e.detail.value == "XZ")
@@ -41,6 +45,13 @@ const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
             setNameButtonSlice("Y");
             setMaxValSlider(args.imageProps.y);
 
+            if(sliceValue > args.imageProps.y)
+            {
+
+                setSliceValue(args.imageProps.y);
+
+            }
+
         }
 
         else
@@ -48,6 +59,13 @@ const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
 
             setNameButtonSlice("X");
             setMaxValSlider(args.imageProps.x);
+
+            if(sliceValue > args.imageProps.x)
+            {
+
+                setSliceValue(args.imageProps.x);
+
+            }
 
         }
 

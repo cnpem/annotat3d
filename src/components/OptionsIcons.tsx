@@ -19,7 +19,7 @@ const OptionsIcons: React.FC<OptionsIconsInterface> = (args) => {
         const removeLabel = args.labelList.filter(label => args.removeId !== label.id);
         args.onRemoveLabel(removeLabel);
 
-        if(removeLabel.length == 0) {
+        if(removeLabel.length == 1) {
 
             args.onIdGenerator(0);
 
