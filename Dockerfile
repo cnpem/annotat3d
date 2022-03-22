@@ -51,6 +51,9 @@ run python3 -m pip install --upgrade pip==22.0.4 setuptools==60.10.0 wheel
 run python3 -m pip install --upgrade cmake==3.17.3 cython cmake-setuptools
 run python3 -m pip install --upgrade blinker nibabel scikit-image SharedArray==3.2.0 #some dependencies fix later
 
+#it is not working on CI
+run python3 -m pip install --upgrade sscIO
+
 #rapids
 #run apt-get install -y libboost-all-dev
 env CUDA_HOME=/usr/local/cuda-${img_cuda_version}
