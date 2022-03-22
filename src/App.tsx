@@ -7,6 +7,7 @@ import {
 import {IonReactRouter} from '@ionic/react-router';
 import {Redirect, Route} from 'react-router-dom';
 import Menu from './components/menu/Menu';
+import MenuTools from './components/menuTools/MenuTools';
 import Page from './pages/Page';
 
 /* Core CSS required for Ionic components to work properly */
@@ -36,6 +37,7 @@ const App: React.FC = () => {
             <IonReactRouter>
                 <IonSplitPane contentId="main" when={false}>
                     <Menu/>
+                    <MenuTools/>
                     <IonRouterOutlet id="main">
                         <Route path="/" exact={true}>
                             <Redirect to="/Annotat3D"/>

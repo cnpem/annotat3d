@@ -23,8 +23,8 @@ const MenuFabButton: React.FC<MenuButtonProps> = ({buttonsList, onChange}) => {
             </IonFabButton>
             <IonFabList side="top">
                 {buttonsList.map((item) => {
-                    return (<IonFabButton>
-                        <IonIcon key={item.id} icon={item.logo} onClick={() => {
+                    return (<IonFabButton key={item.id}>
+                        <IonIcon icon={item.logo} onClick={() => {
                             if (selected.id !== item.id) {
                                 setSelected(item);
                                 if (onChange) {

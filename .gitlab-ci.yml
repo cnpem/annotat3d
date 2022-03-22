@@ -30,7 +30,7 @@ build:
     artifacts:
       paths:
           - backend/dist/*whl
-          - dist/ 
+          - build/
       expire_in: 1 day
 
 deploy:
@@ -43,7 +43,7 @@ deploy:
         - python3 -m pip install keyring==12.0.0 keyrings.alt
         - python3 -m pip install twine==2.0.0 passlib
         - ls ./dist/*
-        - twine upload ./dist/*.whl  --repository-url="$GCC_PYPI_SERVER"
+        - twine upload ./backend/dist/*.whl  --repository-url="$GCC_PYPI_SERVER"
 
         # --privileged is necessary to build singularity in docker (sind)
         - ./build_container.sh

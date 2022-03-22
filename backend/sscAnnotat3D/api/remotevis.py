@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 import numpy as np
 
-from ssc_remote_vis import remote_visualization as rv
+from ssc_remotevis import remote_visualization as rv
 
 from sscAnnotat3D.repository import data_repo
 

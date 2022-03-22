@@ -31,7 +31,7 @@ const Menu: React.FC = () => {
     const [searchText, setSearchText] = useState('');
 
     return (
-        <IonMenu contentId="main" type="overlay" swipeGesture={true}>
+        <IonMenu contentId="main" type="overlay" side="start"  swipeGesture={true}>
             <IonHeader>
                 <IonToolbar>
                     <IonTitle size={"large"} className={"ion-text-center"}>Annotat3D</IonTitle>
