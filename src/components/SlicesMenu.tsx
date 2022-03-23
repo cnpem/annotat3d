@@ -7,15 +7,15 @@ import {IonButton, IonButtons, IonIcon,
 import {albumsOutline} from "ionicons/icons";
 
 /**
- * @param args
+ * @param props
  * @constructor
  */
-const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
+const SlicesMenu: React.FC<SlicesMenuInterface> = (props) => {
 
     const [sliceName, setSliceName] = useState<string>("XY");
     const [nameButtonSlice, setNameButtonSlice] = useState<string>("Z");
     const [sliceValue, setSliceValue] = useState<number>(0);
-    const [maxValSlider, setMaxValSlider] = useState<number>(args.imageProps.z);
+    const [maxValSlider, setMaxValSlider] = useState<number>(props.imageProps.z);
 
     const handleSliceValue = (e: CustomEvent) => {
         setSliceValue(+e.detail.value!);
@@ -28,12 +28,12 @@ const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
         {
 
             setNameButtonSlice("Z");
-            setMaxValSlider(args.imageProps.z);
+            setMaxValSlider(props.imageProps.z);
 
-            if(sliceValue > args.imageProps.z)
+            if(sliceValue > props.imageProps.z)
             {
 
-                setSliceValue(args.imageProps.z);
+                setSliceValue(props.imageProps.z);
 
             }
 
@@ -43,12 +43,12 @@ const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
         {
 
             setNameButtonSlice("Y");
-            setMaxValSlider(args.imageProps.y);
+            setMaxValSlider(props.imageProps.y);
 
-            if(sliceValue > args.imageProps.y)
+            if(sliceValue > props.imageProps.y)
             {
 
-                setSliceValue(args.imageProps.y);
+                setSliceValue(props.imageProps.y);
 
             }
 
@@ -58,12 +58,12 @@ const SlicesMenu: React.FC<SlicesMenuInterface> = (args) => {
         {
 
             setNameButtonSlice("X");
-            setMaxValSlider(args.imageProps.x);
+            setMaxValSlider(props.imageProps.x);
 
-            if(sliceValue > args.imageProps.x)
+            if(sliceValue > props.imageProps.x)
             {
 
-                setSliceValue(args.imageProps.x);
+                setSliceValue(props.imageProps.x);
 
             }
 

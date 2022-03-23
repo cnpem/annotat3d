@@ -2,7 +2,7 @@ import React from "react";
 import {SideMenuVizInterface} from "./TypeScriptFiles/Interfaces/SideMenuVizInterface";
 import {IonCard, IonCardContent, IonContent} from "@ionic/react";
 
-const SideMenuVis: React.FC<SideMenuVizInterface> = (args) => {
+const SideMenuVis: React.FC<SideMenuVizInterface> = () => {
 
     return(
         <React.Fragment>

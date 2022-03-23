@@ -1,0 +1,10 @@
+.round-bar {
+    margin-left: 8px;
+    margin-right: 8px;
+    width: 64px;
+    height: 18px;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+    background: red;
+}

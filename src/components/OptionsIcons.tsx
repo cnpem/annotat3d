@@ -38,7 +38,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
         return(
             <IonButtons>
-                <IonButton onClick={removeTheListElement}>
+                <IonButton size="small" onClick={removeTheListElement}>
                     <IonIcon icon={closeOutline}/>
                 </IonButton>
             </IonButtons>

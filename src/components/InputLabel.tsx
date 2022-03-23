@@ -27,7 +27,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
             Math.floor(Math.random() * 255)
         ];
         const newLabel = {
-            labelName: "label " + props.newLabelId,
+            labelName: "Label " + props.newLabelId,
             color: newColor,
             id: props.newLabelId
         }; // The background color is pink
@@ -43,12 +43,12 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     return(
         <IonButtons>
-            <IonButton className={"ion-text-right"} onClick={addNewLabel}>
+            <IonButton onClick={addNewLabel}>
                 <IonIcon icon={addOutline} slot={"end"}/>
                 Add a label
             </IonButton>
 
-            <IonButton className={"ion-text-right"} slot={"end"} onClick={removeAllLabels}>
+            <IonButton  slot={"end"} onClick={removeAllLabels}>
                 <IonIcon icon={trashOutline} slot={"end"}/>
                 Delete all labels
             </IonButton>

@@ -10,7 +10,7 @@ import {SideMenuAnnotatInterface} from "./TypeScriptFiles/Interfaces/SideMenuAnn
  * @constructor
  * @return this function return a list of all lateral components
  */
-const SideMenuAnnot: React.FC<SideMenuAnnotatInterface> = (args) => {
+const SideMenuAnnot: React.FC<SideMenuAnnotatInterface> = (props) => {
 
     return(
         <React.Fragment>
@@ -18,7 +18,7 @@ const SideMenuAnnot: React.FC<SideMenuAnnotatInterface> = (args) => {
                 <IonCard>
                     <IonCard>
                         <IonCardContent>
-                            <SlicesMenu imageProps={args.imageSlice} onImageProps={args.onImageSlice}/>
+                            <SlicesMenu imageProps={props.imageSlice} onImageProps={props.onImageSlice}/>
                         </IonCardContent>
                     </IonCard>
 

@@ -8,7 +8,7 @@ interface SideMenuInterface{
     hideMenu: boolean
 }
 
-const SideMenu:React.FC<SideMenuInterface> = (args) => {
+const SideMenu:React.FC<SideMenuInterface> = (props) => {
 
     const [menuOp, setMenuOp] = useState<"Visualization" | "Annotation">("Annotation");
     const [imageSlice, setImageSlice] = useState<ImagePropsInterface>({x: 200, y: 200, z: 5000});
@@ -32,7 +32,7 @@ const SideMenu:React.FC<SideMenuInterface> = (args) => {
 
     return(
         <React.Fragment>
-            {args.hideMenu && <ShowMenu/>}
+            {props.hideMenu && <ShowMenu/>}
         </React.Fragment>
 
     );

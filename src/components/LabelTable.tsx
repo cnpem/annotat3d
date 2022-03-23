@@ -1,10 +1,11 @@
 import React, {useState} from "react";
 import * as ReactBootStrap from "react-bootstrap";
-import {IonTitle, IonRow, IonCol} from "@ionic/react";
+import {IonTitle, IonRow, IonCol, IonLabel, IonButton, IonRadio} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
 import {LabelInterface} from './TypeScriptFiles/Interfaces/LabelsInterface';
 
+import './LabelTable.css';
 
 /**
  * Component that creates the label table
@@ -30,9 +31,12 @@ const LabelTable: React.FC = () => {
 
         return(
             <tr key={index}>
-                <td>{labelElement.labelName}</td>
-                <td style={{background: `rgb(${labelElement.color.join(',')})`}}/>
-                <td>{labelElement.id}</td>
+                <td>
+                    <div style={ {display: "flex"} }>
+                        <div className="round-bar" style={{ background: `rgb(${labelElement.color.join(',')})` }}> </div>
+                        {labelElement.labelName}
+                    </div>
+                </td>
                 <td>
                     <OptionsIcons labelList={labelList} onRemoveLabel={selectLabelList}
                         onNewLabelId={selectIdGenerator} removeId={labelElement.id}/>
@@ -41,6 +45,9 @@ const LabelTable: React.FC = () => {
         );
 
     };
+
+    const NAME_WIDTH = "col-3";
+    const OPTIONS_WIDTH = "col-1";
 
     return(
         <React.Fragment>
@@ -54,10 +61,8 @@ const LabelTable: React.FC = () => {
             <ReactBootStrap.Table striped bordered hover>
                 <thead>
                 <tr>
-                    <th>Label Name</th>
-                    <th>Color</th>
-                    <th>Label id</th>
-                    <th>Options</th>
+                    <th className={NAME_WIDTH}>Label Name</th>
+                    <th className={OPTIONS_WIDTH}>Options</th>
                 </tr>
                 </thead>
                 <tbody>
