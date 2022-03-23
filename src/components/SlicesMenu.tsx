@@ -5,7 +5,7 @@ import {IonButton, IonButtons, IonIcon,
 } from "@ionic/react";
 import {albumsOutline} from "ionicons/icons";
 
-import {ImageShapeInterface} from './TypeScriptFiles/Interfaces/ImageShapeInterface';
+import {ImageShapeInterface} from './ImageShapeInterface';
 
 interface SlicesMenuProps{
     imageProps: ImageShapeInterface;
@@ -45,7 +45,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
         }
 
-        else if(e.detail.value == "XZ")
+        else if(e.detail.value === "XZ")
         {
 
             setNameButtonSlice("Y");

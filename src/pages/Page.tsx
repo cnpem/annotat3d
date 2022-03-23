@@ -8,7 +8,6 @@ import {useParams} from 'react-router';
 import './Page.css';
 
 /*Components imports*/
-import SideMenuAnnot from "../components/SideMenuAnnot";
 import SideMenu from "../components/SideMenu";
 import {buildOutline} from "ionicons/icons";
 

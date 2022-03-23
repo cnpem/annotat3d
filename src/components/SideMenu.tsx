@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {ImageShapeInterface} from "./TypeScriptFiles/Interfaces/ImageShapeInterface";
+import {ImageShapeInterface} from "./ImageShapeInterface";
 import InputMenu from "./InputMenu";
 import SideMenuAnnot from "./SideMenuAnnot";
 import SideMenuVis from "./SideMenuVis";

@@ -1,8 +1,8 @@
 import React from "react";
 import {IonCard, IonCardContent, IonContent} from "@ionic/react";
-import LabelTable from "./LabelTable";
+import LabelTable from "./label_table/LabelTable";
 import SlicesMenu from "./SlicesMenu";
-import {ImageShapeInterface} from "./TypeScriptFiles/Interfaces/ImageShapeInterface";
+import {ImageShapeInterface} from "./ImageShapeInterface";
 
 interface SideMenuAnnotatInterface{
     imageSlice: ImageShapeInterface;
