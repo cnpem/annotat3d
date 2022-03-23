@@ -5,15 +5,9 @@
 /**
  * Child component for the ToolbarComp
  */
-export interface LabelProp{
+export interface LabelInterface{
     id: number;
-    color: string;
+    color: [number, number, number];
     labelName: string;
 }
 
-/**
- * Interface component with the respective variable and setter
- */
-export interface LabelTableInterface{
-    labelList: LabelProp[]; onLabelList: (labelVec: LabelProp[]) => void;
-}

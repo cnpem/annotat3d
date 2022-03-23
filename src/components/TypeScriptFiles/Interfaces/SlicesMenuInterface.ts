@@ -4,5 +4,6 @@
 import {ImagePropsInterface} from "./ImagePropsInterface";
 
 export interface SlicesMenuInterface{
-   imageProps: ImagePropsInterface; onImageProps: (image: ImagePropsInterface) => void;
+    imageProps: ImagePropsInterface;
+    onImageProps: (image: ImagePropsInterface) => void;
 }

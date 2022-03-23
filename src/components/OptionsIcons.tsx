@@ -4,8 +4,15 @@ import {IonButton, IonButtons, IonIcon} from "@ionic/react";
 /*Icons import*/
 import {closeOutline} from "ionicons/icons";
 
-/*Interfaces import*/
-import {OptionsIconsInterface} from "./TypeScriptFiles/Interfaces/OptionsIconsInterface";
+import {LabelInterface} from './TypeScriptFiles/Interfaces/LabelsInterface';
+
+interface OptionsProps{
+    labelList: LabelInterface[];
+    onRemoveLabel: (labelElement: LabelInterface[]) => void;
+    
+    onNewLabelId: (id: number) => void;
+    removeId: number;
+}
 
 /**
  * Component that creates the buttons in the table label
@@ -13,22 +20,20 @@ import {OptionsIconsInterface} from "./TypeScriptFiles/Interfaces/OptionsIconsIn
  * @todo i need to implement a option to change the color
  * @constructor
  */
-const OptionsIcons: React.FC<OptionsIconsInterface> = (args) => {
+const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
     const removeTheListElement = () => {
-        const removeLabel = args.labelList.filter(label => args.removeId !== label.id);
-        args.onRemoveLabel(removeLabel);
+        const removeLabel = props.labelList.filter(label => props.removeId !== label.id);
+        props.onRemoveLabel(removeLabel);
 
-        if(removeLabel.length == 1)
+        if(removeLabel.length === 1)
         {
-
-            args.onIdGenerator(0);
-
+            props.onNewLabelId(0);
         }
 
     }
 
-    if(args.removeId !== 0)
+    if(props.removeId !== 0)
     {
 
         return(

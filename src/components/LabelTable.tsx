@@ -3,7 +3,8 @@ import * as ReactBootStrap from "react-bootstrap";
 import {IonTitle, IonRow, IonCol} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
-import {LabelProp} from "./TypeScriptFiles/Interfaces/LabelsInterface";
+import {LabelInterface} from './TypeScriptFiles/Interfaces/LabelsInterface';
+
 
 /**
  * Component that creates the label table
@@ -12,26 +13,29 @@ import {LabelProp} from "./TypeScriptFiles/Interfaces/LabelsInterface";
  */
 const LabelTable: React.FC = () => {
 
-    const [idGenerator, setIdGenerator] = useState<number>(1);
-    const [labelList, setLabelList] = useState<LabelProp[]>([{ labelName: "Background", color: "229,16,249", id: 0}]); // The background color is pink]);
+    const BACKGROUND_COLOR: [number, number, number] = [229, 16, 249];// pink
 
-    const selectLabelList = (labelVec: LabelProp[]) => {
-        setLabelList(labelVec);
+    const [newLabelId, setNewLabelId] = useState<number>(1);
+    const [labelList, setLabelList] = useState<LabelInterface[]>([{ labelName: "Background", color: BACKGROUND_COLOR, id: 0 }]);
+
+    const selectLabelList = (labels: LabelInterface[]) => {
+        setLabelList(labels);
     }
 
     const selectIdGenerator = (id: number) => {
-        setIdGenerator(id + 1);
+        setNewLabelId(id + 1);
     }
 
-    const RenderLabels = (labelElement: LabelProp, index: number) => {
+    const renderLabel = (labelElement: LabelInterface, index: number) => {
 
         return(
             <tr key={index}>
                 <td>{labelElement.labelName}</td>
-                <td style={{background: `rgb(${labelElement.color})`}}/>
+                <td style={{background: `rgb(${labelElement.color.join(',')})`}}/>
                 <td>{labelElement.id}</td>
                 <td>
-                    <OptionsIcons labelList={labelList} onRemoveLabel={selectLabelList} onIdGenerator={selectIdGenerator} removeId={labelList[index].id}/>
+                    <OptionsIcons labelList={labelList} onRemoveLabel={selectLabelList}
+                        onNewLabelId={selectIdGenerator} removeId={labelElement.id}/>
                 </td>
             </tr>
         );
@@ -43,7 +47,8 @@ const LabelTable: React.FC = () => {
             <IonTitle>Label card</IonTitle>
             <IonRow>
                 <IonCol>
-                    <InputLabel labelList={labelList} onLabelList={selectLabelList} idGenerator={idGenerator} onIdGenerator={selectIdGenerator}/>
+                    <InputLabel labelList={labelList} onLabelList={selectLabelList}
+                        newLabelId={newLabelId} onNewLabelId={selectIdGenerator}/>
                 </IonCol>
             </IonRow>
             <ReactBootStrap.Table striped bordered hover>
@@ -56,7 +61,7 @@ const LabelTable: React.FC = () => {
                 </tr>
                 </thead>
                 <tbody>
-                {labelList.map(RenderLabels)}
+                {labelList.map(renderLabel)}
                 </tbody>
             </ReactBootStrap.Table>
         </React.Fragment>

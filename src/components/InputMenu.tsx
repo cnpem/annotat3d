@@ -1,15 +1,19 @@
 import React from "react";
-import {InputMenuInterface} from "./TypeScriptFiles/Interfaces/InputMenuInterface";
 import {IonLabel, IonSegment, IonSegmentButton} from "@ionic/react";
 
-const InputMenu: React.FC<InputMenuInterface> = (args) => {
+interface InputMenuInterface{
+    selectedVal: "Visualization" | "Annotation";
+    onSelectedVal: (val: "Visualization" | "Annotation") => void;
+}
+
+const InputMenu: React.FC<InputMenuInterface> = (props) => {
 
     const inputChangeHandler = (e: CustomEvent) => {
-        args.onSelectVal(e.detail!.value!);
+        props.onSelectedVal(e.detail.value);
     }
 
     return(
-        <IonSegment value={args.selectVal} onIonChange={inputChangeHandler}>
+        <IonSegment value={props.selectedVal} onIonChange={inputChangeHandler}>
             <IonSegmentButton value={"Annotation"}>
                 <IonLabel>Annotation</IonLabel>
             </IonSegmentButton>

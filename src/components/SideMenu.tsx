@@ -24,7 +24,7 @@ const SideMenu:React.FC<SideMenuInterface> = (args) => {
     const ShowMenu:React.FC = () => {
         return(
             <React.Fragment>
-                <InputMenu selectVal={menuOp} onSelectVal={selectMenuOp}/>
+                <InputMenu selectedVal={menuOp} onSelectedVal={selectMenuOp}/>
                 {menuOp === "Annotation" ? <SideMenuAnnot imageSlice={imageSlice} onImageSlice={selectImageSlice}/> : <SideMenuVis imageSlice={imageSlice} onImageSlice={selectImageSlice}/>}
             </React.Fragment>
         );
