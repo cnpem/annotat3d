@@ -2,8 +2,8 @@
  * Interface component for ImagePropsInterface
  */
 
-export interface ImagePropsInterface{
+export interface ImageShapeInterface{
     x: number;
     y: number;
-    z: number
+    z: number;
 }

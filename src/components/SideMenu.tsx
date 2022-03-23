@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {ImagePropsInterface} from "./TypeScriptFiles/Interfaces/ImagePropsInterface";
+import {ImageShapeInterface} from "./TypeScriptFiles/Interfaces/ImageShapeInterface";
 import InputMenu from "./InputMenu";
 import SideMenuAnnot from "./SideMenuAnnot";
 import SideMenuVis from "./SideMenuVis";
@@ -11,9 +11,9 @@ interface SideMenuInterface{
 const SideMenu:React.FC<SideMenuInterface> = (props) => {
 
     const [menuOp, setMenuOp] = useState<"Visualization" | "Annotation">("Annotation");
-    const [imageSlice, setImageSlice] = useState<ImagePropsInterface>({x: 200, y: 200, z: 5000});
+    const [imageSlice, setImageSlice] = useState<ImageShapeInterface>({x: 200, y: 200, z: 5000});
 
-    const selectImageSlice = (image: ImagePropsInterface) => {
+    const selectImageSlice = (image: ImageShapeInterface) => {
         setImageSlice(image);
     }
 
@@ -25,7 +25,13 @@ const SideMenu:React.FC<SideMenuInterface> = (props) => {
         return(
             <React.Fragment>
                 <InputMenu selectedVal={menuOp} onSelectedVal={selectMenuOp}/>
-                {menuOp === "Annotation" ? <SideMenuAnnot imageSlice={imageSlice} onImageSlice={selectImageSlice}/> : <SideMenuVis imageSlice={imageSlice} onImageSlice={selectImageSlice}/>}
+                {
+                    (menuOp === "Annotation") ?
+                        <SideMenuAnnot imageSlice={imageSlice} onImageSlice={selectImageSlice}/>
+                     : 
+                        <SideMenuVis/>
+                    
+                }
             </React.Fragment>
         );
     }

@@ -1,16 +1,22 @@
 import React, {useState} from "react";
-import {SlicesMenuInterface} from "./TypeScriptFiles/Interfaces/SlicesMenuInterface";
 import {IonButton, IonButtons, IonIcon,
         IonInput, IonItem, IonLabel,
         IonRange, IonSegment, IonSegmentButton, IonTitle
 } from "@ionic/react";
 import {albumsOutline} from "ionicons/icons";
 
+import {ImageShapeInterface} from './TypeScriptFiles/Interfaces/ImageShapeInterface';
+
+interface SlicesMenuProps{
+    imageProps: ImageShapeInterface;
+    onImageProps: (image: ImageShapeInterface) => void;
+}
+
 /**
  * @param props
  * @constructor
  */
-const SlicesMenu: React.FC<SlicesMenuInterface> = (props) => {
+const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
     const [sliceName, setSliceName] = useState<string>("XY");
     const [nameButtonSlice, setNameButtonSlice] = useState<string>("Z");

@@ -1,6 +1,6 @@
 import React from "react";
 import {IonButton, IonButtons, IonIcon} from "@ionic/react";
-import { LabelInterface } from "./TypeScriptFiles/Interfaces/LabelsInterface";
+import { LabelInterface } from "./TypeScriptFiles/Interfaces/LabelInterface";
 
 /*Icons import*/
 import {addOutline, trashOutline} from "ionicons/icons";

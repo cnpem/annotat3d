@@ -2,7 +2,12 @@ import React from "react";
 import {IonCard, IonCardContent, IonContent} from "@ionic/react";
 import LabelTable from "./LabelTable";
 import SlicesMenu from "./SlicesMenu";
-import {SideMenuAnnotatInterface} from "./TypeScriptFiles/Interfaces/SideMenuAnnotatInterface";
+import {ImageShapeInterface} from "./TypeScriptFiles/Interfaces/ImageShapeInterface";
+
+interface SideMenuAnnotatInterface{
+    imageSlice: ImageShapeInterface;
+    onImageSlice: (slice: ImageShapeInterface) => void;
+}
 
 /**
  * Component that creates the lateral bar menu

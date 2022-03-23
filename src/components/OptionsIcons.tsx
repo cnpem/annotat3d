@@ -4,7 +4,7 @@ import {IonButton, IonButtons, IonIcon} from "@ionic/react";
 /*Icons import*/
 import {closeOutline} from "ionicons/icons";
 
-import {LabelInterface} from './TypeScriptFiles/Interfaces/LabelsInterface';
+import {LabelInterface} from './TypeScriptFiles/Interfaces/LabelInterface';
 
 interface OptionsProps{
     labelList: LabelInterface[];

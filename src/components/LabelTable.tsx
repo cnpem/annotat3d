@@ -3,7 +3,7 @@ import * as ReactBootStrap from "react-bootstrap";
 import {IonTitle, IonRow, IonCol, IonLabel, IonButton, IonRadio} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
-import {LabelInterface} from './TypeScriptFiles/Interfaces/LabelsInterface';
+import {LabelInterface} from './TypeScriptFiles/Interfaces/LabelInterface';
 
 import './LabelTable.css';
 
