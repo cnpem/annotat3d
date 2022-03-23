@@ -15,7 +15,7 @@ hupexit() {
 trap hupexit HUP
 trap intexit INT
 
-python3 backend/app.py &
+python3 backend/sscAnnotat3D/app.py &
 ionic serve &
 
 wait
