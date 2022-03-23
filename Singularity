@@ -3,8 +3,8 @@ From: gccdockers/annotat3d:cuda-11.2
 
 %files
     ./backend/dist/*whl /opt/Annotat3D/
-    # ./backend/requirements.txt /opt/Annotat3D/requirements.txt
     ./build/ /opt/Annotat3D/
+    ./run_prod.sh /opt/Annotat3D/run_prod.sh
 
 %post
     ls /opt/Annotat3D/
@@ -15,4 +15,4 @@ From: gccdockers/annotat3d:cuda-11.2
     python3 -m pip install /opt/Annotat3D/sscAnnotat3D*.whl
 
 %apprun Annotat3D
-    serve -s /opt/Annotat3D/build & FLASK_APP=sscAnnotat3D.app flask run
+    /opt/Annotat3D/run_prod.sh
