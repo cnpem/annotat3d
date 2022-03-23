@@ -7,7 +7,6 @@ import {
 import {IonReactRouter} from '@ionic/react-router';
 import {Redirect, Route} from 'react-router-dom';
 import Menu from './components/menu/Menu';
-import MenuTools from './components/menuTools/MenuTools';
 import Page from './pages/Page';
 
 /* Core CSS required for Ionic components to work properly */
@@ -31,25 +30,28 @@ import './theme/variables.css';
 
 setupIonicReact();
 
+/**
+ * Main function that does all the functions callouts
+ */
 const App: React.FC = () => {
-    return (
-        <IonApp>
-            <IonReactRouter>
-                <IonSplitPane contentId="main" when={false}>
-                    <Menu/>
-                    <MenuTools/>
-                    <IonRouterOutlet id="main">
-                        <Route path="/" exact={true}>
-                            <Redirect to="/Annotat3D"/>
-                        </Route>
-                        <Route path="/:name" exact={true}>
-                            <Page/>
-                        </Route>
-                    </IonRouterOutlet>
-                </IonSplitPane>
-            </IonReactRouter>
-        </IonApp>
-    );
+
+  return (
+    <IonApp>
+      <IonReactRouter>
+        <IonSplitPane contentId="main" when={false}>
+          <Menu/>
+          <IonRouterOutlet id="main">
+            <Route path="/" exact={true}>
+              <Redirect to="/page/Inbox" />
+            </Route>
+            <Route path="/page/:name" exact={true}>
+              <Page/>
+            </Route>
+          </IonRouterOutlet>
+        </IonSplitPane>
+      </IonReactRouter>
+    </IonApp>
+  );
 };
 
 export default App;
