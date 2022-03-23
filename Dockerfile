@@ -54,7 +54,7 @@ run python3 -m pip install --upgrade blinker nibabel scikit-image SharedArray==3
 add backend/requirements.txt /opt/Annotat3D/requirements.txt
 
 #it is not working on CI
-run python3 -m pip uninstall numpy #numpy is duplicated for some reason
+run python3 -m pip uninstall -y numpy #numpy is duplicated for some reason
 run python3 -m pip install -r /opt/Annotat3D/requirements.txt
 
 #rapids
