@@ -1,5 +1,5 @@
 import React from "react";
-import {IonCard, IonCardContent, IonContent} from "@ionic/react";
+import {IonCard, IonCardContent} from "@ionic/react";
 import LabelTable from "./label_table/LabelTable";
 import SlicesMenu from "./SlicesMenu";
 import {ImageShapeInterface} from "./ImageShapeInterface";

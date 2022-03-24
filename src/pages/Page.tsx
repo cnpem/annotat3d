@@ -4,16 +4,12 @@ import {
     IonFooter, IonHeader, IonIcon,
     IonMenuButton, IonPage, IonTitle,
     IonToolbar, IonSelectOption, IonSelect,
-    IonInput,
-    IonMenu,
-    IonLabel,
     IonMenuToggle
 } from '@ionic/react';
 import {useParams} from 'react-router';
 import './Page.css';
 
 import CanvasContainer from '../components/CanvasContainer';
-import SideMenu from "../components/SideMenu";
 import {build} from "ionicons/icons";
 
 /**
@@ -24,9 +20,8 @@ import {build} from "ionicons/icons";
  */
 const Page: React.FC = () => {
     const { name } = useParams<{ name: string; }>();
-    const [showEditOp, setShowEditOp] = useState<boolean>(true);
 
-    const [sliceXY, setSliceXY] = useState<number>(0)
+    const [sliceXY,] = useState<number>(0)
 
     return (
         <IonPage>

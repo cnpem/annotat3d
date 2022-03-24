@@ -1,5 +1,5 @@
 import React from "react";
-import {IonButton, IonButtons, IonIcon} from "@ionic/react";
+import {IonButton, IonIcon} from "@ionic/react";
 import { LabelInterface } from "./LabelInterface";
 
 /*Icons import*/

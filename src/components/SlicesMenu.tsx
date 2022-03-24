@@ -1,7 +1,7 @@
 import React, {useState} from "react";
-import {IonButton, IonButtons, IonCardSubtitle, IonCardTitle, IonIcon,
+import {IonButton, IonButtons, IonIcon,
         IonInput, IonItem, IonLabel,
-        IonRange, IonSegment, IonSegmentButton, IonTitle
+        IonRange, IonSegment, IonSegmentButton
 } from "@ionic/react";
 import {albumsOutline} from "ionicons/icons";
 

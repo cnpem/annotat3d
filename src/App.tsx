@@ -1,14 +1,12 @@
 import {
     IonApp,
     IonContent,
-    IonLabel,
     IonMenu,
     IonRouterOutlet,
     IonSplitPane,
     setupIonicReact
 } from '@ionic/react';
 import {IonReactRouter} from '@ionic/react-router';
-import {Redirect, Route} from 'react-router-dom';
 import Menu from './components/menu/Menu';
 import Page from './pages/Page';
 
@@ -44,7 +42,7 @@ const App: React.FC = () => {
             <IonReactRouter>
                 <Menu/>
 
-                <IonSplitPane contentId="main">
+                <IonSplitPane contentId="main" when="(orientation: landscape)">
                     <IonMenu side="end" menuId="custom" id="custom"
                         contentId="main"
                         onIonWillClose={ (e) => console.log(e) }>

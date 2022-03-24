@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import * as ReactBootStrap from "react-bootstrap";
-import {IonTitle, IonRow, IonCol, IonLabel} from "@ionic/react";
+import {IonRow, IonCol, IonLabel} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
 import {LabelInterface} from './LabelInterface';

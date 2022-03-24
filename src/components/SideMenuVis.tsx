@@ -1,5 +1,5 @@
 import React from "react";
-import {IonCard, IonCardContent, IonContent} from "@ionic/react";
+import {IonCard, IonCardContent} from "@ionic/react";
 
 const SideMenuVis: React.FC = () => {
 
