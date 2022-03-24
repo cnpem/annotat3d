@@ -1,7 +1,7 @@
 import {Component} from 'react';
 import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
 import { expand, brush, browsers } from 'ionicons/icons';
-import { debounce } from "lodash";
+import { debounce, isEqual } from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 // https://stackoverflow.com/questions/42789896/webgl-error-arraybuffer-not-big-enough-for-request-in-case-of-gl-luminance
@@ -301,11 +301,11 @@ class Canvas {
         //const checked = 'draw_brush';
 
         //const data = {
-            //'coords': this.draw(currPosition, checked),
-            //'z': 0,
-            //'size': this.brush.size,
-            //'label': this.brush.label,
-            //'mode': checked,
+        //'coords': this.draw(currPosition, checked),
+        //'z': 0,
+        //'size': this.brush.size,
+        //'label': this.brush.label,
+        //'mode': checked,
         //};
         //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
 
@@ -325,14 +325,14 @@ class Canvas {
         //const checked = 'draw_brush';
 
         //if (this.isPainting) {
-            //const data = {
-                //'coords': this.draw(currPosition, checked),
-                //'z': 0,
-                //'size': this.brush.size,
-                //'label': this.brush.label,
-                //'mode': checked,
-            //};
-            //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
+        //const data = {
+        //'coords': this.draw(currPosition, checked),
+        //'z': 0,
+        //'size': this.brush.size,
+        //'label': this.brush.label,
+        //'mode': checked,
+        //};
+        //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
         //}
 
         console.log("up");
@@ -497,11 +497,12 @@ class Canvas {
 }
 
 interface ICanvasProps {
-    z: number
+    slice: number;
+    axis: 'XY' | 'XZ' | 'YZ';
 }
 
 interface ICanvasState {
-    brush_mode: string
+    brush_mode: string;
 }
 
 const brushList = [
@@ -529,11 +530,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     }
 
-    fetchAllDebounced = debounce( () => {
-        console.log("update ...", this.props.z);
+    fetchAllDebounced = debounce( (recenter: boolean = false) => {
+        console.log("update ...", this.props.slice);
         this.getImageSlice()
         .then(() => {
-            //this.canvas!.recenter()
+            if (recenter) {
+                this.canvas!.recenter();
+            }
             this.getSuperpixelSlice();
             this.getAnnotSlice();
             this.get_label_slice();
@@ -543,7 +546,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     getSuperpixelSlice() {
 
         const params = {
-            'z': this.props.z,
+            axis: this.props.axis,
+            slice: this.props.slice,
         };
 
         sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray')
@@ -556,9 +560,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     getImageSlice() {
         //console.log('get image slice hue');
-        const z = this.props.z;
+
         const params = {
-            'z': z,
+            'axis': this.props.axis,
+            'slice': this.props.slice,
         };
 
         return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
@@ -571,11 +576,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     getAnnotSlice() {
 
-        const data = {
-            'z': this.props.z,
+        const params = {
+            axis: this.props.axis,
+            slice: this.props.slice,
         };
 
-        sfetch('POST', '/get_annot_slice', JSON.stringify(data), 'gzip/numpyndarray')
+        sfetch('POST', '/get_annot_slice', JSON.stringify(params), 'gzip/numpyndarray')
         .then((slice) => {
             this.canvas!!.annotation.draw(slice);
         });
@@ -584,7 +590,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     get_label_slice() {
 
         const params = {
-            'z': this.props.z,
+            axis: this.props.axis,
+            slice: this.props.slice,
         };
 
         sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
@@ -610,15 +617,15 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas!.resize();
             });
 
-            this.fetchAllDebounced();
+            this.fetchAllDebounced(true);
         }
 
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
-        if (prevProps.z === this.props.z)
+        if (isEqual(prevProps, this.props)) //if all properties are the same (deep comparison)
             return;
-        this.fetchAllDebounced();
+        this.fetchAllDebounced(prevProps.axis !== this.props.axis);
     }
 
     render() {

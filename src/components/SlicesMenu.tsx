@@ -1,11 +1,14 @@
 import React, {useState} from "react";
 import {IonButton, IonButtons, IonIcon,
-        IonInput, IonItem, IonLabel,
-        IonRange, IonSegment, IonSegmentButton
+    IonInput, IonItem, IonLabel,
+    IonRange, IonSegment, IonSegmentButton
 } from "@ionic/react";
 import {albumsOutline} from "ionicons/icons";
 
 import {ImageShapeInterface} from './ImageShapeInterface';
+
+import {dispatch} from '../utils/eventbus';
+import {SliceInfoInterface} from "./SliceInfoInterface";
 
 interface SlicesMenuProps{
     imageProps: ImageShapeInterface;
@@ -18,63 +21,61 @@ interface SlicesMenuProps{
  */
 const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
-    const [sliceName, setSliceName] = useState<string>("XY");
+    const [sliceName, setSliceName] = useState<'XY' | 'XZ' | 'YZ'>("XY");
     const [nameButtonSlice, setNameButtonSlice] = useState<string>("Z");
     const [sliceValue, setSliceValue] = useState<number>(0);
     const [maxValSlider, setMaxValSlider] = useState<number>(props.imageProps.z);
 
     const handleSliceValue = (e: CustomEvent) => {
         setSliceValue(+e.detail.value!);
+         const payload: SliceInfoInterface =  {
+            axis: sliceName,
+            slice: +e.detail.value!
+        };
+
+        dispatch('slicesMenu:sliceChanged', payload);       
     }
 
     const handleSliceName = (e: CustomEvent) => {
         setSliceName(e.detail.value);
 
-        if(e.detail.value === "XY")
-        {
+        if(e.detail.value === "XY") {
 
             setNameButtonSlice("Z");
             setMaxValSlider(props.imageProps.z);
 
-            if(sliceValue > props.imageProps.z)
-            {
-
+            if(sliceValue > props.imageProps.z) {
                 setSliceValue(props.imageProps.z);
-
             }
 
         }
 
-        else if(e.detail.value === "XZ")
-        {
+        else if(e.detail.value === "XZ") {
 
             setNameButtonSlice("Y");
             setMaxValSlider(props.imageProps.y);
 
-            if(sliceValue > props.imageProps.y)
-            {
-
+            if(sliceValue > props.imageProps.y) {
                 setSliceValue(props.imageProps.y);
-
             }
-
         }
 
-        else
-        {
+        else {
 
             setNameButtonSlice("X");
             setMaxValSlider(props.imageProps.x);
 
-            if(sliceValue > props.imageProps.x)
-            {
-
+            if(sliceValue > props.imageProps.x) {
                 setSliceValue(props.imageProps.x);
-
             }
-
         }
 
+        const payload: SliceInfoInterface =  {
+            axis: e.detail!.value,
+            slice: sliceValue
+        };
+
+        dispatch('slicesMenu:sliceChanged', payload);
     }
 
     return(
@@ -95,7 +96,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
             <IonItem>
                 <IonRange min={0} max={maxValSlider} pin={true} value={sliceValue} onIonChange={handleSliceValue}>
-                    <IonIcon size={"big"} slot={"start"} icon={albumsOutline}/>
+                    <IonIcon size={"small"} slot={"start"} icon={albumsOutline}/>
                 </IonRange>
             </IonItem>
             <IonItem>

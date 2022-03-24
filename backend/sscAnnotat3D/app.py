@@ -78,9 +78,11 @@ def get_image_slice(image_id: str):
     if image is None:
         return "failure", 400
 
-    z = request.json["z"]
+    slice_num = request.json["slice"]
+    axis = request.json["axis"]
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
-    img_slice = image[z, :, :]
+    img_slice = image[slice_range]
 
     import time
 
@@ -91,8 +93,6 @@ def get_image_slice(image_id: str):
     comp_st = time.time()
     compressed_byte_slice = zlib.compress(byte_slice)
     comp_en = time.time()
-
-    print('z: ', z)
 
     print('npy time: ', npy_en - npy_st)
     print('compress time: ', comp_en - comp_st)
@@ -109,14 +109,16 @@ def test():
 @app.route('/get_superpixel_slice', methods=['POST', 'GET'])
 def get_superpixel_slice():
 
-    z = request.json["z"]
-
     img_superpixels = data_repo.get_image('superpixel')
 
     if img_superpixels is None:
         return "failure", 400
 
-    slice_superpixels = img_superpixels[z, ...]
+    slice_num = request.json["slice"]
+    axis = request.json["axis"]
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    slice_superpixels = img_superpixels[slice_range]
     slice_superpixels = superpixels.superpixel_slice_borders(
         slice_superpixels)
 
@@ -142,14 +144,17 @@ def get_annot_slice():
     if annot is None:
         return "failure", 400
 
-    z = request.json["z"]
-    print("z", z)
 
-    img_slice = np.ones(image[z, :, :].shape)
-    img_slice = img_slice * -1
-    for coords in annot:
-        if coords[0] == z:
-            img_slice[coords[1], coords[2]] = annot[coords][0]
+    slice_num = request.json["slice"]
+    axis = request.json["axis"]
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+
+    # img_slice = np.ones(image[slice_range].shape)
+    # img_slice = img_slice * -1
+    # for coords in annot:
+        # if coords[0] == z:
+            # img_slice[coords[1], coords[2]] = annot[coords][0]
 
     # slice = slice.astype(np.int16)
     print("annot_slice", img_slice[0])

@@ -12,6 +12,9 @@ import './Page.css';
 import CanvasContainer from '../components/CanvasContainer';
 import {build} from "ionicons/icons";
 
+import {useEventBus} from '../utils/eventbus';
+import {SliceInfoInterface} from "../components/SliceInfoInterface";
+
 /**
  * Module that contains the initial page of Annotat3D web
  * @tutorial the variable name is used as the main site title
@@ -21,7 +24,11 @@ import {build} from "ionicons/icons";
 const Page: React.FC = () => {
     const { name } = useParams<{ name: string; }>();
 
-    const [sliceXY,] = useState<number>(0)
+    const [sliceInfo, setSliceInfo] = useState<SliceInfoInterface>({axis: 'XY', slice: 0});
+
+    useEventBus('slicesMenu:sliceChanged', (payload: SliceInfoInterface) => {
+        setSliceInfo(payload);
+    });
 
     return (
         <IonPage>
@@ -51,11 +58,11 @@ const Page: React.FC = () => {
                         <IonTitle size="large">{name}</IonTitle>
                     </IonToolbar>
                 </IonHeader>
-                <CanvasContainer z={sliceXY}/>
+                <CanvasContainer axis={sliceInfo.axis} slice={sliceInfo.slice}/>
             </IonContent>
 
             <IonFooter>
-                <span>{0}</span>
+                <span>{ sliceInfo.axis + ": " + sliceInfo.slice}</span>
             </IonFooter>
         </IonPage>
     );
