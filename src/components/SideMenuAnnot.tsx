@@ -18,21 +18,20 @@ interface SideMenuAnnotatInterface{
 const SideMenuAnnot: React.FC<SideMenuAnnotatInterface> = (props) => {
 
     return(
-        <React.Fragment>
-                <IonCard>
-                    <IonCard>
-                        <IonCardContent>
-                            <SlicesMenu imageProps={props.imageSlice} onImageProps={props.onImageSlice}/>
-                        </IonCardContent>
-                    </IonCard>
+        <div>
+            <IonCard>
+                <IonCardContent>
+                    <SlicesMenu imageProps={props.imageSlice} onImageProps={props.onImageSlice}/>
+                </IonCardContent>
+            </IonCard>
 
-                    <IonCard>
-                        <IonCardContent>
-                            <LabelTable/>
-                        </IonCardContent>
-                    </IonCard>
-                </IonCard>
-        </React.Fragment>
+            <IonCard>
+                <IonCardContent>
+                    <LabelTable/>
+                </IonCardContent>
+            </IonCard>
+
+        </div>
     )
 
 };
