@@ -27,10 +27,10 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     const [maxValSlider, setMaxValSlider] = useState<number>(props.imageProps.z);
 
     const handleSliceValue = (e: CustomEvent) => {
-        setSliceValue(+e.detail.value!);
+        setSliceValue(+e.detail.value);
          const payload: SliceInfoInterface =  {
             axis: sliceName,
-            slice: +e.detail.value!
+            slice: +e.detail.value
         };
 
         dispatch('slicesMenu:sliceChanged', payload);       
@@ -71,7 +71,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         }
 
         const payload: SliceInfoInterface =  {
-            axis: e.detail!.value,
+            axis: e.detail.value,
             slice: sliceValue
         };
 
