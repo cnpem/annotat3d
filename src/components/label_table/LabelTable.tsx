@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import * as ReactBootStrap from "react-bootstrap";
-import {IonTitle, IonRow, IonCol} from "@ionic/react";
+import {IonTitle, IonRow, IonCol, IonLabel} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
 import {LabelInterface} from './LabelInterface';
@@ -34,7 +34,7 @@ const LabelTable: React.FC = () => {
                 <td>
                     <div style={ {display: "flex"} }>
                         <div className="round-bar" style={{ background: `rgb(${labelElement.color.join(',')})` }}> </div>
-                        {labelElement.labelName}
+                        <IonLabel>{labelElement.labelName}</IonLabel>
                     </div>
                 </td>
                 <td>
@@ -50,26 +50,27 @@ const LabelTable: React.FC = () => {
     const OPTIONS_WIDTH = "col-1";
 
     return(
-        <React.Fragment>
-            <IonTitle>Label card</IonTitle>
+        <div>
             <IonRow>
                 <IonCol>
                     <InputLabel labelList={labelList} onLabelList={selectLabelList}
                         newLabelId={newLabelId} onNewLabelId={selectIdGenerator}/>
                 </IonCol>
             </IonRow>
-            <ReactBootStrap.Table striped bordered hover>
-                <thead>
-                    <tr>
-                        <th className={NAME_WIDTH}>Label Name</th>
-                        <th className={OPTIONS_WIDTH}>Options</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {labelList.map(renderLabel)}
-                </tbody>
-            </ReactBootStrap.Table>
-        </React.Fragment>
+            <div className={"label-table"}>
+                <ReactBootStrap.Table striped bordered hover>
+                    <thead>
+                        <tr>
+                            <th className={NAME_WIDTH}><IonLabel>Label Name</IonLabel></th>
+                            <th className={OPTIONS_WIDTH}>Options</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {labelList.map(renderLabel)}
+                    </tbody>
+                </ReactBootStrap.Table>
+            </div>
+        </div>
     );
 
 };

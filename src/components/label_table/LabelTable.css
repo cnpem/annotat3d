@@ -8,3 +8,8 @@
     border-radius: 8px;
     background: red;
 }
+
+.label-table {
+    height: 20em;
+    overflow-y: auto;
+}

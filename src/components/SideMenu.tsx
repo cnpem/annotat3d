@@ -23,7 +23,7 @@ const SideMenu:React.FC<SideMenuInterface> = (props) => {
 
     const ShowMenu:React.FC = () => {
         return(
-            <React.Fragment>
+            <div>
                 <InputMenu selectedVal={menuOp} onSelectedVal={selectMenuOp}/>
                 {
                     (menuOp === "Annotation") ?
@@ -32,7 +32,7 @@ const SideMenu:React.FC<SideMenuInterface> = (props) => {
                         <SideMenuVis/>
                     
                 }
-            </React.Fragment>
+            </div>
         );
     }
 

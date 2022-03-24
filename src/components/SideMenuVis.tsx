@@ -5,15 +5,13 @@ const SideMenuVis: React.FC = () => {
 
     return(
         <React.Fragment>
-            <IonContent>
+            <IonCard>
                 <IonCard>
-                    <IonCard>
-                        <IonCardContent>
-                            Não se importe aqui, to só testando aqui
-                        </IonCardContent>
-                    </IonCard>
+                    <IonCardContent>
+                        Não se importe aqui, to só testando aqui
+                    </IonCardContent>
                 </IonCard>
-            </IonContent>
+            </IonCard>
         </React.Fragment>
     );
 }

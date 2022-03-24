@@ -1,20 +1,20 @@
-
 import React, {useState} from "react";
 import {
     IonButton, IonButtons, IonContent,
     IonFooter, IonHeader, IonIcon,
     IonMenuButton, IonPage, IonTitle,
     IonToolbar, IonSelectOption, IonSelect,
-    IonInput
+    IonInput,
+    IonMenu,
+    IonLabel,
+    IonMenuToggle
 } from '@ionic/react';
 import {useParams} from 'react-router';
 import './Page.css';
 
 import CanvasContainer from '../components/CanvasContainer';
-
-/*Components imports*/
 import SideMenu from "../components/SideMenu";
-import {buildOutline} from "ionicons/icons";
+import {build} from "ionicons/icons";
 
 /**
  * Module that contains the initial page of Annotat3D web
@@ -28,10 +28,6 @@ const Page: React.FC = () => {
 
     const [sliceXY, setSliceXY] = useState<number>(0)
 
-    const handleEditOp = () => {
-        setShowEditOp(!showEditOp);
-    }
-
     return (
         <IonPage>
             <IonHeader>
@@ -39,9 +35,9 @@ const Page: React.FC = () => {
                 <IonToolbar color="light">
                     <IonButtons slot="start">
                         <IonMenuButton/>
-                        <IonButton onClick={handleEditOp}>
-                            <IonIcon icon={buildOutline}/>
-                        </IonButton>
+                        <IonMenuToggle menu="custom">
+                            <IonButton><IonIcon size="default" icon={build}></IonIcon></IonButton>
+                        </IonMenuToggle>
                     </IonButtons>
                     <div style={ {"display": "flex"} }>
                         <IonTitle>{name}</IonTitle>
@@ -60,11 +56,8 @@ const Page: React.FC = () => {
                         <IonTitle size="large">{name}</IonTitle>
                     </IonToolbar>
                 </IonHeader>
-                <IonInput type="number" value={sliceXY} onIonChange={(e) => { setSliceXY(+e.detail.value!) } } />
                 <CanvasContainer z={sliceXY}/>
             </IonContent>
-
-            <SideMenu hideMenu={showEditOp}/>
 
             <IonFooter>
                 <span>{0}</span>

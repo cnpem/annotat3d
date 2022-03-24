@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {IonButton, IonButtons, IonIcon,
+import {IonButton, IonButtons, IonCardSubtitle, IonCardTitle, IonIcon,
         IonInput, IonItem, IonLabel,
         IonRange, IonSegment, IonSegmentButton, IonTitle
 } from "@ionic/react";
@@ -79,7 +79,6 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
     return(
         <React.Fragment>
-            <IonTitle>Slice selector</IonTitle>
             <IonSegment value={sliceName} onIonChange={handleSliceName}>
                 <IonSegmentButton value={"XY"}>
                     <IonLabel>{"XY"}</IonLabel>

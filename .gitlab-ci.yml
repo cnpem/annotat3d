@@ -42,11 +42,11 @@ deploy:
 
         - python3 -m pip install keyring==12.0.0 keyrings.alt
         - python3 -m pip install twine==2.0.0 passlib
-        - ls ./dist/*
-        - twine upload ./backend/dist/*.whl  --repository-url="$GCC_PYPI_SERVER"
+        #- twine upload ./backend/dist/*.whl  --repository-url="$GCC_PYPI_SERVER"
 
         # --privileged is necessary to build singularity in docker (sind)
-        - ./build_container.sh
+        - ls .
+        - ./build_singularity.sh
         - cp Annotat3DWeb.sif "${GCC_APPS}"/Annotat3D-web-dev.sif
     tags:
         - x86_64

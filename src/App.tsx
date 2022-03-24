@@ -1,5 +1,8 @@
 import {
     IonApp,
+    IonContent,
+    IonLabel,
+    IonMenu,
     IonRouterOutlet,
     IonSplitPane,
     setupIonicReact
@@ -27,6 +30,7 @@ import '@ionic/react/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import SideMenu from './components/SideMenu';
 
 setupIonicReact();
 
@@ -35,23 +39,29 @@ setupIonicReact();
  */
 const App: React.FC = () => {
 
-  return (
-    <IonApp>
-      <IonReactRouter>
-        <IonSplitPane contentId="main" when={false}>
-          <Menu/>
-          <IonRouterOutlet id="main">
-            <Route path="/" exact={true}>
-              <Redirect to="/page/Inbox" />
-            </Route>
-            <Route path="/page/:name" exact={true}>
-              <Page/>
-            </Route>
-          </IonRouterOutlet>
-        </IonSplitPane>
-      </IonReactRouter>
-    </IonApp>
-  );
+    return (
+        <IonApp>
+            <IonReactRouter>
+                <Menu/>
+
+                <IonSplitPane contentId="main">
+                    <IonMenu side="end" menuId="custom" id="custom"
+                        contentId="main"
+                        onIonWillClose={ (e) => console.log(e) }>
+                        <IonContent>
+                            <SideMenu hideMenu={true}/>
+                        </IonContent>
+                    </IonMenu>
+
+                    <IonRouterOutlet id="main">
+                        <Page/>
+                    </IonRouterOutlet>
+                </IonSplitPane>
+
+            </IonReactRouter>
+        </IonApp>
+    );
+
 };
 
 export default App;

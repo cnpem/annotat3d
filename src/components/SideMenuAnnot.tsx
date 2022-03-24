@@ -19,7 +19,6 @@ const SideMenuAnnot: React.FC<SideMenuAnnotatInterface> = (props) => {
 
     return(
         <React.Fragment>
-            <IonContent>
                 <IonCard>
                     <IonCard>
                         <IonCardContent>
@@ -33,7 +32,6 @@ const SideMenuAnnot: React.FC<SideMenuAnnotatInterface> = (props) => {
                         </IonCardContent>
                     </IonCard>
                 </IonCard>
-            </IonContent>
         </React.Fragment>
     )
 

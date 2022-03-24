@@ -47,9 +47,15 @@ run printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOS
 
 run conda install -c conda-forge mpi4py openmpi
 
-run python3 -m pip install --upgrade pip==22.0.4 setuptools==59.8.0 wheel
+run python3 -m pip install --upgrade pip==22.0.4 setuptools==60.10.0 wheel
 run python3 -m pip install --upgrade cmake==3.17.3 cython cmake-setuptools
-run python3 -m pip install --upgrade blinker nibabel scikit-image #some dependencies fix later
+run python3 -m pip install --upgrade blinker nibabel scikit-image SharedArray==3.2.0 #some dependencies fix later
+
+add backend/requirements.txt /opt/Annotat3D/requirements.txt
+
+#it is not working on CI
+run python3 -m pip uninstall -y numpy #numpy is duplicated for some reason
+run python3 -m pip install -r /opt/Annotat3D/requirements.txt
 
 #rapids
 #run apt-get install -y libboost-all-dev

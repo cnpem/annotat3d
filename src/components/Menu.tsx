@@ -74,7 +74,6 @@ const Menu: React.FC = () => {
 
     return (
         <IonMenu contentId="main" type="overlay" swipeGesture={true} style={ {'--width': '1000px'} } >
-
             <IonContent>
                 <IonList id="inbox-list">
                     <IonListHeader>Annotat3D</IonListHeader>

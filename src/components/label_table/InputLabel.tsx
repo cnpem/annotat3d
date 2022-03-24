@@ -42,17 +42,17 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     }
 
     return(
-        <IonButtons>
-            <IonButton onClick={addNewLabel}>
+        <div style={ {display: "flex", justifyContent: "flex-end"} }>
+            <IonButton size="small" onClick={addNewLabel}>
                 <IonIcon icon={addOutline} slot={"end"}/>
-                Add a label
+                Add
             </IonButton>
 
-            <IonButton  slot={"end"} onClick={removeAllLabels}>
+            <IonButton size="small" slot={"end"} onClick={removeAllLabels}>
                 <IonIcon icon={trashOutline} slot={"end"}/>
-                Delete all labels
+                Delete all
             </IonButton>
-        </IonButtons>
+        </div>
     );
 };
 
