@@ -36,7 +36,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     }
 
     const removeAllLabels = () => {
-        const newVec = props.labelList.filter(lab => lab.labelName === "Background");
+        const newVec = props.labelList.filter(lab => lab.id === 0);
         props.onLabelList(newVec);
         props.onNewLabelId(0); // This value resets the id generator
     }

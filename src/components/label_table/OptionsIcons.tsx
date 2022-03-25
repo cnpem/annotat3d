@@ -60,7 +60,18 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
     }
 
     return(
-        <></>
+        <IonButtons>
+            <IonButton id={"edit-label-button-" + props.label.id} onClick={handleClickButton}>
+                <IonIcon icon={pencilOutline}/>
+            </IonButton>
+            <EditLabelNameComp
+                label={props.label}
+                labelNameTrigger={"edit-label-button-" + props.label.id}
+                showPopover={showPopover}
+                onChangeLabelName={props.onChangeLabelName}
+                onShowPopover={handleShowPopover}/>
+
+        </IonButtons>
     );
 
 };
