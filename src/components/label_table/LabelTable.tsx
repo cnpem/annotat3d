@@ -49,10 +49,10 @@ const LabelTable: React.FC = () => {
         setNewLabelId(id + 1);
     }
 
-    const renderLabel = (labelElement: LabelInterface, index: number) => {
+    const renderLabel = (labelElement: LabelInterface) => {
 
         return(
-            <tr key={index}>
+            <tr key={labelElement.id}>
                 <td>
                     <div style={ {display: "flex"} }>
                         <div className="round-bar" style={{ background: `rgb(${labelElement.color.join(',')})` }}> </div>
@@ -61,8 +61,7 @@ const LabelTable: React.FC = () => {
                 </td>
                 <td>
                     <OptionsIcons label={labelElement} onChangeLabelList={removeLabelElement}
-                                  onChangeLabelName={changeLabelName} id={labelElement.id}
-                                  onResetId={selectIdGenerator}/>
+                                  onChangeLabelName={changeLabelName}/>
                 </td>
             </tr>
         );

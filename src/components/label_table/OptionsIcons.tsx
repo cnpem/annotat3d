@@ -1,6 +1,8 @@
 import React, {useState} from "react";
-import {IonButton, IonButtons, IonContent, IonIcon,
-        IonInput, IonItem, IonPopover} from "@ionic/react";
+import {
+    IonButton, IonButtons, IonContent, IonIcon,
+    IonInput, IonItem, IonPopover
+} from "@ionic/react";
 
 /*Icons import*/
 import {closeOutline, pencilOutline} from "ionicons/icons";
@@ -11,20 +13,15 @@ interface OptionsProps{
     label: LabelInterface;
     onChangeLabelList: (label: LabelInterface) => void;
     onChangeLabelName: (newLabelName: string, labelId: number) => void;
-
-    id: number;
-    onResetId: (id: number) => void;
 }
 
 /**
  * Component that creates the buttons in the table label
- * @todo i need to implement the edit name
- * @todo i need to implement a option to change the color
+ * @todo need to implement a option to change the color
  * @constructor
  */
 const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
-    const labelName = props.label.labelName;
     const [showPopover, setShowPopover] = useState<boolean>(false);
 
     const handleClickButton = () => {
@@ -39,7 +36,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
         props.onChangeLabelList(props.label);
     }
 
-    if(props.id !== 0)
+    if(props.label.id !== 0)
     {
         return(
             <IonButtons>
@@ -47,13 +44,12 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                     <IonIcon icon={closeOutline}/>
                 </IonButton>
 
-                <IonButton id={"edit-label-button-" + props.id} onClick={handleClickButton}>
+                <IonButton id={"edit-label-button-" + props.label.id} onClick={handleClickButton}>
                     <IonIcon icon={pencilOutline}/>
                 </IonButton>
                 <EditLabelNameComp
-                    labelNameTrigger={"edit-label-button-" + props.id}
-                    labelName={labelName}
-                    id={props.id}
+                    label={props.label}
+                    labelNameTrigger={"edit-label-button-" + props.label.id}
                     showPopover={showPopover}
                     onChangeLabelName={props.onChangeLabelName}
                     onShowPopover={handleShowPopover}/>
@@ -72,9 +68,8 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 export default OptionsIcons;
 
 interface LabelEditProps{
+    label: LabelInterface;
     labelNameTrigger: string;
-    labelName: string;
-    id: number
 
     showPopover: boolean;
     onShowPopover: (showPop: boolean) => void;
@@ -82,9 +77,14 @@ interface LabelEditProps{
     onChangeLabelName: (newLabelName: string, labelId: number) => void;
 }
 
+/**
+ * @todo the problem here is that newLabelName variable is not updating after any label is deleted
+ * @param props
+ * @constructor
+ */
 const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
 
-    const [newLabelName, setNewLabelName] = useState<string>(props.labelName);
+    const [newLabelName, setNewLabelName] = useState<string>(props.label.labelName);
 
     const changeLabelName = (e: CustomEvent) => {
         setNewLabelName(e.detail.value!);
@@ -92,11 +92,10 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
 
     const exitPopup = () => {
         props.onShowPopover(false)
-        setNewLabelName(props.labelName);
     }
 
     const handleChangeNewLabelName = () => {
-        props.onChangeLabelName(newLabelName, props.id);
+        props.onChangeLabelName(newLabelName, props.label.id);
         props.onShowPopover(false)
     }
 
@@ -107,9 +106,10 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
                 isOpen={props.showPopover}
                 onDidDismiss={exitPopup}
                 className={"label-editor-popover"}>
+
                 <IonContent>
                     <IonItem>
-                        <IonInput type={"text"} value={newLabelName} onIonChange={changeLabelName}/>
+                        <IonInput value={newLabelName} onIonChange={changeLabelName}/>
                     </IonItem>
 
                     <IonItem>
