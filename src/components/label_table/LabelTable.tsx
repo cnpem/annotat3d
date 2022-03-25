@@ -19,7 +19,29 @@ const LabelTable: React.FC = () => {
     const [newLabelId, setNewLabelId] = useState<number>(1);
     const [labelList, setLabelList] = useState<LabelInterface[]>([{ labelName: "Background", color: BACKGROUND_COLOR, id: 0 }]);
 
-    const selectLabelList = (labels: LabelInterface[]) => {
+    const removeLabelElement = (label: LabelInterface) => {
+        setLabelList(labelList.filter(l => l.id !== label.id));
+
+        if(labelList.length === 2)
+        {
+
+            setNewLabelId(1);
+
+        }
+
+    }
+
+    const changeLabelName = (newLabelName: string, labelId: number) => {
+        setLabelList(
+            labelList.map(l =>
+                l.id == labelId
+                    ? {...l, labelName: newLabelName}
+                    : {...l}
+            )
+        )
+    }
+
+    const handleInputLabelOps = (labels: LabelInterface[]) => {
         setLabelList(labels);
     }
 
@@ -38,8 +60,9 @@ const LabelTable: React.FC = () => {
                     </div>
                 </td>
                 <td>
-                    <OptionsIcons labelList={labelList} onChangeLabelList={setLabelList}
-                                  id={labelElement.id} onResetId={selectIdGenerator}/>
+                    <OptionsIcons label={labelElement} onChangeLabelList={removeLabelElement}
+                                  onChangeLabelName={changeLabelName} id={labelElement.id}
+                                  onResetId={selectIdGenerator}/>
                 </td>
             </tr>
         );
@@ -53,7 +76,7 @@ const LabelTable: React.FC = () => {
         <div>
             <IonRow>
                 <IonCol>
-                    <InputLabel labelList={labelList} onLabelList={selectLabelList}
+                    <InputLabel labelList={labelList} onLabelList={handleInputLabelOps}
                                 newLabelId={newLabelId} onNewLabelId={selectIdGenerator}/>
                 </IonCol>
             </IonRow>

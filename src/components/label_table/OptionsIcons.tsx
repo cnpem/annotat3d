@@ -8,8 +8,9 @@ import {closeOutline, pencilOutline} from "ionicons/icons";
 import {LabelInterface} from './LabelInterface';
 
 interface OptionsProps{
-    labelList: LabelInterface[];
-    onChangeLabelList: (labelElement: LabelInterface[]) => void;
+    label: LabelInterface;
+    onChangeLabelList: (label: LabelInterface) => void;
+    onChangeLabelName: (newLabelName: string, labelId: number) => void;
 
     id: number;
     onResetId: (id: number) => void;
@@ -23,15 +24,11 @@ interface OptionsProps{
  */
 const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
-    const [labelName, setLabelName] = useState<string>(props.labelList.filter(label => props.id === label.id)[0].labelName);
+    const labelName = props.label.labelName;
     const [showPopover, setShowPopover] = useState<boolean>(false);
 
     const handleClickButton = () => {
-
-        setLabelName(props.labelList.filter(label => props.id === label.id)[0].labelName);
         setShowPopover(true)
-        console.log(labelName);
-
     }
 
     const handleShowPopover = (showPop: boolean) => {
@@ -39,17 +36,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
     }
 
     const removeTheListElement = () => {
-        const labelsFiltered = props.labelList.filter(label => props.id !== label.id);
-        setLabelName(props.labelList.filter(label => props.id === label.id)[0].labelName);
-        props.onChangeLabelList(labelsFiltered);
-
-        if(labelsFiltered.length === 1)
-        {
-
-            props.onResetId(0);
-
-        }
-
+        props.onChangeLabelList(props.label);
     }
 
     if(props.id !== 0)
@@ -66,10 +53,9 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                 <EditLabelNameComp
                     labelNameTrigger={"edit-label-button-" + props.id}
                     labelName={labelName}
-                    labelList={props.labelList}
-                    onChangeLabelName={props.onChangeLabelList}
                     id={props.id}
                     showPopover={showPopover}
+                    onChangeLabelName={props.onChangeLabelName}
                     onShowPopover={handleShowPopover}/>
 
             </IonButtons>
@@ -93,8 +79,7 @@ interface LabelEditProps{
     showPopover: boolean;
     onShowPopover: (showPop: boolean) => void;
 
-    labelList: LabelInterface[];
-    onChangeLabelName: (labelElement: LabelInterface[]) => void;
+    onChangeLabelName: (newLabelName: string, labelId: number) => void;
 }
 
 const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
@@ -111,15 +96,8 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
     }
 
     const handleChangeNewLabelName = () => {
-        props.onChangeLabelName(
-            props.labelList.map((label) =>
-                label.id === props.id
-                    ? {...label, labelName: newLabelName}
-                    : {...label})
-        );
-
+        props.onChangeLabelName(newLabelName, props.id);
         props.onShowPopover(false)
-
     }
 
     return(
