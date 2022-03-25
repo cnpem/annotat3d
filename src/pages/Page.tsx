@@ -26,7 +26,7 @@ const Page: React.FC = () => {
 
     const [sliceInfo, setSliceInfo] = useState<SliceInfoInterface>({axis: 'XY', slice: 0});
 
-    useEventBus('slicesMenu:sliceChanged', (payload: SliceInfoInterface) => {
+    useEventBus('sliceChanged', (payload: SliceInfoInterface) => {
         setSliceInfo(payload);
     });
 

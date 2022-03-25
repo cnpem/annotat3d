@@ -33,7 +33,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             slice: +e.detail.value
         };
 
-        dispatch('slicesMenu:sliceChanged', payload);       
+        dispatch('sliceChanged', payload);       
     }
 
     const handleSliceName = (e: CustomEvent) => {
