@@ -15,6 +15,7 @@ import { sfetch } from '../utils/simplerequest';
 
 import './styles/CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
+import {type} from 'os';
 
 class Brush {
 
@@ -83,6 +84,17 @@ class Brush {
         return cursor;
     }
 
+    contextDrawBrush(context: CanvasRenderingContext2D, x: number, y: number) {
+        const [r, g, b] = this.colors[(this.label) % this.colors.length];
+
+        console.log('context draw brush: ', context, r, g, b, x, y);
+
+        context.beginPath();
+        context.fillStyle = `rgb(${r},${g},${b})`;
+        context.arc(x + this.size / 2, y + this.size / 2, this.radius, 0, 2 * Math.PI);
+        context.fill();
+    }
+
     setLabel(l: number) {
         this.label = l;
         this.update();
@@ -105,14 +117,9 @@ class Brush {
 
     update() {
         const color = this.colors[(this.label) % this.colors.length];
-        this.context.fillStyle = 'rgb(' + color[0] + ',' + color[1] + ',' + color[2] + ')';
-
-        this.context.rect(0, 0, this.size, this.size);
-        this.context.fill();
 
         this.color = this.rgbToHex(...color);
         this.updateBrush();
-
     }
 }
 
@@ -126,14 +133,25 @@ class Annotation {
 
     constructor() {
         this.canvas = document.createElement('canvas');
-        this.canvas.width = 0;
-        this.canvas.height = 0;
+        //this.canvas.width = 0;
+        //this.canvas.height = 0;
 
         this.context = this.canvas.getContext('2d')!;
 
         this.sprite = new PIXI.Sprite();
+        //this.sprite.tint = 0x00ff00;
 
         this.sprite.texture = PIXI.Texture.from(this.canvas);
+    }
+
+    setSize(x: number, y: number) {
+        this.canvas.width = x;
+        this.canvas.height = y;
+    }
+
+    clear() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.sprite.texture.update();
     }
 
     draw(slice: NdArray<TypedArray>) {
@@ -151,12 +169,14 @@ class Annotation {
             [154, 205, 50],
         ];
 
+        console.log('draw slice: ', slice.shape);
+
         this.canvas.width = slice.shape[1];
         this.canvas.height = slice.shape[0];
 
         //console.log("draw slice: ", mean(slice), std(slice));
 
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        //this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
@@ -190,6 +210,8 @@ class Canvas {
 
     annotation: Annotation;
     brush: Brush;
+
+    brush_mode: 'draw_brush' | 'erase_brush';
 
     slice: PIXI.Sprite;
     labelSlice: PIXI.Sprite;
@@ -230,6 +252,7 @@ class Canvas {
 
         this.annotation = new Annotation();
         this.brush = new Brush();
+        this.brush_mode = 'draw_brush';
 
         this.isPainting = false;
         this.prevPosition = null;
@@ -296,17 +319,13 @@ class Canvas {
 
         if (!this.isPainting) return;
 
-        //const checked = Array.from(brushModeElm).find((radio) => radio.checked)?.value ? true : false;
-
-        //const checked = 'draw_brush';
-
-        //const data = {
-        //'coords': this.draw(currPosition, checked),
-        //'z': 0,
-        //'size': this.brush.size,
-        //'label': this.brush.label,
-        //'mode': checked,
-        //};
+        const data = {
+            'coords': this.draw(currPosition, this.brush_mode),
+            'z': 0,
+            'size': this.brush.size,
+            'label': this.brush.label,
+            'mode': this.brush_mode,
+        };
         //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
 
         this.prevPosition = currPosition;
@@ -320,20 +339,16 @@ class Canvas {
         const currPosition = this.viewport.toWorld(event.data.global);
         this.prevPosition = currPosition;
 
-        //const checked = Array.from(brushModeElm).find((radio) => radio.checked).value;
-
-        //const checked = 'draw_brush';
-
-        //if (this.isPainting) {
-        //const data = {
-        //'coords': this.draw(currPosition, checked),
-        //'z': 0,
-        //'size': this.brush.size,
-        //'label': this.brush.label,
-        //'mode': checked,
-        //};
-        //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
-        //}
+        if (this.isPainting) {
+            const data = {
+                'coords': this.draw(currPosition, this.brush_mode),
+                'z': 0,
+                'size': this.brush.size,
+                'label': this.brush.label,
+                'mode': this.brush_mode,
+            };
+            //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
+        }
 
         console.log("up");
         this.isPainting = false;
@@ -347,7 +362,13 @@ class Canvas {
         return Math.atan2(point2.x - point1.x, point2.y - point1.y);
     }
 
-    draw(currPosition: PIXI.Point, mode: string) {
+    draw(currPosition: PIXI.Point, mode: brush_mode_type) {
+
+        this.brush_mode = mode;
+
+        const context = this.annotation.context;
+
+        console.log('draw');
 
         if (mode === 'erase_brush') {
             this.annotation.context.globalCompositeOperation = 'destination-out';
@@ -358,7 +379,10 @@ class Canvas {
         if (currPosition === this.prevPosition) {
             const x = Math.round(this.prevPosition.x - this.brush.size / 2);
             const y = Math.round(this.prevPosition.y - this.brush.size / 2);
-            this.annotation.context.drawImage(this.brush.canvas, x, y, this.brush.size, this.brush.size);
+            console.log('context draw image 1');
+            
+            this.brush.contextDrawBrush(context, x, y);
+
             this.annotation.sprite.texture.update();
             return [
                 [x, y],
@@ -371,7 +395,8 @@ class Canvas {
         for (let i = 0; i < dist; i++) {
             const x = Math.round(this.prevPosition.x + Math.sin(angle) * i - this.brush.size / 2);
             const y = Math.round(this.prevPosition.y + Math.cos(angle) * i - this.brush.size / 2);
-            this.annotation.context.drawImage(this.brush.canvas, x, y, this.brush.size, this.brush.size);
+            console.log('context draw image 2');
+            this.brush.contextDrawBrush(context, x, y);
             coords.push([x, y]);
         }
         this.annotation.sprite.texture.update();
@@ -457,6 +482,9 @@ class Canvas {
         this.x = x;
         this.y = y;
 
+        this.annotation.setSize(x, y);
+        this.annotation.clear();
+
         const texture = this.textureFromSlice(uint8data, x, y);
         this.slice.texture = texture;
     }
@@ -496,13 +524,15 @@ class Canvas {
     }
 }
 
+type brush_mode_type = 'draw_brush' | 'erase_brush'
+
 interface ICanvasProps {
     slice: number;
     axis: 'XY' | 'XZ' | 'YZ';
 }
 
 interface ICanvasState {
-    brush_mode: string;
+    brush_mode: brush_mode_type;
 }
 
 const brushList = [
@@ -526,7 +556,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         super(props);
         this.pixi_container = null;
         this.canvas = null;
-        this.state = { 'brush_mode': 'draw_brush' };
+        this.state = { brush_mode: 'draw_brush' };
     }
 
     fetchAllDebounced = debounce( (recenter: boolean = false) => {
@@ -636,7 +666,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                     </IonFabButton>
                 </IonFab>
                 <IonFab vertical="bottom" horizontal="end">
-                    <MenuFabButton buttonsList={brushList} onChange={ (b) => {this.setState({'brush_mode': b.id})} } />
+                    <MenuFabButton buttonsList={brushList} onChange={ (b) => {this.setState({brush_mode: b.id as brush_mode_type})} } />
                 </IonFab>
             </div>
         );
