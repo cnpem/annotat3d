@@ -62,7 +62,7 @@ const Page: React.FC = () => {
             </IonContent>
 
             <IonFooter>
-                <span>{ sliceInfo.axis + ": " + sliceInfo.slice}</span>
+                <span>{ sliceInfo.axis + ": " + sliceInfo.slice }</span>
             </IonFooter>
         </IonPage>
     );

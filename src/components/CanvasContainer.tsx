@@ -527,7 +527,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.pixi_container = null;
         this.canvas = null;
         this.state = { 'brush_mode': 'draw_brush' };
-
     }
 
     fetchAllDebounced = debounce( (recenter: boolean = false) => {

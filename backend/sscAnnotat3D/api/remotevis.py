@@ -5,12 +5,15 @@ from ssc_remotevis import remote_visualization as rv
 
 from sscAnnotat3D.repository import data_repo
 
+from flask_cors import cross_origin
+
 middleware_host = 'index.lnls.br'
 middleware_port = 31000
 
 app = Blueprint('remotevis', __name__)
 
 @app.route('/remotevis/visualization_server')
+@cross_origin()
 def visualization_server():
     info = rv.query_visualization_server(middleware_host, middleware_port)
 

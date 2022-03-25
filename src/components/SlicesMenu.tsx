@@ -75,7 +75,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             slice: sliceValue
         };
 
-        dispatch('slicesMenu:sliceChanged', payload);
+        dispatch('sliceChanged', payload);
     }
 
     return(

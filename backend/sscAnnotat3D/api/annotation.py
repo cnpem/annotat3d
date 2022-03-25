@@ -4,9 +4,12 @@ import pickle
 
 from sscAnnotat3D.repository import data_repo
 
+from flask_cors import cross_origin
+
 app = Blueprint('annotation', __name__)
 
 @app.route("/new_annot", methods=["POST"])
+@cross_origin()
 def new_annot():
 
     annot = {}
@@ -18,6 +21,7 @@ def new_annot():
 
 
 @app.route("/open_annot", methods=["POST"])
+@cross_origin()
 def open_annot():
 
     annot_path = request.json["annot_path"]
@@ -38,6 +42,7 @@ def open_annot():
 
 
 @app.route("/close_annot", methods=["POST"])
+@cross_origin()
 def close_annot():
 
     try:
@@ -49,6 +54,7 @@ def close_annot():
 
 
 @app.route("/save_annot", methods=["POST"])
+@cross_origin()
 def save_annot():
 
     annot = data_repo.get_annotation()
@@ -65,6 +71,7 @@ def save_annot():
 
 
 @app.route("/draw", methods=["POST"])
+@cross_origin()
 def draw():
 
     annot = data_repo.get_annotation()
@@ -94,3 +101,43 @@ def draw():
     data_repo.set_annotation(annot)
 
     return "success", 200
+
+@app.route("/get_annot_slice", methods=["POST"])
+@cross_origin()
+def get_annot_slice():
+
+    return "slice", 200
+
+    annot = data_repo.get_annotation()
+    image = data_repo.get_image()
+
+    if annot is None:
+        return "failure", 400
+
+
+    slice_num = request.json["slice"]
+    axis = request.json["axis"]
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+
+    # img_slice = np.ones(image[slice_range].shape)
+    # img_slice = img_slice * -1
+    # for coords in annot:
+        # if coords[0] == z:
+            # img_slice[coords[1], coords[2]] = annot[coords][0]
+
+    # slice = slice.astype(np.int16)
+    print("annot_slice", img_slice[0])
+    print("annot_dtype", img_slice.dtype)
+    print("annot_shape", img_slice.shape, img_slice.reshape(-1).shape)
+    # print("annot_bytes", len(img_slice.tobytes()))
+
+    # print(img_slice.mean(), img_slice.std())
+
+    img_slice = zlib.compress(img_slice.tobytes())
+    # print("annot_gzip_bytes", len(img_slice))
+
+    return send_file(io.BytesIO(img_slice), "application/gzip")
+
+
+
