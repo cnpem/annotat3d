@@ -26,12 +26,13 @@ const Page: React.FC = () => {
     return (
         <IonPage>
             <IonHeader>
-
                 <IonToolbar color="light">
                     <IonButtons slot="start">
                         <IonMenuButton/>
                         <IonMenuToggle menu="custom">
-                            <IonButton><IonIcon size="default" icon={build}></IonIcon></IonButton>
+                            <IonButton>
+                                <IonIcon size="default" icon={build}/>
+                            </IonButton>
                         </IonMenuToggle>
                     </IonButtons>
                     <div style={ {"display": "flex"} }>

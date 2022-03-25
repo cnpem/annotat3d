@@ -23,11 +23,16 @@ interface OptionsProps{
  */
 const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
+    const [labelName, setLabelName] = useState<string>(props.labelList.filter(label => props.id === label.id)[0].labelName);
     const [showPopover, setShowPopover] = useState<boolean>(false);
 
-    const labelName = (props.labelList.filter(label => props.id === label.id)[0] !== null) ?
-        props.labelList.filter(label => props.id === label.id)[0].labelName :
-        "";
+    const handleClickButton = () => {
+
+        setLabelName(props.labelList.filter(label => props.id === label.id)[0].labelName);
+        setShowPopover(true)
+        console.log(labelName);
+
+    }
 
     const handleShowPopover = (showPop: boolean) => {
         setShowPopover(showPop);
@@ -35,6 +40,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
     const removeTheListElement = () => {
         const labelsFiltered = props.labelList.filter(label => props.id !== label.id);
+        setLabelName(props.labelList.filter(label => props.id === label.id)[0].labelName);
         props.onChangeLabelList(labelsFiltered);
 
         if(labelsFiltered.length === 1)
@@ -54,7 +60,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                     <IonIcon icon={closeOutline}/>
                 </IonButton>
 
-                <IonButton id={"edit-label-button-" + props.id} onClick={() => setShowPopover(true)}>
+                <IonButton id={"edit-label-button-" + props.id} onClick={handleClickButton}>
                     <IonIcon icon={pencilOutline}/>
                 </IonButton>
                 <EditLabelNameComp
