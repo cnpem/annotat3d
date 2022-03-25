@@ -1,16 +1,18 @@
-import React from "react";
-import {IonButton, IonButtons, IonIcon} from "@ionic/react";
+import React, {useState} from "react";
+import {IonButton, IonButtons, IonContent, IonIcon,
+        IonInput, IonItem, IonPopover} from "@ionic/react";
 
 /*Icons import*/
-import {closeOutline} from "ionicons/icons";
+import {closeOutline, pencilOutline} from "ionicons/icons";
 
 import {LabelInterface} from './LabelInterface';
 
 interface OptionsProps{
     labelList: LabelInterface[];
-    onRemoveLabel: (labelElement: LabelInterface[]) => void;
-    
+    onChangeLabelList: (labelElement: LabelInterface[]) => void;
+
     id: number;
+    onResetId: (id: number) => void;
 }
 
 /**
@@ -21,9 +23,27 @@ interface OptionsProps{
  */
 const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
+    const [showPopover, setShowPopover] = useState<boolean>(false);
+
+    const labelName = (props.labelList.filter(label => props.id === label.id)[0] !== null) ?
+        props.labelList.filter(label => props.id === label.id)[0].labelName :
+        "";
+
+    const handleShowPopover = (showPop: boolean) => {
+        setShowPopover(showPop);
+    }
+
     const removeTheListElement = () => {
         const labelsFiltered = props.labelList.filter(label => props.id !== label.id);
-        props.onRemoveLabel(labelsFiltered);
+        props.onChangeLabelList(labelsFiltered);
+
+        if(labelsFiltered.length === 1)
+        {
+
+            props.onResetId(0);
+
+        }
+
     }
 
     if(props.id !== 0)
@@ -33,6 +53,19 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                 <IonButton size="small" onClick={removeTheListElement}>
                     <IonIcon icon={closeOutline}/>
                 </IonButton>
+
+                <IonButton id={"edit-label-button-" + props.id} onClick={() => setShowPopover(true)}>
+                    <IonIcon icon={pencilOutline}/>
+                </IonButton>
+                <EditLabelNameComp
+                    labelNameTrigger={"edit-label-button-" + props.id}
+                    labelName={labelName}
+                    labelList={props.labelList}
+                    onChangeLabelName={props.onChangeLabelList}
+                    id={props.id}
+                    showPopover={showPopover}
+                    onShowPopover={handleShowPopover}/>
+
             </IonButtons>
         );
 
@@ -45,3 +78,64 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 };
 
 export default OptionsIcons;
+
+interface LabelEditProps{
+    labelNameTrigger: string;
+    labelName: string;
+    id: number
+
+    showPopover: boolean;
+    onShowPopover: (showPop: boolean) => void;
+
+    labelList: LabelInterface[];
+    onChangeLabelName: (labelElement: LabelInterface[]) => void;
+}
+
+const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
+
+    const [newLabelName, setNewLabelName] = useState<string>(props.labelName);
+
+    const changeLabelName = (e: CustomEvent) => {
+        setNewLabelName(e.detail.value!);
+    }
+
+    const exitPopup = () => {
+        props.onShowPopover(false)
+        setNewLabelName(props.labelName);
+    }
+
+    const handleChangeNewLabelName = () => {
+        props.onChangeLabelName(
+            props.labelList.map((label) =>
+                label.id === props.id
+                    ? {...label, labelName: newLabelName}
+                    : {...label})
+        );
+
+        props.onShowPopover(false)
+
+    }
+
+    return(
+        <React.Fragment>
+            <IonPopover
+                trigger={props.labelNameTrigger}
+                isOpen={props.showPopover}
+                onDidDismiss={exitPopup}
+                className={"label-editor-popover"}>
+                <IonContent>
+                    <IonItem>
+                        <IonInput type={"text"} value={newLabelName} onIonChange={changeLabelName}/>
+                    </IonItem>
+
+                    <IonItem>
+                        <IonButton onClick={exitPopup}>Cancel</IonButton>
+                        <IonButton onClick={handleChangeNewLabelName}>Confirm</IonButton>
+                    </IonItem>
+
+                </IonContent>
+            </IonPopover>
+        </React.Fragment>
+    );
+
+}

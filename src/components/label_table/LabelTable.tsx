@@ -38,8 +38,8 @@ const LabelTable: React.FC = () => {
                     </div>
                 </td>
                 <td>
-                    <OptionsIcons labelList={labelList} onRemoveLabel={setLabelList}
-                        id={labelElement.id}/>
+                    <OptionsIcons labelList={labelList} onChangeLabelList={setLabelList}
+                                  id={labelElement.id} onResetId={selectIdGenerator}/>
                 </td>
             </tr>
         );
@@ -54,7 +54,7 @@ const LabelTable: React.FC = () => {
             <IonRow>
                 <IonCol>
                     <InputLabel labelList={labelList} onLabelList={selectLabelList}
-                        newLabelId={newLabelId} onNewLabelId={selectIdGenerator}/>
+                                newLabelId={newLabelId} onNewLabelId={selectIdGenerator}/>
                 </IonCol>
             </IonRow>
             <div className={"label-table"}>
