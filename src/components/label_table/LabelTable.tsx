@@ -4,20 +4,26 @@ import {IonRow, IonCol, IonLabel} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
 import {LabelInterface} from './LabelInterface';
+import {defaultColormap} from '../../utils/colormap';
+import {dispatch} from '../../utils/eventbus';
 
 import './LabelTable.css';
+
+interface LabelTableProps {
+    colors: [number, number, number][];
+}
 
 /**
  * Component that creates the label table
  * @constructor
  * @return this components returns the label table
  */
-const LabelTable: React.FC = () => {
-
-    const BACKGROUND_COLOR: [number, number, number] = [229, 16, 249];// pink
+const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
     const [newLabelId, setNewLabelId] = useState<number>(1);
-    const [labelList, setLabelList] = useState<LabelInterface[]>([{ labelName: "Background", color: BACKGROUND_COLOR, id: 0 }]);
+    const [labelList, setLabelList] = useState<LabelInterface[]>([{ labelName: "Background", color: props.colors[0], id: 0 }]);
+
+    const [selectedLabel, setSelectedLabel] = useState<number>(0);
 
     const selectLabelList = (labels: LabelInterface[]) => {
         setLabelList(labels);
@@ -27,10 +33,19 @@ const LabelTable: React.FC = () => {
         setNewLabelId(id + 1);
     }
 
+    function selectLabel(id: number) {
+        setSelectedLabel(id);
+        dispatch('labelSelected', {
+            id: id
+        });
+    }
+
     const renderLabel = (labelElement: LabelInterface, index: number) => {
 
+        const isActive = labelElement.id === selectedLabel;
+        
         return(
-            <tr key={index}>
+            <tr key={index} className={ isActive? "label-table-active" : "" } onClick={ () => selectLabel(labelElement.id) }>
                 <td>
                     <div style={ {display: "flex"} }>
                         <div className="round-bar" style={{ background: `rgb(${labelElement.color.join(',')})` }}> </div>
@@ -49,11 +64,16 @@ const LabelTable: React.FC = () => {
     const NAME_WIDTH = "col-3";
     const OPTIONS_WIDTH = "col-1";
 
+    //if selected label is removed, defaults to background
+    if (!labelList.map((l) => l.id).includes(selectedLabel)) {
+        selectLabel(0);
+    }
+
     return(
         <div>
             <IonRow>
                 <IonCol>
-                    <InputLabel labelList={labelList} onLabelList={selectLabelList}
+                    <InputLabel colors={defaultColormap} labelList={labelList} onLabelList={selectLabelList}
                         newLabelId={newLabelId} onNewLabelId={selectIdGenerator}/>
                 </IonCol>
             </IonRow>

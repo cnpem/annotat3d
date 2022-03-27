@@ -1,6 +1,6 @@
 import {Component} from 'react';
 import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
-import { expand, brush, browsers } from 'ionicons/icons';
+import { expand, brush, browsers, add, remove } from 'ionicons/icons';
 import { debounce, isEqual } from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -15,14 +15,16 @@ import { sfetch } from '../utils/simplerequest';
 
 import './styles/CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
-import {type} from 'os';
+import {subscribe, unsubscribe} from '../utils/eventbus';
 
 class Brush {
 
     label: number;
-    size: number;
+    size: number = 0;
     color: number;
-    radius: number;
+    radius: number = 0;
+
+    mode: brush_mode_type = 'draw_brush';
 
     canvas: HTMLCanvasElement;
     context: CanvasRenderingContext2D;
@@ -31,42 +33,26 @@ class Brush {
 
     colors: Array<[number, number, number]>;
 
-    constructor() {
+    constructor(colors: [number, number, number][]) {
         this.label = 0;
-        this.size = 20;
         this.color = 0xffffff;
-        this.radius = 5;
 
         this.canvas = document.createElement('canvas');
-        this.canvas.width = this.size;
-        this.canvas.height = this.size;
 
         this.context = this.canvas.getContext('2d')!;
 
-        // this.colors = ["red", "blue", "yellow", "magenta", "green", "indigo", "darkorange", "cyan", "pink", "yellowgreen"]
-        this.colors = [
-            [255, 0, 0],
-            [0, 0, 255],
-            [255, 255, 0],
-            [255, 0, 255],
-            [0, 128, 0],
-            [75, 0, 130],
-            [255, 140, 0],
-            [0, 255, 255],
-            [255, 192, 203],
-            [154, 205, 50],
-        ];
+        this.colors = colors;
 
         this.cursor = this.createBrush();
 
-        //const blackMatrix = new PIXI.filters.ColorMatrixFilter();
-        //blackMatrix.brightness(0);
-        //const inverseMatrix = new PIXI.filters.ColorMatrixFilter();
-        //inverseMatrix.negative();
-        //this.cursor.filters = [blackMatrix, inverseMatrix];
-        //this.cursor.blendMode = PIXI.BLEND_MODES.ADD;
-        //this.cursor.pivot = 5; //pivot
+        this.setSize(4);
 
+        this.update();
+    }
+
+    setMode(mode: brush_mode_type) {
+        console.log('set mode: ', mode);
+        this.mode = mode;
         this.update();
     }
 
@@ -76,6 +62,7 @@ class Brush {
         gr.beginFill(this.color);
         gr.drawCircle(this.size / 2, this.size / 2, this.radius);
         gr.endFill();
+        console.log(this.color);
     }
 
     private createBrush() {
@@ -86,9 +73,6 @@ class Brush {
 
     contextDrawBrush(context: CanvasRenderingContext2D, x: number, y: number) {
         const [r, g, b] = this.colors[(this.label) % this.colors.length];
-
-        console.log('context draw brush: ', context, r, g, b, x, y);
-
         context.beginPath();
         context.fillStyle = `rgb(${r},${g},${b})`;
         context.arc(x + this.size / 2, y + this.size / 2, this.radius, 0, 2 * Math.PI);
@@ -116,9 +100,13 @@ class Brush {
     }
 
     update() {
-        const color = this.colors[(this.label) % this.colors.length];
+        if (this.mode === 'draw_brush') {
+            const color = this.colors[(this.label) % this.colors.length];
+            this.color = this.rgbToHex(...color);
+        } else {
+            this.color = 0xFFFFFF;
+        }
 
-        this.color = this.rgbToHex(...color);
         this.updateBrush();
     }
 }
@@ -131,7 +119,9 @@ class Annotation {
 
     sprite: PIXI.Sprite;
 
-    constructor() {
+    colors: [number, number, number][];
+
+    constructor(colors: [number, number, number][]) {
         this.canvas = document.createElement('canvas');
         //this.canvas.width = 0;
         //this.canvas.height = 0;
@@ -140,6 +130,8 @@ class Annotation {
 
         this.sprite = new PIXI.Sprite();
         //this.sprite.tint = 0x00ff00;
+
+        this.colors = colors;
 
         this.sprite.texture = PIXI.Texture.from(this.canvas);
     }
@@ -155,19 +147,7 @@ class Annotation {
     }
 
     draw(slice: NdArray<TypedArray>) {
-        // colors = ["red", "blue", "yellow", "magenta", "green", "indigo", "darkorange", "cyan", "pink", "yellowgreen"]
-        const colors = [
-            [255, 0, 0],
-            [0, 0, 255],
-            [255, 255, 0],
-            [255, 0, 255],
-            [0, 128, 0],
-            [75, 0, 130],
-            [255, 140, 0],
-            [0, 255, 255],
-            [255, 192, 203],
-            [154, 205, 50],
-        ];
+        const colors = this.colors;
 
         console.log('draw slice: ', slice.shape);
 
@@ -217,10 +197,12 @@ class Canvas {
     labelSlice: PIXI.Sprite;
     superpixelSlice: PIXI.Sprite;
 
+    colors: [number, number, number][];
+
     x: number;
     y: number;
 
-    constructor(div: HTMLDivElement) {
+    constructor(div: HTMLDivElement, colors: [number, number, number][]) {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
         this.app = new PIXI.Application({
@@ -250,9 +232,11 @@ class Canvas {
         this.superpixelSlice.visible = true;
 
 
-        this.annotation = new Annotation();
-        this.brush = new Brush();
+        this.annotation = new Annotation(colors);
+        this.brush = new Brush(colors);
         this.brush_mode = 'draw_brush';
+
+        this.colors = colors;
 
         this.isPainting = false;
         this.prevPosition = null;
@@ -320,7 +304,7 @@ class Canvas {
         if (!this.isPainting) return;
 
         const data = {
-            'coords': this.draw(currPosition, this.brush_mode),
+            'coords': this.draw(currPosition),
             'z': 0,
             'size': this.brush.size,
             'label': this.brush.label,
@@ -341,7 +325,7 @@ class Canvas {
 
         if (this.isPainting) {
             const data = {
-                'coords': this.draw(currPosition, this.brush_mode),
+                'coords': this.draw(currPosition),
                 'z': 0,
                 'size': this.brush.size,
                 'label': this.brush.label,
@@ -362,11 +346,10 @@ class Canvas {
         return Math.atan2(point2.x - point1.x, point2.y - point1.y);
     }
 
-    draw(currPosition: PIXI.Point, mode: brush_mode_type) {
-
-        this.brush_mode = mode;
+    draw(currPosition: PIXI.Point) {
 
         const context = this.annotation.context;
+        const mode = this.brush_mode;
 
         console.log('draw');
 
@@ -380,7 +363,7 @@ class Canvas {
             const x = Math.round(this.prevPosition.x - this.brush.size / 2);
             const y = Math.round(this.prevPosition.y - this.brush.size / 2);
             console.log('context draw image 1');
-            
+
             this.brush.contextDrawBrush(context, x, y);
 
             this.annotation.sprite.texture.update();
@@ -401,6 +384,11 @@ class Canvas {
         }
         this.annotation.sprite.texture.update();
         return coords;
+    }
+
+    setBrushMode(mode: brush_mode_type) {
+        this.brush_mode = mode;
+        this.brush.setMode(mode);
     }
 
     setSuperpixelVisibility(visible: boolean = true) {
@@ -429,19 +417,7 @@ class Canvas {
         const len = labelSlice.data.length;
         let rgbaData = new Uint8Array(len * 4);
 
-        //change to use the annotat3d npy colormaps
-        const colors = [
-            [255, 0, 0],
-            [0, 0, 255],
-            [255, 255, 0],
-            [255, 0, 255],
-            [0, 128, 0],
-            [75, 0, 130],
-            [255, 140, 0],
-            [0, 255, 255],
-            [255, 192, 203],
-            [154, 205, 50],
-        ];
+        const colors = this.colors;
 
         for (let i = 0; i < len; ++i) {
             const idx = i * 4;
@@ -489,6 +465,16 @@ class Canvas {
         this.slice.texture = texture;
     }
 
+    increaseBrushSize() {
+        this.brush.setSize(this.brush.size + 1);
+    }
+
+    decreaseBrushSize() {
+        if (this.brush.size <= 1)
+            return;
+        this.brush.setSize(this.brush.size - 1);
+    }
+
     setSuperpixelImage(superpixel_slice: NdArray<TypedArray>) {
         const uint8data = superpixel_slice.data.map(x => x * 255) as Uint8Array;
         const x = superpixel_slice.shape[1];
@@ -524,11 +510,12 @@ class Canvas {
     }
 }
 
-type brush_mode_type = 'draw_brush' | 'erase_brush'
+type brush_mode_type = 'draw_brush' | 'erase_brush';
 
 interface ICanvasProps {
     slice: number;
     axis: 'XY' | 'XZ' | 'YZ';
+    colors: [number, number, number][];
 }
 
 interface ICanvasState {
@@ -551,6 +538,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     pixi_container: HTMLDivElement | null;
     canvas: Canvas | null;
+    onLabelSelected: (payload: any) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -630,13 +618,18 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     }
 
+    setBrushMode(brush_mode: brush_mode_type) {
+        this.setState({brush_mode: brush_mode});
+        this.canvas!!.setBrushMode(brush_mode);
+    }
+
     componentDidMount() {
         // the element is the DOM object that we will use as container to add pixi stage(canvas)
         //console.log("create pixi");
         //console.log(this);
         const elem = this.pixi_container;
         if (this && elem) {
-            this.canvas = new Canvas(elem);
+            this.canvas = new Canvas(elem, this.props.colors);
             setTimeout(() => this.canvas!.resize(), 200);
             console.log(this.canvas.viewport);
             console.log(this.pixi_container);
@@ -647,8 +640,19 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             });
 
             this.fetchAllDebounced(true);
-        }
+            this.onLabelSelected =  (payload) => {
+                console.log(payload);
+                console.log('label selected');
+                this.canvas?.brush.setLabel(payload.id);
+            };
 
+            subscribe('labelSelected', this.onLabelSelected);
+        }
+    }
+
+
+    componentWillUnmount() {
+        unsubscribe('labelSelected', this.onLabelSelected);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
@@ -666,8 +670,22 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                     </IonFabButton>
                 </IonFab>
                 <IonFab vertical="bottom" horizontal="end">
-                    <MenuFabButton buttonsList={brushList} onChange={ (b) => {this.setState({brush_mode: b.id as brush_mode_type})} } />
+
+                    <MenuFabButton openSide="start" buttonsList={brushList} onChange={ (b) => { this.setBrushMode(b.id as brush_mode_type) } } />
                 </IonFab>
+                <IonFab vertical="bottom" horizontal="end" style={ {marginBottom: '4em'} }>
+                    <IonFabButton size="small" onClick={() => {
+                            this.canvas?.increaseBrushSize();
+                        }}>
+                        <IonIcon icon={add} />
+                    </IonFabButton>
+                    <IonFabButton size="small" onClick={() => {
+                            this.canvas?.decreaseBrushSize();
+                        }}>
+                        <IonIcon icon={remove}/>
+                    </IonFabButton>
+                    </IonFab>
+
             </div>
         );
     }
