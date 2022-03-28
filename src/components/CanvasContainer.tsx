@@ -10,7 +10,7 @@ import '../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
 //import npyjs from 'npyjs';
 import { NdArray, TypedArray } from 'ndarray';
-//import { mean, std } from '../utils/math';
+import { mean, std } from '../utils/math';
 import { sfetch } from '../utils/simplerequest';
 
 import './styles/CanvasContainer.css';
@@ -202,7 +202,14 @@ class Canvas {
     x: number;
     y: number;
 
-    constructor(div: HTMLDivElement, colors: [number, number, number][]) {
+    axis: 'XY' | 'XZ' | 'YZ';
+    sliceNum: number;
+
+    newAnnotation() {
+        sfetch('POST', '/new_annot');
+    }
+
+    constructor(div: HTMLDivElement, colors: [number, number, number][], axis: 'XY' | 'XZ' | 'YZ', sliceNum: number) {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
         this.app = new PIXI.Application({
@@ -259,10 +266,22 @@ class Canvas {
 
         this.x = this.y = 0;
 
+        this.axis = axis;
+        this.sliceNum = sliceNum;
+
         //this.setSuperpixelVisibility(false);
         this.setLabelVisibility(true);
+
+        this.newAnnotation();
     }
 
+    setSliceNum(sliceNum: number) {
+        this.sliceNum = sliceNum;
+    }
+
+    setAxis(axis: 'XY' | 'XZ' | 'YZ') {
+        this.axis = axis;
+    }
 
     onPointerDown(event: any) {
         if (event.data.pointerType === 'mouse') {
@@ -305,12 +324,14 @@ class Canvas {
 
         const data = {
             'coords': this.draw(currPosition),
-            'z': 0,
+            'axis': this.axis,
+            'slice': this.sliceNum,
             'size': this.brush.size,
             'label': this.brush.label,
             'mode': this.brush_mode,
         };
-        //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
+
+        sfetch('POST', '/draw', JSON.stringify(data));
 
         this.prevPosition = currPosition;
     }
@@ -326,12 +347,13 @@ class Canvas {
         if (this.isPainting) {
             const data = {
                 'coords': this.draw(currPosition),
-                'z': 0,
+                'slice': this.sliceNum,
+                'axis': this.axis,
                 'size': this.brush.size,
                 'label': this.brush.label,
                 'mode': this.brush_mode,
             };
-            //sxhr('POST', '/draw', () => {}, JSON.stringify(data));
+            sfetch('POST', '/draw', JSON.stringify(data));
         }
 
         console.log("up");
@@ -411,8 +433,8 @@ class Canvas {
         const x = labelSlice.shape[1];
         const y = labelSlice.shape[0];
 
-        //console.log("set label image: ", labelSlice);
-        //console.log(mean(labelSlice.data), std(labelSlice.data));
+        console.log("set label image: ", labelSlice);
+        console.log(mean(labelSlice.data), std(labelSlice.data));
 
         const len = labelSlice.data.length;
         let rgbaData = new Uint8Array(len * 4);
@@ -598,8 +620,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             slice: this.props.slice,
         };
 
+        console.log('get annot slice');
         sfetch('POST', '/get_annot_slice', JSON.stringify(params), 'gzip/numpyndarray')
         .then((slice) => {
+            console.log('annot slice');
             this.canvas!!.annotation.draw(slice);
         });
     }
@@ -629,7 +653,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         //console.log(this);
         const elem = this.pixi_container;
         if (this && elem) {
-            this.canvas = new Canvas(elem, this.props.colors);
+            this.canvas = new Canvas(elem, this.props.colors,
+                                     this.props.axis, this.props.slice);
             setTimeout(() => this.canvas!.resize(), 200);
             console.log(this.canvas.viewport);
             console.log(this.pixi_container);
@@ -658,6 +683,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
         if (isEqual(prevProps, this.props)) //if all properties are the same (deep comparison)
             return;
+        this.canvas?.setSliceNum(this.props.slice);
+        this.canvas?.setAxis(this.props.axis);
         this.fetchAllDebounced(prevProps.axis !== this.props.axis);
     }
 
