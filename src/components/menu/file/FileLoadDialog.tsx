@@ -89,7 +89,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const [zRange, setZRange] = useState([0, -1]);
 
     const handleLoadImageAction = () => {
-       sfetch("POST", "/open_image", JSON.stringify(path));
+        sfetch("POST", "/open_image", JSON.stringify(path));
     }
 
     /**

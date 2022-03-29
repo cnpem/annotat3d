@@ -51,7 +51,6 @@ async function decompressGzip(response) {
 async function bufferToNdArray(buffer) {
     const n = new npyjs();
     const data = await n.parse(buffer);
-    //console.log(data);
     return data;
 }
 
@@ -83,7 +82,6 @@ function sfetch(method, url, data = '', responseType = '') {
     return fetch(fullURL.href, {
         method: method,
         headers: {
-            //'Accept': 'application/json',
             'Content-Type': 'application/json'
         },
         body: data
