@@ -6,16 +6,16 @@ import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 // https://stackoverflow.com/questions/42789896/webgl-error-arraybuffer-not-big-enough-for-request-in-case-of-gl-luminance
 // this fix is on the import on utils/pixibufferloader
-import '../utils/pixibufferloader';
+import '../../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
 //import npyjs from 'npyjs';
 import { NdArray, TypedArray } from 'ndarray';
-import { mean, std } from '../utils/math';
-import { sfetch } from '../utils/simplerequest';
+import { mean, std } from '../../utils/math';
+import { sfetch } from '../../utils/simplerequest';
 
-import './styles/CanvasContainer.css';
+import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
-import {subscribe, unsubscribe} from '../utils/eventbus';
+import {subscribe, unsubscribe} from '../../utils/eventbus';
 
 class Brush {
 

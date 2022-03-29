@@ -4,8 +4,8 @@ import {IonRow, IonCol, IonLabel} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
 import {LabelInterface} from './LabelInterface';
-import {defaultColormap} from '../../utils/colormap';
-import {dispatch} from '../../utils/eventbus';
+import {defaultColormap} from '../../../utils/colormap';
+import {dispatch} from '../../../utils/eventbus';
 
 import './LabelTable.css';
 

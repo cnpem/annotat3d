@@ -1,6 +1,6 @@
 import {Fragment, useState} from 'react';
 
-import { IonFabList, IonFabButton, IonIcon, IonContent} from '@ionic/react';
+import { IonFabList, IonFabButton, IonIcon} from '@ionic/react';
 
 interface ButtonProps {
     id: string;

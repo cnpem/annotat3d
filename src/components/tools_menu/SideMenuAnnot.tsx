@@ -3,7 +3,7 @@ import {IonCard, IonCardContent} from "@ionic/react";
 import LabelTable from "./label_table/LabelTable";
 import SlicesMenu from "./SlicesMenu";
 import {ImageShapeInterface} from "./ImageShapeInterface";
-import {defaultColormap} from '../utils/colormap';
+import {defaultColormap} from '../../utils/colormap';
 
 interface SideMenuAnnotatInterface{
     imageSlice: ImageShapeInterface;

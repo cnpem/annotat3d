@@ -1,7 +1,7 @@
 import React from "react";
 import {IonButton, IonIcon} from "@ionic/react";
 import { LabelInterface } from "./LabelInterface";
-import {colorFromId, defaultColormap} from '../../utils/colormap';
+import {colorFromId} from '../../../utils/colormap';
 
 /*Icons import*/
 import {addOutline, trashOutline} from "ionicons/icons";

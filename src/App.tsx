@@ -7,7 +7,7 @@ import {
     setupIonicReact
 } from '@ionic/react';
 import {IonReactRouter} from '@ionic/react-router';
-import Menu from './components/menu/Menu';
+import Menu from './components/main_menu/Menu';
 import Page from './pages/Page';
 
 /* Core CSS required for Ionic components to work properly */
@@ -28,7 +28,7 @@ import '@ionic/react/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
-import SideMenu from './components/SideMenu';
+import ToolsMenu from './components/tools_menu/ToolsMenu';
 
 setupIonicReact();
 
@@ -47,7 +47,7 @@ const App: React.FC = () => {
                         contentId="main"
                         onIonWillClose={ (e) => console.log(e) }>
                         <IonContent>
-                            <SideMenu hideMenu={true}/>
+                            <ToolsMenu hideMenu={true}/>
                         </IonContent>
                     </IonMenu>
 

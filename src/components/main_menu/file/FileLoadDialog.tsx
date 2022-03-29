@@ -18,7 +18,7 @@ import {
     IonAccordion,
     IonAccordionGroup
 } from "@ionic/react";
-import "../../styles/FileDialog.css"
+import "./FileDialog.css"
 import dataType from "./Dtypes";
 import {options} from "ionicons/icons";
 

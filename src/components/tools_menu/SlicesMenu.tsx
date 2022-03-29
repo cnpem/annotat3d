@@ -7,7 +7,7 @@ import {albumsOutline} from "ionicons/icons";
 
 import {ImageShapeInterface} from './ImageShapeInterface';
 
-import {dispatch} from '../utils/eventbus';
+import {dispatch} from '../../utils/eventbus';
 import {SliceInfoInterface} from "./SliceInfoInterface";
 
 interface SlicesMenuProps{
