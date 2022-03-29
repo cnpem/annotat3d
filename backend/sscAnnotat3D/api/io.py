@@ -14,8 +14,8 @@ def open_image():
 
     try:
         image_path = request.json["image_path"]
-    except:
-        return "Cannot load the requested json", 400
+    except Exception as e:
+        return e, 400
 
     extension = image_path.split(".")[-1]
     raw_extensions = ["raw", "b"]
@@ -25,6 +25,8 @@ def open_image():
 
     if extension not in extensions:
         return "failure trying to get the file extension", 400
+
+    info = ""
 
     try:
         image, info = sscIO.io.read_volume(image_path, 'numpy')

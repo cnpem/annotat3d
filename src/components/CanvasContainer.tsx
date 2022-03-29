@@ -607,9 +607,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
         return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
         .then(imgSlice => {
-            //console.log(imgSlice);
             this.canvas!!.setImage(imgSlice);
-            //this.canvas!!.recenter();
         });
     }
 

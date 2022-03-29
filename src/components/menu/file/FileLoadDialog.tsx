@@ -89,7 +89,15 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const [zRange, setZRange] = useState([0, -1]);
 
     const handleLoadImageAction = () => {
-        sfetch("POST", "/open_image", JSON.stringify(path));
+
+        const params = {
+            image_path: path
+        };
+
+        //TODO : i need to pass the shape information to another component into the code
+        const imageInfo = sfetch("POST", "/open_image", JSON.stringify(params), "json");
+        console.log(imageInfo);
+
     }
 
     /**
