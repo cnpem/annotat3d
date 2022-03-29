@@ -21,6 +21,7 @@ import {
 import "../../styles/FileDialog.css"
 import dataType from "./Dtypes";
 import {options} from "ionicons/icons";
+import {sfetch} from "../../../utils/simplerequest";
 
 /**
  * dtypes array
@@ -86,6 +87,10 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const [xRange, setXRange] = useState([0, -1]);
     const [yRange, setYRange] = useState([0, -1]);
     const [zRange, setZRange] = useState([0, -1]);
+
+    const handleLoadImageAction = () => {
+       sfetch("POST", "/open_image", JSON.stringify(path));
+    }
 
     /**
      * Clean up popover dialog
@@ -257,7 +262,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                         </IonGrid>
                     </IonAccordion>
                 </IonAccordionGroup>
-                <IonButton color={"tertiary"} slot={"end"}>
+                <IonButton color={"tertiary"} slot={"end"} onClick={handleLoadImageAction}>
                     Load!
                 </IonButton>
             </IonPopover>

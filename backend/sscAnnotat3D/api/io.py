@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
 import numpy as np
 import sscIO.io
 import pickle
@@ -16,7 +16,10 @@ app = Blueprint('io', __name__)
 @cross_origin()
 def open_image():
 
-    image_path = request.json["image_path"]
+    try:
+        image_path = request.json["image_path"]
+    except:
+        return "failure", 400
 
     extension = image_path.split(".")[-1]
     raw_extensions = ["raw", "b"]
@@ -29,12 +32,10 @@ def open_image():
 
     image, info = sscIO.io.read_volume(image_path, 'numpy')
 
-    print("shape", image.shape)
-    print("dtype", image.dtype)
-
+    print("Shape json : {}".format(jsonify(image.shape)))
     data_repo.set_image(key='image', data=image)
 
-    return "success", 200
+    return jsonify(image.shape), 200
 
 
 @app.route("/close_image", methods=["POST"])
