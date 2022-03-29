@@ -1,15 +1,19 @@
 from flask import Blueprint, request
 import numpy as np
-from sscIO import io
+import sscIO.io
 import pickle
 import zlib
+import io
 
 from sscAnnotat3D.repository import data_repo
+
+from flask_cors import cross_origin
 
 app = Blueprint('io', __name__)
 
 
 @app.route("/open_image", methods=["POST"])
+@cross_origin()
 def open_image():
 
     image_path = request.json["image_path"]
@@ -23,7 +27,7 @@ def open_image():
     if extension not in extensions:
         return "failure", 400
 
-    image, info = io.read_volume(image_path, 'numpy')
+    image, info = sscIO.io.read_volume(image_path, 'numpy')
 
     print("shape", image.shape)
     print("dtype", image.dtype)
@@ -34,6 +38,7 @@ def open_image():
 
 
 @app.route("/close_image", methods=["POST"])
+@cross_origin()
 def close_image():
 
     try:

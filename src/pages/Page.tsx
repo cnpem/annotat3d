@@ -1,55 +1,73 @@
-import { IonButtons, IonContent, IonIcon, IonFooter, IonHeader, IonInput, IonMenuButton, IonPage, IonTitle, IonToolbar, IonSelect, IonSelectOption } from '@ionic/react';
-import { useParams } from 'react-router';
+import React, {useState} from "react";
+import {
+    IonButton, IonButtons, IonContent,
+    IonFooter, IonHeader, IonIcon,
+    IonMenuButton, IonPage, IonTitle,
+    IonToolbar, IonSelectOption, IonSelect,
+    IonMenuToggle
+} from '@ionic/react';
+import {useParams} from 'react-router';
 import './Page.css';
-import { add } from 'ionicons/icons';
 
-import CanvasContainer from '../components/CanvasContainer';
-import React, {useState} from 'react';
-import SuperpixelModuleCard from '../components/SuperpixelModuleCard';
+import {defaultColormap} from '../utils/colormap';
 
+import CanvasContainer from '../components/canvas/CanvasContainer';
+import {build} from "ionicons/icons";
 
+import {useEventBus} from '../utils/eventbus';
+import {SliceInfoInterface} from "../components/tools_menu/SliceInfoInterface";
 
+/**
+ * Module that contains the initial page of Annotat3D web
+ * @tutorial the variable name is used as the main site title
+ * @constructor
+ * @return returns the React file to create the site /inbox
+ */
 const Page: React.FC = () => {
-  const { name } = useParams<{ name: string; }>();
+    const { name } = useParams<{ name: string; }>();
 
-  const [sliceXY, setSliceXY] = useState<number>(0)
+    const [sliceInfo, setSliceInfo] = useState<SliceInfoInterface>({axis: 'XY', slice: 0});
 
-  return (
-    <IonPage>
-      <IonHeader>
+    useEventBus('sliceChanged', (payload: SliceInfoInterface) => {
+        setSliceInfo(payload);
+    });
 
-        <IonToolbar color="light">
-          <IonButtons slot="start">
-            <IonMenuButton/>
-          </IonButtons>
-            <div style={ {"display": "flex"} }>
-          <IonTitle>{name}</IonTitle>
-            <IonSelect interface="popover" placeholder="Segmentation Module">
-                <IonSelectOption value="superpixel">Superpixel Segmentation</IonSelectOption>
-                <IonSelectOption value="pixel">Pixel Segmentation</IonSelectOption>
-                <IonSelectOption value="edit">Edit Labels</IonSelectOption>
-            </IonSelect>
-            </div>
-        </IonToolbar>
-      </IonHeader>
+    return (
+        <IonPage>
+            <IonHeader>
 
-      <IonContent fullscreen>
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">{name}</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-          <IonInput type="number" value={sliceXY} onIonChange={(e) => { setSliceXY(+e.detail.value!) } } />
-          <CanvasContainer z={sliceXY}/>
-          <SuperpixelModuleCard></SuperpixelModuleCard>
-      </IonContent>
+                <IonToolbar color="light">
+                    <IonButtons slot="start">
+                        <IonMenuButton/>
+                        <IonMenuToggle menu="custom">
+                            <IonButton><IonIcon size="default" icon={build}></IonIcon></IonButton>
+                        </IonMenuToggle>
+                    </IonButtons>
+                    <div style={ {"display": "flex"} }>
+                        <IonTitle>{name}</IonTitle>
+                        <IonSelect interface="popover" placeholder="Segmentation Module">
+                            <IonSelectOption value="superpixel">Superpixel Segmentation</IonSelectOption>
+                            <IonSelectOption value="pixel">Pixel Segmentation</IonSelectOption>
+                            <IonSelectOption value="edit">Edit Labels</IonSelectOption>
+                        </IonSelect>
+                    </div>
+                </IonToolbar>
+            </IonHeader>
 
-    <IonFooter>
-        <span>{0}</span>
-    </IonFooter>
+            <IonContent fullscreen>
+                <IonHeader collapse="condense">
+                    <IonToolbar>
+                        <IonTitle size="large">{name}</IonTitle>
+                    </IonToolbar>
+                </IonHeader>
+                <CanvasContainer colors={defaultColormap} axis={sliceInfo.axis} slice={sliceInfo.slice}/>
+            </IonContent>
 
-    </IonPage>
-  );
+            <IonFooter>
+                <span>{ sliceInfo.axis + ": " + sliceInfo.slice }</span>
+            </IonFooter>
+        </IonPage>
+    );
 };
 
 export default Page;

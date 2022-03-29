@@ -1,13 +1,13 @@
 import {
     IonApp,
+    IonContent,
+    IonMenu,
     IonRouterOutlet,
     IonSplitPane,
     setupIonicReact
 } from '@ionic/react';
 import {IonReactRouter} from '@ionic/react-router';
-import {Redirect, Route} from 'react-router-dom';
-import Menu from './components/menu/Menu';
-import MenuTools from './components/menuTools/MenuTools';
+import Menu from './components/main_menu/Menu';
 import Page from './pages/Page';
 
 /* Core CSS required for Ionic components to work properly */
@@ -28,28 +28,38 @@ import '@ionic/react/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import ToolsMenu from './components/tools_menu/ToolsMenu';
 
 setupIonicReact();
 
+/**
+ * Main function that does all the functions callouts
+ */
 const App: React.FC = () => {
+
     return (
         <IonApp>
             <IonReactRouter>
-                <IonSplitPane contentId="main" when={false}>
-                    <Menu/>
-                    <MenuTools/>
+                <Menu/>
+
+                <IonSplitPane contentId="main" when="(orientation: landscape)">
+                    <IonMenu side="end" menuId="custom" id="custom"
+                        contentId="main"
+                        onIonWillClose={ (e) => console.log(e) }>
+                        <IonContent>
+                            <ToolsMenu hideMenu={true}/>
+                        </IonContent>
+                    </IonMenu>
+
                     <IonRouterOutlet id="main">
-                        <Route path="/" exact={true}>
-                            <Redirect to="/Annotat3D"/>
-                        </Route>
-                        <Route path="/:name" exact={true}>
-                            <Page/>
-                        </Route>
+                        <Page/>
                     </IonRouterOutlet>
                 </IonSplitPane>
+
             </IonReactRouter>
         </IonApp>
     );
+
 };
 
 export default App;

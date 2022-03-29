@@ -11,7 +11,7 @@ import {
     IonSelectOption,
     IonTextarea
 } from "@ionic/react";
-import "../../styles/FileDialog.css"
+import "./FileDialog.css"
 import dataType from "./Dtypes";
 
 /**

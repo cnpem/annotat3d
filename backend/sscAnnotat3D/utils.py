@@ -18,6 +18,35 @@ except:
 FILE_EXTENSION_IMAGE_FILTER = "Images (*.tif *.tiff *.TIFF *TIF *.b *.raw);; TIFF  (*.tif *.tiff *.TIFF *.TIF);; Raw Data  (*.b *.raw);; All Files (*.*)"
 
 
+__axis_num = { 'xy': 0, 'xz': 1, 'yz': 2}
+
+def get_3d_slice_range_from(axis: str, slice_num: int):
+    """
+    Given an axis and a slice, returns the range to acess the 2d image from a 3d volume.
+    Args:
+        axis (str): The axis to be considered ('XY' | 'XZ' | 'YZ').
+        slice_num: The slice to be extracted from the given axis.
+    Return:
+        The range to extract that slice number from that axis.
+        Example:
+        img[get_3d_slice_range_from('xy', 10)]
+    """
+    s = [slice(None, None, None),
+         slice(None, None, None),
+         slice(None, None, None)]
+    s[__axis_num[axis.lower()]] = slice_num
+    return s
+
+def get_axis_num(axis: str):
+    """
+    Given an axis, returns the numeric equivalent of such.
+    Args:
+        axis (str): The axis to be considered ('XY' | 'XZ' | 'YZ')
+    Return:
+        The axis free dimension. { 'xy': 0, 'xz': 1, 'yz': 2}
+    """
+    return __axis_num[axis.lower()]
+
 # class ThreadWorker(QtCore.QThread):
     # append_log = QtCore.pyqtSignal(str)
     # finished = QtCore.pyqtSignal()

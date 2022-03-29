@@ -48,8 +48,7 @@ with open(req_file) as f:
 import shutil
 from setuptools.command.install import install
 
-__version__ = '0.0.0'
-
+from sscAnnotat3D.__version__ import __version__
 
 class PostInstallCommand(install):
     """Post-installation for installation mode."""
@@ -118,6 +117,7 @@ setup(
         *extension_modules('sscAnnotat3D'),
         *extension_modules('sscAnnotat3D.repository'),
         *extension_modules('sscAnnotat3D.api'),
+        *extension_modules('sscAnnotat3D.utils'),
         *extension_modules('sscAnnotat3D.modules'),
         *extension_modules('sscAnnotat3D.deeplearning'),
         *extension_modules('sscAnnotat3D.cython', language='c++')
