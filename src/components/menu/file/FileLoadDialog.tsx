@@ -22,6 +22,7 @@ import "../../styles/FileDialog.css"
 import dataType from "./Dtypes";
 import {options} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
+import {dispatch} from "../../../utils/eventbus";
 
 /**
  * dtypes array
@@ -75,6 +76,14 @@ interface ImageInfoInterface{
     imageDtype: string;
 }
 
+interface ImageButtonOption{
+    image_path: string;
+}
+
+interface SuperpixelButtoOption{
+    axis: "XY" | "XZ" | "YZ";
+}
+
 /**
  * Load Image dialog
  * @param name
@@ -97,16 +106,25 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const [imageInfo, setImageInfo] = useState<ImageInfoInterface>({imageDtype: "", imageName: "", imageShape: 0})
 
     const handleLoadImgOP = (e: CustomEvent) => {
-        setLoadImagOp(e.detail!.value!);
+        const buttonSegName = e.detail!.value!
+        setLoadImagOp(buttonSegName);
+    }
+
+    const handleImageOption = () => {
+
+    }
+
+    const handleLabelOption = (params: {axis: "XY" | "XZ" | "YZ", slice: number}) => {
+
+
     }
 
     const handleLoadImageAction = () => {
 
         const params = {
-            image_path: path
-        };
+            image_path: path,
+        }
 
-        //TODO : i need to pass the imgShapeRaw information to another component into the code
         sfetch("POST", "/open_image", JSON.stringify(params), "json").then(
             (image) => {
                 console.log(image);
@@ -115,9 +133,11 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                     imageDtype: "",
                     imageName: "",
                 }
+
                 setImageInfo(info);
-            }
-        );
+                dispatch("ImageLoaded", imageInfo);
+            });
+
     }
 
     /**

@@ -561,6 +561,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     pixi_container: HTMLDivElement | null;
     canvas: Canvas | null;
     onLabelSelected: (payload: any) => void = () => {};
+    onImageLoaded: () => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -666,13 +667,19 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas?.brush.setLabel(payload.id);
             };
 
+            this.onImageLoaded = () => {
+                //page refresher
+                this.fetchAllDebounced(true)
+            }
+
+            subscribe("ImageLoaded", this.onImageLoaded);
             subscribe('labelSelected', this.onLabelSelected);
         }
     }
 
-
     componentWillUnmount() {
         unsubscribe('labelSelected', this.onLabelSelected);
+        unsubscribe("ImageLoaded", this.onImageLoaded)
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
