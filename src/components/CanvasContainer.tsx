@@ -591,14 +591,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
         sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray')
         .then((superpixelSlice) => {
-            //console.log("superpixel response");
-            //console.log(superpixelSlice.shape);
             this.canvas!!.setSuperpixelImage(superpixelSlice);
         });
     }
 
     getImageSlice() {
-        //console.log('get image slice hue');
 
         const params = {
             'axis': this.props.axis,

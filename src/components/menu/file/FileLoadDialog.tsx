@@ -95,8 +95,11 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         };
 
         //TODO : i need to pass the shape information to another component into the code
-        const imageInfo = sfetch("POST", "/open_image", JSON.stringify(params), "json");
-        console.log(imageInfo);
+        const imageInfo = sfetch("POST", "/open_image", JSON.stringify(params), "json").then(
+            (imageInfo) => {
+                console.log("image shape : ", imageInfo["image_shape"]);
+            }
+        );
 
     }
 
