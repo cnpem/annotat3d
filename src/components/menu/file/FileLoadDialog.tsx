@@ -93,7 +93,13 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const [xRange, setXRange] = useState([0, -1]);
     const [yRange, setYRange] = useState([0, -1]);
     const [zRange, setZRange] = useState([0, -1]);
+    const [loadImgOp, setLoadImagOp] = useState<"image" | "label" | "superpixel">("image");
     const [imageInfo, setImageInfo] = useState<ImageInfoInterface>({imageDtype: "", imageName: "", imageShape: 0})
+
+    const handleLoadImgOP = (e: CustomEvent) => {
+        setLoadImagOp(e.detail!.value!);
+    }
+
     const handleLoadImageAction = () => {
 
         const params = {
@@ -125,6 +131,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setXRange([0, -1]);
         setYRange([0, -1]);
         setZRange([0, -1]);
+        setLoadImagOp("image");
     };
     return (
         <>
@@ -137,7 +144,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 <IonList>
                     <IonItem>
                         {/* Select Image/Label/Superpixel */}
-                        <IonSegment onIonChange={e => setKind(e.detail.value)}
+                        <IonSegment value={loadImgOp} onIonChange={handleLoadImgOP}
                                     color="tertiary">
                             <IonSegmentButton value="image">
                                 <IonLabel>Image</IonLabel>
