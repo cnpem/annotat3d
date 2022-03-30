@@ -69,6 +69,12 @@ const dtypeList: dataType[] = [
     }
 ];
 
+interface ImageInfoInterface{
+    imageShape: Array<number> [3];
+    imageName: string;
+    imageDtype: string;
+}
+
 /**
  * Load Image dialog
  * @param name
@@ -82,25 +88,30 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     });
     const [, setKind] = useState<string>();
     const [path, setPath] = useState<string>();
-    const [shape, setShape] = useState(new Array(3))
+    const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
     const [dtype, setDtype] = useState<string>();
     const [xRange, setXRange] = useState([0, -1]);
     const [yRange, setYRange] = useState([0, -1]);
     const [zRange, setZRange] = useState([0, -1]);
-
+    const [imageInfo, setImageInfo] = useState<ImageInfoInterface>({imageDtype: "", imageName: "", imageShape: 0})
     const handleLoadImageAction = () => {
 
         const params = {
             image_path: path
         };
 
-        //TODO : i need to pass the shape information to another component into the code
-        const imageInfo = sfetch("POST", "/open_image", JSON.stringify(params), "json").then(
-            (imageInfo) => {
-                console.log("image shape : ", imageInfo["image_shape"]);
+        //TODO : i need to pass the imgShapeRaw information to another component into the code
+        sfetch("POST", "/open_image", JSON.stringify(params), "json").then(
+            (image) => {
+                console.log(image);
+                const info = {
+                    imageShape: image.image_shape,
+                    imageDtype: "",
+                    imageName: "",
+                }
+                setImageInfo(info);
             }
         );
-
     }
 
     /**
@@ -110,7 +121,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setShowPopover({open: false, event: undefined});
         setPath("");
         setDtype("");
-        setShape([null, null, null]);
+        setImageShapeRaw([null, null, null]);
         setXRange([0, -1]);
         setYRange([0, -1]);
         setZRange([0, -1]);
@@ -157,27 +168,27 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonInput
                                         type="number"
                                         min={"0"}
-                                        value={shape[0]}
+                                        value={imgShapeRaw[0]}
                                         placeholder="X"
-                                        onIonChange={e => setShape([parseInt(e.detail.value!, 10), shape[1], shape[2]])}
+                                        onIonChange={e => setImageShapeRaw([parseInt(e.detail.value!, 10), imgShapeRaw[1], imgShapeRaw[2]])}
                                     />
                                 </IonCol>
                                 <IonCol>
                                     <IonInput
                                         type="number"
                                         min={"0"}
-                                        value={shape[1]}
+                                        value={imgShapeRaw[1]}
                                         placeholder="Y"
-                                        onIonChange={e => setShape([shape[0], parseInt(e.detail.value!, 10), shape[2]])}
+                                        onIonChange={e => setImageShapeRaw([imgShapeRaw[0], parseInt(e.detail.value!, 10), imgShapeRaw[2]])}
                                     />
                                 </IonCol>
                                 <IonCol>
                                     <IonInput
                                         type="number"
                                         min={"0"}
-                                        value={shape[2]}
+                                        value={imgShapeRaw[2]}
                                         placeholder="Z"
-                                        onIonChange={e => setShape([shape[0], shape[1], parseInt(e.detail.value!, 10)])}
+                                        onIonChange={e => setImageShapeRaw([imgShapeRaw[0], imgShapeRaw[1], parseInt(e.detail.value!, 10)])}
                                     />
                                 </IonCol>
                             </IonRow>

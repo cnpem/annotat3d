@@ -33,10 +33,14 @@ def open_image():
     except:
         print(info)
 
-    print("Shape json : {}".format(jsonify(image.shape)))
+    image_info = {"image_shape": image.shape, "image_ext": extension}
+
+    test = jsonify(image_info)
+    print("Fazendo um teste aqui : {}".format(test))
+
     data_repo.set_image(key='image', data=image)
 
-    return {"image_shape": image.shape}, 200
+    return image_info, 200
 
 
 @app.route("/close_image", methods=["POST"])
