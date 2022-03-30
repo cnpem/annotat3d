@@ -17,8 +17,6 @@ app = Blueprint('remotevis', __name__)
 def visualization_server():
     info = rv.query_visualization_server(middleware_host, middleware_port)
 
-    import pdb; pdb.set_trace()
-
     print(info)
 
     if info is None:

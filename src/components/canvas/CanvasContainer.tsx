@@ -398,8 +398,6 @@ class Canvas {
         if (currPosition === this.prevPosition) {
             const x = Math.round(this.prevPosition.x - this.brush.size / 2);
             const y = Math.round(this.prevPosition.y - this.brush.size / 2);
-            console.log('context draw image 1');
-
             this.brush.contextDrawBrush(context, x, y);
 
             this.annotation.sprite.texture.update();
@@ -414,7 +412,6 @@ class Canvas {
         for (let i = 0; i < dist; i++) {
             const x = Math.round(this.prevPosition.x + Math.sin(angle) * i - this.brush.size / 2);
             const y = Math.round(this.prevPosition.y + Math.cos(angle) * i - this.brush.size / 2);
-            console.log('context draw image 2');
             this.brush.contextDrawBrush(context, x, y);
             coords.push([x, y]);
         }
