@@ -18,4 +18,8 @@ function std(a) {
   return Math.sqrt(sum);
 }
 
-export {mean, std};
+function clamp(minimum, value, maximum) {
+    return Math.max(Math.min(value, maximum), minimum);
+}
+
+export {mean, std, clamp};

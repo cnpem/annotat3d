@@ -23,8 +23,6 @@ def superpixel():
         seed_spacing=request.json['seed_spacing'],
         compactness=request.json['compactness'])
 
-    # print(img_superpixel.mean(), img_superpixel.shape)
-
     data_repo.set_image(key='superpixel', data=img_superpixel)
 
     return "success", 200
