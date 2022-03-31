@@ -17,7 +17,10 @@ def open_image():
     except Exception as e:
         return e, 400
 
-    extension = image_path.split(".")[-1]
+    file = image_path.split("/")[-1]
+    file_name = file.split(".")[0]
+
+    extension = file.split(".")[-1]
     raw_extensions = ["raw", "b"]
     tif_extensions = ["tif", "tiff"]
 
@@ -27,19 +30,18 @@ def open_image():
         return "failure trying to get the file extension", 400
 
     info = ""
+    image_name = image_path.split("/")
+    print(image_name)
 
     try:
         image, info = sscIO.io.read_volume(image_path, 'numpy')
     except:
         print(info)
 
-    image_info = {"image_shape": image.shape, "image_ext": extension}
-
-    test = jsonify(image_info)
-    print("Fazendo um teste aqui : {}".format(test))
+    image_info = {"image_shape": image.shape, "image_ext": extension,
+                  "image_name": file_name, "image_dtype": ""}
 
     data_repo.set_image(key='image', data=image)
-
     return image_info, 200
 
 

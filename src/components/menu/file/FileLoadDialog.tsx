@@ -73,6 +73,7 @@ const dtypeList: dataType[] = [
 interface ImageInfoInterface{
     imageShape: Array<number> [3];
     imageName: string;
+    imageExt: string;
     imageDtype: string;
 }
 
@@ -80,7 +81,7 @@ interface ImageButtonOption{
     image_path: string;
 }
 
-interface SuperpixelButtoOption{
+interface SuperpixelButtonOption{
     axis: "XY" | "XZ" | "YZ";
 }
 
@@ -95,7 +96,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         open: false,
         event: undefined,
     });
-    const [, setKind] = useState<string>();
+
     const [path, setPath] = useState<string>();
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
     const [dtype, setDtype] = useState<string>();
@@ -103,7 +104,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const [yRange, setYRange] = useState([0, -1]);
     const [zRange, setZRange] = useState([0, -1]);
     const [loadImgOp, setLoadImagOp] = useState<"image" | "label" | "superpixel">("image");
-    const [imageInfo, setImageInfo] = useState<ImageInfoInterface>({imageDtype: "", imageName: "", imageShape: 0})
+    const [imageInfo, setImageInfo] = useState<ImageInfoInterface>({imageDtype: "", imageName: "", imageExt: "", imageShape: 0})
 
     const handleLoadImgOP = (e: CustomEvent) => {
         const buttonSegName = e.detail!.value!
@@ -123,15 +124,17 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
         const params = {
             image_path: path,
+            dtype: "uint16",
         }
 
         sfetch("POST", "/open_image", JSON.stringify(params), "json").then(
             (image) => {
-                console.log(image);
+                console.log("image info ", image);
                 const info = {
                     imageShape: image.image_shape,
-                    imageDtype: "",
-                    imageName: "",
+                    imageDtype: image.image_dtype,
+                    imageName: image.image_name,
+                    imageExt: image.image_ext,
                 }
 
                 setImageInfo(info);
