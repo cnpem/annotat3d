@@ -6,6 +6,7 @@ import {Fragment, useState} from 'react';
 import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem} from './ModuleCard';
 import {dispatch} from '../../utils/eventbus';
+import {useStorageState} from 'react-storage-hooks';
 
 interface SuperpixelState {
     compactness: number;
@@ -15,7 +16,7 @@ interface SuperpixelState {
 
 const SuperpixelModuleCard: React.FC = () => {
 
-    const [value, setValue] = useState<SuperpixelState>({
+    const [value, setValue] = useStorageState<SuperpixelState>(localStorage, 'superpixelParams', {
         compactness: 1000,
         seedsSpacing: 4,
         method: 'waterpixel'
@@ -68,7 +69,6 @@ const SuperpixelModuleCard: React.FC = () => {
                     </IonInput>
                 </IonItem>
             </ModuleCardItem>
-            <div>{JSON.stringify(value)}</div>
         </ModuleCard>
 
     );

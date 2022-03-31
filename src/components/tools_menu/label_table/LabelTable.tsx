@@ -8,6 +8,7 @@ import {defaultColormap} from '../../../utils/colormap';
 import {dispatch} from '../../../utils/eventbus';
 
 import './LabelTable.css';
+import {useStorageState} from "react-storage-hooks";
 
 interface LabelTableProps {
     colors: [number, number, number][];
@@ -20,10 +21,10 @@ interface LabelTableProps {
  */
 const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
-    const [newLabelId, setNewLabelId] = useState<number>(1);
-    const [labelList, setLabelList] = useState<LabelInterface[]>([{ labelName: "Background", color: props.colors[0], id: 0 }]);
+    const [newLabelId, setNewLabelId] = useStorageState<number>(localStorage, 'newLabelId', 1);
+    const [labelList, setLabelList] = useStorageState<LabelInterface[]>(localStorage, 'labelList', [{ labelName: "Background", color: props.colors[0], id: 0 }]);
 
-    const [selectedLabel, setSelectedLabel] = useState<number>(0);
+    const [selectedLabel, setSelectedLabel] = useStorageState<number>(localStorage, 'selectedLabel', 0);
 
     const selectLabelList = (labels: LabelInterface[]) => {
         setLabelList(labels);

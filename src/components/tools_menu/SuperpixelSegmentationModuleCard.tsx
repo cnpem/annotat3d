@@ -3,6 +3,7 @@
 import { IonCard, IonCardTitle, IonCardHeader, IonCardSubtitle, IonCardContent, IonButton, IonAccordion, IonAccordionGroup, IonTitle, IonItem, IonItemDivider, IonLabel, IonList, IonInput, IonGrid, IonRow, IonSelect, IonSelectOption, IonSpinner, useIonLoading, IonContent, IonIcon, IonFooter, IonHeader, IonChip, IonToolbar, IonCheckbox, IonCol } from '@ionic/react';
 import {arrowDown} from 'ionicons/icons';
 import {Fragment, useState} from 'react';
+import {useStorageState} from 'react-storage-hooks';
 import {ModuleCard, ModuleCardItem } from './ModuleCard';
 
 const classifiers = [
@@ -94,6 +95,10 @@ interface SuperpixelSegmentationState {
 const SuperpixelSegmentationModuleCard: React.FC = () => {
 
 
+    const [superpixelSegmentationParams, setSuperpixelSegmentationParams] = useStorageState<SuperpixelSegmentationState>(sessionStorage, 'superpixelSegmentationParams', {
+        classifier: 'rf',
+        classifierParams: new Map<string, any>()
+    });
 
     function onApply() {
 
@@ -105,7 +110,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     function renderSelectOptionClassifier( classifier: Classifier ) {
         return (
-            <IonSelectOption key={classifier.id}>
+            <IonSelectOption key={classifier.id} value={classifier.id}>
                 { classifier.name }
             </IonSelectOption>
         );
@@ -168,7 +173,16 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 <ModuleCardItem name="Classifier Parameters">
                     <IonItem>
                         <IonLabel>Classifier Model</IonLabel>
-                        <IonSelect interface="popover">
+                        <IonSelect interface="popover"
+                            value={superpixelSegmentationParams.classifier}
+                            onIonChange={(e) => {
+                                if (e.detail.value) {
+                                    setSuperpixelSegmentationParams({
+                                        ...superpixelSegmentationParams,
+                                        classifier: e.detail.value
+                                    });
+                                }
+                            }}>
                             { classifiers.map(renderSelectOptionClassifier)  }
                         </IonSelect>
                     </IonItem>

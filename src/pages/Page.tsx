@@ -43,14 +43,7 @@ const Page: React.FC = () => {
                             <IonButton><IonIcon size="default" icon={build}></IonIcon></IonButton>
                         </IonMenuToggle>
                     </IonButtons>
-                    <div style={ {"display": "flex"} }>
-                        <IonTitle>{name}</IonTitle>
-                        <IonSelect interface="popover" placeholder="Segmentation Module">
-                            <IonSelectOption value="superpixel">Superpixel Segmentation</IonSelectOption>
-                            <IonSelectOption value="pixel">Pixel Segmentation</IonSelectOption>
-                            <IonSelectOption value="edit">Edit Labels</IonSelectOption>
-                        </IonSelect>
-                    </div>
+                    <IonTitle>{name}</IonTitle>
                 </IonToolbar>
             </IonHeader>
 
