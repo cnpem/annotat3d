@@ -111,20 +111,11 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setLoadImagOp(buttonSegName);
     }
 
-    const handleImageOption = () => {
-
-    }
-
-    const handleLabelOption = (params: {axis: "XY" | "XZ" | "YZ", slice: number}) => {
-
-
-    }
-
     const handleLoadImageAction = () => {
 
         const params = {
             image_path: path,
-            dtype: "uint16",
+            image_dtype: dtype,
         }
 
         sfetch("POST", "/open_image", JSON.stringify(params), "json").then(

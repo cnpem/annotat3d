@@ -14,31 +14,33 @@ def open_image():
 
     try:
         image_path = request.json["image_path"]
-    except Exception as e:
-        return e, 400
+    except:
+        return "Error while trying to get the image path", 400
 
     file = image_path.split("/")[-1]
     file_name = file.split(".")[0]
 
     extension = file.split(".")[-1]
+
+    if(extension == file_name):
+        return "The path {} is a invalid path !!".format(image_path), 400
+
     raw_extensions = ["raw", "b"]
     tif_extensions = ["tif", "tiff"]
 
     extensions = [*raw_extensions, *tif_extensions]
 
     if extension not in extensions:
-        return "failure trying to get the file extension", 400
-
-    info = ""
-    image_name = image_path.split("/")
-    print(image_name)
+        return "the extension .{} isn't supported !".format(extension), 400
 
     try:
         image, info = sscIO.io.read_volume(image_path, 'numpy')
-    except:
-        print(info)
+        image_shape = image.shape
 
-    image_info = {"image_shape": image.shape, "image_ext": extension,
+    except:
+        return "The path {} is a invalid path !!".format(image_path), 400
+
+    image_info = {"image_shape": image_shape, "image_ext": extension,
                   "image_name": file_name, "image_dtype": ""}
 
     data_repo.set_image(key='image', data=image)
@@ -52,6 +54,6 @@ def close_image():
     try:
         data_repo.delete_image(key='image')
     except:
-        return "failure", 400
+        return "failure trying to delete the image", 400
 
     return "success", 200
