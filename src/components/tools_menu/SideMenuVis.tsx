@@ -1,11 +1,12 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useLayoutEffect, useRef, useState} from "react";
 import {IonCard, IonCardContent, IonRange, IonIcon} from "@ionic/react";
 import {moon, sunny} from "ionicons/icons";
 import {dispatch} from "../../utils/eventbus";
+import { useStorageState } from 'react-storage-hooks';
 
 const SideMenuVis: React.FC = () => {
 
-    const [contrast, setContrast] = useState({
+    const [contrast, setContrast] = useStorageState(localStorage, 'contrast', {
         lower: 10,
         upper: 90
     });
@@ -16,9 +17,14 @@ const SideMenuVis: React.FC = () => {
     //so I am manually setting it.
     useEffect(() => {
         if (contrastRangeRef) {
-            contrastRangeRef.current!.value = contrast;
-        }
-    }, [contrast, contrastRangeRef]);
+            setTimeout(() => {
+            contrastRangeRef.current!.value = {
+                lower: contrast.lower,
+                upper: contrast.upper
+            }; 
+        }, 20);
+    }
+    }, [contrastRangeRef]);
 
     return(
         <React.Fragment>
@@ -31,7 +37,6 @@ const SideMenuVis: React.FC = () => {
                                 setContrast(range);
                                 dispatch('contrastChanged', [range.lower/100, range.upper/100]);
                             }
-
                         }}>
                         <IonIcon slot='start' icon={sunny}></IonIcon>
                         <IonIcon slot='end' icon={moon}></IonIcon>
