@@ -118,7 +118,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             image_dtype: dtype,
         }
 
-        sfetch("POST", "/open_image", JSON.stringify(params), "json").then(
+        sfetch("POST", "/open_image/"+loadImgOp, JSON.stringify(params), "json").then(
             (image) => {
                 console.log("image info ", image);
                 const info = {

@@ -39,9 +39,6 @@ def get_image_slice(image_id: str):
     print('npy time: ', npy_en - npy_st)
     print('compress time: ', comp_en - comp_st)
 
-    # print(img_slice.mean(), img_slice.std())
-
-    # print("gzip bytes", len(compressed_byte_slice))
     return send_file(io.BytesIO(compressed_byte_slice), "application/gzip")
 
 

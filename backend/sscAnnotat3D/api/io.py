@@ -8,9 +8,9 @@ from flask_cors import cross_origin
 app = Blueprint('io', __name__)
 
 
-@app.route("/open_image", methods=["POST"])
+@app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()
-def open_image():
+def open_image(image_id: str):
 
     try:
         image_path = request.json["image_path"]
