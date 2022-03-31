@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request
 import sscIO.io
 
 from sscAnnotat3D.repository import data_repo
@@ -43,7 +43,7 @@ def open_image(image_id: str):
     image_info = {"image_shape": image_shape, "image_ext": extension,
                   "image_name": file_name, "image_dtype": ""}
 
-    data_repo.set_image(key='image', data=image)
+    data_repo.set_image(key=image_id, data=image)
     return image_info, 200
 
 

@@ -645,8 +645,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     componentDidMount() {
         // the element is the DOM object that we will use as container to add pixi stage(canvas)
-        //console.log("create pixi");
-        //console.log(this);
         const elem = this.pixi_container;
         if (this && elem) {
             this.canvas = new Canvas(elem, this.props.colors,

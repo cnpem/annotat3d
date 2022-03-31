@@ -77,14 +77,6 @@ interface ImageInfoInterface{
     imageDtype: string;
 }
 
-interface ImageButtonOption{
-    image_path: string;
-}
-
-interface SuperpixelButtonOption{
-    axis: "XY" | "XZ" | "YZ";
-}
-
 /**
  * Load Image dialog
  * @param name
