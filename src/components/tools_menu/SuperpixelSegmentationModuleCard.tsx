@@ -1,80 +1,46 @@
 
 
-import { IonCard, IonCardTitle, IonCardHeader, IonCardSubtitle, IonCardContent, IonButton, IonAccordion, IonAccordionGroup, IonTitle, IonItem, IonItemDivider, IonLabel, IonList, IonInput, IonGrid, IonRow, IonSelect, IonSelectOption, IonSpinner, useIonLoading, IonContent, IonIcon, IonFooter, IonHeader, IonChip, IonToolbar, IonCheckbox, IonCol } from '@ionic/react';
-import {arrowDown} from 'ionicons/icons';
-import {Fragment, useState} from 'react';
+import { IonItem, IonItemDivider, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox } from '@ionic/react';
+import {useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
+import {useEventBus} from '../../utils/eventbus';
+import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem } from './ModuleCard';
 
 const classifiers = [
-    {
-        id: 'rf',
-        name: 'Random Forest'
-    },
-    {
-        id: 'svm',
-        name: 'Linear SVM'
-    },
-    {
-        id: 'knn',
-        name: 'KNearest Neighbors'
-    }
+    { id: 'rf', name: 'Random Forest' },
+    { id: 'svm', name: 'Linear SVM' },
+    { id: 'mlp', name: 'Multi Layer Perceptron' },
+    { id: 'knn', name: 'KNearest Neighbors' },
+    { id: 'adaboost', name: 'AdaBoost' }
 ];
 
 const defaultFeatures: Feature[] = [
-    {
-        id: 0,
-        name: 'FFT Gauss',
-        active: true
-    },
-    {
-        id: 1,
-        name: 'None (Original Image)',
-        active: true
-    },
-    {
-        id: 2,
-        name: 'Sobel'
-    },
-    {
-        id: 3,
-        name: 'Minimum'
-    },
-    {
-        id: 4,
-        name: 'Average'
-    },
-    {
-        id: 5,
-        name: 'Median'
-    },
-    {
-        id: 6,
-        name: 'FFT Gabor'
-    },
-    {
-        id: 7,
-        name: 'FFT Difference of Gaussians',
-        active: true
-    },
-    {
-        id: 8,
-        name: 'Membrane Projections',
-        active: true
-    },
-    {
-        id: 9,
-        name: 'Maximum'
-    },
-    {
-        id: 10,
-        name: 'Variance'
-    },
-    {
-        id: 11,
-        name: 'Local Binary Pattern'
-    }
+    { id: 0, name: 'FFT Gauss', active: true },
+    { id: 1, name: 'None (Original Image)', active: true },
+    { id: 2, name: 'Sobel' },
+    { id: 3, name: 'Minimum' },
+    { id: 4, name: 'Average' },
+    { id: 5, name: 'Median' },
+    { id: 6, name: 'FFT Gabor' },
+    { id: 7, name: 'FFT Difference of Gaussians', active: true },
+    { id: 8, name: 'Membrane Projections', active: true },
+    { id: 9, name: 'Maximum' },
+    { id: 10, name: 'Variance' },
+    { id: 11, name: 'Local Binary Pattern' }
 ];
+
+const defaultPooling: Pooling[] = [
+    { id: 'min', name: 'Minimum', active: false },
+    { id: 'max', name: 'Maximum', active: false },
+    { id: 'mean', name: 'Mean', active: true }
+]
+
+interface Pooling {
+    id: string,
+    name: string,
+    active: boolean
+}
 
 interface Feature {
     id: number,
@@ -87,25 +53,55 @@ interface Classifier {
     name: string;
 }
 
-interface SuperpixelSegmentationState {
-    classifierParams: Map<String, any>;
-    classifier: string;
+interface ClassifierParams {
+    classifier: string
+}
+
+interface FeatureParams {
+    pooling: Pooling[],
+    feats: Feature[]
 }
 
 const SuperpixelSegmentationModuleCard: React.FC = () => {
 
 
-    const [superpixelSegmentationParams, setSuperpixelSegmentationParams] = useStorageState<SuperpixelSegmentationState>(sessionStorage, 'superpixelSegmentationParams', {
-        classifier: 'rf',
-        classifierParams: new Map<string, any>()
+    const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelFeatParams', {
+        pooling: defaultPooling,
+        feats: defaultFeatures
+    });
+
+    const [classParams, setClassParams] = useStorageState<ClassifierParams>(sessionStorage, 'superpixelClassParams', {
+        classifier: 'rf'
+    });
+
+    const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'superpixelSegmPreprocessed', false);
+
+    const [disabled, setDisabled] = useState<boolean>(true);
+ 
+    useEffect(() => {
+        sfetch('POST', 'is_available_image/superpixel', '', 'json')
+        .then((response) => {
+           setDisabled(!response.available); 
+        });
+    });
+
+    useEventBus('superpixelChanged', () => {
+        setDisabled(false);
     });
 
     function onApply() {
-
+        sfetch('POST', 'superpixel_segmentation_module/execute', '');
     }
 
     function onPreview() {
+        sfetch('POST', '/superpixel_segmentation_module/preview', '');
+    }
 
+    function onPreprocess() {
+        sfetch('POST', '/superpixel_segmentation_module/create', '')
+        .then(() => {
+            setHasPreprocessed(true);
+        })
     }
 
     function renderSelectOptionClassifier( classifier: Classifier ) {
@@ -120,36 +116,69 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         return (
             <IonItem key={feature.id}>
                 <IonLabel><small>{feature.name}</small></IonLabel>
-                <IonCheckbox checked={feature.active}/>
+                <IonCheckbox value={feature.id} checked={feature.active}
+                    onIonChange={(e) => {
+                        console.log(e);
+                        const newfeats = featParams.feats.map( nf => {
+                            if (nf.id === feature.id) {
+                                return {
+                                    ...nf,
+                                    active: e.detail.checked
+                                }
+                            } else {
+                                return nf;
+                            }
+                        } );
+                        setFeatParams({...featParams, feats: newfeats});
+                    }}
+                />
+            </IonItem>
+        );
+    }
+
+    function renderCheckboxPooling(pooling: Pooling) {
+        return (
+            <IonItem key={pooling.id}>
+                <IonLabel>{pooling.name}</IonLabel>
+                <IonCheckbox value={pooling.id} checked={pooling.active}
+                    onIonChange={ (e) => {
+                        console.log(e);
+                        const newpooling = featParams.pooling.map( np => {
+                            if (np.id === pooling.id) {
+                                return {
+                                    ...np,
+                                    active : e.detail.checked
+                                }
+                            } else {
+                                return np
+                            }
+                        } );
+                        setFeatParams({...featParams, pooling: newpooling})
+                    } }/>
             </IonItem>
         );
     }
 
     return (
-        <ModuleCard name="Superpixel Segmentation" onApply={onApply} onPreview={onPreview}>
+        <ModuleCard name="Superpixel Segmentation" disabled={disabled}
+            onApply={onApply} onPreview={onPreview} onPreprocess={onPreprocess}
+            disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed} disabledPreprocess={hasPreprocessed}>
 
             <ModuleCardItem name="Superpixel Segmentation Parameters">
                 <ModuleCardItem name="Feature Extraction Parameters">
                     <IonList>
-                        { defaultFeatures.map(renderCheckboxFeature) }
+                        { featParams.feats.map(renderCheckboxFeature) }
                     </IonList>
-                    <IonItemDivider/>
+                </ModuleCardItem>
+
+                <ModuleCardItem name="debug">
+                    <IonItem>
+                        <IonLabel>{ JSON.stringify(featParams.feats) }</IonLabel>
+                    </IonItem>
                 </ModuleCardItem>
 
                 <ModuleCardItem name="Superpixel Feature Pooling">
-                    <IonItem>
-                        <IonLabel>Minimum</IonLabel>
-                        <IonCheckbox></IonCheckbox>
-                    </IonItem>
-                    <IonItem>
-                        <IonLabel>Maximum</IonLabel>
-                        <IonCheckbox></IonCheckbox>
-                    </IonItem>
-                    <IonItem>
-                        <IonLabel>Mean</IonLabel>
-                        <IonCheckbox></IonCheckbox>
-                    </IonItem>
-
+                    { featParams.pooling.map(renderCheckboxPooling) }
                 </ModuleCardItem>
 
                 <ModuleCardItem name="Multi-scale Parameters">
@@ -174,11 +203,11 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                     <IonItem>
                         <IonLabel>Classifier Model</IonLabel>
                         <IonSelect interface="popover"
-                            value={superpixelSegmentationParams.classifier}
+                            value={classParams.classifier}
                             onIonChange={(e) => {
                                 if (e.detail.value) {
-                                    setSuperpixelSegmentationParams({
-                                        ...superpixelSegmentationParams,
+                                    setClassParams({
+                                        ...classParams,
                                         classifier: e.detail.value
                                     });
                                 }

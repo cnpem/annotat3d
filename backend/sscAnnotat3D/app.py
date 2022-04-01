@@ -11,6 +11,9 @@ from sscAnnotat3D.api import annotation, io as apiio, superpixel, remotevis, ima
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import superpixels, utils
 from sscAnnotat3D.modules import superpixel_segmentation_module
+
+from sscAnnotat3D.api.modules import superpixel_segmentation_module as apisuperpixel_segmentation_module
+
 from flask_cors import CORS, cross_origin
 
 
@@ -27,6 +30,7 @@ app.register_blueprint(annotation.app)
 app.register_blueprint(superpixel.app)
 app.register_blueprint(remotevis.app)
 app.register_blueprint(apiimage.app)
+app.register_blueprint(apisuperpixel_segmentation_module.app)
 
 image = None
 image_path = None

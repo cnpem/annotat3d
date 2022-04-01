@@ -1,4 +1,4 @@
-from flask import Blueprint, request, send_file
+from flask import Blueprint, request, send_file, jsonify
 import numpy as np
 import pickle
 import zlib
@@ -10,6 +10,12 @@ from sscAnnotat3D import utils
 from flask_cors import cross_origin
 
 app = Blueprint('image', __name__)
+
+@app.route('/is_available_image/<image_id>', methods=["POST"])
+@cross_origin()
+def is_available_image(image_id: str):
+    image = data_repo.get_image(image_id)
+    return jsonify({ 'available': image is not None })
 
 @app.route("/get_image_slice/<image_id>", methods=["POST"])
 @cross_origin()
@@ -43,5 +49,4 @@ def get_image_slice(image_id: str):
 
     # print("gzip bytes", len(compressed_byte_slice))
     return send_file(io.BytesIO(compressed_byte_slice), "application/gzip")
-
 

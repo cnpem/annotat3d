@@ -10,7 +10,7 @@
  * or people might think I am crazy. Even tough I am a little.
  */
 
-import {useEffect} from "react";
+import { useEffect } from "react";
 
 interface Dictionary<T> {
     [Key: string]: T;
@@ -75,4 +75,4 @@ function useEventBus(evt: string, callback: (payload: any) => void) {
     }, []);
 }
 
-export {subscribe, unsubscribe, dispatch, useEventBus};
+export { subscribe, unsubscribe, dispatch, useEventBus };

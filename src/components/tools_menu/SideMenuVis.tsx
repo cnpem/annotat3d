@@ -1,4 +1,4 @@
-import React, {useEffect, useLayoutEffect, useRef, useState} from "react";
+import React, {useEffect, useRef} from "react";
 import {IonCard, IonCardContent, IonRange, IonIcon} from "@ionic/react";
 import {moon, sunny} from "ionicons/icons";
 import {dispatch} from "../../utils/eventbus";

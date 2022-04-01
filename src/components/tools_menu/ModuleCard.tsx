@@ -1,7 +1,5 @@
 
-import { IonCard, IonCardTitle, IonCardHeader, IonCardSubtitle, IonCardContent, IonButton, IonAccordion, IonAccordionGroup, IonTitle, IonItem, IonItemDivider, IonLabel, IonList, IonInput, IonGrid, IonRow, IonSelect, IonSelectOption, IonSpinner, useIonLoading, IonContent, IonIcon, IonFooter, IonHeader, IonChip, IonToolbar } from '@ionic/react';
-import {arrowDown} from 'ionicons/icons';
-import {Fragment, useState} from 'react';
+import { IonCard, IonCardHeader, IonCardContent, IonButton, IonAccordion, IonAccordionGroup, IonItem, IonLabel, IonGrid } from '@ionic/react';
 
 interface ModuleCardProps {
     name: string;
@@ -9,6 +7,10 @@ interface ModuleCardProps {
     disabled?: boolean;
     onPreview?: () => void;
     onApply?: () => void;
+    onPreprocess?: () => void;
+    disabledPreview?: boolean;
+    disabledApply?: boolean;
+    disabledPreprocess?: boolean;
 }
 
 interface ModuleCardItemProps {
@@ -50,8 +52,24 @@ const ModuleCard: React.FC<ModuleCardProps> = (props: ModuleCardProps) => {
             <IonCardContent>
                 { childrenArray }
                 <div style = { { "display": "flex", "justifyContent": "flex-end" } }>
-                    { props.onPreview && <IonButton color="primary" onClick={props.onPreview}>Preview</IonButton> }
-                    { props.onApply && <IonButton color="primary" onClick={props.onApply}>Apply</IonButton> }
+                    <IonButton color="primary"
+                        disabled={props.disabledPreprocess}
+                        hidden={props.onPreprocess === undefined}
+                        onClick={props.onPreprocess}>
+                        Preprocess
+                    </IonButton>
+                    <IonButton color="primary"
+                        disabled={props.disabledPreview}
+                        hidden={props.onPreview === undefined}
+                        onClick={props.onPreview}>
+                        Preview
+                    </IonButton>
+                    <IonButton color="primary"
+                        disabled={props.disabledApply}
+                        hidden={props.onApply === undefined}
+                        onClick={props.onApply}>
+                        Apply
+                    </IonButton>
                 </div>
             </IonCardContent>
 
