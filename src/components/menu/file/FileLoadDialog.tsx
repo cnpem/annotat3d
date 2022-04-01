@@ -89,9 +89,10 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         event: undefined,
     });
 
-    const [path, setPath] = useState<string>();
+    const [path, setPath] = useState<string>("");
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
-    const [dtype, setDtype] = useState<string>();
+    const [dtype, setDtype] = useState<"" | "uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
+        "uint64" | "float32" | "float64" | "complex64">("");
     const [xRange, setXRange] = useState([0, -1]);
     const [yRange, setYRange] = useState([0, -1]);
     const [zRange, setZRange] = useState([0, -1]);
@@ -108,7 +109,9 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         const params = {
             image_path: path,
             image_dtype: dtype,
-            image_raw_shape: Array<number>(3),
+            image_raw_shape: Array(imgShapeRaw[0] || 0,
+                imgShapeRaw[1] || 0, imgShapeRaw[2] || 0),
+            use_image_raw_parse: (imgShapeRaw[0] == null && imgShapeRaw[1] == null && imgShapeRaw[2] == null),
         }
 
         sfetch("POST", "/open_image/"+loadImgOp, JSON.stringify(params), "json").then(

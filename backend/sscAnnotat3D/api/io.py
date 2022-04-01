@@ -17,8 +17,16 @@ def open_image(image_id: str):
     except:
         return "Error while trying to get the image path", 400
 
+    try:
+        image_dtype = request.json["image_dtype"]
+    except:
+        return "Error while trying to get the image dtype", 400
+
     file = image_path.split("/")[-1]
     file_name = file.split(".")[0]
+
+    if(file_name == ""):
+        return "Empty path isn't valid !", 400
 
     extension = file.split(".")[-1]
 
@@ -34,14 +42,23 @@ def open_image(image_id: str):
         return "the extension .{} isn't supported !".format(extension), 400
 
     try:
-        image, info = sscIO.io.read_volume(image_path, 'numpy')
+        use_image_raw_parse = request.json["use_image_raw_parse"]
+        if(extension in tif_extensions or use_image_raw_parse):
+            image, info = sscIO.io.read_volume(image_path, 'numpy')
+
+        else:
+            image_raw_shape = request.json["image_raw_shape"]
+            image, info = sscIO.io.read_volume(image_path, 'numpy',
+                                               shape=(image_raw_shape[2], image_raw_shape[1], image_raw_shape[0]),
+                                               dtype=image_dtype)
         image_shape = image.shape
     except:
-        return " Unable to determine volume information for {} file {}. Please specify shape and dtype".format(extension, image_path), 400
+        return "Unable to reshape the volume {} into shape {} and type {}. " \
+               "Please change the dtype and shape and load the image again".format(file, image_raw_shape,
+                                                                                   image_dtype), 400
 
     image_info = {"image_shape": image_shape, "image_ext": extension,
-                  "image_name": file_name, "image_dtype": ""}
-
+                  "image_name": file_name, "image_dtype": image_dtype}
     data_repo.set_image(key=image_id, data=image)
     return image_info, 200
 
@@ -55,4 +72,4 @@ def close_image():
     except:
         return "failure trying to delete the image", 400
 
-    return "success", 200
+    return "success on deleting the image !", 200
