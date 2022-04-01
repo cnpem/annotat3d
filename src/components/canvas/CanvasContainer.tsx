@@ -1,6 +1,6 @@
 import {Component} from 'react';
-import {IonFab, IonFabButton, IonIcon, IonInput, IonRange} from '@ionic/react';
-import { expand, brush, browsers, add, remove, contrast, moon, sunny } from 'ionicons/icons';
+import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
+import { expand, brush, browsers, add, remove } from 'ionicons/icons';
 import { debounce, isEqual } from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -16,7 +16,6 @@ import { sfetch } from '../../utils/simplerequest';
 import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
 import {subscribe, unsubscribe} from '../../utils/eventbus';
-import {RangeValue} from '@ionic/core';
 
 class Brush {
 

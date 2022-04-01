@@ -2,8 +2,7 @@ import {
     IonContent,
     IonMenu,
     IonHeader,
-    IonSearchbar, IonTitle,
-    IonToolbar, IonAccordionGroup, IonCard, IonCardTitle, IonCardSubtitle
+    IonSearchbar, IonToolbar, IonAccordionGroup, IonCard, IonCardTitle, IonCardSubtitle
 } from '@ionic/react';
 
 import {useLocation} from 'react-router-dom';

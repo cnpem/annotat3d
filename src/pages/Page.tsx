@@ -3,8 +3,7 @@ import {
     IonButton, IonButtons, IonContent,
     IonFooter, IonHeader, IonIcon,
     IonMenuButton, IonPage, IonTitle,
-    IonToolbar, IonSelectOption, IonSelect,
-    IonMenuToggle
+    IonToolbar, IonMenuToggle
 } from '@ionic/react';
 import {useParams} from 'react-router';
 import './Page.css';

@@ -24,7 +24,7 @@ const SideMenuVis: React.FC = () => {
             }; 
         }, 20);
     }
-    }, [contrastRangeRef]);
+    });
 
     return(
         <React.Fragment>

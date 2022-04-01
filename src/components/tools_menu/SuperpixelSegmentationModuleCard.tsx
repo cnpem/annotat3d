@@ -1,6 +1,6 @@
 
 
-import { IonItem, IonItemDivider, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox } from '@ionic/react';
+import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox } from '@ionic/react';
 import {useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
 import {useEventBus} from '../../utils/eventbus';
