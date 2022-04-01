@@ -54,7 +54,7 @@ def open_image(image_id: str):
         image_shape = image.shape
     except:
         return "Unable to reshape the volume {} into shape {} and type {}. " \
-               "Please change the dtype and shape and load the image again".format(file, image_raw_shape,
+               "Please change the dtype and shape and load the image again".format(file, request.json["image_raw_shape"],
                                                                                    image_dtype), 400
 
     image_info = {"image_shape": image_shape, "image_ext": extension,

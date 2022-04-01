@@ -126,7 +126,9 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
                 setImageInfo(info);
                 dispatch("ImageLoaded", imageInfo);
-            });
+            }).catch(error => {
+                console.log(error);
+        })
 
     }
 
