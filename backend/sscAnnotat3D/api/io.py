@@ -36,9 +36,8 @@ def open_image(image_id: str):
     try:
         image, info = sscIO.io.read_volume(image_path, 'numpy')
         image_shape = image.shape
-
     except:
-        return "The path {} is a invalid path !!".format(image_path), 400
+        return " Unable to determine volume information for {} file {}. Please specify shape and dtype".format(extension, image_path), 400
 
     image_info = {"image_shape": image_shape, "image_ext": extension,
                   "image_name": file_name, "image_dtype": ""}

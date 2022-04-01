@@ -108,6 +108,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         const params = {
             image_path: path,
             image_dtype: dtype,
+            image_raw_shape: Array<number>(3),
         }
 
         sfetch("POST", "/open_image/"+loadImgOp, JSON.stringify(params), "json").then(
