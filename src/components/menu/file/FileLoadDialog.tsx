@@ -117,17 +117,31 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         sfetch("POST", "/open_image/"+loadImgOp, JSON.stringify(params), "json").then(
             (image) => {
                 console.log("image info ", image);
-                const info = {
+
+                if(image.hasOwnProperty("image_shape"))
+                {
+
+                    const info = {
                     imageShape: image.image_shape,
                     imageDtype: image.image_dtype,
                     imageName: image.image_name,
                     imageExt: image.image_ext,
+                    }
+
+                    setImageInfo(info);
+                    dispatch("ImageLoaded", imageInfo);
+
                 }
 
-                setImageInfo(info);
-                dispatch("ImageLoaded", imageInfo);
+                else
+                {
+
+                    throw new Error(image.error_msg, image);
+
+                }
+
             }).catch(error => {
-                console.log(error);
+                console.log(error.message);
         })
 
     }
