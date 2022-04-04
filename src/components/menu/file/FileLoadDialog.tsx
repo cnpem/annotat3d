@@ -16,7 +16,8 @@ import {
     IonSelectOption,
     IonTextarea,
     IonAccordion,
-    IonAccordionGroup
+    IonAccordionGroup,
+    IonAlert
 } from "@ionic/react";
 import "../../styles/FileDialog.css"
 import dataType from "./Dtypes";
@@ -77,6 +78,44 @@ interface ImageInfoInterface{
     imageDtype: string;
 }
 
+interface ErrorWindowInterface{
+    errorMsg: string;
+    onErrorMsg: (msg: string) => void;
+
+    errorFlag: boolean;
+    onErrorFlag: (errorFlag: boolean) => void;
+}
+
+const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg, onErrorMsg ,errorFlag, onErrorFlag}) => {
+
+    const resetErrorMsg = () => {
+        onErrorFlag(false);
+        onErrorMsg("");
+    }
+
+    return(
+        <div>
+            {(errorMsg) ?
+                <IonAlert
+                isOpen={errorFlag}
+                onDidDismiss={() => resetErrorMsg}
+                header={"Error while trying to load the image"}
+                message={errorMsg}
+                buttons={[
+                    {
+                        text: "Okay",
+                        id: "confirm-button",
+                        handler: () => {
+                            resetErrorMsg();
+                        }
+                    }
+                ]}/> :
+                <></>
+            }
+        </div>
+    )
+}
+
 /**
  * Load Image dialog
  * @param name
@@ -98,10 +137,20 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const [zRange, setZRange] = useState([0, -1]);
     const [loadImgOp, setLoadImagOp] = useState<"image" | "label" | "superpixel">("image");
     const [imageInfo, setImageInfo] = useState<ImageInfoInterface>({imageDtype: "", imageName: "", imageExt: "", imageShape: 0})
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
 
     const handleLoadImgOP = (e: CustomEvent) => {
         const buttonSegName = e.detail!.value!
         setLoadImagOp(buttonSegName);
+    }
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
     }
 
     const handleLoadImageAction = () => {
@@ -116,7 +165,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
         sfetch("POST", "/open_image/"+loadImgOp, JSON.stringify(params), "json").then(
             (image) => {
-                console.log("image info ", image);
 
                 if(image.hasOwnProperty("image_shape"))
                 {
@@ -129,6 +177,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                     }
 
                     setImageInfo(info);
+                    setShowErrorWindow(false);
                     dispatch("ImageLoaded", imageInfo);
 
                 }
@@ -136,12 +185,13 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 else
                 {
 
+                    setShowErrorWindow(true);
                     throw new Error(image.error_msg, image);
 
                 }
 
             }).catch(error => {
-                console.log(error.message);
+                setErrorMsg(error.message);
         })
 
     }
@@ -158,6 +208,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setYRange([0, -1]);
         setZRange([0, -1]);
         setLoadImagOp("image");
+        setShowErrorWindow(false);
+        setErrorMsg("");
     };
     return (
         <>
@@ -327,6 +379,12 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             >
                 {name}
             </IonItem>
+            {/*Error window*/}
+                <ErrorWindowComp
+                    errorMsg={errorMsg}
+                    onErrorMsg={handleErrorMsg}
+                    errorFlag={showErrorWindow}
+                    onErrorFlag={handleErrorWindow}/>
         </>
     );
 };

@@ -32,7 +32,7 @@ def open_image(image_id: str):
     file = image_path.split("/")[-1]
     file_name = file.split(".")[0]
 
-    if(file_name == ""):
+    if(file == ""):
         return handle_exception("Empty path isn't valid !")
 
     extension = file.split(".")[-1]
