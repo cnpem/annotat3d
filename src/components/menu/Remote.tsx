@@ -15,7 +15,6 @@ const Remote: React.FC = () => {
         title: 'Remote Visualization',
         subItems: [
             'To IndeX \u00AE'
-            // 'To SDumont'
         ],
         iosIcon: paperPlaneOutline,
         mdIcon: paperPlaneSharp

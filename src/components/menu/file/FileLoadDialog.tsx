@@ -16,11 +16,14 @@ import {
     IonSelectOption,
     IonTextarea,
     IonAccordion,
-    IonAccordionGroup
+    IonAccordionGroup,
+    IonAlert
 } from "@ionic/react";
 import "../../styles/FileDialog.css"
 import dataType from "./Dtypes";
 import {options} from "ionicons/icons";
+import {sfetch} from "../../../utils/simplerequest";
+import {dispatch} from "../../../utils/eventbus";
 
 /**
  * dtypes array
@@ -68,6 +71,51 @@ const dtypeList: dataType[] = [
     }
 ];
 
+interface ImageInfoInterface{
+    imageShape: Array<number> [3];
+    imageName: string;
+    imageExt: string;
+    imageDtype: string;
+}
+
+interface ErrorWindowInterface{
+    errorMsg: string;
+    onErrorMsg: (msg: string) => void;
+
+    errorFlag: boolean;
+    onErrorFlag: (errorFlag: boolean) => void;
+}
+
+const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg, onErrorMsg ,errorFlag, onErrorFlag}) => {
+
+    const resetErrorMsg = () => {
+        onErrorFlag(false);
+        onErrorMsg("");
+    }
+
+    return(
+        <div>
+            {(errorMsg) ?
+                <IonAlert
+                isOpen={errorFlag}
+                onDidDismiss={() => resetErrorMsg}
+                header={"Error while trying to load the image"}
+                message={errorMsg}
+                buttons={[
+                    {
+                        text: "Okay",
+                        id: "confirm-button",
+                        handler: () => {
+                            resetErrorMsg();
+                        }
+                    }
+                ]}/> :
+                <></>
+            }
+        </div>
+    )
+}
+
 /**
  * Load Image dialog
  * @param name
@@ -79,13 +127,74 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         open: false,
         event: undefined,
     });
-    const [, setKind] = useState<string>();
-    const [path, setPath] = useState<string>();
-    const [shape, setShape] = useState(new Array(3))
-    const [dtype, setDtype] = useState<string>();
+
+    const [path, setPath] = useState<string>("");
+    const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
+    const [dtype, setDtype] = useState<"" | "uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
+        "uint64" | "float32" | "float64" | "complex64">("");
     const [xRange, setXRange] = useState([0, -1]);
     const [yRange, setYRange] = useState([0, -1]);
     const [zRange, setZRange] = useState([0, -1]);
+    const [loadImgOp, setLoadImagOp] = useState<"image" | "label" | "superpixel">("image");
+    const [imageInfo, setImageInfo] = useState<ImageInfoInterface>({imageDtype: "", imageName: "", imageExt: "", imageShape: 0})
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
+
+    const handleLoadImgOP = (e: CustomEvent) => {
+        const buttonSegName = e.detail!.value!
+        setLoadImagOp(buttonSegName);
+    }
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
+
+    const handleLoadImageAction = () => {
+
+        const params = {
+            image_path: path,
+            image_dtype: dtype,
+            image_raw_shape: Array(imgShapeRaw[0] || 0,
+                imgShapeRaw[1] || 0, imgShapeRaw[2] || 0),
+            use_image_raw_parse: (imgShapeRaw[0] == null && imgShapeRaw[1] == null && imgShapeRaw[2] == null),
+        }
+
+        sfetch("POST", "/open_image/"+loadImgOp, JSON.stringify(params), "json").then(
+            (image) => {
+
+                if(image.hasOwnProperty("image_shape"))
+                {
+
+                    const info = {
+                    imageShape: image.image_shape,
+                    imageDtype: image.image_dtype,
+                    imageName: image.image_name,
+                    imageExt: image.image_ext,
+                    }
+
+                    setImageInfo(info);
+                    setShowErrorWindow(false);
+                    dispatch("ImageLoaded", imageInfo);
+
+                }
+
+                else
+                {
+
+                    setShowErrorWindow(true);
+                    throw new Error(image.error_msg, image);
+
+                }
+
+            }).catch(error => {
+                setErrorMsg(error.message);
+        })
+
+    }
 
     /**
      * Clean up popover dialog
@@ -94,10 +203,13 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setShowPopover({open: false, event: undefined});
         setPath("");
         setDtype("");
-        setShape([null, null, null]);
+        setImageShapeRaw([null, null, null]);
         setXRange([0, -1]);
         setYRange([0, -1]);
         setZRange([0, -1]);
+        setLoadImagOp("image");
+        setShowErrorWindow(false);
+        setErrorMsg("");
     };
     return (
         <>
@@ -110,7 +222,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 <IonList>
                     <IonItem>
                         {/* Select Image/Label/Superpixel */}
-                        <IonSegment onIonChange={e => setKind(e.detail.value)}
+                        <IonSegment value={loadImgOp} onIonChange={handleLoadImgOP}
                                     color="tertiary">
                             <IonSegmentButton value="image">
                                 <IonLabel>Image</IonLabel>
@@ -141,27 +253,27 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonInput
                                         type="number"
                                         min={"0"}
-                                        value={shape[0]}
+                                        value={imgShapeRaw[0]}
                                         placeholder="X"
-                                        onIonChange={e => setShape([parseInt(e.detail.value!, 10), shape[1], shape[2]])}
+                                        onIonChange={e => setImageShapeRaw([parseInt(e.detail.value!, 10), imgShapeRaw[1], imgShapeRaw[2]])}
                                     />
                                 </IonCol>
                                 <IonCol>
                                     <IonInput
                                         type="number"
                                         min={"0"}
-                                        value={shape[1]}
+                                        value={imgShapeRaw[1]}
                                         placeholder="Y"
-                                        onIonChange={e => setShape([shape[0], parseInt(e.detail.value!, 10), shape[2]])}
+                                        onIonChange={e => setImageShapeRaw([imgShapeRaw[0], parseInt(e.detail.value!, 10), imgShapeRaw[2]])}
                                     />
                                 </IonCol>
                                 <IonCol>
                                     <IonInput
                                         type="number"
                                         min={"0"}
-                                        value={shape[2]}
+                                        value={imgShapeRaw[2]}
                                         placeholder="Z"
-                                        onIonChange={e => setShape([shape[0], shape[1], parseInt(e.detail.value!, 10)])}
+                                        onIonChange={e => setImageShapeRaw([imgShapeRaw[0], imgShapeRaw[1], parseInt(e.detail.value!, 10)])}
                                     />
                                 </IonCol>
                             </IonRow>
@@ -257,7 +369,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                         </IonGrid>
                     </IonAccordion>
                 </IonAccordionGroup>
-                <IonButton color={"tertiary"} slot={"end"}>
+                <IonButton color={"tertiary"} slot={"end"} onClick={handleLoadImageAction}>
                     Load!
                 </IonButton>
             </IonPopover>
@@ -267,6 +379,12 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             >
                 {name}
             </IonItem>
+            {/*Error window*/}
+                <ErrorWindowComp
+                    errorMsg={errorMsg}
+                    onErrorMsg={handleErrorMsg}
+                    errorFlag={showErrorWindow}
+                    onErrorFlag={handleErrorWindow}/>
         </>
     );
 };

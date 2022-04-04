@@ -1,3 +1,5 @@
+@import '../../theme/variables.css';
+
 .round-bar {
     margin-left: 8px;
     margin-right: 8px;
@@ -12,4 +14,13 @@
 .label-table {
     height: 20em;
     overflow-y: auto;
+}
+
+.label-table-active {
+    background-color: var(--ion-color-primary);
+}
+
+.label-table-active ion-label {
+    color: white;
+    font-weight: 600;
 }
