@@ -63,12 +63,12 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         });
     }
 
-    const renderLabel = (labelElement: LabelInterface, index: number) => {
+    const renderLabel = (labelElement: LabelInterface) => {
 
         const isActive = labelElement.id === selectedLabel;
 
         return(
-            <tr key={index} className={ isActive? "label-table-active" : "" } onClick={ () => selectLabel(labelElement.id) }>
+            <tr key={labelElement.id} className={ isActive? "label-table-active" : "" } onClick={ () => selectLabel(labelElement.id) }>
                 <td>
                     <div style={ {display: "flex"} }>
                         <div className="round-bar" style={{ background: `rgb(${labelElement.color.join(',')})` }}> </div>
