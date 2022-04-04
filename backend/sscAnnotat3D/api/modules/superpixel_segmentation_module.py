@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 import numpy as np
 
+from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmentationModule
 from sscPySpin import feature_extraction as spin_feat_extraction
@@ -44,6 +45,34 @@ def pooling_to_spin_pooling(pooling):
     elif pooling.lower() == 'min':
         return spin_feat_extraction.SPINSupervoxelPooling.MIN
 
+def features_to_spin_features(feature):
+    if feature.lower() == 'fft_gauss':
+        return spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_GAUSS
+    elif feature.lower() == 'fft_gabor':
+        return spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_GABOR
+    elif feature.lower() == 'none':
+        return spin_feat_extraction.SPINFilters.NONE
+    elif feature.lower() == 'fft_dog':
+        return spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_DIFF_OF_GAUSS
+    elif feature.lower() == 'sobel':
+        return spin_feat_extraction.SPINFilters.SOBEL
+    elif feature.lower() == 'membrane_projections':
+        return spin_feat_extraction.SPINFilters.MEMBRANE_PROJECTIONS
+    elif feature.lower() == 'minimum':
+        return spin_feat_extraction.SPINFilters.ADJ_MIN
+    elif feature.lower() == 'maximum':
+        return spin_feat_extraction.SPINFilters.ADJ_MAX
+    elif feature.lower() == 'average':
+        return spin_feat_extraction.SPINFilters.ADJ_AVERAGE
+    elif feature.lower() == 'variance':
+        return spin_feat_extraction.SPINFilters.ADJ_VARIANCE
+    elif feature.lower() == 'median':
+        return spin_feat_extraction.SPINFilters.ADJ_MEDIAN
+    elif feature.lower() == 'lbp':
+        return spin_feat_extraction.SPINFilters.LBP
+    else:
+        raise f'Unknown feature: {feature.lower()}'
+
 @app.route('/superpixel_segmentation_module/create', methods=['POST', 'GET'])
 @cross_origin()
 def create():
@@ -59,6 +88,12 @@ def create():
     if 'selected_supervoxel_feat_pooling' in feature_extraction_params:
         feature_extraction_params['selected_supervoxel_feat_pooling'] = [
             pooling_to_spin_pooling(p) for p in feature_extraction_params['selected_supervoxel_feat_pooling']
+        ]
+
+    print(feature_extraction_params['selected_features'])
+    if 'selected_features' in feature_extraction_params:
+        feature_extraction_params['selected_features'] = [
+            features_to_spin_features(f) for f in feature_extraction_params['selected_features']
         ]
 
     print(__default_feature_extraction_params)
@@ -114,7 +149,10 @@ def preview():
 
     annotations = data_repo.get_annotation('annotation')
 
-    z = request.json['z']
+    slice_num = request.json['slice']
+    axis = request.json['axis']
+
+    axis_dim = utils.get_axis_num(axis)
 
     if segm_module is None:
         return "Not a valid segmentation module", 400
@@ -122,7 +160,7 @@ def preview():
     if not segm_module.has_preview():
         return "This module does not have a preview", 400
 
-    label = segm_module.preview(annotations, [z - 1, z, z + 1], 0)
+    label = segm_module.preview(annotations, [slice_num - 1, slice_num, slice_num + 1], axis_dim)
 
     # print(label.mean(), label.shape)
 
@@ -147,5 +185,8 @@ def execute():
     # print(label.mean(), label.shape)
 
     data_repo.set_image('label', label)
+
+    print(segm_module._feature_extraction_params)
+    print(segm_module._classifier_params)
 
     return "success", 200

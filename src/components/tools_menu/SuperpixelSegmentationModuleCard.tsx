@@ -1,10 +1,11 @@
 
 
 import {TextFieldTypes} from '@ionic/core';
-import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, InputChangeEventDetail, IonTextarea } from '@ionic/react';
+import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, IonTextarea } from '@ionic/react';
 import {isEqual} from 'lodash';
 import {Fragment, useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
+import {currentEventValue} from '../../utils/eventbus';
 import {useEventBus, dispatch} from '../../utils/eventbus';
 import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem } from './ModuleCard';
@@ -22,15 +23,10 @@ const defaultModelClassifierParams: Record<string, ModelClassifierParams[]> = {
         { id: 'n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number' }
     ],
     'svm': [
-        { id: 'C', label: 'SVM C', value: 1.0, input: 'number'}
+        { id: 'C', label: 'SVM C', value: 1.0, input: 'number' }
     ],
     'mlp': [
-        {
-            id: 'hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text',
-            inputPreprocess: (textInput: string) => textInput.split(',')
-            .map(t => parseInt(t))
-            .filter(n => !Number.isNaN(n))
-        }
+        { id: 'hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text' }
     ],
     'adaboost': [
         { id: 'n_estimators', label: 'N. classifiers', value: 100, input: 'number'}
@@ -40,19 +36,22 @@ const defaultModelClassifierParams: Record<string, ModelClassifierParams[]> = {
     ]
 }
 
+
+//((<SPINFilters.MULTI_SCALE_FFT_GAUSS: 0>, 'FFT Gauss'), (<SPINFilters.MULTI_SCALE_FFT_GABOR: 13>, 'FFT Gabor'), (<SPINFilters.NONE: 14>, 'None (Original Img)'), (<SPINFilters.MULTI_SCALE_FFT_DIFF_OF_GAUSS: 1>, 'FFT DoG'), (<SPINFilters.SOBEL: 3>, 'Sobel'), (<SPINFilters.MEMBRANE_PROJECTIONS: 4>, 'Membrane Projections'), (<SPINFilters.ADJ_MIN: 8>, 'Minimum'), (<SPINFilters.ADJ_MAX: 9>, 'Maximum'), (<SPINFilters.ADJ_AVERAGE: 10>, 'Average'), (<SPINFilters.ADJ_VARIANCE: 11>, 'Variance'), (<SPINFilters.ADJ_MEDIAN: 12>, 'Median'), (<SPINFilters.LBP: 15>, 'LBP'))
+
 const defaultFeatures: Feature[] = [
-    { id: 0, name: 'FFT Gauss', active: true },
-    { id: 1, name: 'None (Original Image)', active: true },
-    { id: 2, name: 'Sobel' },
-    { id: 3, name: 'Minimum' },
-    { id: 4, name: 'Average' },
-    { id: 5, name: 'Median' },
-    { id: 6, name: 'FFT Gabor' },
-    { id: 7, name: 'FFT Difference of Gaussians', active: true },
-    { id: 8, name: 'Membrane Projections', active: true },
-    { id: 9, name: 'Maximum' },
-    { id: 10, name: 'Variance' },
-    { id: 11, name: 'Local Binary Pattern' }
+    { id: 'fft_gauss', name: 'FFT Gauss', active: true },
+    { id: 'none', name: 'None (Original Image)', active: true },
+    { id: 'sobel', name: 'Sobel' },
+    { id: 'minimum', name: 'Minimum' },
+    { id: 'average', name: 'Average' },
+    { id: 'median', name: 'Median' },
+    { id: 'fft_gabor', name: 'FFT Gabor' },
+    { id: 'fft_dog', name: 'FFT Difference of Gaussians', active: true },
+    { id: 'membrane_projections', name: 'Membrane Projections', active: true },
+    { id: 'maximum', name: 'Maximum' },
+    { id: 'variance', name: 'Variance' },
+    { id: 'lbp', name: 'Local Binary Pattern' }
 ];
 
 interface ModelClassifierParams {
@@ -60,9 +59,7 @@ interface ModelClassifierParams {
     id: string,
     label: string,
     value: any,
-    input: TextFieldTypes,
-    inputPreprocess?: (val: any) => any
-
+    input: TextFieldTypes
 }
 
 const defaultMultiscale = [1, 2, 4, 8];
@@ -80,7 +77,7 @@ interface Pooling {
 }
 
 interface Feature {
-    id: number;
+    id: string;
     name: string;
     active?: boolean;
 }
@@ -99,16 +96,18 @@ interface FeatureParams {
     pooling: Pooling[];
     feats: Feature[];
     multiscale: number[];
+    thresholdSelection?: number; 
 }
 
 const SuperpixelSegmentationModuleCard: React.FC = () => {
 
-    const [prevFeatParams, setPrevFeatParams] = useState<FeatureParams>();
+    const [prevFeatParams, setPrevFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelPrevFeatParams');
 
     const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelFeatParams', {
         pooling: defaultPooling,
         feats: defaultFeatures,
-        multiscale: defaultMultiscale
+        multiscale: defaultMultiscale,
+        thresholdSelection: 0.1
     });
 
     const [classParams, setClassParams] = useStorageState<ClassifierParams>(sessionStorage, 'superpixelClassParams', {
@@ -137,6 +136,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     useEventBus('superpixelChanged', () => {
         setDisabled(false);
         setHasPreprocessed(false);
+        setPrevFeatParams(null);
     });
 
     function getModuleBackendParams() {
@@ -148,13 +148,13 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
             feature_extraction_params: {
                 'sigmas': featParams.multiscale,
                 'selected_features': featParams.feats
-                        .filter(p => p.active)
-                        .map(p => p.id),
+                .filter(p => p.active)
+                .map(p => p.id),
                 'selected_supervoxel_feat_pooling': featParams.pooling
-                    .filter(p => p.active)
-                    .map(p => p.id),
-                'feat_selection_enabled': true,
-                'feat_selection_method_threshold': 0.01
+                .filter(p => p.active)
+                .map(p => p.id),
+                'feat_selection_enabled': featParams.thresholdSelection !== null,
+                'feat_selection_method_threshold': featParams.thresholdSelection
             }
         };
 
@@ -163,35 +163,54 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     }
 
     function onApply() {
+        setDisabled(true);
         sfetch('POST', 'superpixel_segmentation_module/execute', '').
             then(() => {
             dispatch('labelChanged', '');
-            setPrevFeatParams(featParams);
+
+        })
+        .finally(() => {
+            setDisabled(false);
         });
     }
 
     function onPreview() {
-        sfetch('POST', '/superpixel_segmentation_module/preview', '')
-            .then(() => {
-                dispatch('labelChanged', '');
-                setPrevFeatParams(featParams);
-            });
+
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number,
+            axis: string
+        };
+
+        console.log(curSlice);
+
+        setDisabled(true);
+        sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice))
+        .then(() => {
+            dispatch('labelChanged', '');
+        })
+        .finally(() => {
+            setDisabled(false);
+        });
     }
 
     function onPreprocess() {
 
         const params = getModuleBackendParams();
 
+        setDisabled(true);
         sfetch('POST', '/superpixel_segmentation_module/create', JSON.stringify(params))
         .then(() => {
             console.log('preprocessou');
             //setPrevFeatParams(prevFeatParams);
-            setHasPreprocessed(true);
+            setPrevFeatParams(featParams);
         })
         .catch(() => {
             console.log('falhou no preprocessou');
             setHasPreprocessed(false);
         })
+        .finally(() => {
+            setDisabled(false);
+        });
     }
 
     function renderSelectOptionClassifier( classifier: Classifier ) {
@@ -249,121 +268,141 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         );
     }
 
-    function renderModelParameter(modelParam: ModelClassifierParams,
-                                  onParamChange?: (value: any) => void) {
+    function stringToNumberArray(text: string): number[] {
+        return text.split(',')
+        .map(t => parseInt(t))
+        .filter(n => !Number.isNaN(n))
+    }
 
-                                      return (
-                                          <IonItem key={modelParam.id}>
-                                              <IonLabel position="floating"> { modelParam.label } </IonLabel>
-                                              <IonInput type={ modelParam.input }
-                                                  debounce={200}
-                                                  value={ modelParam.value }
-                                                  onIonChange={ e => {
-                                                      let value = e.detail.value;
-                                                      console.log('before: ', modelParam.inputPreprocess);
-                                                      if (modelParam.inputPreprocess) {
-                                                          value = modelParam.inputPreprocess(value);
-                                                      }
-                                                      console.log('after: ', value);
-                                                      if (onParamChange)
-                                                          onParamChange(value);
-                                                  }
-                                                  }>
-                                              </IonInput>
-                                          </IonItem>
-                                      );
-                                  }
+    function renderModelParameter(modelParam: ModelClassifierParams, onParamChange?: (value: any) => void) {
 
-                                  return (
-                                      <ModuleCard name="Superpixel Segmentation" disabled={disabled}
-                                          onApply={onApply} onPreview={onPreview} onPreprocess={onPreprocess}
-                                          disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed} disabledPreprocess={hasPreprocessed}>
+        return (
+            <IonItem key={modelParam.id}>
+                <IonLabel position="floating"> { modelParam.label } </IonLabel>
+                <IonInput type={ modelParam.input }
+                    debounce={200}
+                    value={ modelParam.value }
+                    onIonChange={ e => {
+                        let value: any = e.detail.value;
+                        if (modelParam.id === 'hidden_layer_sizes') {
+                            value = stringToNumberArray(value);
+                        }
+                        if (onParamChange) {
+                            onParamChange(value);
+                        }
+                    }}>
+                </IonInput>
+            </IonItem>
+        );
+    }
 
-                                          <ModuleCardItem name={"featParams " + JSON.stringify(hasPreprocessed)}>
+    return (
+        <ModuleCard name="Superpixel Segmentation" disabled={disabled}
+            onApply={onApply} onPreview={onPreview} onPreprocess={onPreprocess}
+            disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed} disabledPreprocess={hasPreprocessed}>
 
-                                              <IonItem>
-                                                  <IonTextarea contentEditable={false}>{ JSON.stringify(featParams, null, 2) }</IonTextarea>
-                                              </IonItem>
+            <ModuleCardItem name="feat params">
+                <IonTextarea>{ JSON.stringify(featParams, null, 2) }</IonTextarea>
+            </ModuleCardItem>
 
-                                          </ModuleCardItem>
 
-                                          <ModuleCardItem name="classParams">
-                                              <IonItem>
-                                                  <IonTextarea contentEditable={false}>{ JSON.stringify(classParams, null, 2) }</IonTextarea>
-                                              </IonItem>
-                                          </ModuleCardItem>
+            <ModuleCardItem name="Superpixel Segmentation Parameters">
+                <ModuleCardItem name="Feature Extraction Parameters">
+                    <IonList>
+                        { featParams.feats.map(renderCheckboxFeature) }
+                    </IonList>
+                </ModuleCardItem>
 
-                                          <ModuleCardItem name="Superpixel Segmentation Parameters">
-                                              <ModuleCardItem name="Feature Extraction Parameters">
-                                                  <IonList>
-                                                      { featParams.feats.map(renderCheckboxFeature) }
-                                                  </IonList>
-                                              </ModuleCardItem>
+                <ModuleCardItem name="Superpixel Feature Pooling">
+                    { featParams.pooling.map(renderCheckboxPooling) }
+                </ModuleCardItem>
 
-                                              <ModuleCardItem name="Superpixel Feature Pooling">
-                                                  { featParams.pooling.map(renderCheckboxPooling) }
-                                              </ModuleCardItem>
+                <ModuleCardItem name="Multi-scale Parameters">
+                    <IonItem>
+                        <IonLabel position="floating">
+                            <small>Multi-scale Filter Windows</small>
+                        </IonLabel>
+                        <IonInput value={featParams.multiscale.join(',')}
+                            onIonChange={(e) => {
+                                if (e.detail.value) {
+                                    const value = stringToNumberArray(e.detail.value);
+                                    if (!isEqual(featParams.multiscale, value)) {
+                                        setFeatParams({...featParams, multiscale: value});
+                                    }
+                                }
+                            }}>
+                        </IonInput>
+                    </IonItem>
+                </ModuleCardItem>
 
-                                              <ModuleCardItem name="Multi-scale Parameters">
-                                                  <IonItem>
-                                                      <IonLabel position="floating"><small>Multi-scale Filter Windows</small></IonLabel>
-                                                      <IonInput></IonInput>
-                                                  </IonItem>
-                                              </ModuleCardItem>
+                <ModuleCardItem name="Feature Selection Parameters">
+                    <IonItem>
+                        <IonLabel>Enable?</IonLabel>
+                        <IonCheckbox checked={featParams.thresholdSelection!==undefined}
+                            onIonChange={(e) => {
+                                const value = e.detail.checked ? 0.01: undefined;
+                                setFeatParams({...featParams, thresholdSelection: value});
+                        }}/>
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel position="stacked">Importance Threshold</IonLabel>
+                        <IonInput
+                            placeholder="feat selection disabled"
+                            min={0} max={0.1}
+                            type="number" step="0.01"
+                            value={featParams.thresholdSelection}
+                            onIonChange={(e) => {
+                                const value = e.detail.value? +e.detail.value : undefined;
 
-                                              <ModuleCardItem name="Feature Selection Parameters">
-                                                  <IonItem>
-                                                      <IonLabel>Enable?</IonLabel>
-                                                      <IonCheckbox/>
-                                                  </IonItem>
-                                                  <IonItem>
-                                                      <IonLabel position="floating">Importance Threshold</IonLabel>
-                                                      <IonInput type="number" step="0.01"></IonInput>
-                                                  </IonItem>
-                                              </ModuleCardItem>
+                                setFeatParams({...featParams,
+                                              thresholdSelection: value})
+                            }}>
+                        </IonInput>
+                    </IonItem>
+                </ModuleCardItem>
 
-                                              <ModuleCardItem name="Classifier Parameters">
-                                                  <IonItem>
-                                                      <IonLabel>Classifier Model</IonLabel>
-                                                      <IonSelect interface="popover"
-                                                          value={classParams.classifier}
-                                                          onIonChange={(e) => {
-                                                              if (e.detail.value) {
-                                                                  setClassParams({
-                                                                      ...classParams,
-                                                                      classifier: e.detail.value,
-                                                                      params: defaultModelClassifierParams[e.detail.value]
-                                                                  });
-                                                              }
-                                                          }}>
-                                                          { classifiers.map(renderSelectOptionClassifier)  }
-                                                      </IonSelect>
-                                                  </IonItem>
-                                                  <Fragment>
-                                                      { classParams.params.map((p) => {
-                                                          return renderModelParameter(p, (value) => {
-                                                              const newParams = classParams.params.map((np) => {
-                                                                  if (np.id === p.id) {
-                                                                      return {...np, value: value}
-                                                                  } else {
-                                                                      return np;
-                                                                  }
-                                                              })
+                <ModuleCardItem name="Classifier Parameters">
+                    <IonItem>
+                        <IonLabel>Classifier Model</IonLabel>
+                        <IonSelect interface="popover"
+                            value={classParams.classifier}
+                            onIonChange={(e) => {
+                                if (e.detail.value) {
+                                    setClassParams({
+                                        ...classParams,
+                                        classifier: e.detail.value,
+                                        params: defaultModelClassifierParams[e.detail.value]
+                                    });
+                                }
+                            }}>
+                            { classifiers.map(renderSelectOptionClassifier)  }
+                        </IonSelect>
+                    </IonItem>
+                    <Fragment>
+                        { classParams.params.map((p) => {
+                            return renderModelParameter(p, (value) => {
+                                const newParams = classParams.params.map((np) => {
+                                    if (np.id === p.id) {
+                                        return {...np, value: value}
+                                    } else {
+                                        return np;
+                                    }
+                                })
 
-                                                              if (!isEqual(newParams, classParams.params)) {
-                                                                  setClassParams(
-                                                                      {...classParams, params: newParams}
-                                                                  );
-                                                              }
-                                                          });
-                                                      })
-                                                      }
-                                                  </Fragment>
-                                              </ModuleCardItem>
-                                          </ModuleCardItem>
+                                if (!isEqual(newParams, classParams.params)) {
+                                    setClassParams(
+                                        {...classParams, params: newParams}
+                                    );
+                                }
+                            });
+                        })
+                        }
+                    </Fragment>
+                </ModuleCardItem>
+            </ModuleCardItem>
 
-                                      </ModuleCard>
-                                  );
+        </ModuleCard>
+    );
 };
 
 export default SuperpixelSegmentationModuleCard;

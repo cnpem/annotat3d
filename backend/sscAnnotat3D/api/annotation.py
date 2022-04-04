@@ -1,4 +1,4 @@
-from flask import Blueprint, request, send_file
+from flask import Blueprint, request, send_file, jsonify
 import numpy as np
 import pickle
 import io
@@ -22,6 +22,12 @@ def new_annot():
 
     return "success", 200
 
+
+@app.route("/is_available_annot", methods=["POST"])
+@cross_origin
+def is_available_annot():
+    annot = data_repo.get_annotation()
+    return jsonify({ 'available': annot is not None })
 
 @app.route("/open_annot", methods=["POST"])
 @cross_origin()
@@ -80,7 +86,8 @@ def draw():
     annot = data_repo.get_annotation()
 
     if annot is None:
-        return "failure", 400
+       annot = {}
+       data_repo.set_annotation(data=annot)
 
     print(request.json)
 

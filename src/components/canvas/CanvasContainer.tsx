@@ -210,15 +210,12 @@ class Canvas {
     axis: 'XY' | 'XZ' | 'YZ';
     sliceNum: number;
 
-    newAnnotation() {
-        sfetch('POST', '/new_annot');
-    }
-
     constructor(div: HTMLDivElement, colors: [number, number, number][], axis: 'XY' | 'XZ' | 'YZ', sliceNum: number) {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
         this.app = new PIXI.Application({
-            backgroundAlpha: 0.1,
+            //backgroundAlpha: 0.99,
+            backgroundColor: 0x303030
         });
 
         this.viewport = new pixi_viewport.Viewport({
@@ -276,8 +273,6 @@ class Canvas {
 
         //this.setSuperpixelVisibility(false);
         this.setLabelVisibility(true);
-
-        this.newAnnotation();
     }
 
     setSliceNum(sliceNum: number) {
@@ -500,8 +495,6 @@ class Canvas {
         this.x = x;
         this.y = y;
 
-        this.annotation.setSize(x, y);
-        this.annotation.clear();
 
         const texture = this.textureFromSlice(uint8data, x, y);
         this.slice.texture = texture;
@@ -601,6 +594,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             this.getLabelSlice();
         });
     }, 250);
+
+    newAnnotation() {
+        sfetch('POST', '/new_annot');
+        console.log("new annotation, hue");
+    }
 
     getSuperpixelSlice() {
 
@@ -720,11 +718,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
+
         if (isEqual(prevProps, this.props)) //if all properties are the same (deep comparison)
             return;
         this.canvas?.setSliceNum(this.props.slice);
         this.canvas?.setAxis(this.props.axis);
         this.fetchAllDebounced(prevProps.axis !== this.props.axis);
+
     }
 
     adjustContrast(minimum: number, maximum: number) {
