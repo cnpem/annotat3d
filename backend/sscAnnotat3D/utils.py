@@ -37,6 +37,15 @@ def get_3d_slice_range_from(axis: str, slice_num: int):
     s[__axis_num[axis.lower()]] = slice_num
     return s
 
+def get_axis_num(axis: str):
+    """
+    Given an axis, returns the numeric equivalent of such.
+    Args:
+        axis (str): The axis to be considered ('XY' | 'XZ' | 'YZ')
+    Return:
+        The axis free dimension. { 'xy': 0, 'xz': 1, 'yz': 2}
+    """
+    return __axis_num[axis.lower()]
 
 # class ThreadWorker(QtCore.QThread):
     # append_log = QtCore.pyqtSignal(str)

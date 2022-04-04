@@ -9,6 +9,8 @@ import {
 import {useParams} from 'react-router';
 import './Page.css';
 
+import {defaultColormap} from '../utils/colormap';
+
 import CanvasContainer from '../components/CanvasContainer';
 import {build} from "ionicons/icons";
 
@@ -59,7 +61,7 @@ const Page: React.FC = () => {
                         <IonTitle size="large">{name}</IonTitle>
                     </IonToolbar>
                 </IonHeader>
-                <CanvasContainer axis={sliceInfo.axis} slice={sliceInfo.slice}/>
+                <CanvasContainer colors={defaultColormap} axis={sliceInfo.axis} slice={sliceInfo.slice}/>
             </IonContent>
 
             <IonFooter>

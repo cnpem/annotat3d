@@ -1,9 +1,7 @@
 from flask import Blueprint, request
-import numpy as np
+from werkzeug.exceptions import BadRequest
+
 import sscIO.io
-import pickle
-import zlib
-import io
 
 from sscAnnotat3D.repository import data_repo
 
@@ -11,30 +9,66 @@ from flask_cors import cross_origin
 
 app = Blueprint('io', __name__)
 
+@app.errorhandler(BadRequest)
+def handle_exception(error_msg: str):
+    return {"error_msg": error_msg}, 400
 
-@app.route("/open_image", methods=["POST"])
+app.register_error_handler(400, handle_exception)
+
+@app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()
-def open_image():
+def open_image(image_id: str):
 
-    image_path = request.json["image_path"]
+    try:
+        image_path = request.json["image_path"]
+    except:
+        return handle_exception("Error while trying to get the image path")
 
-    extension = image_path.split(".")[-1]
+    try:
+        image_dtype = request.json["image_dtype"]
+    except:
+        return handle_exception("Error while trying to get the image dtype")
+
+    file = image_path.split("/")[-1]
+    file_name = file.split(".")[0]
+
+    if(file == ""):
+        return handle_exception("Empty path isn't valid !")
+
+    extension = file.split(".")[-1]
+
+    if(extension == file_name):
+        return handle_exception( "The path {} is a invalid path !!".format(image_path))
+
     raw_extensions = ["raw", "b"]
     tif_extensions = ["tif", "tiff"]
 
     extensions = [*raw_extensions, *tif_extensions]
 
     if extension not in extensions:
-        return "failure", 400
+        return handle_exception("the extension .{} isn't supported !".format(extension))
 
-    image, info = sscIO.io.read_volume(image_path, 'numpy')
+    try:
+        use_image_raw_parse = request.json["use_image_raw_parse"]
+        if(extension in tif_extensions or use_image_raw_parse):
+            image, info = sscIO.io.read_volume(image_path, 'numpy')
 
-    print("shape", image.shape)
-    print("dtype", image.dtype)
+        else:
+            image_raw_shape = request.json["image_raw_shape"]
+            image, info = sscIO.io.read_volume(image_path, 'numpy',
+                                               shape=(image_raw_shape[2], image_raw_shape[1], image_raw_shape[0]),
+                                               dtype=image_dtype)
+        image_shape = image.shape
+    except:
+        error_msg = "Unable to reshape the volume {} into shape {} and type {}. " \
+               "Please change the dtype and shape and load the image again".format(file, request.json["image_raw_shape"],
+                                                                                   image_dtype)
+        return handle_exception(error_msg)
 
-    data_repo.set_image(key='image', data=image)
-
-    return "success", 200
+    image_info = {"image_shape": image_shape, "image_ext": extension,
+                  "image_name": file_name, "image_dtype": image_dtype}
+    data_repo.set_image(key=image_id, data=image)
+    return image_info, 200
 
 
 @app.route("/close_image", methods=["POST"])
@@ -44,6 +78,6 @@ def close_image():
     try:
         data_repo.delete_image(key='image')
     except:
-        return "failure", 400
+        return "failure trying to delete the image", 400
 
-    return "success", 200
+    return "success on deleting the image !", 200

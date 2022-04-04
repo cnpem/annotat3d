@@ -1,11 +1,13 @@
 import React from "react";
 import {IonButton, IonIcon} from "@ionic/react";
 import { LabelInterface } from "./LabelInterface";
+import {colorFromId, defaultColormap} from '../../utils/colormap';
 
 /*Icons import*/
 import {addOutline, trashOutline} from "ionicons/icons";
 
 interface InputLabelProps {
+    colors: [number, number, number][];
     onLabelList: (labels: LabelInterface[]) => void;
     labelList: LabelInterface[];
     newLabelId: number;
@@ -21,11 +23,7 @@ interface InputLabelProps {
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     const addNewLabel = () => {
-        const newColor: [number, number, number] = [
-            Math.floor(Math.random() * 255),
-            Math.floor(Math.random() * 255),
-            Math.floor(Math.random() * 255)
-        ];
+        const newColor = colorFromId(props.colors, props.newLabelId); 
         const newLabel = {
             labelName: "Label " + props.newLabelId,
             color: newColor,
