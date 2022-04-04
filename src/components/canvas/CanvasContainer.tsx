@@ -598,7 +598,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             }
             this.getSuperpixelSlice();
             this.getAnnotSlice();
-            this.get_label_slice();
+            this.getLabelSlice();
         });
     }, 250);
 
@@ -648,7 +648,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         });
     }
 
-    get_label_slice() {
+    getLabelSlice() {
 
         const params = {
             axis: this.props.axis,
@@ -669,6 +669,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     onSuperpixelChanged() {
         this.getSuperpixelSlice();
+    }
+
+    onLabelChanged() {
+        console.log('onlabelchanged ...');
+        this.getLabelSlice();
     }
 
     onLabelSelected(payload: any) {
@@ -701,7 +706,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
             subscribe('labelSelected', (payload) => { this.onLabelSelected(payload) });
             subscribe('superpixelChanged', () => this.onSuperpixelChanged());
-            subscribe('contrastChanged', (payload) => { this.onContrastChanged(payload) })
+            subscribe('contrastChanged', (payload) => { this.onContrastChanged(payload) });
+            subscribe('labelChanged', () => { this.onLabelChanged() });
         }
     }
 
@@ -710,6 +716,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('labelSelected', this.onLabelSelected);
         unsubscribe('superpixelChanged', this.onSuperpixelChanged);
         unsubscribe('contrastChanged', this.onContrastChanged);
+        unsubscribe('labelChanged', this.onLabelChanged);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {

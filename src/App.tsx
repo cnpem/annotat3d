@@ -32,9 +32,9 @@ import ToolsMenu from './components/tools_menu/ToolsMenu'
 
 setupIonicReact()
 
-/**
- * Main function that does all the functions callouts
- */
+    /**
+     * Main function that does all the functions callouts
+     */
 const App: React.FC = () => {
     return (
         <IonApp>
@@ -47,8 +47,7 @@ const App: React.FC = () => {
                         menuId="custom"
                         id="custom"
                         contentId="main"
-                        onIonWillClose={(e) => console.log(e)}
-                    >
+                        onIonWillClose={(e) => console.log(e)}>
                         <IonContent>
                             <ToolsMenu hideMenu={true} />
                         </IonContent>

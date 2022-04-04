@@ -21,10 +21,10 @@ interface LabelTableProps {
  */
 const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
-    const [newLabelId, setNewLabelId] = useStorageState<number>(localStorage, 'newLabelId', 1);
-    const [labelList, setLabelList] = useStorageState<LabelInterface[]>(localStorage, 'labelList', [{ labelName: "Background", color: props.colors[0], id: 0 }]);
+    const [newLabelId, setNewLabelId] = useStorageState<number>(sessionStorage, 'newLabelId', 1);
+    const [labelList, setLabelList] = useStorageState<LabelInterface[]>(sessionStorage, 'labelList', [{ labelName: "Background", color: props.colors[0], id: 0 }]);
 
-    const [selectedLabel, setSelectedLabel] = useStorageState<number>(localStorage, 'selectedLabel', 0);
+    const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
 
     const selectLabelList = (labels: LabelInterface[]) => {
         setLabelList(labels);
