@@ -1,10 +1,9 @@
-import React, {useEffect, useState} from "react";
+import React, {} from "react";
 import {IonCard, IonCardContent} from "@ionic/react";
 import LabelTable from "./label_table/LabelTable";
 import SlicesMenu from "./SlicesMenu";
 import {ImageShapeInterface} from "./ImageShapeInterface";
-import {defaultColormap} from '../utils/colormap';
-import {sfetch} from "../utils/simplerequest";
+import {defaultColormap} from '../../utils/colormap';
 
 interface SideMenuAnnotatInterface{
     imageSlice: ImageShapeInterface;

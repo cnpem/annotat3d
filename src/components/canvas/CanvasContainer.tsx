@@ -1,21 +1,22 @@
 import {Component} from 'react';
-import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
-import { expand, brush, browsers, add, remove } from 'ionicons/icons';
+import {IonFab, IonFabButton, IonIcon, IonInput, IonRange} from '@ionic/react';
+import { expand, brush, browsers, add, remove, contrast, moon, sunny } from 'ionicons/icons';
 import { debounce, isEqual } from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 // https://stackoverflow.com/questions/42789896/webgl-error-arraybuffer-not-big-enough-for-request-in-case-of-gl-luminance
 // this fix is on the import on utils/pixibufferloader
-import '../utils/pixibufferloader';
+import '../../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
 //import npyjs from 'npyjs';
 import { NdArray, TypedArray } from 'ndarray';
-import { mean, std } from '../utils/math';
-import { sfetch } from '../utils/simplerequest';
+import { clamp, mean, std } from '../../utils/math';
+import { sfetch } from '../../utils/simplerequest';
 
-import './styles/CanvasContainer.css';
+import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
-import {subscribe, unsubscribe} from '../utils/eventbus';
+import {subscribe, unsubscribe} from '../../utils/eventbus';
+import {RangeValue} from '@ionic/core';
 
 class Brush {
 
@@ -202,6 +203,11 @@ class Canvas {
     x: number;
     y: number;
 
+    imgSlice?: NdArray<TypedArray>;
+
+    imgMin: number = 0.0;
+    imgMax: number = 1.0;
+
     axis: 'XY' | 'XZ' | 'YZ';
     sliceNum: number;
 
@@ -368,6 +374,14 @@ class Canvas {
         return Math.atan2(point2.x - point1.x, point2.y - point1.y);
     }
 
+    adjustContrast(minimum: number, maximum: number) {
+        this.imgMax = maximum;
+        this.imgMin = minimum;
+        if (this.imgSlice) {
+            this.setImage(this.imgSlice);
+        }
+    }
+
     draw(currPosition: PIXI.Point) {
 
         const context = this.annotation.context;
@@ -384,8 +398,6 @@ class Canvas {
         if (currPosition === this.prevPosition) {
             const x = Math.round(this.prevPosition.x - this.brush.size / 2);
             const y = Math.round(this.prevPosition.y - this.brush.size / 2);
-            console.log('context draw image 1');
-
             this.brush.contextDrawBrush(context, x, y);
 
             this.annotation.sprite.texture.update();
@@ -400,7 +412,6 @@ class Canvas {
         for (let i = 0; i < dist; i++) {
             const x = Math.round(this.prevPosition.x + Math.sin(angle) * i - this.brush.size / 2);
             const y = Math.round(this.prevPosition.y + Math.cos(angle) * i - this.brush.size / 2);
-            console.log('context draw image 2');
             this.brush.contextDrawBrush(context, x, y);
             coords.push([x, y]);
         }
@@ -458,6 +469,8 @@ class Canvas {
 
     setImage(img_slice: NdArray<TypedArray>) {
 
+        this.imgSlice = img_slice;
+
         let uint8data: Uint8Array;
 
         const x = img_slice.shape[1];
@@ -469,9 +482,14 @@ class Canvas {
         if (img_slice.dtype === 'uint8') {
             uint8data = img_slice.data as Uint8Array;
         } else {
+            const max = 65535.0 * this.imgMax;
+            const min = 65535.0 * this.imgMin;
+            const range = max - min;
             uint8data = new Uint8Array(len);
             for (let i = 0; i < len; ++i) {
-                const x = 255 * (1 - (65535.0 - img_slice.data[i]) / 65535);
+                const val = clamp(min, img_slice.data[i], max);
+                //console.log(val);
+                const x = 255 * (1.0 - (max - val) / range);
                 uint8data[i] = x;
                 //console.log(uint8data[i]);
             }
@@ -542,6 +560,8 @@ interface ICanvasProps {
 
 interface ICanvasState {
     brush_mode: brush_mode_type;
+    contrast: number;
+    brightness: number;
 }
 
 const brushList = [
@@ -560,14 +580,17 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     pixi_container: HTMLDivElement | null;
     canvas: Canvas | null;
+
     onLabelSelected: (payload: any) => void = () => {};
-    onImageLoaded: () => void = () => {};
+    onImageLoaded: (payload: any) => void = () => {};
+    onContrastChanged: (payload: number[]) => void = () => {};
+    onSuperpixelChanged: () => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
         this.pixi_container = null;
         this.canvas = null;
-        this.state = { brush_mode: 'draw_brush' };
+        this.state = { brush_mode: 'draw_brush', contrast: 0.0, brightness: 0.0 };
     }
 
     fetchAllDebounced = debounce( (recenter: boolean = false) => {
@@ -647,8 +670,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         // the element is the DOM object that we will use as container to add pixi stage(canvas)
         const elem = this.pixi_container;
         if (this && elem) {
-            this.canvas = new Canvas(elem, this.props.colors,
-                                     this.props.axis, this.props.slice);
+            this.canvas = new Canvas(elem, this.props.colors, this.props.axis, this.props.slice);
             setTimeout(() => this.canvas!.resize(), 200);
             console.log(this.canvas.viewport);
             console.log(this.pixi_container);
@@ -659,25 +681,36 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             });
 
             this.fetchAllDebounced(true);
-            this.onLabelSelected =  (payload) => {
+
+            this.onLabelSelected = (payload: any) => {
                 console.log(payload);
                 console.log('label selected');
                 this.canvas?.brush.setLabel(payload.id);
             };
 
             this.onImageLoaded = () => {
-                //page refresher
-                this.fetchAllDebounced(true)
+                this.fetchAllDebounced(true);
+            };
+
+            this.onSuperpixelChanged = () => {
+                this.getSuperpixelSlice();
             }
 
-            subscribe("ImageLoaded", this.onImageLoaded);
+            this.onContrastChanged = (payload: number[]) => {
+                this.adjustContrast(payload[0], payload[1]);
+            }
+
             subscribe('labelSelected', this.onLabelSelected);
+            subscribe('superpixelChanged', this.onSuperpixelChanged);
+            subscribe('contrastChanged', this.onContrastChanged);
         }
     }
 
     componentWillUnmount() {
         unsubscribe('labelSelected', this.onLabelSelected);
-        unsubscribe("ImageLoaded", this.onImageLoaded)
+        unsubscribe("ImageLoaded", this.onImageLoaded);
+        unsubscribe('superpixelChanged', this.onSuperpixelChanged);
+        unsubscribe('contrastChanged', this.onContrastChanged);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
@@ -688,30 +721,37 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.fetchAllDebounced(prevProps.axis !== this.props.axis);
     }
 
+    adjustContrast(minimum: number, maximum: number) {
+        //this.setState({...this.state, contrastMin: minimum});
+        this.canvas?.adjustContrast(minimum, maximum);
+    }
+
     render() {
         return (
             <div id="root" className="canvas" style={ {"backgroundColor": "transparent"}  } ref={elem => this.pixi_container = elem} >
+
                 <IonFab vertical="bottom" horizontal="start">
                     <IonFabButton color="medium" onClick={() => this.canvas?.recenter()}>
                         <IonIcon icon={expand}/>
                     </IonFabButton>
                 </IonFab>
+
                 <IonFab vertical="bottom" horizontal="end">
 
                     <MenuFabButton openSide="start" buttonsList={brushList} onChange={ (b) => { this.setBrushMode(b.id as brush_mode_type) } } />
                 </IonFab>
                 <IonFab vertical="bottom" horizontal="end" style={ {marginBottom: '4em'} }>
                     <IonFabButton size="small" onClick={() => {
-                            this.canvas?.increaseBrushSize();
-                        }}>
+                        this.canvas?.increaseBrushSize();
+                    }}>
                         <IonIcon icon={add} />
                     </IonFabButton>
                     <IonFabButton size="small" onClick={() => {
-                            this.canvas?.decreaseBrushSize();
-                        }}>
+                        this.canvas?.decreaseBrushSize();
+                    }}>
                         <IonIcon icon={remove}/>
                     </IonFabButton>
-                    </IonFab>
+                </IonFab>
 
             </div>
         );

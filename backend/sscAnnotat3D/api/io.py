@@ -1,5 +1,6 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
 from werkzeug.exceptions import BadRequest
+import os.path
 
 import sscIO.io
 
@@ -30,23 +31,18 @@ def open_image(image_id: str):
         return handle_exception("Error while trying to get the image dtype")
 
     file = image_path.split("/")[-1]
-    file_name = file.split(".")[0]
+    file_name, extension = os.path.splitext(file)
 
     if(file == ""):
         return handle_exception("Empty path isn't valid !")
 
-    extension = file.split(".")[-1]
-
-    if(extension == file_name):
-        return handle_exception( "The path {} is a invalid path !!".format(image_path))
-
-    raw_extensions = ["raw", "b"]
-    tif_extensions = ["tif", "tiff"]
+    raw_extensions = [".raw", ".b"]
+    tif_extensions = [".tif", ".tiff"]
 
     extensions = [*raw_extensions, *tif_extensions]
 
     if extension not in extensions:
-        return handle_exception("the extension .{} isn't supported !".format(extension))
+        return handle_exception("The extension {} isn't supported !".format(extension))
 
     error_msg = ""
 
@@ -72,7 +68,7 @@ def open_image(image_id: str):
     image_info = {"image_shape": image_shape, "image_ext": extension,
                   "image_name": file_name, "image_dtype": image_dtype}
     data_repo.set_image(key=image_id, data=image)
-    return image_info, 200
+    return jsonify(image_info)
 
 
 @app.route("/close_image", methods=["POST"])

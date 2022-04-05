@@ -11,11 +11,11 @@ import './Page.css';
 
 import {defaultColormap} from '../utils/colormap';
 
-import CanvasContainer from '../components/CanvasContainer';
+import CanvasContainer from '../components/canvas/CanvasContainer';
 import {build} from "ionicons/icons";
 
 import {useEventBus} from '../utils/eventbus';
-import {SliceInfoInterface} from "../components/SliceInfoInterface";
+import {SliceInfoInterface} from "../components/tools_menu/SliceInfoInterface";
 
 /**
  * Module that contains the initial page of Annotat3D web
