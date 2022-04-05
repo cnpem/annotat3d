@@ -165,7 +165,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
                 if(image.hasOwnProperty("image_shape")) {
 
-                    const info = {
+                    const info: ImageInfoInterface = {
                         imageShape: image.image_shape,
                         imageDtype: image.image_dtype,
                         imageName: image.image_name,

@@ -1,7 +1,7 @@
 
 
 import {TextFieldTypes} from '@ionic/core';
-import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, IonTextarea } from '@ionic/react';
+import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox } from '@ionic/react';
 import {isEqual} from 'lodash';
 import {Fragment, useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
