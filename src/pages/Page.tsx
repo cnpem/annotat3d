@@ -3,8 +3,7 @@ import {
     IonButton, IonButtons, IonContent,
     IonFooter, IonHeader, IonIcon,
     IonMenuButton, IonPage, IonTitle,
-    IonToolbar, IonSelectOption, IonSelect,
-    IonMenuToggle
+    IonToolbar, IonMenuToggle
 } from '@ionic/react';
 import {useParams} from 'react-router';
 import './Page.css';
@@ -44,14 +43,7 @@ const Page: React.FC = () => {
                             </IonButton>
                         </IonMenuToggle>
                     </IonButtons>
-                    <div style={ {"display": "flex"} }>
-                        <IonTitle>{name}</IonTitle>
-                        <IonSelect interface="popover" placeholder="Segmentation Module">
-                            <IonSelectOption value="superpixel">Superpixel Segmentation</IonSelectOption>
-                            <IonSelectOption value="pixel">Pixel Segmentation</IonSelectOption>
-                            <IonSelectOption value="edit">Edit Labels</IonSelectOption>
-                        </IonSelect>
-                    </div>
+                    <IonTitle>{name}</IonTitle>
                 </IonToolbar>
             </IonHeader>
 

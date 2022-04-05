@@ -41,11 +41,6 @@ from .. import utils
 from .segmentation_module import SegmentationModule
 # from .widgets_parameters import SuperpixelSegmentationParamWidget
 
-__headless_mode__ = utils.headless_mode()
-
-if __headless_mode__:
-    from PyQt5.QtWidgets import QMessageBox
-
 __rapids_support__ = utils.rapids_support()
 
 if __rapids_support__:
@@ -461,15 +456,6 @@ class ClassifierSegmentationModule(SegmentationModule):
         return True
 
     def load_classifier(self, path):
-        if len(self._loaded_training_superpixel_features) > 0:
-            if __headless_mode__ or QMessageBox.question(
-                    None, 'Classifier Loading',
-                    'Training features have been previously loaded. Loading a new classifier will overwrite the loaded features. Continue?'
-            ) == QMessageBox.Yes:
-                self._loaded_training_superpixel_features = []
-                self._loaded_training_superpixel_labels = []
-            else:
-                return False
 
         try:
             # model_complete = joblib.load(path)
@@ -552,11 +538,7 @@ class ClassifierSegmentationModule(SegmentationModule):
         newest_version = self._training_data_version
 
         if version != '1.1':
-            if __headless_mode__:
-                QMessageBox.warning(
-                    None, 'Loading training data',
-                    'This seems to be an older version of training data file (file version: %s, current version %s). Superpixel estimation and classification parameters were not stored in the file. Please set them according to the original specifications, otherwise classification results may differ.'
-                    % (version, newest_version))
+            raise 'This seems to be an older version of training data file (file version: %s, current version %s). Superpixel estimation and classification parameters were not stored in the file. Please set them according to the original specifications, otherwise classification results may differ.' % (version, newest_version)
             return False
 
         try:
@@ -643,8 +625,6 @@ class ClassifierSegmentationModule(SegmentationModule):
         self._training_labels = []
         self._training_labels_raw = []
 
-        # if len(self._loaded_training_superpixel_features) > 0:
-        # 	if force_reset_loaded or QMessageBox.question(None, 'Features loaded', 'Training feature data has been loaded, reset it anyway?') == QMessageBox.Yes:
 
         if len(self._loaded_training_superpixel_features) > 0 and force_reset_loaded_data:
             self._loaded_training_superpixel_features = []
@@ -763,12 +743,6 @@ class ClassifierSegmentationModule(SegmentationModule):
         return self._superpixel_params['pixel_segmentation']
 
     def load_training_data(self, path):
-        if self._flag_classifier_loaded:
-            if __headless_mode__ or QMessageBox.question(
-                    None, 'Training Data Loading',
-                    'A trained classifer has been previously loaded. Loading new training data will overwrite the loaded classifier. Continue?'
-            ) == QMessageBox.No:
-                return False
 
         try:
             # IMPORTANT NOTE: since Annotat3D version 0.3.7, classifier loading was modified to use pickle instead of joblib because the
@@ -869,12 +843,7 @@ class ClassifierSegmentationModule(SegmentationModule):
         logging.debug('\n\n***Classifier type after resetting {}'.format(type(self._model)))
 
     def __del__(self):
-        if not __headless_mode__:
-            if QMessageBox.question(None,
-                                    'Auto-save data detected',
-                                    'Auto-saved data detected, delete it?',
-                                    defaultButton=QMessageBox.No) == QMessageBox.Yes:
-                self.remove_auto_saved_data()
+        self.remove_auto_saved_data()
 
     def set_feature_extraction_parameters(self, **kwargs):
         for param, value in kwargs.items():

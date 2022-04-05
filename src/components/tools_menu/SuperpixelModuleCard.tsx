@@ -1,11 +1,11 @@
 
 
-import { IonCard, IonCardTitle, IonCardHeader, IonCardSubtitle, IonCardContent, IonButton, IonAccordion, IonAccordionGroup, IonTitle, IonItem, IonItemDivider, IonLabel, IonList, IonInput, IonGrid, IonRow, IonSelect, IonSelectOption, IonSpinner, useIonLoading, IonContent, IonIcon, IonFooter, IonHeader, IonChip, IonToolbar } from '@ionic/react';
-import {arrowDown} from 'ionicons/icons';
-import {Fragment, useState} from 'react';
+import { IonItem, IonLabel, IonInput, IonSelect, IonSelectOption } from '@ionic/react';
+import {useState} from 'react';
 import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem} from './ModuleCard';
 import {dispatch} from '../../utils/eventbus';
+import {useStorageState} from 'react-storage-hooks';
 
 interface SuperpixelState {
     compactness: number;
@@ -15,10 +15,11 @@ interface SuperpixelState {
 
 const SuperpixelModuleCard: React.FC = () => {
 
-    const [superpixelParams, setSuperpixelParams] = useState<SuperpixelState>({
+
+    const [superpixelParams, setSuperpixelParams] = useStorageState<SuperpixelState>(localStorage, 'superpixelParams', {
         compactness: 1000,
         seedsSpacing: 4,
-        method: 'waterpixel'
+        method: 'waterpixels'
     });
 
     const [disabled, setDisabled] = useState<boolean>(false);
@@ -31,7 +32,7 @@ const SuperpixelModuleCard: React.FC = () => {
             compactness: superpixelParams.compactness
         };
         sfetch('POST', '/superpixel', JSON.stringify(params))
-        .then(() => { 
+        .then(() => {
             console.log('computed superpixel ok');
             dispatch('superpixelChanged', {});
         })
@@ -49,8 +50,9 @@ const SuperpixelModuleCard: React.FC = () => {
                     <IonSelect interface="popover"
                         value={ superpixelParams.method }
                         onIonChange={ (e) => { setSuperpixelParams({...superpixelParams, method: e.detail.value}); }  }>
-                        <IonSelectOption>slic</IonSelectOption>
-                        <IonSelectOption>waterpixel</IonSelectOption>
+                        <IonSelectOption>waterpixels</IonSelectOption>
+                        <IonSelectOption value="waterpixels3d">waterpixels 3D</IonSelectOption>
+                        <IonSelectOption disabled>slic</IonSelectOption>
                     </IonSelect>
                 </IonItem>
                 <IonItem>

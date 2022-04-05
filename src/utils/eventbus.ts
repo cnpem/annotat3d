@@ -10,7 +10,7 @@
  * or people might think I am crazy. Even tough I am a little.
  */
 
-import {useEffect} from "react";
+import { useEffect } from "react";
 
 interface Dictionary<T> {
     [Key: string]: T;
@@ -22,6 +22,8 @@ interface Subscriber {
 }
 
 const subscribers: Dictionary<Subscriber[]> = {};
+
+const currentValue: Dictionary<any> = {};
 
 /**
  * Subscribe to listen to the defined event.
@@ -56,6 +58,7 @@ function dispatch(evt: string, payload: any) {
     curSubs.forEach(sub => {
         sub.callback(payload);
     });
+    currentValue[evt] = payload;
 }
 
 /**
@@ -75,4 +78,9 @@ function useEventBus(evt: string, callback: (payload: any) => void) {
     }, []);
 }
 
-export {subscribe, unsubscribe, dispatch, useEventBus};
+function currentEventValue(evt: string): any | null {
+    const cur = currentValue[evt] || null;
+    return cur;
+}
+
+export { subscribe, unsubscribe, dispatch, useEventBus,  currentEventValue };

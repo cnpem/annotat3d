@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React from "react";
 import * as ReactBootStrap from "react-bootstrap";
 import {IonRow, IonCol, IonLabel} from "@ionic/react";
 import InputLabel from "./InputLabel";
@@ -8,6 +8,7 @@ import {defaultColormap} from '../../../utils/colormap';
 import {dispatch} from '../../../utils/eventbus';
 
 import './LabelTable.css';
+import {useStorageState} from "react-storage-hooks";
 
 interface LabelTableProps {
     colors: [number, number, number][];
@@ -20,10 +21,10 @@ interface LabelTableProps {
  */
 const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
-    const [newLabelId, setNewLabelId] = useState<number>(1);
-    const [labelList, setLabelList] = useState<LabelInterface[]>([{ labelName: "Background", color: props.colors[0], id: 0 }]);
+    const [newLabelId, setNewLabelId] = useStorageState<number>(sessionStorage, 'newLabelId', 1);
+    const [labelList, setLabelList] = useStorageState<LabelInterface[]>(sessionStorage, 'labelList', [{ labelName: "Background", color: props.colors[0], id: 0 }]);
 
-    const [selectedLabel, setSelectedLabel] = useState<number>(0);
+    const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
 
     const removeLabelElement = (label: LabelInterface) => {
         setLabelList(labelList.filter(l => l.id !== label.id));
@@ -40,7 +41,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     const changeLabelName = (newLabelName: string, labelId: number) => {
         setLabelList(
             labelList.map(l =>
-                l.id == labelId
+                l.id === labelId
                     ? {...l, labelName: newLabelName}
                     : {...l}
             )

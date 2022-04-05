@@ -2,8 +2,7 @@ import {
     IonContent,
     IonMenu,
     IonHeader,
-    IonSearchbar, IonTitle,
-    IonToolbar, IonAccordionGroup
+    IonSearchbar, IonToolbar, IonAccordionGroup, IonCard, IonCardTitle, IonCardSubtitle
 } from '@ionic/react';
 
 import {useLocation} from 'react-router-dom';
@@ -34,8 +33,10 @@ const Menu: React.FC = () => {
         <IonMenu contentId="main" type="overlay" side="start"  swipeGesture={true}>
             <IonHeader>
                 <IonToolbar>
-                    <IonTitle size={"large"} className={"ion-text-center"}>Annotat3D</IonTitle>
-                    <IonTitle size={"small"} className={"menu-subtitle ion-text-center"}>web version 1.0.0</IonTitle>
+                    <IonCard color="primary" style={ {padding: '1em', fontFamily: 'monospace'} }>
+                        <IonCardTitle className={"ion-text-center"}><big>Annotat3D</big></IonCardTitle>
+                    <IonCardSubtitle className={"ion-text-center"}>web version 1.0.0</IonCardSubtitle>
+                        </IonCard>
                 </IonToolbar>
             </IonHeader>
             <IonToolbar>

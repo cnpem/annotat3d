@@ -14,7 +14,6 @@ import {
     IonSegmentButton,
     IonSelect,
     IonSelectOption,
-    IonTextarea,
     IonAccordion,
     IonAccordionGroup,
     IonAlert
@@ -162,32 +161,28 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             use_image_raw_parse: (imgShapeRaw[0] == null && imgShapeRaw[1] == null && imgShapeRaw[2] == null),
         }
 
-        sfetch("POST", "/open_image/"+loadImgOp, JSON.stringify(params), "json").then(
-            (image) => {
+        sfetch("POST", "/open_image/"+loadImgOp, JSON.stringify(params), "json")
+            .then((image) => {
 
-                if(image.hasOwnProperty("image_shape"))
-                    {
+                if(image.hasOwnProperty("image_shape")) {
 
-                        const info = {
-                            imageShape: image.image_shape,
-                            imageDtype: image.image_dtype,
-                            imageName: image.image_name,
-                            imageExt: image.image_ext,
-                        }
-
-                        setImageInfo(info);
-                        setShowErrorWindow(false);
-                        dispatch("ImageLoaded", imageInfo);
-
+                    const info = {
+                        imageShape: image.image_shape,
+                        imageDtype: image.image_dtype,
+                        imageName: image.image_name,
+                        imageExt: image.image_ext,
                     }
 
-                    else
-                        {
+                    setImageInfo(info);
+                    setShowErrorWindow(false);
+                    dispatch("ImageLoaded", imageInfo);
 
-                            setShowErrorWindow(true);
-                            throw new Error(image.error_msg, image);
+                } else {
 
-                        }
+                    setShowErrorWindow(true);
+                    throw new Error(image.error_msg, image);
+
+                }
 
             }).catch(error => {
                 setErrorMsg(error.message);
@@ -216,8 +211,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 isOpen={showPopover.open}
                 event={showPopover.event}
                 onDidDismiss={() => cleanUp()}
-                className={"file-popover"}
-            >
+                className={"file-popover"}>
                 <IonList>
                     <IonItem>
                         {/* Select Image/Label/Superpixel */}

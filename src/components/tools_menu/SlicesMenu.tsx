@@ -9,6 +9,7 @@ import {ImageShapeInterface} from './ImageShapeInterface';
 
 import {dispatch} from '../../utils/eventbus';
 import {SliceInfoInterface} from "./SliceInfoInterface";
+import {useStorageState} from "react-storage-hooks";
 
 interface SlicesMenuProps{
     imageProps: ImageShapeInterface;
@@ -21,10 +22,10 @@ interface SlicesMenuProps{
  */
 const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
-    const [sliceName, setSliceName] = useState<'XY' | 'XZ' | 'YZ'>("XY");
+    const [sliceName, setSliceName] = useStorageState<'XY' | 'XZ' | 'YZ'>(sessionStorage, 'sliceName', "XY");
     const [nameButtonSlice, setNameButtonSlice] = useState<string>("Z");
-    const [sliceValue, setSliceValue] = useState<number>(0);
-    const [maxValSlider, setMaxValSlider] = useState<number>(props.imageProps.z);
+    const [sliceValue, setSliceValue] = useStorageState<number>(sessionStorage, 'sliceValue', 0);
+    const [maxValSlider, setMaxValSlider] = useStorageState<number>(sessionStorage, 'maxSlider', props.imageProps.z);
 
     const handleSliceValue = (e: CustomEvent) => {
         setSliceValue(+e.detail.value);

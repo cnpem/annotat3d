@@ -1,11 +1,9 @@
-import {IonButton, IonItem, IonLabel, IonSegment, IonSegmentButton} from "@ionic/react";
-import React, {Fragment, useState} from "react";
+import {IonLabel, IonSegment, IonSegmentButton} from "@ionic/react";
+import React, {useState} from "react";
 import {ImageShapeInterface} from "./ImageShapeInterface";
-import { ModuleCard, ModuleCardItem }from "./ModuleCard";
+import ProcessingMenu from "./ProcessingMenu";
 import SideMenuAnnot from "./SideMenuAnnot";
 import SideMenuVis from "./SideMenuVis";
-import SuperpixelModuleCard from "./SuperpixelModuleCard";
-import SuperpixelSegmentationModuleCard from "./SuperpixelSegmentationModuleCard";
 
 interface SideMenuProps {
     hideMenu: boolean
@@ -33,12 +31,7 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
             case 'Visualization':
                 return <SideMenuVis/>
             case 'Processing':
-                return (
-                    <Fragment>
-                        <SuperpixelModuleCard/>
-                        <SuperpixelSegmentationModuleCard/>
-                    </Fragment>
-            );
+                return <ProcessingMenu />
         }
     };
 

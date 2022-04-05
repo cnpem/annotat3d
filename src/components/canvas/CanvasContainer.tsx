@@ -1,6 +1,6 @@
 import {Component} from 'react';
-import {IonFab, IonFabButton, IonIcon, IonInput, IonRange} from '@ionic/react';
-import { expand, brush, browsers, add, remove, contrast, moon, sunny } from 'ionicons/icons';
+import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
+import { expand, brush, browsers, add, remove } from 'ionicons/icons';
 import { debounce, isEqual } from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -16,7 +16,6 @@ import { sfetch } from '../../utils/simplerequest';
 import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
 import {subscribe, unsubscribe} from '../../utils/eventbus';
-import {RangeValue} from '@ionic/core';
 
 class Brush {
 
@@ -211,15 +210,12 @@ class Canvas {
     axis: 'XY' | 'XZ' | 'YZ';
     sliceNum: number;
 
-    newAnnotation() {
-        sfetch('POST', '/new_annot');
-    }
-
     constructor(div: HTMLDivElement, colors: [number, number, number][], axis: 'XY' | 'XZ' | 'YZ', sliceNum: number) {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
         this.app = new PIXI.Application({
-            backgroundAlpha: 0.1,
+            //backgroundAlpha: 0.99,
+            backgroundColor: 0x303030
         });
 
         this.viewport = new pixi_viewport.Viewport({
@@ -277,8 +273,6 @@ class Canvas {
 
         //this.setSuperpixelVisibility(false);
         this.setLabelVisibility(true);
-
-        this.newAnnotation();
     }
 
     setSliceNum(sliceNum: number) {
@@ -498,8 +492,6 @@ class Canvas {
         this.x = x;
         this.y = y;
 
-        this.annotation.setSize(x, y);
-        this.annotation.clear();
 
         const texture = this.textureFromSlice(uint8data, x, y);
         this.slice.texture = texture;
@@ -583,6 +575,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onImageLoaded: (payload: any) => void = () => {};
     onContrastChanged: (payload: number[]) => void = () => {};
     onSuperpixelChanged: () => void = () => {};
+    onLabelChanged: () => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -600,9 +593,14 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             }
             this.getSuperpixelSlice();
             this.getAnnotSlice();
-            this.get_label_slice();
+            this.getLabelSlice();
         });
     }, 250);
+
+    newAnnotation() {
+        sfetch('POST', '/new_annot');
+        console.log("new annotation, hue");
+    }
 
     getSuperpixelSlice() {
 
@@ -645,7 +643,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         });
     }
 
-    get_label_slice() {
+    getLabelSlice() {
 
         const params = {
             axis: this.props.axis,
@@ -698,9 +696,15 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.adjustContrast(payload[0], payload[1]);
             }
 
+            this.onLabelChanged = () => {
+                console.log('onlabelchanged ...');
+                this.getLabelSlice();
+            }
+
             subscribe('labelSelected', this.onLabelSelected);
             subscribe('superpixelChanged', this.onSuperpixelChanged);
             subscribe('contrastChanged', this.onContrastChanged);
+            subscribe('labelChanged', this.onLabelChanged);
         }
     }
 
@@ -709,14 +713,17 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe("ImageLoaded", this.onImageLoaded);
         unsubscribe('superpixelChanged', this.onSuperpixelChanged);
         unsubscribe('contrastChanged', this.onContrastChanged);
+        unsubscribe('labelChanged', this.onLabelChanged);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
+
         if (isEqual(prevProps, this.props)) //if all properties are the same (deep comparison)
             return;
         this.canvas?.setSliceNum(this.props.slice);
         this.canvas?.setAxis(this.props.axis);
         this.fetchAllDebounced(prevProps.axis !== this.props.axis);
+
     }
 
     adjustContrast(minimum: number, maximum: number) {

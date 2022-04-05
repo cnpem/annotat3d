@@ -117,6 +117,7 @@ setup(
         *extension_modules('sscAnnotat3D'),
         *extension_modules('sscAnnotat3D.repository'),
         *extension_modules('sscAnnotat3D.api'),
+        *extension_modules('sscAnnotat3D.api.modules'),
         *extension_modules('sscAnnotat3D.utils'),
         *extension_modules('sscAnnotat3D.modules'),
         *extension_modules('sscAnnotat3D.deeplearning'),
