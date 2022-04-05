@@ -685,6 +685,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             };
 
             this.onImageLoaded = () => {
+                console.log('onImageLoaded');
                 this.fetchAllDebounced(true);
             };
 
@@ -705,6 +706,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('superpixelChanged', this.onSuperpixelChanged);
             subscribe('contrastChanged', this.onContrastChanged);
             subscribe('labelChanged', this.onLabelChanged);
+            subscribe('ImageLoaded', this.onImageLoaded);
         }
     }
 

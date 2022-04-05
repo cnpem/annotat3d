@@ -1,6 +1,5 @@
 import {IonLabel, IonSegment, IonSegmentButton} from "@ionic/react";
 import React, {useState} from "react";
-import {ImageShapeInterface} from "./ImageShapeInterface";
 import ProcessingMenu from "./ProcessingMenu";
 import SideMenuAnnot from "./SideMenuAnnot";
 import SideMenuVis from "./SideMenuVis";
@@ -14,11 +13,6 @@ type InputMenuChoicesType = "Visualization" | "Annotation" | "Processing";
 const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
 
     const [menuOp, setMenuOp] = useState<InputMenuChoicesType>("Visualization");
-    const [imageSlice, setImageSlice] = useState<ImageShapeInterface>({x: 200, y: 200, z: 5000});
-
-    const selectImageSlice = (image: ImageShapeInterface) => {
-        setImageSlice(image);
-    };
 
     const selectMenuOp = (op: InputMenuChoicesType) => {
         setMenuOp(op);
@@ -27,7 +21,7 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
     const activeItemRender = () => {
         switch(menuOp) {
             case 'Annotation':
-                return <SideMenuAnnot imageSlice={imageSlice} onImageSlice={selectImageSlice}/>
+                return <SideMenuAnnot/>
             case 'Visualization':
                 return <SideMenuVis/>
             case 'Processing':

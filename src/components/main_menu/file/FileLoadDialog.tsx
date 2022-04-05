@@ -135,7 +135,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const [yRange, setYRange] = useState([0, -1]);
     const [zRange, setZRange] = useState([0, -1]);
     const [loadImgOp, setLoadImagOp] = useState<"image" | "label" | "superpixel">("image");
-    const [imageInfo, setImageInfo] = useState<ImageInfoInterface>({imageDtype: "", imageName: "", imageExt: "", imageShape: 0})
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
 
@@ -173,9 +172,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                         imageExt: image.image_ext,
                     }
 
-                    setImageInfo(info);
                     setShowErrorWindow(false);
-                    dispatch("ImageLoaded", imageInfo);
+                    dispatch("ImageLoaded", info);
 
                 } else {
 

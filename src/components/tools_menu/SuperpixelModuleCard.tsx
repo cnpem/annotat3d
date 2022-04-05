@@ -70,7 +70,6 @@ const SuperpixelModuleCard: React.FC = () => {
                     </IonInput>
                 </IonItem>
             </ModuleCardItem>
-            <div>{JSON.stringify(superpixelParams)}</div>
         </ModuleCard>
 
     );

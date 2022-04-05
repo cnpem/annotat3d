@@ -36,9 +36,6 @@ const defaultModelClassifierParams: Record<string, ModelClassifierParams[]> = {
     ]
 }
 
-
-//((<SPINFilters.MULTI_SCALE_FFT_GAUSS: 0>, 'FFT Gauss'), (<SPINFilters.MULTI_SCALE_FFT_GABOR: 13>, 'FFT Gabor'), (<SPINFilters.NONE: 14>, 'None (Original Img)'), (<SPINFilters.MULTI_SCALE_FFT_DIFF_OF_GAUSS: 1>, 'FFT DoG'), (<SPINFilters.SOBEL: 3>, 'Sobel'), (<SPINFilters.MEMBRANE_PROJECTIONS: 4>, 'Membrane Projections'), (<SPINFilters.ADJ_MIN: 8>, 'Minimum'), (<SPINFilters.ADJ_MAX: 9>, 'Maximum'), (<SPINFilters.ADJ_AVERAGE: 10>, 'Average'), (<SPINFilters.ADJ_VARIANCE: 11>, 'Variance'), (<SPINFilters.ADJ_MEDIAN: 12>, 'Median'), (<SPINFilters.LBP: 15>, 'LBP'))
-
 const defaultFeatures: Feature[] = [
     { id: 'fft_gauss', name: 'FFT Gauss', active: true },
     { id: 'none', name: 'None (Original Image)', active: true },
@@ -299,11 +296,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         <ModuleCard name="Superpixel Segmentation" disabled={disabled}
             onApply={onApply} onPreview={onPreview} onPreprocess={onPreprocess}
             disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed} disabledPreprocess={hasPreprocessed}>
-
-            <ModuleCardItem name="feat params">
-                <IonTextarea>{ JSON.stringify(featParams, null, 2) }</IonTextarea>
-            </ModuleCardItem>
-
 
             <ModuleCardItem name="Superpixel Segmentation Parameters">
                 <ModuleCardItem name="Feature Extraction Parameters">

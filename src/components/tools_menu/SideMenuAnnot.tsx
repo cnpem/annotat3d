@@ -2,13 +2,10 @@ import React, {} from "react";
 import {IonCard, IonCardContent} from "@ionic/react";
 import LabelTable from "./label_table/LabelTable";
 import SlicesMenu from "./SlicesMenu";
-import {ImageShapeInterface} from "./ImageShapeInterface";
 import {defaultColormap} from '../../utils/colormap';
-
-interface SideMenuAnnotatInterface{
-    imageSlice: ImageShapeInterface;
-    onImageSlice: (slice: ImageShapeInterface) => void;
-}
+import {useEventBus} from "../../utils/eventbus";
+import {useStorageState} from "react-storage-hooks";
+import {ImageShapeInterface} from "./ImageShapeInterface";
 
 /**
  * Component that creates the lateral bar menu
@@ -16,13 +13,25 @@ interface SideMenuAnnotatInterface{
  * @constructor
  * @return this function return a list of all lateral components
  */
-const SideMenuAnnot: React.FC<SideMenuAnnotatInterface> = (props) => {
+const SideMenuAnnot: React.FC = () => {
+
+    const [imageShape, setImageShape] = useStorageState<ImageShapeInterface>(sessionStorage, 'imageShape', {
+        x: 0, y: 0, z: 0
+    });
+
+    useEventBus('ImageLoaded', (imgInfo) => {
+        setImageShape({
+            x: imgInfo.imageShape[2],
+            y: imgInfo.imageShape[1],
+            z: imgInfo.imageShape[0]
+        });
+    })
 
     return(
         <div>
             <IonCard>
                 <IonCardContent>
-                    <SlicesMenu imageProps={props.imageSlice} onImageProps={props.onImageSlice}/>
+                    <SlicesMenu imageShape={imageShape}/>
                 </IonCardContent>
             </IonCard>
 

@@ -1,4 +1,3 @@
-import React, {useState} from "react";
 import {IonButton, IonButtons, IonIcon,
     IonInput, IonItem, IonLabel,
     IonRange, IonSegment, IonSegmentButton
@@ -10,11 +9,17 @@ import {ImageShapeInterface} from './ImageShapeInterface';
 import {dispatch} from '../../utils/eventbus';
 import {SliceInfoInterface} from "./SliceInfoInterface";
 import {useStorageState} from "react-storage-hooks";
+import {Fragment} from "react";
 
 interface SlicesMenuProps{
-    imageProps: ImageShapeInterface;
-    onImageProps: (image: ImageShapeInterface) => void;
+    imageShape: ImageShapeInterface;
 }
+
+const buttonSliceName: Record<'XY'|'XZ'|'YZ', 'X'|'Y'|'Z'> = {
+    'XY': 'Z',
+    'XZ': 'Y',
+    'YZ': 'X'
+};
 
 /**
  * @param props
@@ -23,52 +28,30 @@ interface SlicesMenuProps{
 const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
     const [sliceName, setSliceName] = useStorageState<'XY' | 'XZ' | 'YZ'>(sessionStorage, 'sliceName', "XY");
-    const [nameButtonSlice, setNameButtonSlice] = useState<string>("Z");
     const [sliceValue, setSliceValue] = useStorageState<number>(sessionStorage, 'sliceValue', 0);
-    const [maxValSlider, setMaxValSlider] = useStorageState<number>(sessionStorage, 'maxSlider', props.imageProps.z);
+
+    const maxValSlider: Record<'XY'|'XZ'|'YZ', number> = {
+        'XY': props.imageShape.z,
+        'XZ': props.imageShape.y,
+        'YZ': props.imageShape.x
+    }
 
     const handleSliceValue = (e: CustomEvent) => {
         setSliceValue(+e.detail.value);
-         const payload: SliceInfoInterface =  {
+        const payload: SliceInfoInterface =  {
             axis: sliceName,
             slice: +e.detail.value
         };
 
-        dispatch('sliceChanged', payload);       
+        dispatch('sliceChanged', payload);
     }
 
     const handleSliceName = (e: CustomEvent) => {
-        setSliceName(e.detail.value);
-
-        if(e.detail.value === "XY") {
-
-            setNameButtonSlice("Z");
-            setMaxValSlider(props.imageProps.z);
-
-            if(sliceValue > props.imageProps.z) {
-                setSliceValue(props.imageProps.z);
-            }
-
-        }
-
-        else if(e.detail.value === "XZ") {
-
-            setNameButtonSlice("Y");
-            setMaxValSlider(props.imageProps.y);
-
-            if(sliceValue > props.imageProps.y) {
-                setSliceValue(props.imageProps.y);
-            }
-        }
-
-        else {
-
-            setNameButtonSlice("X");
-            setMaxValSlider(props.imageProps.x);
-
-            if(sliceValue > props.imageProps.x) {
-                setSliceValue(props.imageProps.x);
-            }
+        const curSliceName = e.detail.value as 'XY'|'YZ'|'XZ';
+        setSliceName(curSliceName);
+        const maxSliceValue = maxValSlider[curSliceName];
+        if (sliceValue > maxSliceValue) {
+            setSliceValue(maxSliceValue);
         }
 
         const payload: SliceInfoInterface =  {
@@ -80,7 +63,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     }
 
     return(
-        <React.Fragment>
+        <Fragment>
             <IonSegment value={sliceName} onIonChange={handleSliceName}>
                 <IonSegmentButton value={"XY"}>
                     <IonLabel>{"XY"}</IonLabel>
@@ -96,17 +79,17 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             </IonSegment>
 
             <IonItem>
-                <IonRange min={0} max={maxValSlider} pin={true} value={sliceValue} onIonChange={handleSliceValue}>
+                <IonRange min={0} max={maxValSlider[sliceName]} pin={true} value={sliceValue} onIonChange={handleSliceValue}>
                     <IonIcon size={"small"} slot={"start"} icon={albumsOutline}/>
                 </IonRange>
             </IonItem>
             <IonItem>
                 <IonButtons>
-                    <IonButton disabled={true} color={"dark"} size={"default"}>{nameButtonSlice}</IonButton>
+                    <IonButton disabled={true} color={"dark"} size={"default"}>{buttonSliceName[sliceName]}</IonButton>
                 </IonButtons>
-                <IonInput type={"number"} min={0} max={maxValSlider} clearInput value={sliceValue} onIonChange={handleSliceValue}/>
+                <IonInput type={"number"} min={0} max={maxValSlider[sliceName]} clearInput value={sliceValue} onIonChange={handleSliceValue}/>
             </IonItem>
-        </React.Fragment>
+        </Fragment>
     );
 
 }
