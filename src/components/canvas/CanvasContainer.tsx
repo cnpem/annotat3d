@@ -560,8 +560,6 @@ interface ICanvasProps {
 
 interface ICanvasState {
     brush_mode: brush_mode_type;
-    contrast: number;
-    brightness: number;
 }
 
 const brushList = [
@@ -590,7 +588,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         super(props);
         this.pixi_container = null;
         this.canvas = null;
-        this.state = { brush_mode: 'draw_brush', contrast: 0.0, brightness: 0.0 };
+        this.state = { brush_mode: 'draw_brush' };
     }
 
     fetchAllDebounced = debounce( (recenter: boolean = false) => {

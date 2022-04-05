@@ -15,7 +15,7 @@ type InputMenuChoicesType = "Visualization" | "Annotation" | "Processing";
 
 const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
 
-    const [menuOp, setMenuOp] = useState<InputMenuChoicesType>("Annotation");
+    const [menuOp, setMenuOp] = useState<InputMenuChoicesType>("Visualization");
     const [imageSlice, setImageSlice] = useState<ImageShapeInterface>({x: 200, y: 200, z: 5000});
 
     const selectImageSlice = (image: ImageShapeInterface) => {
@@ -73,12 +73,12 @@ const InputMenu: React.FC<InputMenuInterface> = (props) => {
 
     return(
         <IonSegment value={props.selectedVal} onIonChange={inputChangeHandler}>
-            <IonSegmentButton value={"Annotation"}>
-                <IonLabel>Annotation</IonLabel>
-            </IonSegmentButton>
-
             <IonSegmentButton value={"Visualization"}>
                 <IonLabel>Visualization</IonLabel>
+            </IonSegmentButton>
+
+            <IonSegmentButton value={"Annotation"}>
+                <IonLabel>Annotation</IonLabel>
             </IonSegmentButton>
 
             <IonSegmentButton value={"Processing"}>
