@@ -78,6 +78,6 @@ def close_image():
     try:
         data_repo.delete_image(key='image')
     except:
-        return "failure trying to delete the image", 400
+        return handle_exception("failure trying to delete the image")
 
     return "success on deleting the image !", 200

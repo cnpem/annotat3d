@@ -23,6 +23,7 @@ import dataType from "./Dtypes";
 import {options} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
+import ErrorWindowComp from "./ErrorWindowComp";
 
 /**
  * dtypes array
@@ -75,44 +76,6 @@ interface ImageInfoInterface{
     imageName: string;
     imageExt: string;
     imageDtype: string;
-}
-
-interface ErrorWindowInterface{
-    errorMsg: string;
-    onErrorMsg: (msg: string) => void;
-
-    errorFlag: boolean;
-    onErrorFlag: (errorFlag: boolean) => void;
-}
-
-const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg, onErrorMsg ,errorFlag, onErrorFlag}) => {
-
-    const resetErrorMsg = () => {
-        onErrorFlag(false);
-        onErrorMsg("");
-    }
-
-    return(
-        <div>
-            {(errorMsg) ?
-                <IonAlert
-                    isOpen={errorFlag}
-                    onDidDismiss={() => resetErrorMsg}
-                    header={"Error while trying to load the image"}
-                    message={errorMsg}
-                    buttons={[
-                        {
-                            text: "Okay",
-                            id: "confirm-button",
-                            handler: () => {
-                                resetErrorMsg();
-                            }
-                        }
-                    ]}/> :
-                        <></>
-            }
-        </div>
-    )
 }
 
 /**

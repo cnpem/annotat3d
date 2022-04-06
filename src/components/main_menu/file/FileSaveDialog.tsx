@@ -70,8 +70,10 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         open: false,
         event: undefined,
     });
-    const [path, setPath] = useState<string>();
-    const [dtype, setDtype] = useState<string>();
+    const [path, setPath] = useState<string>("");
+    const [dtype, setDtype] = useState<"" | "uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
+        "uint64" | "float32" | "float64" | "complex64">("uint16");
+    const [loadImgOp, setLoadImagOp] = useState<"image" | "label" | "superpixel">("image");
     const [, setKind] = useState<string>();
 
     /**
