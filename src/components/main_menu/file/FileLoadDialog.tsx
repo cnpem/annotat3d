@@ -24,6 +24,7 @@ import {options} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import ErrorWindowComp from "./ErrorWindowComp";
+import ImageInfoInterface from "./ImageInfoInterface";
 
 /**
  * dtypes array
@@ -71,13 +72,6 @@ const dtypeList: dataType[] = [
     }
 ];
 
-interface ImageInfoInterface{
-    imageShape: Array<number> [3];
-    imageName: string;
-    imageExt: string;
-    imageDtype: string;
-}
-
 /**
  * Load Image dialog
  * @param name
@@ -115,6 +109,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     }
 
     const handleLoadImageAction = () => {
+
+        console.log("path : ", path);
 
         const params = {
             image_path: path,
