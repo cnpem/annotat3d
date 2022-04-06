@@ -14,6 +14,7 @@ import {
 import "./FileDialog.css"
 import dataType from "./Dtypes";
 import ErrorWindowComp from "./ErrorWindowComp";
+import {sfetch} from "../../../utils/simplerequest";
 
 /**
  * dtypes array
@@ -92,7 +93,31 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     }
 
     const handleSaveImageAction = () => {
+
+        const params = {
+            image_path: path,
+            image_dtype: dtype,
+        }
+
         console.log("saving the image");
+        sfetch("POST", "/save_image/"+saveImgOp, JSON.stringify(params), "json").then(
+            (image) => {
+                console.log("opa, bão ?\n");
+                console.log("image info : ", image);
+
+                if(image.hasOwnProperty("image_shape")){
+
+                    setShowErrorWindow(false);
+
+                } else {
+                    setShowErrorWindow(true);
+                    throw new Error(image.error_msg, image);
+                }
+
+            }).catch(error => {
+                console.log("oia o erro aqui");
+                setErrorMsg(error.message);
+        })
     }
 
     /**
@@ -167,6 +192,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             <ErrorWindowComp
                 errorMsg={errorMsg}
                 onErrorMsg={handleErrorMsg}
+                windowOp={"saving"}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
         </>

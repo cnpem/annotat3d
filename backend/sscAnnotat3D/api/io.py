@@ -51,6 +51,8 @@ def open_image(image_id: str):
         if(extension in tif_extensions or use_image_raw_parse):
             image, info = sscIO.io.read_volume(image_path, 'numpy')
             error_msg = "No such file or directory {}".format(image_path)
+            image_dtype = image.dtype()
+            print("image dtype : {}".format(image_dtype))
 
         else:
             image_raw_shape = request.json["image_raw_shape"]
@@ -81,3 +83,61 @@ def close_image():
         return handle_exception("failure trying to delete the image")
 
     return "success on deleting the image !", 200
+
+
+@app.route("/save_image/<image_id>", methods=["POST"])
+@cross_origin()
+def save_image(image_id: str):
+
+    try:
+        image_path = request.json["image_path"]
+    except:
+        return handle_exception("Error while trying to get the image path")
+
+    try:
+        image_dtype = request.json["image_dtype"]
+    except:
+        return handle_exception("Error while trying to get the image dtype")
+
+    file = image_path.split("/")[-1]
+    file_name, extension = os.path.splitext(file)
+
+    if(file == ""):
+        return handle_exception("Empty path isn't valid !")
+
+    raw_extensions = [".raw", ".b"]
+    tif_extensions = [".tif", ".tiff"]
+
+    extensions = [*raw_extensions, *tif_extensions]
+
+    if extension not in extensions:
+        return handle_exception("The extension {} isn't supported !".format(extension))
+
+    error_msg = ""
+
+    try:
+        use_image_raw_parse = request.json["use_image_raw_parse"]
+        if(extension in tif_extensions or use_image_raw_parse):
+            image = data_repo.get_image(key=image_id)
+            error_msg = "No such file or directory {}".format(image_path)
+            image_dtype = image.dtype()
+            print("image dtype : {}".format(image_dtype))
+
+        else:
+            image_raw_shape = request.json["image_raw_shape"]
+            image = data_repo.get_image(image_path, 'numpy',
+                                               shape=(image_raw_shape[2], image_raw_shape[1], image_raw_shape[0]),
+                                               dtype=image_dtype)
+
+            error_msg = "Unable to reshape the volume {} into shape {} and type {}. " \
+                        "Please change the dtype and shape and load the image again".format(file, request.json["image_raw_shape"],
+                                                                                            image_dtype)
+        image_shape = image.shape
+        print("image : {}".format(image))
+    except:
+        return handle_exception(error_msg)
+
+    image_info = {"image_shape": image_shape, "image_ext": extension,
+                  "image_name": file_name, "image_dtype": image_dtype}
+    data_repo.set_image(key=image_id, data=image)
+    return jsonify(image_info)

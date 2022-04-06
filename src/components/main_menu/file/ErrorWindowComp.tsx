@@ -2,6 +2,8 @@ import React from "react";
 import {IonAlert} from "@ionic/react";
 
 export interface ErrorWindowInterface{
+    windowOp: string
+
     errorMsg: string;
     onErrorMsg: (msg: string) => void;
 
@@ -9,7 +11,11 @@ export interface ErrorWindowInterface{
     onErrorFlag: (errorFlag: boolean) => void;
 }
 
-const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg, onErrorMsg ,errorFlag, onErrorFlag}) => {
+const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg,
+                                                             windowOp,
+                                                             onErrorMsg,
+                                                             errorFlag,
+                                                             onErrorFlag}) => {
 
     const resetErrorMsg = () => {
         onErrorFlag(false);
@@ -22,7 +28,7 @@ const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg, onErrorMsg ,
                 <IonAlert
                     isOpen={errorFlag}
                     onDidDismiss={() => resetErrorMsg}
-                    header={"Error while trying to load the image"}
+                    header={"Error while trying to " + windowOp +" the image"}
                     message={errorMsg}
                     buttons={[
                         {
