@@ -13,6 +13,7 @@ import {
 } from "@ionic/react";
 import "./FileDialog.css"
 import dataType from "./Dtypes";
+import ErrorWindowComp from "./ErrorWindowComp";
 
 /**
  * dtypes array
@@ -73,8 +74,26 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     const [path, setPath] = useState<string>("");
     const [dtype, setDtype] = useState<"" | "uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
         "uint64" | "float32" | "float64" | "complex64">("uint16");
-    const [loadImgOp, setLoadImagOp] = useState<"image" | "label" | "superpixel">("image");
-    const [, setKind] = useState<string>();
+    const [saveImgOp, setSaveImgOp] = useState<"image" | "label" | "superpixel">("image");
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
+
+    const handleSaveImgOP = (e: CustomEvent) => {
+        const buttonSegName = e.detail!.value!
+        setSaveImgOp(buttonSegName);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleSaveImageAction = () => {
+        console.log("saving the image");
+    }
 
     /**
      * Clean up popover dialog
@@ -83,6 +102,9 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         setShowPopover({open: false, event: undefined});
         setPath("");
         setDtype("");
+        setSaveImgOp("image")
+        setErrorMsg("");
+        setShowErrorWindow(false)
     };
     return (
         <>
@@ -94,7 +116,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             >
                 <IonList>
                     <IonItem>
-                        <IonSegment onIonChange={e => setKind(e.detail.value)}
+                        <IonSegment value={saveImgOp} onIonChange={handleSaveImgOP}
                                     color="tertiary">
                             <IonSegmentButton value="image">
                                 <IonLabel>Image</IonLabel>
@@ -132,7 +154,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                         </IonSelect>
                     </IonItem>
                 </IonList>
-                <IonButton color={"tertiary"} slot={"end"}>
+                <IonButton color={"tertiary"} slot={"end"} onClick={handleSaveImageAction}>
                     Save!
                 </IonButton>
             </IonPopover>
@@ -141,6 +163,12 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             >
                 {name}
             </IonItem>
+            {/*Error window*/}
+            <ErrorWindowComp
+                errorMsg={errorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
         </>
     );
 };

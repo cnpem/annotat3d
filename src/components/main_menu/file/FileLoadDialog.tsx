@@ -198,8 +198,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                             onIonChange={e => setPath(e.detail.value!)} />
                     </IonItem>
                     {/* Image Size Grid*/}
-
-
                     <IonItem>
                         <IonRow>
                             <IonCol>
