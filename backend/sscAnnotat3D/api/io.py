@@ -119,9 +119,9 @@ def save_image(image_id: str):
         use_image_raw_parse = request.json["use_image_raw_parse"]
         if(extension in tif_extensions or use_image_raw_parse):
             image = data_repo.get_image(key=image_id)
+            print("loaded image : {}".format(image))
             error_msg = "No such file or directory {}".format(image_path)
-            image_dtype = image.dtype()
-            print("image dtype : {}".format(image_dtype))
+            image_dtype = image.dtype
 
         else:
             image_raw_shape = request.json["image_raw_shape"]
@@ -133,11 +133,10 @@ def save_image(image_id: str):
                         "Please change the dtype and shape and load the image again".format(file, request.json["image_raw_shape"],
                                                                                             image_dtype)
         image_shape = image.shape
-        print("image : {}".format(image))
     except:
         return handle_exception(error_msg)
 
     image_info = {"image_shape": image_shape, "image_ext": extension,
                   "image_name": file_name, "image_dtype": image_dtype}
-    data_repo.set_image(key=image_id, data=image)
+
     return jsonify(image_info)

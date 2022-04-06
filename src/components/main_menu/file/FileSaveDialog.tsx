@@ -104,7 +104,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         console.log("saving the image");
         sfetch("POST", "/save_image/"+saveImgOp, JSON.stringify(params), "json").then(
             (image) => {
-                console.log("image info : ", image);
+                console.log("image info save : ", image);
 
                 if(image.hasOwnProperty("image_shape")){
 
@@ -114,6 +114,8 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                         imageName: image.image_name,
                         imageExt: image.image_ext,
                     }
+
+                    console.log("info in save : ", info);
 
                     setShowErrorWindow(false);
                     dispatch("SaveImage", info);

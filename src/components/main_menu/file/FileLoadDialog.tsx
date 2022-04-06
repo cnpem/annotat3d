@@ -110,8 +110,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
     const handleLoadImageAction = () => {
 
-        console.log("path : ", path);
-
         const params = {
             image_path: path,
             image_dtype: dtype,
@@ -241,8 +239,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                             </IonCol>
                         </IonRow>
                     </IonItem>
-
-
                 </IonList>
                 {/* Advanced Options Accordion */}
                 <small>
