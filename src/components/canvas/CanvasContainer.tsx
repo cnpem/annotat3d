@@ -197,6 +197,8 @@ class Canvas {
     labelSlice: PIXI.Sprite;
     superpixelSlice: PIXI.Sprite;
 
+    superpixelColor: number = 0xff0000;
+
     colors: [number, number, number][];
 
     x: number;
@@ -233,7 +235,7 @@ class Canvas {
         this.labelSlice = new PIXI.Sprite();
 
         this.superpixelSlice = new PIXI.Sprite();
-        this.superpixelSlice.tint = 0xff00ff
+        this.superpixelSlice.tint = this.superpixelColor;
         this.superpixelSlice.alpha = 0.3;
         this.superpixelSlice.blendMode = PIXI.BLEND_MODES.ADD;
         this.superpixelSlice.scale.x = 0.5;
@@ -422,6 +424,18 @@ class Canvas {
         this.superpixelSlice.visible = visible;
     }
 
+    setAnnotationVisibility(visible: boolean = true) {
+        this.annotation.sprite.visible = visible;
+    }
+
+    setAnnotationAlpha(alpha: number) {
+        this.annotation.sprite.alpha = alpha;
+    }
+
+    setLabelAlpha(alpha: number) {
+        this.labelSlice.alpha = alpha;
+    }
+
     setLabelVisibility(visible: boolean = true) {
         this.labelSlice.visible = visible;
     }
@@ -507,6 +521,11 @@ class Canvas {
         this.brush.setSize(this.brush.size - 1);
     }
 
+    setSuperpixelColor(color: number) {
+        this.superpixelColor = color;
+        this.superpixelSlice.tint = this.superpixelColor;
+    }
+
     setSuperpixelImage(superpixel_slice: NdArray<TypedArray>) {
         const uint8data = superpixel_slice.data.map(x => x * 255) as Uint8Array;
         const x = superpixel_slice.shape[1];
@@ -567,7 +586,6 @@ const brushList = [
 
 class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
-
     pixi_container: HTMLDivElement | null;
     canvas: Canvas | null;
 
@@ -576,6 +594,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onContrastChanged: (payload: number[]) => void = () => {};
     onSuperpixelChanged: () => void = () => {};
     onLabelChanged: () => void = () => {};
+    onSuperpixelColorChanged: (color: any) => void = () => {};
+    onSuperpixelVisibilityChanged: (visible: boolean) => void = () => {};
+    onLabelVisibilityChanged: (visible: boolean) => void = () => {};
+    onLabelAlphaChanged: (alpha: number) => void = () => {};
+    onAnnotanionAlphaChanged!: (alpha: number) => void;
+    onAnnotanionVisibilityChanged!: (visible: boolean) => void;
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -693,6 +717,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.getSuperpixelSlice();
             }
 
+            this.onSuperpixelColorChanged = (color) => {
+                console.log('superpixel color changed: ', color);
+                this.canvas?.setSuperpixelColor(color);
+            }
+
             this.onContrastChanged = (payload: number[]) => {
                 this.adjustContrast(payload[0], payload[1]);
             }
@@ -702,6 +731,32 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.getLabelSlice();
             }
 
+            this.onSuperpixelVisibilityChanged = (visible: boolean) => {
+                this.canvas?.setSuperpixelVisibility(visible);
+            }
+
+            this.onLabelVisibilityChanged = (visible: boolean) => {
+                this.canvas?.setLabelVisibility(visible);
+            }
+
+            this.onLabelAlphaChanged = (alpha: number) => {
+                this.canvas?.setLabelAlpha(alpha);
+            }
+
+            this.onAnnotanionAlphaChanged = (alpha: number) => {
+                this.canvas?.setAnnotationAlpha(alpha);
+            }
+
+            this.onAnnotanionVisibilityChanged = (visible: boolean) => {
+                this.canvas?.setAnnotationVisibility(visible);
+            }
+
+            subscribe('annotationVisibilityChanged', this.onAnnotanionVisibilityChanged);
+            subscribe('annotationAlphaChanged', this.onAnnotanionAlphaChanged);
+            subscribe('labelAlphaChanged', this.onLabelAlphaChanged);
+            subscribe('labelVisibilityChanged', this.onLabelVisibilityChanged);
+            subscribe('superpixelVisibilityChanged', this.onSuperpixelVisibilityChanged);
+            subscribe('superpixelColorChanged', this.onSuperpixelColorChanged);
             subscribe('labelSelected', this.onLabelSelected);
             subscribe('superpixelChanged', this.onSuperpixelChanged);
             subscribe('contrastChanged', this.onContrastChanged);
@@ -711,6 +766,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     componentWillUnmount() {
+        unsubscribe('annotationVisibilityChanged', this.onAnnotanionVisibilityChanged);
+        unsubscribe('annotationAlphaChanged', this.onAnnotanionAlphaChanged);
+        unsubscribe('labelAlphaChanged', this.onLabelAlphaChanged);
+        unsubscribe('labelVisibilityChanged', this.onLabelVisibilityChanged);
+        unsubscribe('superpixelVisibilityChanged', this.onSuperpixelVisibilityChanged);
+        unsubscribe('superpixelColorChanged', this.onSuperpixelColorChanged);
         unsubscribe('labelSelected', this.onLabelSelected);
         unsubscribe("ImageLoaded", this.onImageLoaded);
         unsubscribe('superpixelChanged', this.onSuperpixelChanged);

@@ -31,6 +31,7 @@
     "pixi.js": "^6.2.2",
     "react": "^17.0.1",
     "react-bootstrap": "^2.2.1",
+    "react-color": "^2.19.3",
     "react-dom": "^17.0.1",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
@@ -77,6 +78,7 @@
   "devDependencies": {
     "@capacitor/cli": "3.4.3",
     "@ionic/lab": "3.2.11",
+    "@types/react-color": "^3.0.6",
     "prettier": "2.6.1",
     "react-scripts": "5.0.0"
   },
