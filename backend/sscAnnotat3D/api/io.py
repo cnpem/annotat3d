@@ -3,6 +3,7 @@ from werkzeug.exceptions import BadRequest
 import os.path
 
 import sscIO.io
+import numpy as np
 
 from sscAnnotat3D.repository import data_repo
 
@@ -15,6 +16,41 @@ def handle_exception(error_msg: str):
     return {"error_msg": error_msg}, 400
 
 app.register_error_handler(400, handle_exception)
+
+def _convert_dtype_to_str(dtype: np.dtype):
+
+    if(dtype == "uint8"):
+        return "uint8"
+
+    if (dtype == "int16"):
+        return "int16"
+
+    if (dtype == "uint16"):
+        return "uint16"
+
+    if (dtype == "int32"):
+        return "int32"
+
+    if (dtype == "uint32"):
+        return "uint32"
+
+    if (dtype == "int64"):
+        return "int64"
+
+    if (dtype == "uint64"):
+        return "uint64"
+
+    if (dtype == "float32"):
+        return "float32"
+
+    if (dtype == "float64"):
+        return "float64"
+
+    if (dtype == "complex64"):
+        return "complex64"
+
+    return ""
+
 
 @app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()
@@ -50,7 +86,6 @@ def open_image(image_id: str):
         use_image_raw_parse = request.json["use_image_raw_parse"]
         if(extension in tif_extensions or use_image_raw_parse):
             image, info = sscIO.io.read_volume(image_path, 'numpy')
-            image_dtype = image.dtype
             error_msg = "No such file or directory {}".format(image_path)
 
         else:
@@ -63,6 +98,7 @@ def open_image(image_id: str):
                         "Please change the dtype and shape and load the image again".format(file, request.json["image_raw_shape"],
                                                                                             image_dtype)
         image_shape = image.shape
+        image_dtype = _convert_dtype_to_str(dtype=image.dtype)
     except:
         return handle_exception(error_msg)
 
@@ -116,12 +152,10 @@ def save_image(image_id: str):
     error_msg = ""
 
     try:
-        use_image_raw_parse = request.json["use_image_raw_parse"]
-        if(extension in tif_extensions or use_image_raw_parse):
+        if(extension in tif_extensions):
             image = data_repo.get_image(key=image_id)
-            print("loaded image : {}".format(image))
+            print("image is empty : {}".format(image))
             error_msg = "No such file or directory {}".format(image_path)
-            image_dtype = image.dtype
 
         else:
             image_raw_shape = request.json["image_raw_shape"]
@@ -133,6 +167,7 @@ def save_image(image_id: str):
                         "Please change the dtype and shape and load the image again".format(file, request.json["image_raw_shape"],
                                                                                             image_dtype)
         image_shape = image.shape
+        image_dtype = _convert_dtype_to_str(dtype=image.dtype)
     except:
         return handle_exception(error_msg)
 
