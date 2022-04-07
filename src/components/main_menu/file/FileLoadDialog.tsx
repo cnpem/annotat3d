@@ -16,7 +16,8 @@ import {
     IonSelectOption,
     IonAccordion,
     IonAccordionGroup,
-    IonAlert
+    IonAlert,
+    useIonToast
 } from "@ionic/react";
 import "./FileDialog.css"
 import dataType from "./Dtypes";
@@ -97,7 +98,7 @@ const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg, onErrorMsg ,
             {(errorMsg) ?
                 <IonAlert
                     isOpen={errorFlag}
-                    onDidDismiss={() => resetErrorMsg}
+                    onDidDismiss={() => resetErrorMsg()}
                     header={"Error while trying to load the image"}
                     message={errorMsg}
                     buttons={[
@@ -126,6 +127,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         open: false,
         event: undefined,
     });
+
+    const [showToast, dismissToast] = useIonToast();
 
     const [path, setPath] = useState<string>("");
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
@@ -174,6 +177,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
                     setShowErrorWindow(false);
                     dispatch("ImageLoaded", info);
+                    setShowPopover({...showPopover, open: false});
+                    showToast(`Loaded ${image.image_name}${image.image_ext}`, 2000);
 
                 } else {
 

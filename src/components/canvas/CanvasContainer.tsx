@@ -75,7 +75,7 @@ class Brush {
         const [r, g, b] = this.colors[(this.label) % this.colors.length];
         context.beginPath();
         context.fillStyle = `rgb(${r},${g},${b})`;
-        context.arc(x + this.size / 2, y + this.size / 2, this.radius, 0, 2 * Math.PI);
+        context.arc(x, y, this.radius, 0, 2 * Math.PI);
         context.fill();
     }
 
@@ -389,8 +389,8 @@ class Canvas {
         }
 
         if (currPosition === this.prevPosition) {
-            const x = Math.round(this.prevPosition.x - this.brush.size / 2);
-            const y = Math.round(this.prevPosition.y - this.brush.size / 2);
+            const x = this.prevPosition.x;
+            const y = this.prevPosition.y;
             this.brush.contextDrawBrush(context, x, y);
 
             this.annotation.sprite.texture.update();
@@ -403,8 +403,8 @@ class Canvas {
         const dist = this.distanceBetween(this.prevPosition, currPosition);
         const angle = this.angleBetween(this.prevPosition, currPosition);
         for (let i = 0; i < dist; i++) {
-            const x = Math.round(this.prevPosition.x + Math.sin(angle) * i - this.brush.size / 2);
-            const y = Math.round(this.prevPosition.y + Math.cos(angle) * i - this.brush.size / 2);
+            const x = this.prevPosition.x + Math.sin(angle) * i;
+            const y = this.prevPosition.y + Math.cos(angle) * i;
             this.brush.contextDrawBrush(context, x, y);
             coords.push([x, y]);
         }
