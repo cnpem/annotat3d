@@ -4,7 +4,8 @@ import pickle
 import io
 import zlib
 
-from sscAnnotat3D.repository import data_repo
+from sscAnnotat3D.modules import annotation_module
+from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D import utils
 
 from flask_cors import cross_origin
@@ -18,7 +19,14 @@ def new_annot():
     annot = {}
     annot_path = ""
 
-    data_repo.set_annotation(data=annot)
+    img = data_repo.get_image('image')
+    if img is None:
+        return 'No image associated', 400
+
+    annot_module = annotation_module.AnnotationModule(img.shape, 'uint16')
+
+    data_repo.set_annotation('annotation', data=annot)
+    module_repo.set_module('annotation', module=annot_module)
 
     return "success", 200
 
@@ -86,8 +94,8 @@ def draw():
     annot = data_repo.get_annotation()
 
     if annot is None:
-       annot = {}
-       data_repo.set_annotation(data=annot)
+       new_annot()
+       annot = data_repo.get_annotation()
 
     print(request.json)
 
@@ -98,22 +106,19 @@ def draw():
     mode = request.json["mode"]
 
     axis_dim = utils.get_axis_num(axis)
-    coords_dim = [i for i in range(3)[::-1] if i != axis_dim]
 
-    for coord in request.json["coords"]:
-        for d1 in np.arange(coord[0], coord[0] + size):
-            for d2 in np.arange(coord[1], coord[1] + size):
-                voxel_coord = [None, None, None]
-                voxel_coord[coords_dim[0]] = d1
-                voxel_coord[coords_dim[1]] = d2
-                voxel_coord[axis_dim] = slice_num
-                voxel_coord = tuple(voxel_coord)
-                if mode == "draw_brush":
-                    annot[voxel_coord] = (label, 0)
-                else:
-                    annot.pop(voxel_coord, True)
 
-    data_repo.set_annotation(annot)
+    annot_module = module_repo.get_module('annotation')
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+    annot_module.set_radius(size//2)
+
+    erase = (mode == 'erase_brush')
+
+    for coord in request.json['coords']:
+        annot_module.draw_marker_dot(coord[1], coord[0], label, 1, erase)
+
+    data_repo.set_annotation(annot_module.annotation)
 
     return "success", 200
 
@@ -127,31 +132,14 @@ def get_annot_slice():
     if annot is None:
         return "failure", 400
 
-
     slice_num = request.json["slice"]
     axis = request.json["axis"]
     axis_dim = utils.get_axis_num(axis)
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
+    annot_module = module_repo.get_module('annotation')
 
-    img_slice = np.ones(image[slice_range].shape, dtype='int32')
-    img_slice = img_slice * -1
-    print(axis_dim, slice_num)
-    for coords in annot:
-        print(coords)
-        if coords[axis_dim] == slice_num:
-            coord_2d = [c for i, c in enumerate(coords) if i!=axis_dim]
-            print(coord_2d)
-            img_slice[coord_2d[0], coord_2d[1]] = annot[coords][0]
-            print(annot[coords][0])
-
-    # slice = slice.astype(np.int16)
-    print("annot_slice", img_slice)
-    print("annot_dtype", img_slice.dtype)
-    print("annot_shape", img_slice.shape, img_slice.reshape(-1).shape)
-    # print("annot_bytes", len(img_slice.tobytes()))
-
-    print(img_slice.mean(), img_slice.std())
+    img_slice = annot_module.annotation_image[slice_range]
 
     img_slice = zlib.compress(utils.toNpyBytes(img_slice))
     # print("annot_gzip_bytes", len(img_slice))

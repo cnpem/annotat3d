@@ -115,6 +115,7 @@ setup(
     python_requires='>=3.6',
     ext_modules=cythonize([
         *extension_modules('sscAnnotat3D'),
+        *extension_modules('sscAnnotat3D.image'),
         *extension_modules('sscAnnotat3D.repository'),
         *extension_modules('sscAnnotat3D.api'),
         *extension_modules('sscAnnotat3D.api.modules'),
