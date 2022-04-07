@@ -12,7 +12,7 @@ app = Blueprint('io', __name__)
 
 @app.errorhandler(BadRequest)
 def handle_exception(error_msg: str):
-    return {"error_msg": error_msg}, 400
+    return jsonify({"error_msg": error_msg}), 400
 
 app.register_error_handler(400, handle_exception)
 
