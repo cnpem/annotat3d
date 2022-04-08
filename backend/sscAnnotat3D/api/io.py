@@ -160,7 +160,11 @@ def save_image(image_id: str):
                 image = image.astype(image_dtype)
 
             error_msg = "No such file or directory {}".format(image_path)
-            imwrite("aoba.tif", image)
+
+            try:
+                imwrite(image_path, image)
+            except Exception as e:
+                handle_exception(str(e))
 
         else:
             image_raw_shape = request.json["image_raw_shape"]
