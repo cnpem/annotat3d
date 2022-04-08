@@ -4,6 +4,7 @@ import os.path
 
 import sscIO.io
 import numpy as np
+from tifffile import imwrite
 
 from sscAnnotat3D.repository import data_repo
 
@@ -154,8 +155,12 @@ def save_image(image_id: str):
     try:
         if(extension in tif_extensions):
             image = data_repo.get_image(key=image_id)
-            print("image is empty : {}".format(image))
+
+            if(image.dtype != image_dtype):
+                image = image.astype(image_dtype)
+
             error_msg = "No such file or directory {}".format(image_path)
+            imwrite("aoba.tif", image)
 
         else:
             image_raw_shape = request.json["image_raw_shape"]
