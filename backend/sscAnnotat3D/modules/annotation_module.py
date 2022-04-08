@@ -107,8 +107,6 @@ class AnnotationModule():
         self.highlighted_labels = set()
         self.recently_updated_labels = set()
 
-        self.current_mk_id = 0  # Equals to the number of markers drawn on the image
-
         self.last_markers = []
         # Annotation result
         self.annotation = {}
@@ -158,36 +156,7 @@ class AnnotationModule():
         self.__annotation_image = (-1) * np.ones((self.zsize, self.ysize, self.xsize), dtype='int16')
 
         for c, v in self.__annotation.items():
-            self.__annotation_image[c] = v[0] + 1
-
-    def label_interpolator(self, volume, grid):
-        # WORKAROUND: defining a generic interpolator for label-like data
-        self.__label_interpolator.values = volume
-        return self.__label_interpolator(grid)
-
-    @property
-    def volume_data_alt_vis(self):
-        return self.__volume_data_alt_vis
-
-    @volume_data_alt_vis.setter
-    def volume_data_alt_vis(self, val):
-        if val is not None:
-            data = self.get_volume_grid_data(val)
-
-            min_val = data['min_val']
-            max_val = data['max_val']
-
-            self.__volume_data_alt_vis = val
-            self.__volume_data_alt_vis_min = min_val
-            self.__volume_data_alt_vis_max = max_val
-
-            # WORKAROUND: same workaround as for the regular volume
-            self.__invalid_grid_factor_alt_vis = max(1, (max_val - min_val) * 0.005)
-            d = max(0, min_val - self.__invalid_grid_factor_alt_vis)
-
-        else:
-            self.__volume_data_alt_vis = None
-            self.alt_volume_interpolator = None
+            self.__annotation_image[c] = v[0]
 
     def initialize(self):
         self.volume_data_alt_vis = None
@@ -215,27 +184,12 @@ class AnnotationModule():
         d0, d1, d2 = data['shape']
         diag = data['diag']
 
-        # grid_x, grid_y = np.meshgrid(np.linspace(-scaling*diag,scaling*diag, diag), np.linspace(-scaling*diag,scaling*diag, diag), indexing='xy')
-
         grid_x, grid_y = np.meshgrid(np.array(range(-(diag // 2), diag - (diag // 2))),
                                      np.array(range(-(diag // 2), diag - (diag // 2))),
                                      indexing='xy')
         self.clipping_plane_grid = np.zeros((grid_x.shape[0], grid_x.shape[1], 3), dtype='float32')
         self.clipping_plane_grid[:, :, 0] = grid_x
         self.clipping_plane_grid[:, :, 1] = grid_y
-
-    def reset_zoom(self):
-        self.setup_camera()
-        self.update_annotation_slice()
-
-    def load_label(self, label):
-        self.prediction = label
-
-        new_labels = np.unique(self.prediction)
-        #if we have more labels than our colormap supports, load a bigger colormap
-        self.include_labels(new_labels)
-
-        aux_functions.log_usage(op_type='load_label', label_shape=label.shape, label_dtype=str(label.dtype))
 
     def load_alternative_visualization_volume(self, image):
         self.volume_data_alt_vis = image
@@ -247,45 +201,6 @@ class AnnotationModule():
 
     def set_current_volume_visualization(self, vis):
         self.cur_visualization = vis
-
-    def update_classifier_params(self, **kwargs):
-
-        logging.debug('Update classifier params: {}'.format(kwargs))
-
-        cur_module = self.module_from_args(**kwargs)
-
-        logging.debug('Segmentation Module selected: {}'.format(cur_module))
-
-        self.force_feature_extraction_flag = True
-
-
-    def get_preview_data(self, selected_axis=None):
-
-        if selected_axis is None:
-            selected_axis = self.current_axis
-
-        if selected_axis < 0:
-            raise Exception(
-                'Preview mode unsupported for clipping plane view. Please choose an orthogonal axis instead')
-
-        if selected_axis == 0:
-            curr_slice = self.xyslice
-            axis_size = self.zsize
-        elif selected_axis == 1:
-            curr_slice = self.xzslice
-            axis_size = self.ysize
-        else:
-            curr_slice = self.yzslice
-            axis_size = self.xsize
-
-        if self.classifier.preview_slice_range > 0:
-            selected_slices = set(
-                range(max(0, curr_slice - self.classifier.preview_slice_range),
-                      min(axis_size, curr_slice + self.classifier.preview_slice_range)))
-        else:
-            selected_slices = set((curr_slice, ))
-
-        return selected_slices, selected_axis
 
     def execute(self, preview, **kwargs):
         labels_to_merge = {}
@@ -839,53 +754,53 @@ class AnnotationModule():
                 lb = self.prediction[self.get_current_slice_3d_coord((y, x))]
                 self.window.set_current_label_selection(lb, programmatic_selection=True)
 
-    def add_new_marker(self, event):
-        if event.button == 1:
-            try:
-                tr = self.scene.node_transform(self.image_slice)
-                img_coord = tr.map(event.pos)[:2]
-                x = int(img_coord[1])
-                y = int(img_coord[0])
+    # def add_new_marker(self, event):
+        # if event.button == 1:
+            # try:
+                # tr = self.scene.node_transform(self.image_slice)
+                # img_coord = tr.map(event.pos)[:2]
+                # x = int(img_coord[1])
+                # y = int(img_coord[0])
 
-                if not self.valid_coords((x, y)):
-                    return
+                # if not self.valid_coords((x, y)):
+                    # return
 
-                logging.debug('marker selection {}'.format(self.marker_label_selection_type))
+                # logging.debug('marker selection {}'.format(self.marker_label_selection_type))
 
-                if self.marker_label_selection_type == 'from_previous_label':
-                    self.__select_label_under_click(event)
-                elif self.marker_label_selection_type == 'sequential_labeling':
-                    self.window.add_label()
-                    #self.window.set_current_label_selection(self.added_labels[-1])
+                # if self.marker_label_selection_type == 'from_previous_label':
+                    # self.__select_label_under_click(event)
+                # elif self.marker_label_selection_type == 'sequential_labeling':
+                    # self.window.add_label()
+                    # self.window.set_current_label_selection(self.added_labels[-1])
 
-                if self.current_label < 0 and self.marker_mode in ['add', 'extend', 'merge']:
-                    return
+                # if self.current_label < 0 and self.marker_mode in ['add', 'extend', 'merge']:
+                    # return
 
-                logging.debug('Adding new marker with current label {}'.format(self.current_label))
+                # logging.debug('Adding new marker with current label {}'.format(self.current_label))
 
                 # Set marker coordinates
-                self.current_x = x
-                self.current_y = y
-                self.last_x = x
-                self.last_y = y
+                # self.current_x = x
+                # self.current_y = y
+                # self.last_x = x
+                # self.last_y = y
                 # Start drawing marker
-                self.is_drawing = True
-                self.last_markers = []
+                # self.is_drawing = True
+                # self.last_markers = []
 
-                marker_ids = aux_functions.get_marker_ids(self.annotation)
-                self.current_mk_id = max(self.current_mk_id, max(marker_ids) if len(marker_ids) > 0 else 0) + 1
+                # marker_ids = aux_functions.get_marker_ids(self.annotation)
+                # self.current_mk_id = max(self.current_mk_id, max(marker_ids) if len(marker_ids) > 0 else 0) + 1
 
-                self.update_annotation_next_time = -1
+                # self.update_annotation_next_time = -1
 
-                logging.debug('New marker id: {}'.format(self.current_mk_id))
+                # logging.debug('New marker id: {}'.format(self.current_mk_id))
 
-                self.marker_path[self.current_mk_id] = [(x, y)]
-                self.marker_lines_path[self.current_mk_id] = [(event.pos[0], event.pos[1])]
+                # self.marker_path[self.current_mk_id] = [(x, y)]
+                # self.marker_lines_path[self.current_mk_id] = [(event.pos[0], event.pos[1])]
 
-                #self.draw_marker()
-                #self.update_annotation_slice()
-            except Exception as e:
-                aux_functions.log_error(e)
+                # self.draw_marker()
+                # self.update_annotation_slice()
+            # except Exception as e:
+                # aux_functions.log_error(e)
                 # QMessageBox.critical(self.window, 'Error', str(e))
 
     def on_mouse_move(self, event):
@@ -973,11 +888,6 @@ class AnnotationModule():
             import sys
             # QMessageBox.critical(self.window, 'Error', str(e))
 
-    def draw_points(self, points: List[Tuple[int, int, int]], mk_id: int):
-        self.current_mk_id = mk_id
-
-        self.marker_path[self.current_mk_id] = [*(self.marker_path[self.current_mk_id]), *points]
-
     def get_coords_surrounding_point(self, y, x, coords3d=True, tolerance=2):
         if self.current_axis < 0:
             #rr, cc = draw.circle(y, x, radius = tolerance, shape = self.get_current_slice_shape())
@@ -1047,10 +957,6 @@ class AnnotationModule():
             self.current_x = None
             self.current_y = None
             self.move_count = 0
-
-            logging.debug('++++++++= marker_mode: {}'.format(self.marker_mode))
-            logging.debug('current_mk_id: {}'.format(self.current_mk_id))
-            logging.debug('annotation: {}'.format(self.annotation_buffer))
 
             if self.marker_mode == 'merge':
                 # Selecting all labels under the currently selected scribble for merging with the label of the marker
@@ -1138,17 +1044,6 @@ class AnnotationModule():
 
         coord = self.get_current_slice_3d_coord((y, x))
 
-        self.__set_visualization_slices(coord)
-
-    def __set_visualization_slices(self, coord):
-
-        self.window.set_spin_slice_xy(coord[0])
-        self.window.set_spin_slice_xz(coord[1])
-        self.window.set_spin_slice_yz(coord[2])
-
-        self.window.set_center(coord)
-        self.window.update_views()
-
     def draw_marker(self,
                     last_x=None,
                     last_y=None,
@@ -1180,30 +1075,30 @@ class AnnotationModule():
             self.draw_marker_dot(y, x, current_label, current_mk_id, erase=marker_mode == 'erase')
 
     def undo(self):
-        if self.current_mk_id > 0:
-            if len(self.order_markers) > 0:
-                marker_to_remove = max(self.order_markers)
+        print('gonna undo ...', self.order_markers)
+        if len(self.order_markers) > 0:
+            marker_to_remove = max(self.order_markers)
 
-                self.order_markers.remove(marker_to_remove)
+            self.order_markers.remove(marker_to_remove)
 
-                last_remaining_marker = max(self.order_markers) if len(self.order_markers) > 0 else 0
+            if len(self.order_markers):
+                self.remove_annotation(ids=(marker_to_remove, ))
 
-                if not self.classifier.undo(last_remaining_marker):
-                    self.order_markers.add(marker_to_remove)
 
-                    # QMessageBox.warning(self.window, 'Undo', 'Maximum undo limit reached. Can not undo further')
-                else:
-                    self.remove_annotation(ids=(marker_to_remove, ))
-
-                self.window.update_views()
+    @property
+    def current_mk_id(self):
+        marker_id = max(self.order_markers) + 1 if self.order_markers else 1
+        return marker_id
 
     def draw_marker_dot(self, y, x, marker_lb, marker_id, erase=False):
         print('draw marker dot')
-        self.last_markers.append(marker_id)
+
+        self.order_markers.add(marker_id)
         if self.radius == 0:
             if not erase:
                 # Draw point using current label
                 c = self.get_current_slice_3d_coord((y, x))
+                print(c)
                 if self.valid_coords(c):
                     self.annotation[c] = (marker_lb, marker_id)
                     self.__annotation_image[c] = marker_lb

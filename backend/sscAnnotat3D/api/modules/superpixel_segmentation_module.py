@@ -79,9 +79,6 @@ def create():
     img = data_repo.get_image('image')
     img_superpixel = data_repo.get_image('superpixel')
 
-    print(data_repo.__images)
-    print(data_repo.__annotations)
-
     feature_extraction_params = request.json['feature_extraction_params']
     classifier_params = request.json['classifier_params']
 
@@ -147,7 +144,7 @@ def preview():
 
     segm_module = module_repo.get_module(key='superpixel_segmentation_module')
 
-    annotations = data_repo.get_annotation('annotation')
+    annotations = module_repo.get_module('annotation').annotation
 
     slice_num = request.json['slice']
     axis = request.json['axis']
@@ -175,7 +172,7 @@ def execute():
 
     segm_module = module_repo.get_module(key='superpixel_segmentation_module')
 
-    annotations = data_repo.get_annotation('annotation')
+    annotations = module_repo.get_module('annotation').annotation
 
     if segm_module is None:
         return "Not a valid segmentation module", 400

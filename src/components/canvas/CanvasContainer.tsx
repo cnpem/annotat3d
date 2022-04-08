@@ -211,6 +211,8 @@ class Canvas {
     axis: 'XY' | 'XZ' | 'YZ';
     sliceNum: number;
 
+    pointsBuffer: [number, number][] = [];
+
     constructor(div: HTMLDivElement, colors: [number, number, number][], axis: 'XY' | 'XZ' | 'YZ', sliceNum: number) {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
@@ -315,24 +317,12 @@ class Canvas {
             }
         }
 
-        //document.getElementById('brush_x').value = currPosition.x;
-        //document.getElementById('brush_y').value = currPosition.y;
-
         this.brush.cursor.position.x = currPosition.x - this.brush.size / 2;
         this.brush.cursor.position.y = currPosition.y - this.brush.size / 2;
 
         if (!this.isPainting) return;
 
-        const data = {
-            'coords': this.draw(currPosition),
-            'axis': this.axis,
-            'slice': this.sliceNum,
-            'size': this.brush.size,
-            'label': this.brush.label,
-            'mode': this.brush_mode,
-        };
-
-        sfetch('POST', '/draw', JSON.stringify(data));
+        this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
         this.prevPosition = currPosition;
     }
@@ -345,9 +335,11 @@ class Canvas {
         const currPosition = this.viewport.toWorld(event.data.global);
         this.prevPosition = currPosition;
 
+        this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
+
         if (this.isPainting) {
             const data = {
-                'coords': this.draw(currPosition),
+                'coords': this.pointsBuffer,
                 'slice': this.sliceNum,
                 'axis': this.axis,
                 'size': this.brush.size,
@@ -356,6 +348,8 @@ class Canvas {
             };
             sfetch('POST', '/draw', JSON.stringify(data));
         }
+
+        this.pointsBuffer = [];
 
         console.log("up");
         this.isPainting = false;
@@ -377,7 +371,7 @@ class Canvas {
         }
     }
 
-    draw(currPosition: PIXI.Point) {
+    draw(currPosition: PIXI.Point) : [number, number][] {
 
         const context = this.annotation.context;
         const mode = this.brush_mode;
@@ -399,7 +393,7 @@ class Canvas {
             ];
         }
 
-        const coords = [];
+        const coords: [number, number][] = [];
         const dist = this.distanceBetween(this.prevPosition, currPosition);
         const angle = this.angleBetween(this.prevPosition, currPosition);
         for (let i = 0; i < dist; i++) {
@@ -594,6 +588,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onLabelAlphaChanged: (alpha: number) => void = () => {};
     onAnnotanionAlphaChanged!: (alpha: number) => void;
     onAnnotanionVisibilityChanged!: (visible: boolean) => void;
+    onAnnotationChanged!: () => void;
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -745,6 +740,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas?.setAnnotationVisibility(visible);
             }
 
+            this.onAnnotationChanged = () => {
+                this.getAnnotSlice();
+            }
+
+            subscribe('annotationChanged', this.onAnnotationChanged);
             subscribe('annotationVisibilityChanged', this.onAnnotanionVisibilityChanged);
             subscribe('annotationAlphaChanged', this.onAnnotanionAlphaChanged);
             subscribe('labelAlphaChanged', this.onLabelAlphaChanged);
@@ -760,6 +760,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     componentWillUnmount() {
+        unsubscribe('annotationChanged', this.onAnnotationChanged);
         unsubscribe('annotationVisibilityChanged', this.onAnnotanionVisibilityChanged);
         unsubscribe('annotationAlphaChanged', this.onAnnotanionAlphaChanged);
         unsubscribe('labelAlphaChanged', this.onLabelAlphaChanged);
