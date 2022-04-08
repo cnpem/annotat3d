@@ -4,7 +4,6 @@ import LabelTable from "./label_table/LabelTable";
 import SlicesMenu from "./SlicesMenu";
 import {defaultColormap} from '../../utils/colormap';
 import {dispatch, useEventBus} from "../../utils/eventbus";
-import {useStorageState} from "react-storage-hooks";
 import {ImageShapeInterface} from "./ImageShapeInterface";
 import {arrowUndoOutline, folderOpenOutline, saveOutline} from "ionicons/icons";
 import {sfetch} from "../../utils/simplerequest";
