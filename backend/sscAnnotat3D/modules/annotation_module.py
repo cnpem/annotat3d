@@ -1,44 +1,17 @@
-from typing import List, Tuple
-
 import logging
 import math
-import os.path
 import pickle
 import sys
 import threading
-from collections import Counter
+from skimage import draw
 from operator import itemgetter
-from time import time
-
 import numpy as np
-import scipy.ndimage.measurements
-import skimage.exposure as sk_exposure
-import sscPySpin.image as spin_img
-import vispy
-from skimage import draw, morphology, segmentation
-from sklearn.preprocessing import LabelEncoder
 
 from sscAnnotat3D import aux_functions, utils
 
 class Label(object):
-    def __init__(self, id, name=None, color=None):
+    def __init__(self, id, name=None):
         self.id = id
-        self.name = self._default_name()
-
-    def _default_name(self):
-        if self.id == 0:
-            name = 'Background'
-        else:
-            name = 'Label {}'.format(self.id)
-        return name
-
-    def color_id(self, colormap_label, offset=0):
-
-        # The marker colormap includes a color for the background scribble
-        ncolors = len(colormap_label.colors)
-        color_id = ((self.id + offset) % (ncolors - 1)) + 1
-
-        return color_id
 
     def __lt__(self, other):
         return self.id < other.id
@@ -71,9 +44,6 @@ class AnnotationModule():
 
         self.zsize, self.ysize, self.xsize = image_shape
 
-        self.label_flag = False
-        self.markers_image = None
-
         self.xyslice = 0
         self.xzslice = 0
         self.yzslice = 0
@@ -84,43 +54,24 @@ class AnnotationModule():
 
         self.order_markers = set()
         # Markers
-        self.is_drawing = False
         self.current_label = -1
         self.__default_marker_label_selection_type = 'from_user'
         self.set_marker_label_selection_type(self.__default_marker_label_selection_type)
         self.added_labels = []
 
-        self.last_x = None
-        self.last_y = None
-        self.current_x = None
-        self.current_y = None
         self.marker_mode = 'add'
         self.manual_marker_mode = False
 
-
         self.radius = 5
 
-        self.highlighted_labels = set()
-        self.recently_updated_labels = set()
-
-        self.last_markers = []
         # Annotation result
         self.annotation = {}
-        self.labels_to_remove = set()
 
         self.label_merging_scribbles = {}
         self.label_splitting_scribbles = {}
         self.removed_annotation = {}
 
         self.create_labels()
-
-        self.move_flag = False
-
-        self.marker_path = {}
-        self.marker_lines_path = {}
-        self.update_annotation_timer = None
-        self.update_annotation_next_time = None
-        self.annotation_buffer = []
 
         self.selected_cmap = 'grays'
 
@@ -155,17 +106,13 @@ class AnnotationModule():
 
     def initialize(self):
         self.annotation = {}
-        self.labels_to_remove = set()
         self.label_merging_scribbles = {}
         self.label_splitting_scribbles = {}
         self.removed_annotation = {}
 
-        self.highlighted_labels = set()
-
         self.set_slice_xy(0, False)
         self.set_slice_xz(0, False)
         self.set_slice_yz(0, True)
-        self.set_label(-1)
 
         # Clipping plane data
         self.clipping_plane_transform = None
@@ -198,12 +145,6 @@ class AnnotationModule():
 
         self.__default_marker_label_selection_type = 'from_user'
         self.set_marker_label_selection_type(self.__default_marker_label_selection_type)
-
-        self.label_flag = False
-        self.show_markers = True
-        self.label_boundaries = False
-        self.prediction = None
-        self.move_flag = False
 
         logging.debug('Reloading complete for annotation class')
  
@@ -414,77 +355,8 @@ class AnnotationModule():
     def annotation_image(self):
         return self.__annotation_image
 
-    def draw_data_on_clipping_plane(self):
-        if self.clipping_plane_transform is not None:
-            # Projecting clipping plane grid according to transform into the coordinate system of the scene
-            clipping_plane_grid = self.transform_clipping_plane(self.clipping_plane_transform)
-
-            # Interpolating transformed clipping plane from volume data (image and labels)
-            return self.draw_data_on_clipping_plane_aux(clipping_plane_grid)
-        else:
-            return None, None, None
-
-    def draw_data_on_clipping_plane_aux(self, clipping_plane_grid):
-        current_slice = None
-        #if not markers_only:
-        #update what will be shown on canvas
-        if self.volume_data_alt_vis is None or self.cur_visualization == 'orig':
-            current_slice = self.volume_interpolator(clipping_plane_grid)
-        else:
-            current_slice = self.alt_volume_interpolator(clipping_plane_grid)
-
-        labels_slice = None
-
-        #if not markers_only:
-        #logging.debug('Drawing on axis', axis, 'xy', self.xyslice, 'xz', self.xzslice, 'yz', self.yzslice)
-        #logging.debug('highlighted_labels', self.highlighted_labels)
-        if self.label_flag is True:
-            if self.prediction is not None:
-                labels_slice = self.prediction_interpolator(clipping_plane_grid)
-
-                if labels_slice is not None:
-                    label_slice_tmp = labels_slice
-
-                    if len(self.highlighted_labels) > 0:
-                        tmp = np.zeros(labels_slice.shape, dtype='uint16')
-                        for lb in self.highlighted_labels:
-                            tmp[labels_slice == lb] = lb
-
-                        labels_slice = tmp
-                    else:
-                        labels_slice = label_slice_tmp.astype('uint16')
-            else:
-                labels_slice = None
-        elif self.label_boundaries is True:
-            pass
-            #TODO: Allow the display of superpixel boundaries on clipping plane
-            superpixels_vol = self.classifier.get_superpixel()
-            if superpixels_vol is not None:
-                superpixel = self.label_interpolator(superpixels_vol, clipping_plane_grid)
-
-                if superpixel is not None:
-                    #labels_slice = spin_img.spin_find_boundaries(superpixel).astype('uint16')
-                    labels_slice = spin_img.spin_find_boundaries_subpixel(superpixel, dtype='uint8')
-                    logging.debug('labels_slice: {} {}'.format(labels_slice.min(), labels_slice.max()))
-        else:
-            labels_slice = None
-            self.window.check_superpixel.setChecked(False)
-            self.window.label_visualization.setChecked(False)
-
-        markers_slice = None
-
-        if self.show_markers is True:  # Pointing the marker's slice to the appropriate position, if self.show_markers is True
-            #markers_slice = np.zeros(current_slice.shape, dtype='uint16')
-            markers_slice = self.__annotation_interpolator(clipping_plane_grid).astype('uint16')
-            #self.draw_annotation_on_image(markers_slice, -1)
-
-        return current_slice, labels_slice, markers_slice
-
     def set_marker_label_selection_type(self, type):
         self.marker_label_selection_type = type
-
-    def set_label(self, label):
-        self.current_label = int(label)
 
     def get_labels_object(self):
         return self.added_labels
@@ -511,11 +383,6 @@ class AnnotationModule():
     def remove_label(self, label):
         label = int(label)
 
-        if self.prediction is not None:
-            np.place(self.prediction, self.prediction == label, 0)
-
-        self.classifier.load_label(self.prediction)
-
         self.remove_annotation(labels=(label, ))
 
         #update the label list
@@ -523,7 +390,6 @@ class AnnotationModule():
         removed = added_labels != self.added_labels
 
         self.added_labels = added_labels
-        self.window.update_views()
 
         return removed
 
@@ -532,13 +398,11 @@ class AnnotationModule():
         self.removed_annotation = dict(self.annotation)
 
         self.annotation = {}
-        self.labels_to_remove = set()
         self.label_merging_scribbles = {}
         self.label_splitting_scribbles = {}
 
     def clear_removed_data(self):
         self.removed_annotation = {}
-        self.labels_to_remove = set()
 
     def get_radius(self):
         return self.radius
@@ -548,22 +412,8 @@ class AnnotationModule():
             return
         self.radius = int(radius)
 
-
-    def __select_label_under_click(self, event):
-        if event.button == 1:
-            tr = self.scene.node_transform(self.image_slice)
-            img_coord = tr.map(event.pos)[:2]
-            y = int(img_coord[1])
-            x = int(img_coord[0])
-
-            if self.prediction is not None:
-                lb = self.prediction[self.get_current_slice_3d_coord((y, x))]
-                self.window.set_current_label_selection(lb, programmatic_selection=True)
-
     def get_coords_surrounding_point(self, y, x, coords3d=True, tolerance=2):
         if self.current_axis < 0:
-            #rr, cc = draw.circle(y, x, radius = tolerance, shape = self.get_current_slice_shape())
-            #coords = list(map(lambda coord: self.get_current_slice_3d_coord(coord), zip(rr, cc)))
 
             rr, cc = draw.circle(y, x, radius=tolerance, shape=self.get_current_slice_shape())
 
@@ -576,29 +426,13 @@ class AnnotationModule():
 
         return valid_coords
 
-    def set_highlighted_labels(self, labels):
-        self.highlighted_labels = labels
-
-    def set_visualization_slices(self, event):
-        tr = self.scene.node_transform(self.image_slice)
-        img_coord = tr.map(event.pos)[:2]
-        x = int(img_coord[0])
-        y = int(img_coord[1])
-
-        if not self.valid_coords((y, x)):
-            return
-
-        coord = self.get_current_slice_3d_coord((y, x))
-
     def undo(self):
         print('gonna undo ...', self.order_markers)
         if len(self.order_markers) > 0:
             marker_to_remove = max(self.order_markers)
 
             self.order_markers.remove(marker_to_remove)
-
-            if len(self.order_markers):
-                self.remove_annotation(ids=(marker_to_remove, ))
+            self.remove_annotation(ids=(marker_to_remove, ))
 
     @property
     def current_mk_id(self):
