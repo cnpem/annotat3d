@@ -75,11 +75,12 @@ def reconnect_session():
     return jsonify(annotat3d_session)
 
 @app.route('/test', methods=['POST', 'GET'])
+@cross_origin()
 def test():
-    return 'test'
+    return 'test', 200
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 5000, True)
+    app.run("0.0.0.0", 5000, True, threaded=True)
 
     # address = socket.gethostbyname(socket.gethostname())
     # with socket.socket() as s:

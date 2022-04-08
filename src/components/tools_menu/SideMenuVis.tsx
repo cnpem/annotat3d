@@ -4,6 +4,7 @@ import {moon, sunny} from "ionicons/icons";
 import {dispatch} from "../../utils/eventbus";
 import { useStorageState } from 'react-storage-hooks';
 import { AlphaPicker, SliderPicker } from 'react-color';
+import {isEqual} from "lodash";
 
 function rgbToHex(r: number, g: number, b: number) {
     const bin = (r << 16) | (g << 8) | b;
@@ -31,12 +32,11 @@ const SideMenuVis: React.FC = () => {
     //so I am manually setting it.
     useEffect(() => {
         if (contrastRangeRef) {
-            setTimeout(() => {
-                contrastRangeRef.current!.value = {
-                    lower: contrast.lower,
-                    upper: contrast.upper
-                };
-            }, 20);
+            if (!isEqual(contrastRangeRef.current!.value, contrast)) {
+                setTimeout(() => {
+                    contrastRangeRef.current!.value = contrast;
+                }, 20);
+            }
         }
 
         //now I am just dispatch all events on mount
@@ -50,7 +50,6 @@ const SideMenuVis: React.FC = () => {
         dispatch('labelVisibilityChanged', showLabel);
         dispatch('annotationVisibilityChanged', showAnnotations);
         dispatch('annotationAlphaChanged', annotationAlpha);
-
     });
 
     return(
@@ -132,6 +131,7 @@ const SideMenuVis: React.FC = () => {
                             onChange={(e) => {
                                 dispatch('annotationAlphaChanged', e.hsl.a!!)
                                 setMarkerAlpha(e.hsl.a!!);
+                                setAnnotationAlpha(e.hsl.a!!);
                             }}>
                         </AlphaPicker>
                     </div>

@@ -16,7 +16,7 @@ import {
     IonSelectOption,
     IonAccordion,
     IonAccordionGroup,
-    IonAlert
+    useIonToast
 } from "@ionic/react";
 import "./FileDialog.css"
 import dataType from "./Dtypes";
@@ -84,6 +84,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         event: undefined,
     });
 
+    const [showToast, dismissToast] = useIonToast();
+
     const [path, setPath] = useState<string>("");
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
     const [dtype, setDtype] = useState<"" | "uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
@@ -131,6 +133,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
                     setShowErrorWindow(false);
                     dispatch("ImageLoaded", info);
+                    setShowPopover({...showPopover, open: false});
+                    showToast(`Loaded ${image.image_name}${image.image_ext}`, 2000);
 
                 } else {
 

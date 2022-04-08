@@ -10,7 +10,7 @@ import '../../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
 //import npyjs from 'npyjs';
 import { NdArray, TypedArray } from 'ndarray';
-import { clamp, mean, std } from '../../utils/math';
+import { clamp } from '../../utils/math';
 import { sfetch } from '../../utils/simplerequest';
 
 import './CanvasContainer.css';
@@ -137,8 +137,11 @@ class Annotation {
     }
 
     setSize(x: number, y: number) {
-        this.canvas.width = x;
-        this.canvas.height = y;
+        //avoid calling canvas resize unecessarily
+        if (this.canvas.width !== x || this.canvas.height !== y) {
+            this.canvas.width = x;
+            this.canvas.height = y;
+        }
     }
 
     clear() {
@@ -151,12 +154,8 @@ class Annotation {
 
         console.log('draw slice: ', slice.shape);
 
-        this.canvas.width = slice.shape[1];
-        this.canvas.height = slice.shape[0];
-
-        //console.log("draw slice: ", mean(slice), std(slice));
-
-        //this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.clear();
+        this.setSize(slice.shape[1], slice.shape[0]);
 
         const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
@@ -383,8 +382,6 @@ class Canvas {
         const context = this.annotation.context;
         const mode = this.brush_mode;
 
-        console.log('draw');
-
         if (mode === 'erase_brush') {
             this.annotation.context.globalCompositeOperation = 'destination-out';
         } else {
@@ -452,9 +449,6 @@ class Canvas {
         const x = labelSlice.shape[1];
         const y = labelSlice.shape[0];
 
-        console.log("set label image: ", labelSlice);
-        console.log(mean(labelSlice.data), std(labelSlice.data));
-
         const len = labelSlice.data.length;
         let rgbaData = new Uint8Array(len * 4);
 
@@ -471,6 +465,7 @@ class Canvas {
             rgbaData[idx + 2] = color[2];
             rgbaData[idx + 3] = 128;
         }
+
         const texture = this.textureFromSlice(rgbaData, x, y, PIXI.FORMATS.RGBA);
         this.labelSlice.texture = texture;
     }
@@ -506,6 +501,7 @@ class Canvas {
         this.x = x;
         this.y = y;
 
+        this.annotation.setSize(x, y);
 
         const texture = this.textureFromSlice(uint8data, x, y);
         this.slice.texture = texture;
@@ -530,8 +526,6 @@ class Canvas {
         const uint8data = superpixel_slice.data.map(x => x * 255) as Uint8Array;
         const x = superpixel_slice.shape[1];
         const y = superpixel_slice.shape[0];
-        //console.log("I am setting superpixel hue hue huei: ", x, y);
-        //console.log(mean(uint8data), std(uint8data));
         const texture = this.textureFromSlice(uint8data, x, y);
         this.superpixelSlice.texture = texture;
     }

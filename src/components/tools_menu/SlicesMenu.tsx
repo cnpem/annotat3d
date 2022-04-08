@@ -31,9 +31,9 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     const [sliceValue, setSliceValue] = useStorageState<number>(sessionStorage, 'sliceValue', 0);
 
     const maxValSlider: Record<'XY'|'XZ'|'YZ', number> = {
-        'XY': props.imageShape.z,
-        'XZ': props.imageShape.y,
-        'YZ': props.imageShape.x
+        'XY': props.imageShape.z - 1,
+        'XZ': props.imageShape.y - 1,
+        'YZ': props.imageShape.x - 1
     }
 
     const handleSliceValue = (e: CustomEvent) => {

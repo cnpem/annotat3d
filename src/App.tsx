@@ -3,6 +3,7 @@ import {
     IonContent,
     IonMenu,
     IonRouterOutlet,
+    IonSpinner,
     IonSplitPane,
     setupIonicReact,
 } from '@ionic/react'
@@ -29,19 +30,46 @@ import '@ionic/react/css/display.css'
 /* Theme variables */
 import './theme/variables.css'
 import ToolsMenu from './components/tools_menu/ToolsMenu'
+import {useEffect, useState} from 'react'
+import {sfetch} from './utils/simplerequest'
 
 setupIonicReact()
 
-    /**
-     * Main function that does all the functions callouts
-     */
+/**
+ * Main function that does all the functions callouts
+ */
 const App: React.FC = () => {
+
+    //a sanity check is sent to check if the backend
+    //is up every TEST_INTERVAL milliseconds
+    const TEST_INTERVAL = 1000;
+
+    const [loadedBackend, setLoadedBackend] = useState<boolean>(false);
+
+    function loopBackendTest() {
+        console.log('loop backend test');
+        sfetch('POST', '/test')
+        .then( () => {
+            setLoadedBackend(true);
+        })
+        .catch(() => {
+            setLoadedBackend(false);
+            setTimeout(loopBackendTest, TEST_INTERVAL);
+        });
+
+    }
+
+    useEffect(() => {
+        loopBackendTest();
+    });
+
+
     return (
         <IonApp>
+            <LoadingComponent hidden={loadedBackend}/>
             <IonReactRouter>
                 <Menu />
-
-                <IonSplitPane contentId="main" when="(orientation: landscape)">
+                <IonSplitPane hidden={!loadedBackend} contentId="main" when="(orientation: landscape)">
                     <IonMenu
                         side="end"
                         menuId="custom"
@@ -60,6 +88,22 @@ const App: React.FC = () => {
             </IonReactRouter>
         </IonApp>
     )
+}
+
+const LoadingComponent: React.FC<{hidden?: boolean}> = ({hidden}) => {
+
+    return (
+        <IonContent hidden={hidden}>
+            <div style={ { display: 'flex',
+                height: '100vh',
+                alignItems: 'center',
+                justifyContent: 'center'} } >
+                <IonSpinner color="primary" name='bubbles' duration={1500}
+                    style={ { transform: 'scale(5)'} }>
+                </IonSpinner>
+            </div>
+        </IonContent>
+    );
 }
 
 export default App
