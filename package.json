@@ -78,7 +78,6 @@
   "devDependencies": {
     "@capacitor/cli": "3.4.3",
     "@ionic/lab": "3.2.11",
-    "@types/react-color": "^3.0.6",
     "prettier": "2.6.1",
     "react-scripts": "5.0.0"
   },

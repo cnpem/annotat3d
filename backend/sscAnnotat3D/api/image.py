@@ -53,3 +53,15 @@ def get_image_slice(image_id: str):
 
     return send_file(io.BytesIO(compressed_byte_slice), "application/gzip")
 
+
+@app.route("/get_image_info/<image_id>", methods=["POST"])
+def get_image_info(image_id: str):
+    img = data_repo.get_image(image_id)
+
+    if img is None:
+        return f"Image {image_id} not found.", 400
+
+    return jsonify({
+        'shape': img.shape,
+        'dtype': str(img.dtype)
+    })

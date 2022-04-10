@@ -224,6 +224,8 @@ class Canvas {
     axis: 'XY' | 'XZ' | 'YZ';
     sliceNum: number;
 
+    pointsBuffer: [number, number][] = [];
+
     constructor(div: HTMLDivElement, colors: [number, number, number][], axis: 'XY' | 'XZ' | 'YZ', sliceNum: number) {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
@@ -346,16 +348,7 @@ class Canvas {
 
         if (!this.isPainting) return;
 
-        const data = {
-            'coords': this.draw(currPosition),
-            'axis': this.axis,
-            'slice': this.sliceNum,
-            'size': this.brush.size,
-            'label': this.brush.label,
-            'mode': this.brush_mode,
-        };
-
-        sfetch('POST', '/draw', JSON.stringify(data));
+        this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
         this.prevPosition = currPosition;
     }
@@ -368,9 +361,11 @@ class Canvas {
         const currPosition = this.viewport.toWorld(event.data.global);
         this.prevPosition = currPosition;
 
+        this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
+
         if (this.isPainting) {
             const data = {
-                'coords': this.draw(currPosition),
+                'coords': this.pointsBuffer,
                 'slice': this.sliceNum,
                 'axis': this.axis,
                 'size': this.brush.size,
@@ -379,6 +374,8 @@ class Canvas {
             };
             sfetch('POST', '/draw', JSON.stringify(data));
         }
+
+        this.pointsBuffer = [];
 
         console.log("up");
         this.isPainting = false;
@@ -400,7 +397,7 @@ class Canvas {
         }
     }
 
-    draw(currPosition: PIXI.Point) {
+    draw(currPosition: PIXI.Point) : [number, number][] {
 
         const context = this.annotation.context;
         const mode = this.brush_mode;
@@ -422,7 +419,7 @@ class Canvas {
             ];
         }
 
-        const coords = [];
+        const coords: [number, number][] = [];
         const dist = this.distanceBetween(this.prevPosition, currPosition);
         const angle = this.angleBetween(this.prevPosition, currPosition);
         for (let i = 0; i < dist; i++) {
@@ -591,6 +588,7 @@ interface ICanvasProps {
 
 interface ICanvasState {
     brush_mode: brush_mode_type;
+    label_contour: boolean;
 }
 
 const brushList = [
@@ -621,12 +619,14 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onAnnotanionAlphaChanged!: (alpha: number) => void;
     onAnnotanionVisibilityChanged!: (visible: boolean) => void;
     onLabelColorsChanged!: (colors: {id: number, color: [number, number, number]}[]) => void;
+    onAnnotationChanged!: () => void;
+    onLabelContourChanged!: (contour: boolean) => void;
 
     constructor(props: ICanvasProps) {
         super(props);
         this.pixi_container = null;
         this.canvas = null;
-        this.state = { brush_mode: 'draw_brush' };
+        this.state = { brush_mode: 'draw_brush', 'label_contour': false };
     }
 
     fetchAllDebounced = debounce( (recenter: boolean = false) => {
@@ -693,7 +693,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         const params = {
             axis: this.props.axis,
             slice: this.props.slice,
-            contour: true
+            contour: this.state.label_contour
         };
 
         sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
@@ -778,7 +778,19 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 console.log('colors received: ', colors);
             }
 
+            this.onAnnotationChanged = () => {
+                this.getAnnotSlice();
+            }
+
+            this.onLabelContourChanged = (contour: boolean) => {
+                this.setState({...this.state, label_contour: contour});
+                this.getLabelSlice();
+                console.log('contour changed: ', contour);
+            }
+
+            subscribe('labelContourChanged', this.onLabelContourChanged);
             subscribe('labelColorsChanged', this.onLabelColorsChanged);
+            subscribe('annotationChanged', this.onAnnotationChanged);
             subscribe('annotationVisibilityChanged', this.onAnnotanionVisibilityChanged);
             subscribe('annotationAlphaChanged', this.onAnnotanionAlphaChanged);
             subscribe('labelAlphaChanged', this.onLabelAlphaChanged);
@@ -794,7 +806,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     componentWillUnmount() {
+        unsubscribe('labelContourChanged', this.onLabelContourChanged);
         unsubscribe('labelColorsChanged', this.onLabelColorsChanged);
+        unsubscribe('annotationChanged', this.onAnnotationChanged);
         unsubscribe('annotationVisibilityChanged', this.onAnnotanionVisibilityChanged);
         unsubscribe('annotationAlphaChanged', this.onAnnotanionAlphaChanged);
         unsubscribe('labelAlphaChanged', this.onLabelAlphaChanged);

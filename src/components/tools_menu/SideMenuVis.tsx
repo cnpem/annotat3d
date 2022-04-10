@@ -3,8 +3,12 @@ import {IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonItem
 import {moon, sunny} from "ionicons/icons";
 import {dispatch} from "../../utils/eventbus";
 import { useStorageState } from 'react-storage-hooks';
-import { AlphaPicker, SliderPicker } from 'react-color';
 import {isEqual} from "lodash";
+
+//ignoring types for react-color, as it seems broken
+//TODO: investigate if this is fixed, otherwise declare the types manually
+// @ts-ignore
+import { AlphaPicker, SliderPicker } from 'react-color';
 
 function rgbToHex(r: number, g: number, b: number) {
     const bin = (r << 16) | (g << 8) | b;
@@ -17,6 +21,8 @@ const SideMenuVis: React.FC = () => {
         lower: 10,
         upper: 90
     });
+
+    const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
     const [showSuperpixel, setShowSuperpixel] = useStorageState<boolean>(sessionStorage, 'showSuperpixel', true);
     const [superpixelColor, setSuperpixelColor] = useStorageState<number>(sessionStorage, 'superpixelColor', 0xf03030);
@@ -111,6 +117,14 @@ const SideMenuVis: React.FC = () => {
                                 setLabelAlpha(e.hsl.a!!);
                             }}>
                         </AlphaPicker>
+                        <IonItem>
+                            <IonLabel>Contour only</IonLabel>
+                            <IonToggle checked={labelContour}
+                                onIonChange={(e) => {
+                                    dispatch('labelContourChanged', e.detail.checked);
+                                    setLabelContour(e.detail.checked);
+                            }}/>
+                        </IonItem>
                     </div>
                 </IonCardContent>
             </IonCard>
