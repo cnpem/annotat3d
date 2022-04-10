@@ -9,6 +9,7 @@ import {dispatch, useEventBus, currentEventValue} from '../../../utils/eventbus'
 
 import './LabelTable.css';
 import {useStorageState} from "react-storage-hooks";
+import {isEqual} from "lodash";
 
 interface LabelTableProps {
     colors: [number, number, number][];
@@ -32,6 +33,10 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         setDarkMode(darkMode);
     });
 
+    useEffect(() => {
+        dispatch('labelColorsChanged', labelList);
+    });
+
     const removeLabelElement = (label: LabelInterface) => {
         setLabelList(labelList.filter(l => l.id !== label.id));
 
@@ -41,16 +46,19 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
     }
 
-    const changeLabelName = (newLabelName: string, labelId: number) => {
-        setLabelList(
-            labelList.map(l =>
-                l.id === labelId
-                    ? {...l, labelName: newLabelName}
-                    : {...l}
-            )
-        )
-    }
+    const changeLabelList = (newLabelName: string, labelId: number, color: [number, number, number]) => {
 
+        const newList = labelList
+        .map(l => l.id === labelId
+            ? {...l, labelName: newLabelName, color: color}
+            : l);
+
+        if (!isEqual(labelList.filter(l=>l.id === labelId)[0].color, color)) {
+            dispatch('labelColorsChanged', [{id: labelId, color: color}]);
+        }
+
+        setLabelList(newList);
+    }
 
     const selectLabelList = (labels: LabelInterface[]) => {
         setLabelList(labels);
@@ -83,7 +91,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                     <OptionsIcons
                         label={labelElement}
                         onChangeLabelList={removeLabelElement}
-                        onChangeLabelName={changeLabelName}/>
+                        onChangeLabel={changeLabelList}/>
                 </td>
             </tr>
         );

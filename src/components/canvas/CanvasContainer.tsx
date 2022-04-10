@@ -16,6 +16,7 @@ import { sfetch } from '../../utils/simplerequest';
 import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
 import {subscribe, unsubscribe} from '../../utils/eventbus';
+import {defaultColormap} from '../../utils/colormap';
 
 class Brush {
 
@@ -121,6 +122,8 @@ class Annotation {
 
     colors: [number, number, number][];
 
+    annotData?: NdArray<TypedArray>;
+
     constructor(colors: [number, number, number][]) {
         this.canvas = document.createElement('canvas');
         //this.canvas.width = 0;
@@ -149,7 +152,16 @@ class Annotation {
         this.sprite.texture.update();
     }
 
+    update() {
+        if (this.annotData) {
+            this.draw(this.annotData);
+        }
+    }
+
     draw(slice: NdArray<TypedArray>) {
+
+        this.annotData = slice;
+
         const colors = this.colors;
 
         console.log('draw slice: ', slice.shape);
@@ -203,7 +215,8 @@ class Canvas {
     x: number;
     y: number;
 
-    imgSlice?: NdArray<TypedArray>;
+    imgData?: NdArray<TypedArray>;
+    labelData?: NdArray<TypedArray>;
 
     imgMin: number = 0.0;
     imgMax: number = 1.0;
@@ -276,6 +289,19 @@ class Canvas {
         this.setLabelVisibility(true);
     }
 
+    setColor(colors: {id: number, color: [number, number, number]}[]) {
+       
+        colors.forEach((color) => {
+            this.colors[color.id] = color.color;
+        });
+
+        if (this.labelData) {
+            this.setLabelImage(this.labelData);
+        }
+
+        this.annotation.update();
+    }
+
     setSliceNum(sliceNum: number) {
         this.sliceNum = sliceNum;
     }
@@ -314,9 +340,6 @@ class Canvas {
                 return;
             }
         }
-
-        //document.getElementById('brush_x').value = currPosition.x;
-        //document.getElementById('brush_y').value = currPosition.y;
 
         this.brush.cursor.position.x = currPosition.x - this.brush.size / 2;
         this.brush.cursor.position.y = currPosition.y - this.brush.size / 2;
@@ -372,8 +395,8 @@ class Canvas {
     adjustContrast(minimum: number, maximum: number) {
         this.imgMax = maximum;
         this.imgMin = minimum;
-        if (this.imgSlice) {
-            this.setImage(this.imgSlice);
+        if (this.imgData) {
+            this.setImage(this.imgData);
         }
     }
 
@@ -446,6 +469,9 @@ class Canvas {
     }
 
     setLabelImage(labelSlice: NdArray<TypedArray>) {
+
+        this.labelData = labelSlice;
+
         const x = labelSlice.shape[1];
         const y = labelSlice.shape[0];
 
@@ -472,7 +498,7 @@ class Canvas {
 
     setImage(img_slice: NdArray<TypedArray>) {
 
-        this.imgSlice = img_slice;
+        this.imgData = img_slice;
 
         let uint8data: Uint8Array;
 
@@ -560,7 +586,6 @@ type brush_mode_type = 'draw_brush' | 'erase_brush';
 interface ICanvasProps {
     slice: number;
     axis: 'XY' | 'XZ' | 'YZ';
-    colors: [number, number, number][];
 }
 
 interface ICanvasState {
@@ -594,6 +619,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onLabelAlphaChanged: (alpha: number) => void = () => {};
     onAnnotanionAlphaChanged!: (alpha: number) => void;
     onAnnotanionVisibilityChanged!: (visible: boolean) => void;
+    onLabelColorsChanged!: (colors: {id: number, color: [number, number, number]}[]) => void;
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -684,7 +710,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         // the element is the DOM object that we will use as container to add pixi stage(canvas)
         const elem = this.pixi_container;
         if (this && elem) {
-            this.canvas = new Canvas(elem, this.props.colors, this.props.axis, this.props.slice);
+            this.canvas = new Canvas(elem, defaultColormap, this.props.axis, this.props.slice);
             setTimeout(() => this.canvas!.resize(), 200);
             console.log(this.canvas.viewport);
             console.log(this.pixi_container);
@@ -745,6 +771,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas?.setAnnotationVisibility(visible);
             }
 
+            this.onLabelColorsChanged = (colors) => {
+                this.canvas?.setColor(colors);
+                console.log('colors received: ', colors);
+            }
+
+            subscribe('labelColorsChanged', this.onLabelColorsChanged);
             subscribe('annotationVisibilityChanged', this.onAnnotanionVisibilityChanged);
             subscribe('annotationAlphaChanged', this.onAnnotanionAlphaChanged);
             subscribe('labelAlphaChanged', this.onLabelAlphaChanged);
@@ -760,6 +792,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     componentWillUnmount() {
+        unsubscribe('labelColorsChanged', this.onLabelColorsChanged);
         unsubscribe('annotationVisibilityChanged', this.onAnnotanionVisibilityChanged);
         unsubscribe('annotationAlphaChanged', this.onAnnotanionAlphaChanged);
         unsubscribe('labelAlphaChanged', this.onLabelAlphaChanged);

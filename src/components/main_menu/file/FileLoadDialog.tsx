@@ -128,7 +128,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         event: undefined,
     });
 
-    const [showToast, dismissToast] = useIonToast();
+    const [showToast,] = useIonToast();
 
     const [path, setPath] = useState<string>("");
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
