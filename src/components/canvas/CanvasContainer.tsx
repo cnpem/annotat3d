@@ -254,7 +254,6 @@ class Canvas {
         this.superpixelSlice.scale.y = 0.5;
         this.superpixelSlice.visible = true;
 
-
         this.annotation = new Annotation(colors);
         this.brush = new Brush(colors);
         this.brush_mode = 'draw_brush';
@@ -473,8 +472,8 @@ class Canvas {
 
         this.labelData = labelSlice;
 
-        const x = labelSlice.shape[1];
-        const y = labelSlice.shape[0];
+        const width = labelSlice.shape[1];
+        const height = labelSlice.shape[0];
 
         const len = labelSlice.data.length;
         let rgbaData = new Uint8Array(len * 4);
@@ -486,6 +485,7 @@ class Canvas {
             const label = labelSlice.data[i];
             if (label <= 0)
                 continue;
+
             const color = colors[label];
             rgbaData[idx] = color[0];
             rgbaData[idx + 1] = color[1];
@@ -493,7 +493,7 @@ class Canvas {
             rgbaData[idx + 3] = 128;
         }
 
-        const texture = this.textureFromSlice(rgbaData, x, y, PIXI.FORMATS.RGBA);
+        const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
         this.labelSlice.texture = texture;
     }
 
@@ -693,6 +693,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         const params = {
             axis: this.props.axis,
             slice: this.props.slice,
+            contour: true
         };
 
         sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
