@@ -300,6 +300,7 @@ class Canvas {
         }
 
         this.annotation.update();
+        this.brush.update();
     }
 
     setSliceNum(sliceNum: number) {
