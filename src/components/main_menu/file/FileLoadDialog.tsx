@@ -155,7 +155,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const cleanUp = () => {
         setShowPopover({open: false, event: undefined});
         setPath("");
-        setDtype("");
+        setDtype("uint16");
         setImageShapeRaw([null, null, null]);
         setXRange([0, -1]);
         setYRange([0, -1]);

@@ -119,7 +119,7 @@ def close_image():
 
     return "success on deleting the image !", 200
 
-
+#TODO: need to pass this function to sscIO
 def _save_file(image_path: str, extension: str, image_dtype: str, image: np.array):
 
     raw_extensions = [".raw", ".b"]

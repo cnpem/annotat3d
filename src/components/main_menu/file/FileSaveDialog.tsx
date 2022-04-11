@@ -9,7 +9,8 @@ import {
     IonSegmentButton,
     IonSelect,
     IonSelectOption,
-    IonTextarea
+    IonTextarea,
+    useIonToast
 } from "@ionic/react";
 import "./FileDialog.css"
 import dataType from "./Dtypes";
@@ -74,8 +75,11 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         open: false,
         event: undefined,
     });
+
+    const [showToast, _] = useIonToast();
+
     const [path, setPath] = useState<string>("");
-    const [dtype, setDtype] = useState<"" | "uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
+    const [dtype, setDtype] = useState<"uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
         "uint64" | "float32" | "float64" | "complex64">("uint16");
     const [saveImgOp, setSaveImgOp] = useState<"image" | "label" | "superpixel">("image");
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
@@ -103,7 +107,6 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
 
         sfetch("POST", "/save_image/"+saveImgOp, JSON.stringify(params), "json").then(
             (image) => {
-                console.log("image before save : ", image);
 
                 if(image.hasOwnProperty("image_shape")){
 
@@ -135,7 +138,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     const cleanUp = () => {
         setShowPopover({open: false, event: undefined});
         setPath("");
-        setDtype("");
+        setDtype("uint16");
         setSaveImgOp("image")
         setErrorMsg("");
         setShowErrorWindow(false)
