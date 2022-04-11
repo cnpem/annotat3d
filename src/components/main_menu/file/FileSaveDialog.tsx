@@ -117,10 +117,10 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                         imageExt: image.image_ext,
                     }
 
-                    console.log("info after save : ", info);
-
                     setShowErrorWindow(false);
                     dispatch("SaveImage", info);
+                    setShowPopover({...showPopover, open: false});
+                    showToast(`image saved in ${image.image_name}${image.image_ext}`, 2000);
 
                 } else {
                     setShowErrorWindow(true);
