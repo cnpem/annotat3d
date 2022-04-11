@@ -6,6 +6,8 @@ import {colorFromId} from '../../../utils/colormap';
 /*Icons import*/
 import {addOutline, trashOutline} from "ionicons/icons";
 
+import './OptionsIcons.css';
+
 interface InputLabelProps {
     colors: [number, number, number][];
     onLabelList: (labels: LabelInterface[]) => void;
@@ -28,7 +30,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
             labelName: "Label " + props.newLabelId,
             color: newColor,
             id: props.newLabelId
-        }; // The background color is pink
+        };
         props.onLabelList([...props.labelList, newLabel]);
         props.onNewLabelId(props.newLabelId);
     }
@@ -46,7 +48,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                 Add
             </IonButton>
 
-            <IonButton size="small" slot={"end"} onClick={removeAllLabels}>
+            <IonButton color="danger" size="small" slot={"end"} onClick={removeAllLabels}>
                 <IonIcon icon={trashOutline} slot={"end"}/>
                 Delete all
             </IonButton>

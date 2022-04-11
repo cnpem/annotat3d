@@ -53,18 +53,21 @@ const ModuleCard: React.FC<ModuleCardProps> = (props: ModuleCardProps) => {
                 { childrenArray }
                 <div style = { { "display": "flex", "justifyContent": "flex-end" } }>
                     <IonButton color="primary"
+                        size="small"
                         disabled={props.disabledPreprocess}
                         hidden={props.onPreprocess === undefined}
                         onClick={props.onPreprocess}>
                         Preprocess
                     </IonButton>
                     <IonButton color="primary"
+                        size="small"
                         disabled={props.disabledPreview}
                         hidden={props.onPreview === undefined}
                         onClick={props.onPreview}>
                         Preview
                     </IonButton>
                     <IonButton color="primary"
+                        size="small"
                         disabled={props.disabledApply}
                         hidden={props.onApply === undefined}
                         onClick={props.onApply}>

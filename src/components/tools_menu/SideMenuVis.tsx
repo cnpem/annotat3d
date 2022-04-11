@@ -3,8 +3,12 @@ import {IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonItem
 import {moon, sunny} from "ionicons/icons";
 import {dispatch} from "../../utils/eventbus";
 import { useStorageState } from 'react-storage-hooks';
-import { AlphaPicker, SliderPicker } from 'react-color';
 import {isEqual} from "lodash";
+
+//ignoring types for react-color, as it seems broken
+//TODO: investigate if this is fixed, otherwise declare the types manually
+// @ts-ignore
+import { AlphaPicker, SliderPicker } from 'react-color';
 
 function rgbToHex(r: number, g: number, b: number) {
     const bin = (r << 16) | (g << 8) | b;
@@ -17,6 +21,8 @@ const SideMenuVis: React.FC = () => {
         lower: 10,
         upper: 90
     });
+
+    const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
     const [showSuperpixel, setShowSuperpixel] = useStorageState<boolean>(sessionStorage, 'showSuperpixel', true);
     const [superpixelColor, setSuperpixelColor] = useStorageState<number>(sessionStorage, 'superpixelColor', 0xf03030);
@@ -82,7 +88,7 @@ const SideMenuVis: React.FC = () => {
                     </IonItem>
                     <div hidden={!showSuperpixel}>
                         <SliderPicker color={'#'+superpixelColor.toString(16)}
-                            onChange={ (e) => {
+                            onChange={ (e: any) => {
                                 console.log(e);
                                 const color = rgbToHex(e.rgb.r, e.rgb.g, e.rgb.b);
                                 dispatch('superpixelColorChanged', color);
@@ -105,12 +111,20 @@ const SideMenuVis: React.FC = () => {
                     </IonItem>
                     <div hidden={!showLabel}>
                         <AlphaPicker width="100%" color={ {h: 0, s: 0, l: 0, a: labelAlpha} }
-                            onChange={(e) => {
+                            onChange={(e: any) => {
                                 console.log(e);
                                 dispatch('labelAlphaChanged', e.hsl.a);
                                 setLabelAlpha(e.hsl.a!!);
                             }}>
                         </AlphaPicker>
+                        <IonItem>
+                            <IonLabel>Contour only</IonLabel>
+                            <IonToggle checked={labelContour}
+                                onIonChange={(e) => {
+                                    dispatch('labelContourChanged', e.detail.checked);
+                                    setLabelContour(e.detail.checked);
+                            }}/>
+                        </IonItem>
                     </div>
                 </IonCardContent>
             </IonCard>
@@ -128,7 +142,7 @@ const SideMenuVis: React.FC = () => {
                     </IonItem>
                     <div hidden={!showAnnotations}>
                         <AlphaPicker width="100%" color={ {h: 0, s: 0, l: 0, a: markerAlpha} }
-                            onChange={(e) => {
+                            onChange={(e: any) => {
                                 dispatch('annotationAlphaChanged', e.hsl.a!!)
                                 setMarkerAlpha(e.hsl.a!!);
                                 setAnnotationAlpha(e.hsl.a!!);

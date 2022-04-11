@@ -1,76 +1,79 @@
-import React, {useState} from "react";
+import React, {Fragment, useState} from "react";
 import {
     IonButton, IonButtons, IonContent, IonIcon,
     IonInput, IonItem, IonPopover
 } from "@ionic/react";
 
 /*Icons import*/
-import {closeOutline, pencilOutline} from "ionicons/icons";
+import {closeOutline, colorPalette, pencilOutline} from "ionicons/icons";
 
 import {LabelInterface} from './LabelInterface';
+// @ts-ignore
+import {ChromePicker} from "react-color";
+import {useStorageState} from "react-storage-hooks";
+import {defaultColormap} from "../../../utils/colormap";
 
 interface OptionsProps{
     label: LabelInterface;
     onChangeLabelList: (label: LabelInterface) => void;
-    onChangeLabelName: (newLabelName: string, labelId: number) => void;
+    onChangeLabel: (newLabelName: string, labelId: number, color: [number, number, number]) => void;
 }
 
 /**
  * Component that creates the buttons in the table label
- * @todo need to implement a option to change the color
- * @constructor
  */
 const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
-    const [showPopover, setShowPopover] = useState<boolean>(false);
+    const [showNamePopover, setShowNamePopover] = useState<boolean>(false);
 
-    const handleClickButton = () => {
-        setShowPopover(true)
+    const [showColorPopover, setShowColorPopover] = useState<boolean>(false);
+
+    const [color, setColor] = useStorageState<[number, number, number]>(
+        sessionStorage, 'labelColor.'+props.label.id, defaultColormap[props.label.id]
+    );
+
+    const handleNameEditClickButton = () => {
+        setShowNamePopover(true)
     }
 
-    const handleShowPopover = (showPop: boolean) => {
-        setShowPopover(showPop);
+    const handleNameEditShowPopover = (showPop: boolean) => {
+        setShowNamePopover(showPop);
     }
 
     const removeTheListElement = () => {
         props.onChangeLabelList(props.label);
     }
 
-    if(props.label.id !== 0)
-    {
-        return(
-            <IonButtons>
-                <IonButton size="small" onClick={removeTheListElement}>
-                    <IonIcon icon={closeOutline}/>
-                </IonButton>
-
-                <IonButton id={"edit-label-button-" + props.label.id} onClick={handleClickButton}>
-                    <IonIcon icon={pencilOutline}/>
-                </IonButton>
-                <EditLabelNameComp
-                    label={props.label}
-                    labelNameTrigger={"edit-label-button-" + props.label.id}
-                    showPopover={showPopover}
-                    onChangeLabelName={props.onChangeLabelName}
-                    onShowPopover={handleShowPopover}/>
-
-            </IonButtons>
-        );
-
-    }
-
     return(
         <IonButtons>
-            <IonButton id={"edit-label-button-" + props.label.id} onClick={handleClickButton}>
+            <IonButton hidden={props.label.id===0} size="small" onClick={removeTheListElement}>
+                <IonIcon icon={closeOutline}/>
+            </IonButton>
+
+            <IonButton id={"edit-label-button-" + props.label.id} onClick={handleNameEditClickButton}>
                 <IonIcon icon={pencilOutline}/>
             </IonButton>
+
+            <IonButton id={"edit-color-button-" + props.label.id} onClick={() => setShowColorPopover(true)}>
+                <IonIcon icon={colorPalette}/>
+            </IonButton>
+
+            <IonPopover
+                trigger={"edit-color-button-" + props.label.id} isOpen={showColorPopover}>
+                <ChromePicker color={`rgb(${color[0]},${color[1]},${color[2]})`}
+                    onChange={ (color: any) => {
+                        const colorTuple: [number, number, number] = [color.rgb.r, color.rgb.g, color.rgb.b];
+                        props.onChangeLabel(props.label.labelName, props.label.id, colorTuple);
+                        setColor(colorTuple);
+                    }} disableAlpha/>
+            </IonPopover>
+
             <EditLabelNameComp
                 label={props.label}
                 labelNameTrigger={"edit-label-button-" + props.label.id}
-                showPopover={showPopover}
-                onChangeLabelName={props.onChangeLabelName}
-                onShowPopover={handleShowPopover}/>
-
+                showPopover={showNamePopover}
+                onChangeLabelName={(name, id) => props.onChangeLabel(name, id, props.label.color)}
+                onShowPopover={handleNameEditShowPopover}/>
         </IonButtons>
     );
 
@@ -89,7 +92,6 @@ interface LabelEditProps{
 }
 
 /**
- * @todo the problem here is that newLabelName variable is not updating after any label is deleted
  * @param props
  * @constructor
  */
@@ -111,12 +113,11 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
     }
 
     return(
-        <React.Fragment>
+        <Fragment>
             <IonPopover
                 trigger={props.labelNameTrigger}
                 isOpen={props.showPopover}
-                onDidDismiss={exitPopup}
-                className={"label-editor-popover"}>
+                onDidDismiss={exitPopup}>
 
                 <IonContent>
                     <IonItem>
@@ -127,10 +128,10 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
                         <IonButton onClick={exitPopup}>Cancel</IonButton>
                         <IonButton onClick={handleChangeNewLabelName}>Confirm</IonButton>
                     </IonItem>
-
                 </IonContent>
+
             </IonPopover>
-        </React.Fragment>
+        </Fragment>
     );
 
 }

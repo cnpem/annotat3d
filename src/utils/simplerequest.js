@@ -1,7 +1,7 @@
 import npyjs from "npyjs";
 import pako from "pako"; 
 
-const BACKEND_HOST = 'http://0.0.0.0:5000';
+const BACKEND_HOST = (process.env.NODE_ENV === 'development') ? 'http://0.0.0.0:5000/' : window.location.href;
 
 function sxhr(method, url, callback, data = '', responseType = '') {
 

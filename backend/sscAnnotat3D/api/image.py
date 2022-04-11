@@ -6,7 +6,7 @@ import zlib
 import io
 
 from sscAnnotat3D.repository import data_repo
-from sscAnnotat3D import utils
+from sscAnnotat3D import utils, label
 
 from flask_cors import cross_origin
 
@@ -33,6 +33,11 @@ def get_image_slice(image_id: str):
 
     img_slice = image[slice_range]
 
+    get_contour = request.json.get('contour', False)
+
+    if get_contour:
+        img_slice = label.label_slice_contour(img_slice)
+
     import time
 
     npy_st = time.time()
@@ -48,3 +53,15 @@ def get_image_slice(image_id: str):
 
     return send_file(io.BytesIO(compressed_byte_slice), "application/gzip")
 
+
+@app.route("/get_image_info/<image_id>", methods=["POST"])
+def get_image_info(image_id: str):
+    img = data_repo.get_image(image_id)
+
+    if img is None:
+        return f"Image {image_id} not found.", 400
+
+    return jsonify({
+        'shape': img.shape,
+        'dtype': str(img.dtype)
+    })

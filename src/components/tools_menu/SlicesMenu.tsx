@@ -64,7 +64,6 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
     return(
         <Fragment>
-            {JSON.stringify(props.imageShape)}
             <IonSegment value={sliceName} onIonChange={handleSliceName}>
                 <IonSegmentButton value={"XY"}>
                     <IonLabel>{"XY"}</IonLabel>

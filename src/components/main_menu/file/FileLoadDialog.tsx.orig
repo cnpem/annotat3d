@@ -16,6 +16,7 @@ import {
     IonSelectOption,
     IonAccordion,
     IonAccordionGroup,
+    IonAlert,
     useIonToast
 } from "@ionic/react";
 import "./FileDialog.css"
@@ -23,8 +24,6 @@ import dataType from "./Dtypes";
 import {options} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
-import ErrorWindowComp from "./ErrorWindowComp";
-import ImageInfoInterface from "./ImageInfoInterface";
 
 /**
  * dtypes array
@@ -72,6 +71,51 @@ const dtypeList: dataType[] = [
     }
 ];
 
+interface ImageInfoInterface{
+    imageShape: Array<number> [3];
+    imageName: string;
+    imageExt: string;
+    imageDtype: string;
+}
+
+interface ErrorWindowInterface{
+    errorMsg: string;
+    onErrorMsg: (msg: string) => void;
+
+    errorFlag: boolean;
+    onErrorFlag: (errorFlag: boolean) => void;
+}
+
+const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg, onErrorMsg ,errorFlag, onErrorFlag}) => {
+
+    const resetErrorMsg = () => {
+        onErrorFlag(false);
+        onErrorMsg("");
+    }
+
+    return(
+        <div>
+            {(errorMsg) ?
+                <IonAlert
+                    isOpen={errorFlag}
+                    onDidDismiss={() => resetErrorMsg()}
+                    header={"Error while trying to load the image"}
+                    message={errorMsg}
+                    buttons={[
+                        {
+                            text: "Okay",
+                            id: "confirm-button",
+                            handler: () => {
+                                resetErrorMsg();
+                            }
+                        }
+                    ]}/> :
+                        <></>
+            }
+        </div>
+    )
+}
+
 /**
  * Load Image dialog
  * @param name
@@ -84,11 +128,15 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         event: undefined,
     });
 
+<<<<<<< HEAD
     const [showToast,] = useIonToast();
+=======
+    const [showToast, ] = useIonToast();
+>>>>>>> dev-issue-3
 
     const [path, setPath] = useState<string>("");
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
-    const [dtype, setDtype] = useState<"uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
+    const [dtype, setDtype] = useState<"" | "uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
         "uint64" | "float32" | "float64" | "complex64">("uint16");
     const [xRange, setXRange] = useState([0, -1]);
     const [yRange, setYRange] = useState([0, -1]);
@@ -155,7 +203,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const cleanUp = () => {
         setShowPopover({open: false, event: undefined});
         setPath("");
-        setDtype("uint16");
+        setDtype("");
         setImageShapeRaw([null, null, null]);
         setXRange([0, -1]);
         setYRange([0, -1]);
@@ -196,6 +244,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                             onIonChange={e => setPath(e.detail.value!)} />
                     </IonItem>
                     {/* Image Size Grid*/}
+
+
                     <IonItem>
                         <IonRow>
                             <IonCol>
@@ -243,6 +293,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                             </IonCol>
                         </IonRow>
                     </IonItem>
+
+
                 </IonList>
                 {/* Advanced Options Accordion */}
                 <small>
@@ -331,7 +383,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             {/*Error window*/}
             <ErrorWindowComp
                 errorMsg={errorMsg}
-                windowOp={"loading"}
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
