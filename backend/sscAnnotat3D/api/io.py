@@ -4,8 +4,8 @@ import os.path
 
 import sscIO.io
 import numpy as np
-from tifffile import imwrite
-
+import tifffile
+import imageio
 from sscAnnotat3D.repository import data_repo
 
 from flask_cors import cross_origin
@@ -121,7 +121,7 @@ def close_image():
 
     return "success on deleting the image !", 200
 
-
+#TODO: need to implement a better error message
 @app.route("/save_image/<image_id>", methods=["POST"])
 @cross_origin()
 def save_image(image_id: str):
@@ -153,28 +153,24 @@ def save_image(image_id: str):
     error_msg = ""
 
     try:
+
+        image = data_repo.get_image(key=image_id)
+        error_msg = "No such file or directory {}".format(image_path)
+
         if(extension in tif_extensions):
-            image = data_repo.get_image(key=image_id)
 
             if(image.dtype != image_dtype):
                 image = image.astype(image_dtype)
 
-            error_msg = "No such file or directory {}".format(image_path)
-
             try:
-                imwrite(image_path, image)
+                #imwrite(image_path, image)
+                tifffile.imwrite(image_path, image)
             except Exception as e:
                 handle_exception(str(e))
 
-        else:
-            image_raw_shape = request.json["image_raw_shape"]
-            image = data_repo.get_image(image_path, 'numpy',
-                                               shape=(image_raw_shape[2], image_raw_shape[1], image_raw_shape[0]),
-                                               dtype=image_dtype)
-
-            error_msg = "Unable to reshape the volume {} into shape {} and type {}. " \
-                        "Please change the dtype and shape and load the image again".format(file, request.json["image_raw_shape"],
-                                                                                            image_dtype)
+        #.raw and .b save files
+        elif(error_msg == ""):
+            print("\nraw file :D\n")
         image_shape = image.shape
         image_dtype = _convert_dtype_to_str(dtype=image.dtype)
     except:
