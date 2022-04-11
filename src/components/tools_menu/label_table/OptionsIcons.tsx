@@ -8,6 +8,7 @@ import {
 import {closeOutline, colorPalette, pencilOutline} from "ionicons/icons";
 
 import {LabelInterface} from './LabelInterface';
+// @ts-ignore
 import {ChromePicker} from "react-color";
 import {useStorageState} from "react-storage-hooks";
 import {defaultColormap} from "../../../utils/colormap";
