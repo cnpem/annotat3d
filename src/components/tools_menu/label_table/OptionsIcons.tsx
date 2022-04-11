@@ -8,6 +8,7 @@ import {
 import {closeOutline, colorPalette, pencilOutline} from "ionicons/icons";
 
 import {LabelInterface} from './LabelInterface';
+// @ts-ignore
 import {ChromePicker} from "react-color";
 import {useStorageState} from "react-storage-hooks";
 import {defaultColormap} from "../../../utils/colormap";
@@ -60,7 +61,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
             <IonPopover
                 trigger={"edit-color-button-" + props.label.id} isOpen={showColorPopover}>
                 <ChromePicker color={`rgb(${color[0]},${color[1]},${color[2]})`}
-                    onChange={ (color) => {
+                    onChange={ (color: any) => {
                         const colorTuple: [number, number, number] = [color.rgb.r, color.rgb.g, color.rgb.b];
                         props.onChangeLabel(props.label.labelName, props.label.id, colorTuple);
                         setColor(colorTuple);

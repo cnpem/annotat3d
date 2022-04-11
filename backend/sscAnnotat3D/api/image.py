@@ -6,7 +6,7 @@ import zlib
 import io
 
 from sscAnnotat3D.repository import data_repo
-from sscAnnotat3D import utils
+from sscAnnotat3D import utils, label
 
 from flask_cors import cross_origin
 
@@ -32,6 +32,11 @@ def get_image_slice(image_id: str):
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
     img_slice = image[slice_range]
+
+    get_contour = request.json.get('contour', False)
+
+    if get_contour:
+        img_slice = label.label_slice_contour(img_slice)
 
     import time
 

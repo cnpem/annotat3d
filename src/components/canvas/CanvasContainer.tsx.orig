@@ -588,7 +588,6 @@ interface ICanvasProps {
 
 interface ICanvasState {
     brush_mode: brush_mode_type;
-    label_contour: boolean;
 }
 
 const brushList = [
@@ -618,15 +617,17 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onLabelAlphaChanged: (alpha: number) => void = () => {};
     onAnnotanionAlphaChanged!: (alpha: number) => void;
     onAnnotanionVisibilityChanged!: (visible: boolean) => void;
+<<<<<<< HEAD
     onLabelColorsChanged!: (colors: {id: number, color: [number, number, number]}[]) => void;
+=======
     onAnnotationChanged!: () => void;
-    onLabelContourChanged!: (contour: boolean) => void;
+>>>>>>> dev-issue-3
 
     constructor(props: ICanvasProps) {
         super(props);
         this.pixi_container = null;
         this.canvas = null;
-        this.state = { brush_mode: 'draw_brush', 'label_contour': false };
+        this.state = { brush_mode: 'draw_brush' };
     }
 
     fetchAllDebounced = debounce( (recenter: boolean = false) => {
@@ -693,7 +694,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         const params = {
             axis: this.props.axis,
             slice: this.props.slice,
-            contour: this.state.label_contour
+            contour: true
         };
 
         sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
@@ -773,28 +774,20 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas?.setAnnotationVisibility(visible);
             }
 
+<<<<<<< HEAD
             this.onLabelColorsChanged = (colors) => {
                 this.canvas?.setColor(colors);
                 console.log('colors received: ', colors);
             }
 
-            this.onAnnotationChanged = () => {
-                this.getAnnotSlice();
-            }
-
-            this.onLabelContourChanged = (contour: boolean) => {
-                this.setState({...this.state, label_contour: contour});
-                this.getLabelSlice();
-                console.log('contour changed: ', contour);
-            }
-
-            this.onAnnotationChanged = () => {
-                this.getAnnotSlice();
-            }
-
             subscribe('labelColorsChanged', this.onLabelColorsChanged);
-            subscribe('labelContourChanged', this.onLabelContourChanged);
+=======
+            this.onAnnotationChanged = () => {
+                this.getAnnotSlice();
+            }
+
             subscribe('annotationChanged', this.onAnnotationChanged);
+>>>>>>> dev-issue-3
             subscribe('annotationVisibilityChanged', this.onAnnotanionVisibilityChanged);
             subscribe('annotationAlphaChanged', this.onAnnotanionAlphaChanged);
             subscribe('labelAlphaChanged', this.onLabelAlphaChanged);
@@ -810,9 +803,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     componentWillUnmount() {
-        unsubscribe('labelContourChanged', this.onLabelContourChanged);
+<<<<<<< HEAD
         unsubscribe('labelColorsChanged', this.onLabelColorsChanged);
+=======
         unsubscribe('annotationChanged', this.onAnnotationChanged);
+>>>>>>> dev-issue-3
         unsubscribe('annotationVisibilityChanged', this.onAnnotanionVisibilityChanged);
         unsubscribe('annotationAlphaChanged', this.onAnnotanionAlphaChanged);
         unsubscribe('labelAlphaChanged', this.onLabelAlphaChanged);
