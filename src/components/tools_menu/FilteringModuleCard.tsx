@@ -1,4 +1,4 @@
-import {IonInput, IonItem, IonLabel, IonSelect, IonSelectOption, IonToggle} from "@ionic/react";
+import {IonInput, IonItem, IonLabel, IonToggle} from "@ionic/react";
 import {ModuleCard, ModuleCardItem} from "./ModuleCard";
 
 

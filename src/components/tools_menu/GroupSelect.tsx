@@ -1,6 +1,5 @@
 import {IonItem, IonLabel, IonIcon, IonPopover} from "@ionic/react";
 import {caretDown, caretForward} from "ionicons/icons";
-import {padStart} from "lodash";
 import {Fragment, useState} from "react";
 
 interface OptionInterface {
