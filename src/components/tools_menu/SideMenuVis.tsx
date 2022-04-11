@@ -88,7 +88,7 @@ const SideMenuVis: React.FC = () => {
                     </IonItem>
                     <div hidden={!showSuperpixel}>
                         <SliderPicker color={'#'+superpixelColor.toString(16)}
-                            onChange={ (e) => {
+                            onChange={ (e: any) => {
                                 console.log(e);
                                 const color = rgbToHex(e.rgb.r, e.rgb.g, e.rgb.b);
                                 dispatch('superpixelColorChanged', color);
@@ -111,7 +111,7 @@ const SideMenuVis: React.FC = () => {
                     </IonItem>
                     <div hidden={!showLabel}>
                         <AlphaPicker width="100%" color={ {h: 0, s: 0, l: 0, a: labelAlpha} }
-                            onChange={(e) => {
+                            onChange={(e: any) => {
                                 console.log(e);
                                 dispatch('labelAlphaChanged', e.hsl.a);
                                 setLabelAlpha(e.hsl.a!!);
@@ -142,7 +142,7 @@ const SideMenuVis: React.FC = () => {
                     </IonItem>
                     <div hidden={!showAnnotations}>
                         <AlphaPicker width="100%" color={ {h: 0, s: 0, l: 0, a: markerAlpha} }
-                            onChange={(e) => {
+                            onChange={(e: any) => {
                                 dispatch('annotationAlphaChanged', e.hsl.a!!)
                                 setMarkerAlpha(e.hsl.a!!);
                                 setAnnotationAlpha(e.hsl.a!!);
