@@ -20,6 +20,8 @@
 .vscode
 .idea
 
+backend/sscAnnotat3D/static/*.*
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

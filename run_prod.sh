@@ -17,7 +17,6 @@ trap intexit INT
 
 
 FLASK_APP=sscAnnotat3D.app flask run --host 0.0.0.0 &
-serve -s /opt/Annotat3D/build &
 
 wait
 echo "all done"

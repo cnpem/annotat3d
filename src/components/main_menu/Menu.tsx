@@ -30,7 +30,7 @@ const Menu: React.FC = () => {
     const [searchText, setSearchText] = useState('');
 
     return (
-        <IonMenu contentId="main" type="overlay" side="start"  swipeGesture={true}>
+        <IonMenu contentId="main" type="overlay" side="start">
             <IonHeader>
                 <IonToolbar>
                     <IonCard color="primary" style={ {padding: '1em', fontFamily: 'monospace'} }>
