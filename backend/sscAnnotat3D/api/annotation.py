@@ -23,12 +23,12 @@ def new_annot():
     if img is None:
         return 'No image associated', 400
 
-    annot_module = annotation_module.AnnotationModule(img.shape, 'uint16')
+    annot_module = annotation_module.AnnotationModule(img.shape)
 
     data_repo.set_annotation('annotation', data=annot)
     module_repo.set_module('annotation', module=annot_module)
 
-    return "success", 200
+    return "success", 2
 
 
 @app.route("/is_available_annot", methods=["POST"])
@@ -115,8 +115,10 @@ def draw():
 
     erase = (mode == 'erase_brush')
 
+    mk_id = annot_module.current_mk_id
+
     for coord in request.json['coords']:
-        annot_module.draw_marker_dot(coord[1], coord[0], label, 1, erase)
+        annot_module.draw_marker_dot(coord[1], coord[0], label, mk_id, erase)
 
     data_repo.set_annotation(annot_module.annotation)
 
@@ -147,4 +149,12 @@ def get_annot_slice():
     return send_file(io.BytesIO(img_slice), "application/gzip")
 
 
+@app.route("/undo_annot", methods=['POST'])
+@cross_origin()
+def undo_annot():
+
+    annot_module = module_repo.get_module('annotation')
+    annot_module.undo()
+
+    return 'success', 200
 

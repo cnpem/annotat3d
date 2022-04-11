@@ -48,7 +48,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                 Add
             </IonButton>
 
-            <IonButton size="small" slot={"end"} onClick={removeAllLabels}>
+            <IonButton color="danger" size="small" slot={"end"} onClick={removeAllLabels}>
                 <IonIcon icon={trashOutline} slot={"end"}/>
                 Delete all
             </IonButton>
