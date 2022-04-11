@@ -5,7 +5,6 @@ import os.path
 import sscIO.io
 import numpy as np
 import tifffile
-import imageio
 from sscAnnotat3D.repository import data_repo
 
 from flask_cors import cross_origin
@@ -103,7 +102,6 @@ def open_image(image_id: str):
     except:
         return handle_exception(error_msg)
 
-
     image_info = {"image_shape": image_shape, "image_ext": extension,
                   "image_name": file_name, "image_dtype": image_dtype}
     data_repo.set_image(key=image_id, data=image)
@@ -120,6 +118,35 @@ def close_image():
         return handle_exception("failure trying to delete the image")
 
     return "success on deleting the image !", 200
+
+
+def _save_file(image_path: str, extension: str, image_dtype: str, image: np.array):
+
+    raw_extensions = [".raw", ".b"]
+    tif_extensions = [".tif", ".tiff"]
+
+    if (extension in tif_extensions):
+
+        if (image.dtype != image_dtype):
+            image = image.astype(image_dtype)
+
+        try:
+            tifffile.imwrite(image_path, image)
+        except Exception as e:
+            return handle_exception(str(e))
+
+        return None
+
+    elif (extension in raw_extensions):
+        try:
+            image = image.astype(image_dtype)
+            image.tofile(image_path)
+        except Exception as e:
+            return handle_exception(str(e))
+
+    else:
+        return handle_exception("The extension {} isn't supported !".format(extension))
+
 
 #TODO: need to implement a better error message
 @app.route("/save_image/<image_id>", methods=["POST"])
@@ -142,40 +169,17 @@ def save_image(image_id: str):
     if(file == ""):
         return handle_exception("Empty path isn't valid !")
 
-    raw_extensions = [".raw", ".b"]
-    tif_extensions = [".tif", ".tiff"]
+    image = data_repo.get_image(key=image_id)
 
-    extensions = [*raw_extensions, *tif_extensions]
+    if(image.size == 0):
+        return handle_exception("Unable to retrive the image !")
 
-    if extension not in extensions:
-        return handle_exception("The extension {} isn't supported !".format(extension))
+    save_status = _save_file(image_path, extension, image_dtype, image)
 
-    error_msg = ""
+    if(save_status != None):
+        return save_status
 
-    try:
-
-        image = data_repo.get_image(key=image_id)
-        error_msg = "No such file or directory {}".format(image_path)
-
-        if(extension in tif_extensions):
-
-            if(image.dtype != image_dtype):
-                image = image.astype(image_dtype)
-
-            try:
-                #imwrite(image_path, image)
-                tifffile.imwrite(image_path, image)
-            except Exception as e:
-                handle_exception(str(e))
-
-        #.raw and .b save files
-        elif(error_msg == ""):
-            print("\nraw file :D\n")
-        image_shape = image.shape
-        image_dtype = _convert_dtype_to_str(dtype=image.dtype)
-    except:
-        return handle_exception(error_msg)
-
+    image_shape = image.shape
     image_info = {"image_shape": image_shape, "image_ext": extension,
                   "image_name": file_name, "image_dtype": image_dtype}
 
