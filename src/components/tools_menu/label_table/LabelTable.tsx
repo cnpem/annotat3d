@@ -1,11 +1,11 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import * as ReactBootStrap from "react-bootstrap";
 import {IonRow, IonCol, IonLabel} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
 import {LabelInterface} from './LabelInterface';
 import {defaultColormap} from '../../../utils/colormap';
-import {dispatch} from '../../../utils/eventbus';
+import {dispatch, useEventBus, currentEventValue} from '../../../utils/eventbus';
 
 import './LabelTable.css';
 import {useStorageState} from "react-storage-hooks";
@@ -26,14 +26,17 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
 
+    const [darkMode, setDarkMode] = useState<boolean>( currentEventValue('toggleMode'));
+
+    useEventBus('toggleMode', (darkMode) => {
+        setDarkMode(darkMode);
+    });
+
     const removeLabelElement = (label: LabelInterface) => {
         setLabelList(labelList.filter(l => l.id !== label.id));
 
-        if(labelList.length === 2)
-        {
-
+        if(labelList.length === 2) {
             setNewLabelId(1);
-
         }
 
     }
@@ -104,7 +107,8 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                 </IonCol>
             </IonRow>
             <div className={"label-table"}>
-                <ReactBootStrap.Table striped bordered hover>
+                <ReactBootStrap.Table striped bordered hover
+                    className={darkMode? 'table-dark' : ''}>
                     <thead>
                         <tr>
                             <th className={NAME_WIDTH}><IonLabel>Label Name</IonLabel></th>
