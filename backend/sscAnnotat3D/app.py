@@ -80,7 +80,9 @@ def test():
     return 'test', 200
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 5000, True, threaded=True)
+    #WARNING: only one process can be used, as we store images in memory
+    #to be able to use more processes we should find a better way to store data
+    app.run("0.0.0.0", 5000, True, processes=1, threaded=True)
 
     # address = socket.gethostbyname(socket.gethostname())
     # with socket.socket() as s:
