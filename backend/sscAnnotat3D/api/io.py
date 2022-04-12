@@ -19,7 +19,7 @@ app.register_error_handler(400, handle_exception)
 
 def _convert_dtype_to_str(dtype: np.dtype):
 
-    if(dtype == "uint8"):
+    if (dtype == "uint8"):
         return "uint8"
 
     if (dtype == "int16"):
@@ -69,7 +69,7 @@ def open_image(image_id: str):
     file = image_path.split("/")[-1]
     file_name, extension = os.path.splitext(file)
 
-    if(file == ""):
+    if (file == ""):
         return handle_exception("Empty path isn't valid !")
 
     raw_extensions = [".raw", ".b"]
@@ -84,7 +84,7 @@ def open_image(image_id: str):
 
     try:
         use_image_raw_parse = request.json["use_image_raw_parse"]
-        if(extension in tif_extensions or use_image_raw_parse):
+        if (extension in tif_extensions or use_image_raw_parse):
             image, info = sscIO.io.read_volume(image_path, 'numpy')
             error_msg = "No such file or directory {}".format(image_path)
 
@@ -166,17 +166,17 @@ def save_image(image_id: str):
     file = image_path.split("/")[-1]
     file_name, extension = os.path.splitext(file)
 
-    if(file == ""):
+    if (file == ""):
         return handle_exception("Empty path isn't valid !")
 
     image = data_repo.get_image(key=image_id)
 
-    if(image.size == 0):
+    if (image.size == 0):
         return handle_exception("Unable to retrive the image !")
 
     save_status = _save_file(image_path, extension, image_dtype, image)
 
-    if(save_status != None):
+    if (save_status != None):
         return save_status
 
     image_shape = image.shape
