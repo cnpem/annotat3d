@@ -11,6 +11,7 @@ From: gccdockers/annotat3d:cuda-11.2
     cat ~/.pip/pip.conf
     # python3 -m pip install -r /opt/Annotat3D/requirements.txt
     python3 -m pip install /opt/Annotat3D/sscAnnotat3D*.whl
+    python3 -m pip install gunicorn
 
 %apprun Annotat3D
-    FLASK_APP=sscAnnotat3D.app flask run $@
+    gunicorn --threads 32 --workers 1 sscAnnotat3D.app:app $@

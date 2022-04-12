@@ -55,6 +55,7 @@ def get_image_slice(image_id: str):
 
 
 @app.route("/get_image_info/<image_id>", methods=["POST"])
+@cross_origin()
 def get_image_info(image_id: str):
     img = data_repo.get_image(image_id)
 
