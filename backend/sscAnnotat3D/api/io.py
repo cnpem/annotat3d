@@ -163,24 +163,18 @@ def save_image(image_id: str):
     except:
         return handle_exception("Error while trying to get the image dtype")
 
-    file = image_path.split("/")[-1]
-    file_name, extension = os.path.splitext(file)
-
-    if (file == ""):
-        return handle_exception("Empty path isn't valid !")
-
     image = data_repo.get_image(key=image_id)
 
     if (image.size == 0):
         return handle_exception("Unable to retrive the image !")
 
-    save_status = _save_file(image_path, extension, image_dtype, image)
+    save_status = sscIO.io.save_volume(image_path, image_dtype, image)
 
-    if (save_status != None):
-        return save_status
+    if (save_status["error_msg"] != ""):
+        return handle_exception(save_status["error_msg"])
 
     image_shape = image.shape
-    image_info = {"image_shape": image_shape, "image_ext": extension,
-                  "image_name": file_name, "image_dtype": image_dtype}
+    image_info = {"image_shape": image_shape, "image_ext": save_status["extension"],
+                  "image_name": save_status["file_name"], "image_dtype": image_dtype}
 
     return jsonify(image_info)
