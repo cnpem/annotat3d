@@ -415,7 +415,7 @@ class AnnotationModule():
     def get_coords_surrounding_point(self, y, x, coords3d=True, tolerance=2):
         if self.current_axis < 0:
 
-            rr, cc = draw.circle(y, x, radius=tolerance, shape=self.get_current_slice_shape())
+            rr, cc = draw.disk((y, x), radius=tolerance, shape=self.get_current_slice_shape())
 
             coords = list(
                 map(lambda coord: coord if not coords3d else self.get_current_slice_3d_coord(coord), zip(rr, cc)))
@@ -479,7 +479,7 @@ class AnnotationModule():
                 coords = map(lambda co: (tuple((np.array(co)).astype('int32')), (marker_lb, marker_id)),
                              zip(dd - center[0] + coord[0], rr - center[1] + coord[1], cc - center[2] + coord[2]))
             else:
-                rr, cc = draw.circle(y, x, radius=self.radius, shape=self.get_current_slice_shape())
+                rr, cc = draw.disk((y, x), radius=self.radius, shape=self.get_current_slice_shape())
                 coords = map(lambda co: (self.get_current_slice_3d_coord(co), (marker_lb, marker_id)), zip(rr, cc))
 
             valid_coords = {c: v for c, v in coords if self.valid_coords(c)}
