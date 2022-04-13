@@ -1,5 +1,5 @@
-import React from "react";
-import {IonButton, IonIcon} from "@ionic/react";
+import React, {useState} from "react";
+import {IonAlert, IonButton, IonIcon} from "@ionic/react";
 import { LabelInterface } from "./LabelInterface";
 import {colorFromId} from '../../../utils/colormap';
 
@@ -16,6 +16,26 @@ interface InputLabelProps {
     onNewLabelId: (id: number) => void;
 }
 
+interface WarningWindowInterface {
+    openWarningWindow: boolean
+    onOpenWarningWindow: (flag: boolean) => void;
+}
+
+const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
+                                                             onOpenWarningWindow}) => {
+
+    const closeWarningWindow = () => {
+        onOpenWarningWindow(false);
+    }
+
+    return(
+        <IonAlert
+            isOpen={true}
+            onDidDismiss={closeWarningWindow}
+            header={"test"}/>
+    )
+}
+
 /**
  * This component creates the option for add any label in the label section
  * @param props a list that contains the toolbar components
@@ -23,6 +43,12 @@ interface InputLabelProps {
  * @return This function returns a window for the user add a label name and color a vector with this new label
  */
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
+
+    const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
+
+    const handleShowWarningWindow = (flag: boolean) => {
+        setOpenWarningWindow(flag);
+    }
 
     const addNewLabel = () => {
         const newColor = colorFromId(props.colors, props.newLabelId); 
@@ -48,10 +74,16 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                 Add
             </IonButton>
 
-            <IonButton color="danger" size="small" slot={"end"} onClick={removeAllLabels}>
+            <IonButton color="danger" size="small" slot={"end"} onClick={() => setOpenWarningWindow(true)}>
                 <IonIcon icon={trashOutline} slot={"end"}/>
                 Delete all
             </IonButton>
+            {(openWarningWindow) ?
+                <WarningWindow
+                    openWarningWindow={openWarningWindow}
+                    onOpenWarningWindow={handleShowWarningWindow}/> :
+                <></>
+            }
         </div>
     );
 };
