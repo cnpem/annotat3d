@@ -2,7 +2,7 @@ werkzeug==2.0.3 #there seems to be some bug on the newer versions that randomly 
 flask
 flask-cors
 jinja2
-sscIO==0.1.4.4
+sscIO
 sscPySpin
 sscDeepsirius
 ssc-remotevis
