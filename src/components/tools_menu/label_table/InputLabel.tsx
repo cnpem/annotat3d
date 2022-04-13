@@ -19,20 +19,43 @@ interface InputLabelProps {
 interface WarningWindowInterface {
     openWarningWindow: boolean
     onOpenWarningWindow: (flag: boolean) => void;
+
+    labelList: LabelInterface[];
+    onLabelList: (labels: LabelInterface[]) => void;
+    onNewLabelId: (id: number) => void;
 }
 
 const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
-                                                             onOpenWarningWindow}) => {
+                                                             onOpenWarningWindow,
+                                                             labelList,
+                                                             onLabelList,
+                                                             onNewLabelId}) => {
 
     const closeWarningWindow = () => {
         onOpenWarningWindow(false);
     }
 
+    const removeAllLabels = () => {
+        const newVec = labelList.filter(lab => lab.id === 0);
+        onLabelList(newVec);
+        onNewLabelId(0); // This value resets the id generator
+    }
+
     return(
         <IonAlert
-            isOpen={true}
+            isOpen={openWarningWindow}
             onDidDismiss={closeWarningWindow}
-            header={"test"}/>
+            header={"test"}
+            message={"opa,bão ?"}
+            buttons={[
+                {
+                    text: "Okay",
+                    id: "confirm-button",
+                    handler: () => {
+                        removeAllLabels()
+                    }
+                }
+            ]}/>
     )
 }
 
@@ -61,12 +84,6 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         props.onNewLabelId(props.newLabelId);
     }
 
-    const removeAllLabels = () => {
-        const newVec = props.labelList.filter(lab => lab.id === 0);
-        props.onLabelList(newVec);
-        props.onNewLabelId(0); // This value resets the id generator
-    }
-
     return(
         <div style={ {display: "flex", justifyContent: "flex-end"} }>
             <IonButton size="small" onClick={addNewLabel}>
@@ -81,7 +98,10 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
             {(openWarningWindow) ?
                 <WarningWindow
                     openWarningWindow={openWarningWindow}
-                    onOpenWarningWindow={handleShowWarningWindow}/> :
+                    onOpenWarningWindow={handleShowWarningWindow}
+                    labelList={props.labelList}
+                    onLabelList={props.onLabelList}
+                    onNewLabelId={props.onNewLabelId}/> :
                 <></>
             }
         </div>
