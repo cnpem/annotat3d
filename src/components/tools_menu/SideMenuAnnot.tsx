@@ -7,6 +7,7 @@ import {dispatch, useEventBus} from "../../utils/eventbus";
 import {ImageShapeInterface} from "./ImageShapeInterface";
 import {arrowUndoOutline, folderOpenOutline, saveOutline} from "ionicons/icons";
 import {sfetch} from "../../utils/simplerequest";
+import AnnotationCard from "./annotation/AnnotationCard";
 
 /**
  * Component that creates the lateral bar menu
@@ -40,13 +41,6 @@ const SideMenuAnnot: React.FC = () => {
         });
     })
 
-    function undoAnnotation() {
-        sfetch('POST', '/undo_annot', '')
-        .then(() => {
-            dispatch('annotationChanged', null);
-        });
-    }
-
     return(
         <div>
             <IonCard>
@@ -61,30 +55,7 @@ const SideMenuAnnot: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard>
-                <IonCardContent>
-                    <div style={ {display: 'flex', justifyContent: 'flex-end'} }>
-                        <IonButton size="small">
-                            <IonIcon slot="end" icon={folderOpenOutline}/>
-                            Load
-                        </IonButton>
-
-                        <IonButton size="small">
-                            <IonIcon slot="end" icon={saveOutline}/>
-                            Save
-                        </IonButton>
-
-                        <IonButton color="danger" size="small"
-                            onClick={ () => {
-                                undoAnnotation();
-                            }}>
-                            <IonIcon slot="end" icon={arrowUndoOutline}/>
-                            Undo
-                        </IonButton>
-
-                    </div>
-                </IonCardContent>
-            </IonCard>
+            <AnnotationCard/>
 
         </div>
     )

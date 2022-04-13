@@ -1,7 +1,8 @@
 import React from "react";
-import {MenuItem} from "./MenuItems";
+import {MenuItem} from "../MenuItems";
 import {extensionPuzzleOutline, extensionPuzzleSharp} from "ionicons/icons";
 import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
+import AnnotationLoadDialog from "../../tools_menu/annotation/AnnotationLoadDialog";
 
 /**
  * Classification component
@@ -16,9 +17,7 @@ const Classification: React.FC = () => {
         subItems: [
             'New Classifier',
             'Load Classifier',
-            'Save Classifier',
-            'Load Annotation',
-            'Save Annotation',
+            'Save Classifier'
         ],
         iosIcon: extensionPuzzleOutline,
         mdIcon: extensionPuzzleSharp
@@ -30,11 +29,9 @@ const Classification: React.FC = () => {
                 <IonLabel>{items.title}</IonLabel>
             </IonItem>
             <IonList slot={"content"}>
-                {items.subItems.map((subItem) => {
-                    return (
-                        <IonItem button>{subItem}</IonItem>
-                    );
-                })}
+                <IonItem button>{items.subItems[0]}</IonItem>
+                <IonItem button>{items.subItems[1]}</IonItem>
+                <IonItem button>{items.subItems[2]}</IonItem>
             </IonList>
         </IonAccordion>
     );

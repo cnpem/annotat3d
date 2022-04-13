@@ -12,10 +12,10 @@ from flask_cors import cross_origin
 
 app = Blueprint('annotation', __name__)
 
+
 @app.route("/new_annot", methods=["POST"])
 @cross_origin()
 def new_annot():
-
     annot = {}
     annot_path = ""
 
@@ -25,35 +25,38 @@ def new_annot():
 
     annot_module = annotation_module.AnnotationModule(img.shape)
 
-    data_repo.set_annotation('annotation', data=annot)
     module_repo.set_module('annotation', module=annot_module)
 
-    return "success", 2
+    return "success", 200
 
 
 @app.route("/is_available_annot", methods=["POST"])
 @cross_origin
 def is_available_annot():
     annot = data_repo.get_annotation()
-    return jsonify({ 'available': annot is not None })
+    return jsonify({'available': annot is not None})
+
 
 @app.route("/open_annot", methods=["POST"])
 @cross_origin()
 def open_annot():
+    img = data_repo.get_image('image')
+    if img is None:
+        return 'No image associated', 400
 
-    annot_path = request.json["annot_path"]
+    annot_module = annotation_module.AnnotationModule(img.shape)
+
+    try:
+        annot_path = request.json["annot_path"]
+    except:
+        return "Error while trying to get the annotation path", 400
+
     with open(annot_path, "rb") as f:
         annot = pickle.load(f)
-
-    data_repo.set_annotation(data=annot)
     print("annot", len(annot))
 
-    most = {}
-    for coords in annot:
-        if coords[0] in most:
-            most[coords[0]] = most[coords[0]] + 1
-        else:
-            most[coords[0]] = 0
+    annot_module.annotation = annot
+    module_repo.set_module('annotation', module=annot_module)
 
     return "success", 200
 
@@ -61,9 +64,9 @@ def open_annot():
 @app.route("/close_annot", methods=["POST"])
 @cross_origin()
 def close_annot():
-
     try:
-        data_repo.delete_annotation()
+        annot_module = module_repo.get_module('annotation')
+        annot_module.annotation = {}
     except:
         return "failure", 400
 
@@ -73,13 +76,16 @@ def close_annot():
 @app.route("/save_annot", methods=["POST"])
 @cross_origin()
 def save_annot():
-
-    annot = data_repo.get_annotation()
+    annot_module = module_repo.get_module('annotation')
+    annot = annot_module.annotation
 
     if annot is None:
-        return "failure", 400
+        return "Failed to fetch annotation", 400
 
-    annot_path = request.json["annot_path"]
+    try:
+        annot_path = request.json["annot_path"]
+    except:
+        return "Failed to receive annotation path", 400
 
     with open(annot_path, "wb") as f:
         pickle.dump(annot, f)
@@ -90,13 +96,6 @@ def save_annot():
 @app.route("/draw", methods=["POST"])
 @cross_origin()
 def draw():
-
-    annot = data_repo.get_annotation()
-
-    if annot is None:
-       new_annot()
-       annot = data_repo.get_annotation()
-
     print(request.json)
 
     slice_num = request.json["slice"]
@@ -107,11 +106,10 @@ def draw():
 
     axis_dim = utils.get_axis_num(axis)
 
-
     annot_module = module_repo.get_module('annotation')
     annot_module.set_current_axis(axis_dim)
     annot_module.set_current_slice(slice_num)
-    annot_module.set_radius(size//2)
+    annot_module.set_radius(size // 2)
 
     erase = (mode == 'erase_brush')
 
@@ -120,19 +118,19 @@ def draw():
     for coord in request.json['coords']:
         annot_module.draw_marker_dot(coord[1], coord[0], label, mk_id, erase)
 
-    data_repo.set_annotation(annot_module.annotation)
+    # data_repo.set_annotation(annot_module.annotation)
 
     return "success", 200
+
 
 @app.route("/get_annot_slice", methods=["POST"])
 @cross_origin()
 def get_annot_slice():
-
-    annot = data_repo.get_annotation()
+    # annot = data_repo.get_annotation()
     image = data_repo.get_image()
 
-    if annot is None:
-        return "failure", 400
+    # if annot is None:
+    #     return "failure", 400
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
@@ -152,9 +150,7 @@ def get_annot_slice():
 @app.route("/undo_annot", methods=['POST'])
 @cross_origin()
 def undo_annot():
-
     annot_module = module_repo.get_module('annotation')
     annot_module.undo()
 
     return 'success', 200
-

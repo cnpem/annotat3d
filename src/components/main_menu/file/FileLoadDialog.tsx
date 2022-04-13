@@ -358,7 +358,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                             type="number"
                                             min={"-1"}
                                             value={zRange[1]}
-                                            placeholder="Y1"
+                                            placeholder="Z1"
                                             onIonChange={e => setZRange([zRange[0], parseInt(e.detail.value!, 10)])}
                                         />
                                     </IonCol>

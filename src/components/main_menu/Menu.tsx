@@ -11,7 +11,7 @@ import './Menu.css';
 import ThemeToggle from "./ThemeToggle";
 import File from "./file/File";
 import Colormap from "./Colormap";
-import Classification from "./Classification";
+import Classification from "./classification/Classification";
 import DeepLearning from "./DeepLearning";
 import Remote from "./Remote";
 

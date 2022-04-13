@@ -10,16 +10,18 @@ from flask_cors import cross_origin
 
 app = Blueprint('io', __name__)
 
+
 @app.errorhandler(BadRequest)
 def handle_exception(error_msg: str):
     return jsonify({"error_msg": error_msg}), 400
 
+
 app.register_error_handler(400, handle_exception)
+
 
 @app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()
 def open_image(image_id: str):
-
     try:
         image_path = request.json["image_path"]
     except:
@@ -33,11 +35,11 @@ def open_image(image_id: str):
     file = image_path.split("/")[-1]
     file_name, extension = os.path.splitext(file)
 
-    if(file == ""):
+    if (file == ""):
         return handle_exception("Empty path isn't valid !")
 
     raw_extensions = [".raw", ".b"]
-    tif_extensions = [".tif", ".tiff"]
+    tif_extensions = [".tif", ".tiff", ".npy", ".cbf"]
 
     extensions = [*raw_extensions, *tif_extensions]
 
@@ -48,7 +50,7 @@ def open_image(image_id: str):
 
     try:
         use_image_raw_parse = request.json["use_image_raw_parse"]
-        if(extension in tif_extensions or use_image_raw_parse):
+        if (extension in tif_extensions or use_image_raw_parse):
             image, info = sscIO.io.read_volume(image_path, 'numpy')
             error_msg = "No such file or directory {}".format(image_path)
 
@@ -59,7 +61,8 @@ def open_image(image_id: str):
                                                dtype=image_dtype)
 
             error_msg = "Unable to reshape the volume {} into shape {} and type {}. " \
-                        "Please change the dtype and shape and load the image again".format(file, request.json["image_raw_shape"],
+                        "Please change the dtype and shape and load the image again".format(file, request.json[
+                "image_raw_shape"],
                                                                                             image_dtype)
         image_shape = image.shape
     except:
@@ -74,7 +77,6 @@ def open_image(image_id: str):
 @app.route("/close_image", methods=["POST"])
 @cross_origin()
 def close_image():
-
     try:
         data_repo.delete_image(key='image')
     except:
