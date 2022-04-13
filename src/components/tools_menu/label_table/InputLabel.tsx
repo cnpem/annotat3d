@@ -46,19 +46,19 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
         <IonAlert
             isOpen={openWarningWindow}
             onDidDismiss={closeWarningWindow}
-            header={"test"}
-            message={"opa,bão ?"}
+            header={"Deleting all labels"}
+            message={"Do you wish to delete all labels ?"}
             buttons={[
                 {
-                    text: "Cancel",
-                    id: "cancel-button",
+                    text: "No",
+                    id: "no-button",
                     handler: () => {
                         closeWarningWindow();
                     }
                 },
                 {
-                    text: "Okay",
-                    id: "confirm-button",
+                    text: "Yes",
+                    id: "yes-button",
                     handler: () => {
                         removeAllLabels();
                     }
