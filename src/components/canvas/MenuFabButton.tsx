@@ -8,17 +8,22 @@ interface ButtonProps {
 }
 
 interface MenuButtonProps {
+    value: string;
     buttonsList: ButtonProps[];
     onChange?: (button: ButtonProps) => void;
     openSide: 'top' | 'bottom' | 'start' | 'end';
+    hidden?: boolean;
 };
 
-const MenuFabButton: React.FC<MenuButtonProps> = ({buttonsList, onChange, openSide}) => {
+const MenuFabButton: React.FC<MenuButtonProps> = ({value, buttonsList, onChange, openSide, hidden}) => {
 
-    const [selected, setSelected] = useState(buttonsList[0]);
+    const [selected, setSelected] = useState(buttonsList.find(b => b.id === value)
+                                             || buttonsList[0]);
+
+
 
     return (
-        <Fragment>
+        <div hidden={hidden}>
             <IonFabButton color='dark'>
                 <IonIcon size="large" icon={selected.logo}/>
             </IonFabButton>
@@ -36,7 +41,7 @@ const MenuFabButton: React.FC<MenuButtonProps> = ({buttonsList, onChange, openSi
                     </IonFabButton>);
                 })}
             </IonFabList>
-        </Fragment>
+        </div>
     );
 }
 

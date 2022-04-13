@@ -107,12 +107,12 @@ def open_image(image_id: str):
     return jsonify(image_info)
 
 
-@app.route("/close_image", methods=["POST"])
+@app.route("/close_image/<image_id>", methods=["POST"])
 @cross_origin()
-def close_image():
+def close_image(image_id: str):
 
     try:
-        data_repo.delete_image(key='image')
+        data_repo.delete_image(key=image_id)
     except:
         return handle_exception("failure trying to delete the image")
 

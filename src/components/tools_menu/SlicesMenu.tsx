@@ -9,7 +9,7 @@ import {ImageShapeInterface} from './ImageShapeInterface';
 import {dispatch} from '../../utils/eventbus';
 import {SliceInfoInterface} from "./SliceInfoInterface";
 import {useStorageState} from "react-storage-hooks";
-import {Fragment} from "react";
+import {Fragment, useEffect} from "react";
 
 interface SlicesMenuProps{
     imageShape: ImageShapeInterface;
@@ -61,6 +61,13 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
         dispatch('sliceChanged', payload);
     }
+
+    useEffect(() => {
+        dispatch('sliceChanged', {
+            axis: sliceName,
+            slice: sliceValue
+        });
+    })
 
     return(
         <Fragment>

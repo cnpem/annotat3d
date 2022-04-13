@@ -10,18 +10,34 @@ interface OptionInterface {
 
 interface GroupSelectOptions {
     id: string;
+    value?: string;
     options: OptionInterface[];
     onChange: (option: OptionInterface) => void;
 }
 
 const GroupSelect: React.FC<GroupSelectOptions> = (props) => {
 
-    const [curOption, setCurOption] = useState<OptionInterface>(props.options[0]);
+    const [curOption, setCurOption] = useState<OptionInterface>(getDefault(props.options) || props.options[0]);
     const [curGroup, setCurGroup] = useState<OptionInterface[]>(props.options);
     const [showPopover, setShowPopover] = useState<boolean>(false);
 
     function reset() {
         setCurGroup(props.options);
+    }
+
+    function getDefault(options: OptionInterface[]): OptionInterface | null {
+        for(let i=0; i<options.length; ++i) {
+            const option = options[i];
+            if (option.id === props.value) {
+                return option;
+            } else if(option.options) {
+                const defaultOption = getDefault(option.options);
+                if (defaultOption) {
+                    return defaultOption;
+                }
+            }
+        }
+        return null;
     }
 
     function renderOption(option: OptionInterface) {

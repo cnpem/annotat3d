@@ -20,21 +20,28 @@ FILE_EXTENSION_IMAGE_FILTER = "Images (*.tif *.tiff *.TIFF *TIF *.b *.raw);; TIF
 
 __axis_num = { 'xy': 0, 'xz': 1, 'yz': 2}
 
-def get_3d_slice_range_from(axis: str, slice_num: int):
+def get_3d_slice_range_from(axis: str, slice_num: int, slice_num_to: int = None):
     """
     Given an axis and a slice, returns the range to acess the 2d image from a 3d volume.
     Args:
         axis (str): The axis to be considered ('XY' | 'XZ' | 'YZ').
         slice_num: The slice to be extracted from the given axis.
+        slice_num_to: If defined, determine the from (slice_num, slice_num_to) to be extracted
     Return:
         The range to extract that slice number from that axis.
         Example:
         img[get_3d_slice_range_from('xy', 10)]
     """
+
+    if slice_num_to is None:
+        val = slice_num
+    else:
+        val = slice(slice_num, slice_num_to, None)
+
     s = [slice(None, None, None),
          slice(None, None, None),
          slice(None, None, None)]
-    s[__axis_num[axis.lower()]] = slice_num
+    s[__axis_num[axis.lower()]] = val
     return s
 
 def get_axis_num(axis: str):
