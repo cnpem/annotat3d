@@ -1,6 +1,6 @@
 import {Component} from 'react';
-import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
-import { expand, brush, browsers, add, remove } from 'ionicons/icons';
+import {IonButton, IonFab, IonFabButton, IonIcon} from '@ionic/react';
+import { expand, brush, browsers, add, remove, eye, eyeOff } from 'ionicons/icons';
 import { debounce, isEqual } from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -104,8 +104,12 @@ class Brush {
         if (this.mode === 'draw_brush') {
             const color = this.colors[(this.label) % this.colors.length];
             this.color = this.rgbToHex(...color);
-        } else {
+            this.cursor.visible = true;
+        } else if(this.mode === 'erase_brush') {
             this.color = 0xFFFFFF;
+            this.cursor.visible = true;
+        } else {
+            this.cursor.visible = false;
         }
 
         this.updateBrush();
@@ -202,11 +206,12 @@ class Canvas {
     annotation: Annotation;
     brush: Brush;
 
-    brush_mode: 'draw_brush' | 'erase_brush';
+    brush_mode: brush_mode_type;
 
     slice: PIXI.Sprite;
     labelSlice: PIXI.Sprite;
     superpixelSlice: PIXI.Sprite;
+    futureSlice: PIXI.Sprite;
 
     superpixelColor: number = 0xff0000;
 
@@ -217,6 +222,7 @@ class Canvas {
 
     imgData?: NdArray<TypedArray>;
     labelData?: NdArray<TypedArray>;
+    futureData?: NdArray<TypedArray>;
 
     imgMin: number = 0.0;
     imgMax: number = 1.0;
@@ -248,6 +254,9 @@ class Canvas {
 
         this.labelSlice = new PIXI.Sprite();
 
+        this.futureSlice = new PIXI.Sprite();
+        this.futureSlice.visible = false;
+
         this.superpixelSlice = new PIXI.Sprite();
         this.superpixelSlice.tint = this.superpixelColor;
         this.superpixelSlice.alpha = 0.3;
@@ -267,6 +276,7 @@ class Canvas {
 
         this.app.stage.addChild(this.viewport);
         this.viewport.addChild(this.slice);
+        this.viewport.addChild(this.futureSlice);
         this.viewport.addChild(this.superpixelSlice);
         this.viewport.addChild(this.labelSlice);
         this.viewport.addChild(this.annotation.sprite);
@@ -291,7 +301,7 @@ class Canvas {
     }
 
     setColor(colors: {id: number, color: [number, number, number]}[]) {
-       
+
         colors.forEach((color) => {
             this.colors[color.id] = color.color;
         });
@@ -307,6 +317,8 @@ class Canvas {
     setSliceNum(sliceNum: number) {
         this.sliceNum = sliceNum;
     }
+
+
 
     setAxis(axis: 'XY' | 'XZ' | 'YZ') {
         this.axis = axis;
@@ -402,7 +414,9 @@ class Canvas {
         const context = this.annotation.context;
         const mode = this.brush_mode;
 
-        if (mode === 'erase_brush') {
+        if (mode === 'no_brush') {
+            return [];
+        } else if (mode === 'erase_brush') {
             this.annotation.context.globalCompositeOperation = 'destination-out';
         } else {
             this.annotation.context.globalCompositeOperation = 'source-over';
@@ -453,6 +467,10 @@ class Canvas {
         this.labelSlice.alpha = alpha;
     }
 
+    setPreviewVisibility(visible: boolean = true) {
+        this.futureSlice.visible = visible;
+    }
+
     setLabelVisibility(visible: boolean = true) {
         this.labelSlice.visible = visible;
     }
@@ -494,33 +512,60 @@ class Canvas {
         this.labelSlice.texture = texture;
     }
 
-    setImage(img_slice: NdArray<TypedArray>) {
-
-        this.imgData = img_slice;
+    private toUint8Array(img: NdArray<TypedArray>): Uint8Array {
 
         let uint8data: Uint8Array;
 
-        const x = img_slice.shape[1];
-        const y = img_slice.shape[0];
+        const x = img.shape[1];
+        const y = img.shape[0];
 
         const len = x*y;
 
         //TODO: implement for another dtypes
-        if (img_slice.dtype === 'uint8') {
-            uint8data = img_slice.data as Uint8Array;
+        if (img.dtype === 'uint8') {
+            uint8data = img.data as Uint8Array;
         } else {
             const max = 65535.0 * this.imgMax;
             const min = 65535.0 * this.imgMin;
             const range = max - min;
             uint8data = new Uint8Array(len);
             for (let i = 0; i < len; ++i) {
-                const val = clamp(min, img_slice.data[i], max);
+                const val = clamp(min, img.data[i], max);
                 //console.log(val);
                 const x = 255 * (1.0 - (max - val) / range);
                 uint8data[i] = x;
                 //console.log(uint8data[i]);
             }
         }
+
+        return uint8data;
+    }
+
+    setFutureImage(futureSlice: NdArray<TypedArray>) {
+        this.futureData = futureSlice;
+
+        const x = futureSlice.shape[1];
+        const y = futureSlice.shape[0];
+
+        const uint8data = this.toUint8Array(futureSlice);
+        const texture = this.textureFromSlice(uint8data, x, y);
+
+        this.futureSlice.texture = texture;
+    }
+
+    deleteFutureImage() {
+        this.futureData = undefined;
+        this.futureSlice.texture = PIXI.Texture.EMPTY;
+    }
+
+    setImage(imgSlice: NdArray<TypedArray>) {
+
+        this.imgData = imgSlice;
+
+        const uint8data = this.toUint8Array(imgSlice);
+
+        const x = imgSlice.shape[1];
+        const y = imgSlice.shape[0];
 
         this.x = x;
         this.y = y;
@@ -579,16 +624,18 @@ class Canvas {
     }
 }
 
-type brush_mode_type = 'draw_brush' | 'erase_brush';
+type brush_mode_type = 'draw_brush' | 'erase_brush' | 'no_brush';
 
 interface ICanvasProps {
     slice: number;
     axis: 'XY' | 'XZ' | 'YZ';
+    canvasMode: 'drawing' | 'imaging';
 }
 
 interface ICanvasState {
     brush_mode: brush_mode_type;
     label_contour: boolean;
+    future_sight_on: boolean;
 }
 
 const brushList = [
@@ -621,12 +668,17 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onLabelColorsChanged!: (colors: {id: number, color: [number, number, number]}[]) => void;
     onAnnotationChanged!: () => void;
     onLabelContourChanged!: (contour: boolean) => void;
+    onFutureChanged!: (hasPreview: boolean) => void;
 
     constructor(props: ICanvasProps) {
         super(props);
         this.pixi_container = null;
         this.canvas = null;
-        this.state = { brush_mode: 'draw_brush', 'label_contour': false };
+        this.state = {
+            brush_mode: 'draw_brush',
+            label_contour: false,
+            future_sight_on: false,
+        };
     }
 
     fetchAllDebounced = debounce( (recenter: boolean = false) => {
@@ -639,6 +691,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             this.getSuperpixelSlice();
             this.getAnnotSlice();
             this.getLabelSlice();
+            this.getFutureSlice();
         });
     }, 250);
 
@@ -670,6 +723,23 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
         .then(imgSlice => {
             this.canvas!!.setImage(imgSlice);
+        });
+    }
+
+    getFutureSlice() {
+
+        //the preview image is just a single slice
+        //so we always get the 0th XY slice
+        const params = {
+            'axis': 'XY',
+            'slice': 0
+        };
+
+        sfetch('POST', '/get_image_slice/future', JSON.stringify(params), 'gzip/numpyndarray')
+        .then(previewSlice => {
+            this.canvas?.setFutureImage(previewSlice);
+            this.canvas?.setPreviewVisibility(true);
+            this.setState({...this.state, future_sight_on: true});
         });
     }
 
@@ -792,6 +862,16 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.getAnnotSlice();
             }
 
+            this.onFutureChanged = (hasSlice: boolean) => {
+                if (hasSlice) {
+                    this.getFutureSlice();
+                } else {
+                    this.canvas?.deleteFutureImage();
+                    this.setState({...this.state, future_sight_on: false});
+                }
+            }
+
+            subscribe('futureChanged', this.onFutureChanged);
             subscribe('labelColorsChanged', this.onLabelColorsChanged);
             subscribe('labelContourChanged', this.onLabelContourChanged);
             subscribe('annotationChanged', this.onAnnotationChanged);
@@ -810,6 +890,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     componentWillUnmount() {
+        unsubscribe('futureChanged', this.onFutureChanged);
+        unsubscribe('labelColorsChanged', this.onLabelColorsChanged);
         unsubscribe('labelContourChanged', this.onLabelContourChanged);
         unsubscribe('labelColorsChanged', this.onLabelColorsChanged);
         unsubscribe('annotationChanged', this.onAnnotationChanged);
@@ -830,9 +912,20 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
         if (isEqual(prevProps, this.props)) //if all properties are the same (deep comparison)
             return;
+
+
+        if (this.props.canvasMode !== prevProps.canvasMode) {
+            if (this.props.canvasMode === 'imaging') {
+                this.setBrushMode('no_brush');
+            } else {
+                this.setBrushMode('draw_brush')
+            }
+        }
+
+        this.setState({...this.state, future_sight_on: false});
         this.canvas?.setSliceNum(this.props.slice);
         this.canvas?.setAxis(this.props.axis);
-        this.fetchAllDebounced(prevProps.axis !== this.props.axis);
+        this.fetchAllDebounced(true);
 
     }
 
@@ -851,9 +944,19 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                     </IonFabButton>
                 </IonFab>
 
-                <IonFab vertical="bottom" horizontal="end">
+                <IonFab hidden={this.props.canvasMode !== 'imaging'} vertical="bottom" horizontal="end">
+                    <IonFabButton color="dark"
+                        onClick={() => {
+                            const futureSightVisibility = !this.state.future_sight_on;
+                            this.setState({...this.state, future_sight_on: futureSightVisibility});
+                            this.canvas?.setPreviewVisibility(futureSightVisibility);
+                        }}>
+                        <IonIcon icon={this.state.future_sight_on ? eye : eyeOff}/>
+                    </IonFabButton>
+                </IonFab>
 
-                    <MenuFabButton openSide="start" buttonsList={brushList} onChange={ (b) => { this.setBrushMode(b.id as brush_mode_type) } } />
+                <IonFab hidden={this.props.canvasMode !== 'drawing'} vertical="bottom" horizontal="end">
+                    <MenuFabButton value={this.state.brush_mode} openSide="start" buttonsList={brushList} onChange={ (b) => { this.setBrushMode(b.id as brush_mode_type) } } />
                 </IonFab>
                 <IonFab vertical="bottom" horizontal="end" style={ {marginBottom: '4em'} }>
                     <IonFabButton size="small" onClick={() => {

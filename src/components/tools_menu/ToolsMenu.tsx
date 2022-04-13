@@ -1,5 +1,6 @@
-import {IonLabel, IonSegment, IonSegmentButton} from "@ionic/react";
-import React, {useState} from "react";
+import {IonLabel, IonSegment, IonSegmentButton, SegmentChangeEventDetail} from "@ionic/react";
+import React, {Fragment} from "react";
+import {useStorageState} from "react-storage-hooks";
 import ProcessingMenu from "./ProcessingMenu";
 import SideMenuAnnot from "./SideMenuAnnot";
 import SideMenuVis from "./SideMenuVis";
@@ -8,33 +9,41 @@ interface SideMenuProps {
     hideMenu: boolean
 }
 
-type InputMenuChoicesType = "Visualization" | "Annotation" | "Processing";
+const menuChoices = ['visualization', 'annotation', 'processing'] as const;
+const menus = [ <SideMenuVis/>, <SideMenuAnnot/>, <ProcessingMenu/> ];
+
+type InputMenuChoicesType = typeof menuChoices[number];
 
 const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
 
-    const [menuOp, setMenuOp] = useState<InputMenuChoicesType>("Visualization");
+    const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, "toolsMenu", "visualization");
 
-    const selectMenuOp = (op: InputMenuChoicesType) => {
-        setMenuOp(op);
+    const selectMenuOp = (e: CustomEvent<SegmentChangeEventDetail>) => {
+        setMenuOp(e.detail.value as InputMenuChoicesType);
     };
 
-    const activeItemRender = () => {
-        switch(menuOp) {
-            case 'Annotation':
-                return <SideMenuAnnot/>
-            case 'Visualization':
-                return <SideMenuVis/>
-            case 'Processing':
-                return <ProcessingMenu />
-        }
-    };
+    const renderSegmentButton = (choice: InputMenuChoicesType) => {
+        return (
+            <IonSegmentButton value={choice}>
+                <IonLabel>{choice}</IonLabel>
+            </IonSegmentButton>
+        );
+    }
+
+    const renderMenu = (choice: InputMenuChoicesType, idx: number) => {
+        return (
+            <div hidden={menuOp!==choice}>{ menus[idx] }</div>
+        );
+    }
 
     const ShowMenu:React.FC = () => {
         return(
-            <div>
-                <InputMenu selectedVal={menuOp} onSelectedVal={selectMenuOp}/>
-                { activeItemRender() }
-            </div>
+            <Fragment>
+                <IonSegment value={menuOp} onIonChange={selectMenuOp}>
+                    { menuChoices.map(renderSegmentButton) }
+                </IonSegment>
+                { menuChoices.map(renderMenu) }
+            </Fragment>
         );
     }
 
@@ -43,35 +52,6 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
             {props.hideMenu && <ShowMenu/>}
         </React.Fragment>
 
-    );
-
-}
-
-interface InputMenuInterface{
-    selectedVal: InputMenuChoicesType;
-    onSelectedVal: (val: InputMenuChoicesType) => void;
-}
-
-const InputMenu: React.FC<InputMenuInterface> = (props) => {
-
-    const inputChangeHandler = (e: CustomEvent) => {
-        props.onSelectedVal(e.detail.value);
-    }
-
-    return(
-        <IonSegment value={props.selectedVal} onIonChange={inputChangeHandler}>
-            <IonSegmentButton value={"Visualization"}>
-                <IonLabel>Visualization</IonLabel>
-            </IonSegmentButton>
-
-            <IonSegmentButton value={"Annotation"}>
-                <IonLabel>Annotation</IonLabel>
-            </IonSegmentButton>
-
-            <IonSegmentButton value={"Processing"}>
-                <IonLabel>Processing</IonLabel>
-            </IonSegmentButton>
-        </IonSegment>
     );
 
 }
