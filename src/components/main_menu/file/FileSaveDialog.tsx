@@ -76,7 +76,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         event: undefined,
     });
 
-    const [showToast, _] = useIonToast();
+    const [showToast,] = useIonToast();
 
     const [path, setPath] = useState<string>("");
     const [dtype, setDtype] = useState<"uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
@@ -129,7 +129,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
 
             }).catch(error => {
                 setErrorMsg(error.message);
-        })
+            })
     }
 
     /**
@@ -154,7 +154,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                 <IonList>
                     <IonItem>
                         <IonSegment value={saveImgOp} onIonChange={handleSaveImgOP}
-                                    color="tertiary">
+                            color="tertiary">
                             <IonSegmentButton value="image">
                                 <IonLabel>Image</IonLabel>
                             </IonSegmentButton>
@@ -196,7 +196,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                 </IonButton>
             </IonPopover>
             <IonItem button
-                     onClick={(e) => setShowPopover({open: true, event: e.nativeEvent})}
+                onClick={(e) => setShowPopover({open: true, event: e.nativeEvent})}
             >
                 {name}
             </IonItem>

@@ -1,7 +1,7 @@
 import {IonInput, IonItem, IonLabel, IonToggle} from "@ionic/react";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {useStorageState} from "react-storage-hooks";
-import {currentEventValue, dispatch, useEventBus} from "../../utils/eventbus";
+import {currentEventValue, dispatch} from "../../utils/eventbus";
 import {sfetch} from "../../utils/simplerequest";
 import {ModuleCard, ModuleCardItem} from "./ModuleCard";
 

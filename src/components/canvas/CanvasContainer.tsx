@@ -1,5 +1,5 @@
 import {Component} from 'react';
-import {IonButton, IonFab, IonFabButton, IonIcon} from '@ionic/react';
+import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
 import { expand, brush, browsers, add, remove, eye, eyeOff } from 'ionicons/icons';
 import { debounce, isEqual } from "lodash";
 import * as PIXI from 'pixi.js';
@@ -10,12 +10,12 @@ import '../../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
 //import npyjs from 'npyjs';
 import { NdArray, TypedArray } from 'ndarray';
-import { clamp } from '../../utils/math';
+import {clamp} from '../../utils/math';
 import { sfetch } from '../../utils/simplerequest';
 
 import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
-import {subscribe, unsubscribe} from '../../utils/eventbus';
+import {dispatch, subscribe, unsubscribe} from '../../utils/eventbus';
 import {defaultColormap} from '../../utils/colormap';
 
 class Brush {
@@ -329,7 +329,7 @@ class Canvas {
             if (event.data.button !== 0) return;
         } else if (event.data.pointerType === 'touch') {
             this.viewport.plugins.pause('drag');
-            // canvas.brush.cursor.visible = false
+            // canvas.brush.cursor.visible = false;
         }
 
         console.log("down");
@@ -384,7 +384,14 @@ class Canvas {
                 'label': this.brush.label,
                 'mode': this.brush_mode,
             };
-            sfetch('POST', '/draw', JSON.stringify(data));
+            sfetch('POST', '/draw', JSON.stringify(data))
+                .then((success)=>{
+                    console.log(success);
+                    dispatch("annotationChanged", null);
+                })
+                .catch((error)=>{
+                    console.log(error);
+                });
         }
 
         this.pointsBuffer = [];
@@ -524,17 +531,26 @@ class Canvas {
         //TODO: implement for another dtypes
         if (img.dtype === 'uint8') {
             uint8data = img.data as Uint8Array;
-        } else {
+        } else if (img.dtype === 'uint16'){
             const max = 65535.0 * this.imgMax;
             const min = 65535.0 * this.imgMin;
             const range = max - min;
             uint8data = new Uint8Array(len);
             for (let i = 0; i < len; ++i) {
                 const val = clamp(min, img.data[i], max);
-                //console.log(val);
+                // console.log(val);
                 const x = 255 * (1.0 - (max - val) / range);
                 uint8data[i] = x;
-                //console.log(uint8data[i]);
+                // console.log(uint8data[i]);
+            }
+        } else {
+            uint8data = new Uint8Array(len);
+            for (let i = 0; i < len; ++i) {
+                const val = clamp(0.0, img.data[i], 1.0);
+                // console.log(val);
+                const x = 255 * val;
+                uint8data[i] = x;
+                // console.log(uint8data[i]);
             }
         }
 
