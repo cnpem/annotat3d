@@ -4,7 +4,6 @@ import os.path
 
 import sscIO.io
 import numpy as np
-import tifffile
 from sscAnnotat3D.repository import data_repo
 
 from flask_cors import cross_origin
@@ -119,34 +118,6 @@ def close_image():
 
     return "success on deleting the image !", 200
 
-#TODO: need to pass this function to sscIO
-def _save_file(image_path: str, extension: str, image_dtype: str, image: np.array):
-
-    raw_extensions = [".raw", ".b"]
-    tif_extensions = [".tif", ".tiff"]
-
-    if (extension in tif_extensions):
-
-        if (image.dtype != image_dtype):
-            image = image.astype(image_dtype)
-
-        try:
-            tifffile.imwrite(image_path, image)
-        except Exception as e:
-            return handle_exception(str(e))
-
-        return None
-
-    elif (extension in raw_extensions):
-        try:
-            image = image.astype(image_dtype)
-            image.tofile(image_path)
-        except Exception as e:
-            return handle_exception(str(e))
-
-    else:
-        return handle_exception("The extension {} isn't supported !".format(extension))
-
 
 #TODO: need to implement a better error message
 @app.route("/save_image/<image_id>", methods=["POST"])
@@ -166,7 +137,7 @@ def save_image(image_id: str):
     image = data_repo.get_image(key=image_id)
 
     if (image.size == 0):
-        return handle_exception("Unable to retrive the image !")
+        return handle_exception("Unable to retrieve the image !")
 
     save_status = sscIO.io.save_volume(image_path, image_dtype, image)
 
