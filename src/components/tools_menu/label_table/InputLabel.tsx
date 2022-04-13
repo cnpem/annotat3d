@@ -39,6 +39,7 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
         const newVec = labelList.filter(lab => lab.id === 0);
         onLabelList(newVec);
         onNewLabelId(0); // This value resets the id generator
+        closeWarningWindow();
     }
 
     return(
@@ -49,10 +50,17 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
             message={"opa,bão ?"}
             buttons={[
                 {
+                    text: "Cancel",
+                    id: "cancel-button",
+                    handler: () => {
+                        closeWarningWindow();
+                    }
+                },
+                {
                     text: "Okay",
                     id: "confirm-button",
                     handler: () => {
-                        removeAllLabels()
+                        removeAllLabels();
                     }
                 }
             ]}/>
@@ -91,7 +99,9 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                 Add
             </IonButton>
 
-            <IonButton color="danger" size="small" slot={"end"} onClick={() => setOpenWarningWindow(true)}>
+            <IonButton color="danger" size="small" slot={"end"}
+                       disabled={props.labelList.length <= 1}
+                       onClick={() => setOpenWarningWindow(true)}>
                 <IonIcon icon={trashOutline} slot={"end"}/>
                 Delete all
             </IonButton>
