@@ -30,10 +30,10 @@ interface LabelEditProps{
 }
 
 interface WarningWindowInterface {
-    openWarningWindow: boolean
-    onOpenWarningWindow: (flag: boolean) => void;
+    showPopover: boolean;
+    onShowPopover: (showPop: boolean) => void;
 
-    label: LabelInterface
+    label: LabelInterface;
     labelNameTrigger: string;
     onChangeLabelList: (labels: LabelInterface) => void;
 }
@@ -52,12 +52,12 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
     }
 
     const exitPopup = () => {
-        props.onShowPopover(false)
+        props.onShowPopover(false);
     }
 
     const handleChangeNewLabelName = () => {
         props.onChangeLabelName(newLabelName, props.label.id);
-        props.onShowPopover(false)
+        props.onShowPopover(false);
     }
 
     return(
@@ -84,17 +84,18 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
 
 }
 
-const WarningDeleteWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
+const WarningDeleteWindow: React.FC<WarningWindowInterface> = ({showPopover,
                                                              labelNameTrigger,
-                                                             onOpenWarningWindow,
+                                                             onShowPopover,
                                                              label,
                                                              onChangeLabelList}) => {
 
-    const closeWarningWindow = () => {
-        onOpenWarningWindow(false);
+    const exitPopup = () => {
+        onShowPopover(false);
     }
 
-    const removeTheListElement = () => {
+    const handleChangeNewLabelName = () => {
+        onShowPopover(false);
         onChangeLabelList(label);
     }
 
@@ -102,18 +103,23 @@ const WarningDeleteWindow: React.FC<WarningWindowInterface> = ({openWarningWindo
         <Fragment>
             <IonPopover
                 trigger={labelNameTrigger}
-                isOpen={openWarningWindow}
-                onIonPopoverDidDismiss={closeWarningWindow}>
+                isOpen={showPopover}
+                onDidDismiss={exitPopup}>
 
                 <IonContent>
                     <IonItem>
-                        {label.labelName}
+                    </IonItem>
+
+                    <IonItem>
+                        <IonButton onClick={exitPopup}>Cancel</IonButton>
+                        <IonButton onClick={handleChangeNewLabelName}>Confirm</IonButton>
                     </IonItem>
                 </IonContent>
-            </IonPopover>
 
+            </IonPopover>
         </Fragment>
-    )
+    );
+
 }
 
 /**
@@ -141,19 +147,15 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
         setShowNamePopover(showPop);
     }
 
-    const removeTheListElement = () => {
-        props.onChangeLabelList(props.label);
-    }
-
     return(
         <IonButtons>
-            <IonButton hidden={props.label.id===0} size="small" onClick={() => setOpenWarningWindow(true)}>
+            <IonButton id={"delete-label-button-" + props.label.id} hidden={props.label.id===0} size="small" onClick={() => setOpenWarningWindow(true)}>
                 <IonIcon icon={closeOutline}/>
             </IonButton>
             <WarningDeleteWindow
-                    openWarningWindow={openWarningWindow}
+                    showPopover={openWarningWindow}
                     labelNameTrigger={"delete-label-button-" + props.label.id}
-                    onOpenWarningWindow={handleShowWarningWindow}
+                    onShowPopover={handleShowWarningWindow}
                     label={props.label}
                     onChangeLabelList={props.onChangeLabelList}/>
 
