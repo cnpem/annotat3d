@@ -19,68 +19,6 @@ interface OptionsProps{
     onChangeLabel: (newLabelName: string, labelId: number, color: [number, number, number]) => void;
 }
 
-/**
- * Component that creates the buttons in the table label
- */
-const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
-
-    const [showNamePopover, setShowNamePopover] = useState<boolean>(false);
-
-    const [showColorPopover, setShowColorPopover] = useState<boolean>(false);
-
-    const [color, setColor] = useStorageState<[number, number, number]>(
-        sessionStorage, 'labelColor.'+props.label.id, defaultColormap[props.label.id]
-    );
-
-    const handleNameEditClickButton = () => {
-        setShowNamePopover(true)
-    }
-
-    const handleNameEditShowPopover = (showPop: boolean) => {
-        setShowNamePopover(showPop);
-    }
-
-    const removeTheListElement = () => {
-        props.onChangeLabelList(props.label);
-    }
-
-    return(
-        <IonButtons>
-            <IonButton hidden={props.label.id===0} size="small" onClick={removeTheListElement}>
-                <IonIcon icon={closeOutline}/>
-            </IonButton>
-
-            <IonButton id={"edit-label-button-" + props.label.id} onClick={handleNameEditClickButton}>
-                <IonIcon icon={pencilOutline}/>
-            </IonButton>
-
-            <IonButton id={"edit-color-button-" + props.label.id} onClick={() => setShowColorPopover(true)}>
-                <IonIcon icon={colorPalette}/>
-            </IonButton>
-
-            <IonPopover
-                trigger={"edit-color-button-" + props.label.id} isOpen={showColorPopover}>
-                <ChromePicker color={`rgb(${color[0]},${color[1]},${color[2]})`}
-                    onChange={ (color: any) => {
-                        const colorTuple: [number, number, number] = [color.rgb.r, color.rgb.g, color.rgb.b];
-                        props.onChangeLabel(props.label.labelName, props.label.id, colorTuple);
-                        setColor(colorTuple);
-                    }} disableAlpha/>
-            </IonPopover>
-
-            <EditLabelNameComp
-                label={props.label}
-                labelNameTrigger={"edit-label-button-" + props.label.id}
-                showPopover={showNamePopover}
-                onChangeLabelName={(name, id) => props.onChangeLabel(name, id, props.label.color)}
-                onShowPopover={handleNameEditShowPopover}/>
-        </IonButtons>
-    );
-
-};
-
-export default OptionsIcons;
-
 interface LabelEditProps{
     label: LabelInterface;
     labelNameTrigger: string;
@@ -90,6 +28,16 @@ interface LabelEditProps{
 
     onChangeLabelName: (newLabelName: string, labelId: number) => void;
 }
+
+interface WarningWindowInterface {
+    openWarningWindow: boolean
+    onOpenWarningWindow: (flag: boolean) => void;
+
+    label: LabelInterface
+    labelNameTrigger: string;
+    onChangeLabelList: (labels: LabelInterface) => void;
+}
+
 
 /**
  * @param props
@@ -135,3 +83,107 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
     );
 
 }
+
+const WarningDeleteWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
+                                                             labelNameTrigger,
+                                                             onOpenWarningWindow,
+                                                             label,
+                                                             onChangeLabelList}) => {
+
+    const closeWarningWindow = () => {
+        onOpenWarningWindow(false);
+    }
+
+    const removeTheListElement = () => {
+        onChangeLabelList(label);
+    }
+
+    return(
+        <Fragment>
+            <IonPopover
+                trigger={labelNameTrigger}
+                isOpen={openWarningWindow}
+                onIonPopoverDidDismiss={closeWarningWindow}>
+
+                <IonContent>
+                    <IonItem>
+                        {label.labelName}
+                    </IonItem>
+                </IonContent>
+            </IonPopover>
+
+        </Fragment>
+    )
+}
+
+/**
+ * Component that creates the buttons in the table label
+ */
+const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
+
+    const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
+    const [showNamePopover, setShowNamePopover] = useState<boolean>(false);
+    const [showColorPopover, setShowColorPopover] = useState<boolean>(false);
+
+    const handleShowWarningWindow = (flag: boolean) => {
+        setOpenWarningWindow(flag);
+    }
+
+    const [color, setColor] = useStorageState<[number, number, number]>(
+        sessionStorage, 'labelColor.'+props.label.id, defaultColormap[props.label.id]
+    );
+
+    const handleNameEditClickButton = () => {
+        setShowNamePopover(true)
+    }
+
+    const handleNameEditShowPopover = (showPop: boolean) => {
+        setShowNamePopover(showPop);
+    }
+
+    const removeTheListElement = () => {
+        props.onChangeLabelList(props.label);
+    }
+
+    return(
+        <IonButtons>
+            <IonButton hidden={props.label.id===0} size="small" onClick={() => setOpenWarningWindow(true)}>
+                <IonIcon icon={closeOutline}/>
+            </IonButton>
+            <WarningDeleteWindow
+                    openWarningWindow={openWarningWindow}
+                    labelNameTrigger={"delete-label-button-" + props.label.id}
+                    onOpenWarningWindow={handleShowWarningWindow}
+                    label={props.label}
+                    onChangeLabelList={props.onChangeLabelList}/>
+
+            <IonButton id={"edit-label-button-" + props.label.id} onClick={handleNameEditClickButton}>
+                <IonIcon icon={pencilOutline}/>
+            </IonButton>
+
+            <IonButton id={"edit-color-button-" + props.label.id} onClick={() => setShowColorPopover(true)}>
+                <IonIcon icon={colorPalette}/>
+            </IonButton>
+
+            <IonPopover
+                trigger={"edit-color-button-" + props.label.id} isOpen={showColorPopover}>
+                <ChromePicker color={`rgb(${color[0]},${color[1]},${color[2]})`}
+                    onChange={ (color: any) => {
+                        const colorTuple: [number, number, number] = [color.rgb.r, color.rgb.g, color.rgb.b];
+                        props.onChangeLabel(props.label.labelName, props.label.id, colorTuple);
+                        setColor(colorTuple);
+                    }} disableAlpha/>
+            </IonPopover>
+
+            <EditLabelNameComp
+                label={props.label}
+                labelNameTrigger={"edit-label-button-" + props.label.id}
+                showPopover={showNamePopover}
+                onChangeLabelName={(name, id) => props.onChangeLabel(name, id, props.label.color)}
+                onShowPopover={handleNameEditShowPopover}/>
+        </IonButtons>
+    );
+
+};
+
+export default OptionsIcons;
