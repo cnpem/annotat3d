@@ -1,4 +1,4 @@
-import React, {Fragment, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
     IonButton, IonButtons, IonContent, IonIcon,
     IonInput, IonItem, IonPopover
@@ -29,16 +29,6 @@ interface LabelEditProps{
     onChangeLabelName: (newLabelName: string, labelId: number) => void;
 }
 
-interface WarningWindowInterface {
-    showPopover: boolean;
-    onShowPopover: (showPop: boolean) => void;
-
-    label: LabelInterface;
-    labelNameTrigger: string;
-    onChangeLabelList: (labels: LabelInterface) => void;
-}
-
-
 /**
  * @param props
  * @constructor
@@ -61,8 +51,7 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
     }
 
     return(
-        <Fragment>
-            <IonPopover
+        <IonPopover
                 trigger={props.labelNameTrigger}
                 isOpen={props.showPopover}
                 onDidDismiss={exitPopup}>
@@ -78,46 +67,7 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
                     </IonItem>
                 </IonContent>
 
-            </IonPopover>
-        </Fragment>
-    );
-
-}
-
-const WarningDeleteWindow: React.FC<WarningWindowInterface> = ({showPopover,
-                                                             labelNameTrigger,
-                                                             onShowPopover,
-                                                             label,
-                                                             onChangeLabelList}) => {
-
-    const exitPopup = () => {
-        onShowPopover(false);
-    }
-
-    const handleChangeNewLabelName = () => {
-        onShowPopover(false);
-        onChangeLabelList(label);
-    }
-
-    return(
-        <Fragment>
-            <IonPopover
-                trigger={labelNameTrigger}
-                isOpen={showPopover}
-                onDidDismiss={exitPopup}>
-
-                <IonContent>
-                    <IonItem>
-                    </IonItem>
-
-                    <IonItem>
-                        <IonButton onClick={exitPopup}>Cancel</IonButton>
-                        <IonButton onClick={handleChangeNewLabelName}>Confirm</IonButton>
-                    </IonItem>
-                </IonContent>
-
-            </IonPopover>
-        </Fragment>
+        </IonPopover>
     );
 
 }
@@ -127,13 +77,16 @@ const WarningDeleteWindow: React.FC<WarningWindowInterface> = ({showPopover,
  */
 const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
+    const [userDeleteOp, setUserDeleteOp] = useState<boolean>(false);
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
     const [showNamePopover, setShowNamePopover] = useState<boolean>(false);
     const [showColorPopover, setShowColorPopover] = useState<boolean>(false);
 
-    const handleShowWarningWindow = (flag: boolean) => {
-        setOpenWarningWindow(flag);
-    }
+    useEffect(() => {
+        if (userDeleteOp){
+            props.onChangeLabelList(props.label);
+        }
+    }, [userDeleteOp, props]);
 
     const [color, setColor] = useStorageState<[number, number, number]>(
         sessionStorage, 'labelColor.'+props.label.id, defaultColormap[props.label.id]
@@ -152,13 +105,6 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
             <IonButton id={"delete-label-button-" + props.label.id} hidden={props.label.id===0} size="small" onClick={() => setOpenWarningWindow(true)}>
                 <IonIcon icon={closeOutline}/>
             </IonButton>
-            <WarningDeleteWindow
-                    showPopover={openWarningWindow}
-                    labelNameTrigger={"delete-label-button-" + props.label.id}
-                    onShowPopover={handleShowWarningWindow}
-                    label={props.label}
-                    onChangeLabelList={props.onChangeLabelList}/>
-
             <IonButton id={"edit-label-button-" + props.label.id} onClick={handleNameEditClickButton}>
                 <IonIcon icon={pencilOutline}/>
             </IonButton>
@@ -177,12 +123,31 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                     }} disableAlpha/>
             </IonPopover>
 
+            <IonPopover
+                trigger={"delete-label-button-" + props.label.id}
+                isOpen={openWarningWindow}
+                onDidDismiss={() => setOpenWarningWindow(false)}>
+
+                <IonItem>
+                    <IonButton onClick={() => {
+                        setOpenWarningWindow(false);
+                        setUserDeleteOp(false);}}>
+                        Cancel
+                    </IonButton>
+                    <IonButton onClick={() => {
+                        setOpenWarningWindow(false);
+                        setUserDeleteOp(true);}}>Confirm</IonButton>
+                </IonItem>
+
+            </IonPopover>
+
             <EditLabelNameComp
                 label={props.label}
                 labelNameTrigger={"edit-label-button-" + props.label.id}
                 showPopover={showNamePopover}
                 onChangeLabelName={(name, id) => props.onChangeLabel(name, id, props.label.color)}
                 onShowPopover={handleNameEditShowPopover}/>
+
         </IonButtons>
     );
 
