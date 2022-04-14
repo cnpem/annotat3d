@@ -78,7 +78,7 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
 const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
     const [userDeleteOp, setUserDeleteOp] = useState<boolean>(false);
-    const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
+    const [showDeletePopUp, setShowDeletePopUp] = useState<boolean>(false);
     const [showNamePopover, setShowNamePopover] = useState<boolean>(false);
     const [showColorPopover, setShowColorPopover] = useState<boolean>(false);
 
@@ -102,7 +102,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
     return(
         <IonButtons>
-            <IonButton id={"delete-label-button-" + props.label.id} hidden={props.label.id===0} size="small" onClick={() => setOpenWarningWindow(true)}>
+            <IonButton id={"delete-label-button-" + props.label.id} hidden={props.label.id===0} size="small" onClick={() => setShowDeletePopUp(true)}>
                 <IonIcon icon={closeOutline}/>
             </IonButton>
             <IonButton id={"edit-label-button-" + props.label.id} onClick={handleNameEditClickButton}>
@@ -113,6 +113,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                 <IonIcon icon={colorPalette}/>
             </IonButton>
 
+            {/*Color popUp*/}
             <IonPopover
                 trigger={"edit-color-button-" + props.label.id} isOpen={showColorPopover}>
                 <ChromePicker color={`rgb(${color[0]},${color[1]},${color[2]})`}
@@ -123,31 +124,36 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                     }} disableAlpha/>
             </IonPopover>
 
+            {/*Delete popUp*/}
             <IonPopover
                 trigger={"delete-label-button-" + props.label.id}
-                isOpen={openWarningWindow}
-                onDidDismiss={() => setOpenWarningWindow(false)}>
+                isOpen={showDeletePopUp}
+                onDidDismiss={() => setShowDeletePopUp(false)}>
 
-                <IonItem>
-                    <IonButton onClick={() => {
-                        setOpenWarningWindow(false);
-                        setUserDeleteOp(false);}}>
-                        Cancel
-                    </IonButton>
-                    <IonButton onClick={() => {
-                        setOpenWarningWindow(false);
-                        setUserDeleteOp(true);}}>Confirm</IonButton>
-                </IonItem>
+                <IonContent>
+                    <IonItem>
+                        Do you wish to delete {props.label.labelName} ?
+                    </IonItem>
 
+                    <IonItem>
+                        <IonButton onClick={() => {
+                            setShowDeletePopUp(false);
+                            setUserDeleteOp(false);}}>Cancel</IonButton>
+
+                        <IonButton onClick={() => {
+                            setShowDeletePopUp(false);
+                            setUserDeleteOp(true);}}>Confirm</IonButton>
+                    </IonItem>
+                </IonContent>
             </IonPopover>
 
+            {/*Edit Label component*/}
             <EditLabelNameComp
                 label={props.label}
                 labelNameTrigger={"edit-label-button-" + props.label.id}
                 showPopover={showNamePopover}
                 onChangeLabelName={(name, id) => props.onChangeLabel(name, id, props.label.color)}
                 onShowPopover={handleNameEditShowPopover}/>
-
         </IonButtons>
     );
 
