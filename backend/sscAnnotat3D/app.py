@@ -7,7 +7,7 @@ import numpy as np
 import skimage.io
 from flask import *
 
-from sscAnnotat3D.api import annotation, io as apiio, superpixel, remotevis, image as apiimage
+from sscAnnotat3D.api import annotation, filters, io as apiio, superpixel, remotevis, image as apiimage
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import superpixels, utils
 from sscAnnotat3D.modules import superpixel_segmentation_module
@@ -31,6 +31,7 @@ app.register_blueprint(superpixel.app)
 app.register_blueprint(remotevis.app)
 app.register_blueprint(apiimage.app)
 app.register_blueprint(apisuperpixel_segmentation_module.app)
+app.register_blueprint(filters.app)
 
 image = None
 image_path = None

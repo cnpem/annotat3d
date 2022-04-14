@@ -11,8 +11,9 @@ import './Page.css';
 import CanvasContainer from '../components/canvas/CanvasContainer';
 import {build} from "ionicons/icons";
 
-import {useEventBus} from '../utils/eventbus';
+import {dispatch, useEventBus} from '../utils/eventbus';
 import {SliceInfoInterface} from "../components/tools_menu/SliceInfoInterface";
+import {sfetch} from "../utils/simplerequest";
 
 /**
  * Module that contains the initial page of Annotat3D web
@@ -25,8 +26,18 @@ const Page: React.FC = () => {
 
     const [sliceInfo, setSliceInfo] = useState<SliceInfoInterface>({axis: 'XY', slice: 0});
 
+    const [canvasMode, setCanvasMode] = useState<'drawing' | 'imaging'>('drawing');
+
     useEventBus('sliceChanged', (payload: SliceInfoInterface) => {
         setSliceInfo(payload);
+        sfetch('POST', '/close_image/future')
+        .then(() => {
+            dispatch('futureChanged', null)
+        });
+    });
+
+    useEventBus('canvasModeChanged', (mode) => {
+        setCanvasMode(mode);
     });
 
     return (
@@ -51,7 +62,8 @@ const Page: React.FC = () => {
                         <IonTitle size="large">{name}</IonTitle>
                     </IonToolbar>
                 </IonHeader>
-                <CanvasContainer axis={sliceInfo.axis} slice={sliceInfo.slice}/>
+                <CanvasContainer canvasMode={canvasMode}
+                    axis={sliceInfo.axis} slice={sliceInfo.slice}/>
             </IonContent>
 
             <IonFooter>

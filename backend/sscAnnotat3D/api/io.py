@@ -10,51 +10,22 @@ from flask_cors import cross_origin
 
 app = Blueprint('io', __name__)
 
+
 @app.errorhandler(BadRequest)
 def handle_exception(error_msg: str):
     return jsonify({"error_msg": error_msg}), 400
+
 
 app.register_error_handler(400, handle_exception)
 
 def _convert_dtype_to_str(dtype: np.dtype):
 
-    if (dtype == "uint8"):
-        return "uint8"
-
-    if (dtype == "int16"):
-        return "int16"
-
-    if (dtype == "uint16"):
-        return "uint16"
-
-    if (dtype == "int32"):
-        return "int32"
-
-    if (dtype == "uint32"):
-        return "uint32"
-
-    if (dtype == "int64"):
-        return "int64"
-
-    if (dtype == "uint64"):
-        return "uint64"
-
-    if (dtype == "float32"):
-        return "float32"
-
-    if (dtype == "float64"):
-        return "float64"
-
-    if (dtype == "complex64"):
-        return "complex64"
-
-    return ""
+    return np.dtype(dtype).name
 
 
 @app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()
 def open_image(image_id: str):
-
     try:
         image_path = request.json["image_path"]
     except:
@@ -72,7 +43,7 @@ def open_image(image_id: str):
         return handle_exception("Empty path isn't valid !")
 
     raw_extensions = [".raw", ".b"]
-    tif_extensions = [".tif", ".tiff"]
+    tif_extensions = [".tif", ".tiff", ".npy", ".cbf"]
 
     extensions = [*raw_extensions, *tif_extensions]
 
@@ -94,7 +65,8 @@ def open_image(image_id: str):
                                                dtype=image_dtype)
 
             error_msg = "Unable to reshape the volume {} into shape {} and type {}. " \
-                        "Please change the dtype and shape and load the image again".format(file, request.json["image_raw_shape"],
+                        "Please change the dtype and shape and load the image again".format(file, request.json[
+                "image_raw_shape"],
                                                                                             image_dtype)
         image_shape = image.shape
         image_dtype = _convert_dtype_to_str(dtype=image.dtype)
@@ -107,12 +79,11 @@ def open_image(image_id: str):
     return jsonify(image_info)
 
 
-@app.route("/close_image", methods=["POST"])
+@app.route("/close_image/<image_id>", methods=["POST"])
 @cross_origin()
-def close_image():
-
+def close_image(image_id: str):
     try:
-        data_repo.delete_image(key='image')
+        data_repo.delete_image(key=image_id)
     except:
         return handle_exception("failure trying to delete the image")
 
