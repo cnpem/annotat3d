@@ -13,9 +13,9 @@ from flask_cors import cross_origin
 app = Blueprint('annotation', __name__)
 
 
-@app.route("/new_annot", methods=["POST"])
+@app.route("/new_annot/<annot_id>", methods=["POST"])
 @cross_origin()
-def new_annot():
+def new_annot(annot_id: str):
     annot = {}
     annot_path = ""
 
@@ -25,16 +25,23 @@ def new_annot():
 
     annot_module = annotation_module.AnnotationModule(img.shape)
 
-    module_repo.set_module('annotation', module=annot_module)
+    module_repo.set_module(annot_id, module=annot_module)
 
     return "success", 200
 
 
-@app.route("/is_available_annot", methods=["POST"])
+@app.route("/is_available_annot/<annot_id>", methods=["POST"])
 @cross_origin
-def is_available_annot():
-    annot = data_repo.get_annotation()
-    return jsonify({'available': annot is not None})
+def is_available_annot(annot_id: str):
+    annot = module_repo.get_module(annot_id)
+
+    available = True
+    if annot is None:
+        available = False
+    if not isinstance(annot, annotation_module.AnnotationModule):
+        available = False
+
+    return jsonify({'available': available})
 
 
 @app.route("/open_annot", methods=["POST"])

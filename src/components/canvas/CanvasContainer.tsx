@@ -697,22 +697,25 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
     }
 
-    fetchAllDebounced = debounce( (recenter: boolean = false) => {
+    fetchAll =  (recenter: boolean = false) => {
         console.log("update ...", this.props.slice);
-        this.getImageSlice()
-        .then(() => {
-            if (recenter) {
-                this.canvas!.recenter();
-            }
-            this.getSuperpixelSlice();
-            this.getAnnotSlice();
-            this.getLabelSlice();
-            this.getFutureSlice();
+        return this.getImageSlice()
+            .then(() => {
+                if (recenter) {
+                    this.canvas!.recenter();
+                }
+                this.getSuperpixelSlice();
+                this.getAnnotSlice();
+                this.getLabelSlice();
+                this.getFutureSlice();
         });
-    }, 250);
+    }
+
+
+    fetchAllDebounced = debounce(this.fetchAll, 250);
 
     newAnnotation() {
-        sfetch('POST', '/new_annot');
+        sfetch('POST', '/new_annot/annotation');
         console.log("new annotation, hue");
     }
 
@@ -808,7 +811,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas!.resize();
             });
 
-            this.fetchAllDebounced(true);
+
+            this.fetchAll(true);
 
             this.onLabelSelected = (payload: any) => {
                 console.log(payload);
@@ -818,7 +822,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
             this.onImageLoaded = () => {
                 console.log('onImageLoaded');
-                this.fetchAllDebounced(true);
+                const promise = this.fetchAll(true);
+                console.log(promise);
+                promise?.then(() => {
+                        this.newAnnotation();
+                    });
             };
 
             this.onSuperpixelChanged = () => {
