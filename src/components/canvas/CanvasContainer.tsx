@@ -332,8 +332,6 @@ class Canvas {
             // canvas.brush.cursor.visible = false;
         }
 
-        console.log("down");
-
         this.isPainting = true;
 
         this.prevPosition = this.viewport.toWorld(event.data.global);
@@ -370,29 +368,31 @@ class Canvas {
 
         this.viewport.plugins.resume('drag');
 
+        if (!this.isPainting)
+            return;
+
         const currPosition = this.viewport.toWorld(event.data.global);
         this.prevPosition = currPosition;
 
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
-        if (this.isPainting) {
-            const data = {
-                'coords': this.pointsBuffer,
-                'slice': this.sliceNum,
-                'axis': this.axis,
-                'size': this.brush.size,
-                'label': this.brush.label,
-                'mode': this.brush_mode,
-            };
-            sfetch('POST', '/draw', JSON.stringify(data))
-                .then((success)=>{
-                    console.log(success);
-                    dispatch("annotationChanged", null);
-                })
-                .catch((error)=>{
-                    console.log(error);
-                });
-        }
+
+        const data = {
+            'coords': this.pointsBuffer,
+            'slice': this.sliceNum,
+            'axis': this.axis,
+            'size': this.brush.size,
+            'label': this.brush.label,
+            'mode': this.brush_mode,
+        };
+        sfetch('POST', '/draw', JSON.stringify(data))
+        .then((success)=>{
+            console.log(success);
+            dispatch("annotationChanged", null);
+        })
+        .catch((error)=>{
+            console.log(error);
+        });
 
         this.pointsBuffer = [];
 
@@ -700,14 +700,14 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     fetchAll =  (recenter: boolean = false) => {
         console.log("update ...", this.props.slice);
         return this.getImageSlice()
-            .then(() => {
-                if (recenter) {
-                    this.canvas!.recenter();
-                }
-                this.getSuperpixelSlice();
-                this.getAnnotSlice();
-                this.getLabelSlice();
-                this.getFutureSlice();
+        .then(() => {
+            if (recenter) {
+                this.canvas!.recenter();
+            }
+            this.getSuperpixelSlice();
+            this.getAnnotSlice();
+            this.getLabelSlice();
+            this.getFutureSlice();
         });
     }
 
@@ -825,8 +825,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 const promise = this.fetchAll(true);
                 console.log(promise);
                 promise?.then(() => {
-                        this.newAnnotation();
-                    });
+                    this.newAnnotation();
+                });
             };
 
             this.onSuperpixelChanged = () => {
