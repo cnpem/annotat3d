@@ -85,8 +85,23 @@ function sfetch(method, url, data = '', responseType = '') {
             'Content-Type': 'application/json'
         },
         body: data
-    }).then(function(response) { 
-        console.log(response);
+    }).then(async function(response) {
+
+        if (!response.ok) {
+            let error = await response.text();
+            try {
+                error = JSON.parse(error);
+            } catch {
+                error = {
+                    error: error
+                };
+            }
+            error.status = response.status;
+            console.log(url, error);
+            return Promise.reject(error);
+        }
+
+        console.log('hue', response);
         switch (responseType) {
             case 'gzip/numpyndarray':
                 const responseNumpy = responseToNdArray(response);

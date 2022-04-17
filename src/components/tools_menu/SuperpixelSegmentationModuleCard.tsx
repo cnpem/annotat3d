@@ -136,6 +136,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         setPrevFeatParams(null);
     });
 
+    useEventBus('ImageLoaded', () => {
+        setPrevFeatParams(null);
+    });
+
     function getModuleBackendParams() {
         const params = {
             classifier_params: {

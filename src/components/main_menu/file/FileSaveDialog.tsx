@@ -108,27 +108,21 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         sfetch("POST", "/save_image/"+saveImgOp, JSON.stringify(params), "json").then(
             (image) => {
 
-                if(image.hasOwnProperty("image_shape")){
-
-                    const info: ImageInfoInterface = {
-                        imageShape: image.image_shape,
-                        imageDtype: image.image_dtype,
-                        imageName: image.image_name,
-                        imageExt: image.image_ext,
-                    }
-
-                    setShowErrorWindow(false);
-                    dispatch("SaveImage", info);
-                    setShowPopover({...showPopover, open: false});
-                    showToast(`image saved in ${image.image_name}${image.image_ext}`, 2000);
-
-                } else {
-                    setShowErrorWindow(true);
-                    throw new Error(image.error_msg, image);
+                const info: ImageInfoInterface = {
+                    imageShape: image.image_shape,
+                    imageDtype: image.image_dtype,
+                    imageName: image.image_name,
+                    imageExt: image.image_ext,
                 }
 
+                setShowErrorWindow(false);
+                dispatch("SaveImage", info);
+                setShowPopover({...showPopover, open: false});
+                showToast(`image saved in ${image.image_name}${image.image_ext}`, 2000);
+
             }).catch(error => {
-                setErrorMsg(error.message);
+                setShowErrorWindow(true);
+                setErrorMsg(error.error_msg);
             })
     }
 

@@ -1,11 +1,11 @@
 
 
 import {TextFieldTypes} from '@ionic/core';
-import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox } from '@ionic/react';
+import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonAlert } from '@ionic/react';
 import {isEqual} from 'lodash';
 import {Fragment, useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
-import {currentEventValue} from '../../utils/eventbus';
+import {currentEventValue, useEventBus} from '../../utils/eventbus';
 import {dispatch} from '../../utils/eventbus';
 import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem } from './ModuleCard';
@@ -85,6 +85,8 @@ interface FeatureParams {
 
 const PixelSegmentationModuleCard: React.FC = () => {
 
+    const [present] = useIonAlert();
+
     const [prevFeatParams, setPrevFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'pixelPrevFeatParams');
 
     const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'pixelFeatParams', {
@@ -109,6 +111,9 @@ const PixelSegmentationModuleCard: React.FC = () => {
         setHasPreprocessed(!hasChanged);
     }, [featParams, prevFeatParams, setHasPreprocessed]);
 
+    useEventBus('ImageLoaded', () => {
+        setPrevFeatParams(null);
+    });
 
     function getModuleBackendParams() {
         const params = {
@@ -136,6 +141,12 @@ const PixelSegmentationModuleCard: React.FC = () => {
         .then(() => {
             dispatch('labelChanged', '');
         })
+        .catch(error => {
+            present({
+                header: error.error,
+                message: error.error_msg
+            });
+        })
         .finally(() => {
             setDisabled(false);
         });
@@ -154,6 +165,12 @@ const PixelSegmentationModuleCard: React.FC = () => {
         sfetch('POST', '/pixel_segmentation_module/preview', JSON.stringify(curSlice))
         .then(() => {
             dispatch('labelChanged', '');
+        })
+        .catch((error) => {
+            present({
+                header: error.error,
+                message: error.error_msg
+            });
         })
         .finally(() => {
             setDisabled(false);

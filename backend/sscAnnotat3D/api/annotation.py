@@ -114,6 +114,10 @@ def draw():
     axis_dim = utils.get_axis_num(axis)
 
     annot_module = module_repo.get_module('annotation')
+    
+    if annot_module is None:
+        return "Annotation module not found", 400
+
     annot_module.set_current_axis(axis_dim)
     annot_module.set_current_slice(slice_num)
     annot_module.set_radius(size // 2)

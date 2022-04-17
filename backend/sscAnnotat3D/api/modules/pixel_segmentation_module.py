@@ -140,8 +140,15 @@ def preview():
     if not segm_module.has_preview():
         return "This module does not have a preview", 400
 
-    label = segm_module.preview(annotations, [slice_num], axis_dim)
-
+    try:
+        label = segm_module.preview(annotations, [slice_num], axis_dim)
+    except Exception as e:
+        import traceback
+        stack_trace = traceback.format_exc()
+        return jsonify({
+            'error': 'Failure on Pixel Segmentation Preview',
+            'error_msg': stack_trace
+        }), 500
     data_repo.set_image('label', label)
 
     return "success", 200
@@ -158,7 +165,15 @@ def execute():
     if segm_module is None:
         return "Not a valid segmentation module", 400
 
-    label = segm_module.execute(annotations)
+    try:
+        label = segm_module.execute(annotations)
+    except Exception as e:
+        import traceback
+        stack_trace = traceback.format_exc()
+        return jsonify({
+            'error': 'Failure on Pixel Segmentation Apply',
+            'error_msg': stack_trace
+        }), 500
 
     # print(label.mean(), label.shape)
 
