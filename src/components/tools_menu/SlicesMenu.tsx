@@ -9,7 +9,7 @@ import {ImageShapeInterface} from './ImageShapeInterface';
 import {dispatch} from '../../utils/eventbus';
 import {SliceInfoInterface} from "./SliceInfoInterface";
 import {useStorageState} from "react-storage-hooks";
-import {Fragment, useEffect} from "react";
+import {Fragment, useEffect, useState} from "react";
 
 interface SlicesMenuProps{
     imageShape: ImageShapeInterface;
@@ -29,6 +29,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
     const [sliceName, setSliceName] = useStorageState<'XY' | 'XZ' | 'YZ'>(sessionStorage, 'sliceName', "XY");
     const [sliceValue, setSliceValue] = useStorageState<number>(sessionStorage, 'sliceValue', 0);
+    const [activateMenu, setActivateMenu] = useState<boolean>(true);
 
     const maxValSlider: Record<'XY'|'XZ'|'YZ', number> = {
         'XY': props.imageShape.z - 1,
@@ -86,7 +87,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             </IonSegment>
 
             <IonItem>
-                <IonRange min={0} max={maxValSlider[sliceName]} pin={true} value={sliceValue} onIonChange={handleSliceValue}>
+                <IonRange min={0} max={maxValSlider[sliceName]} pin={true} value={sliceValue} onIonChange={handleSliceValue} disabled={activateMenu}>
                     <IonIcon size={"small"} slot={"start"} icon={albumsOutline}/>
                 </IonRange>
             </IonItem>
