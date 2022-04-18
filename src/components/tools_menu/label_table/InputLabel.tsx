@@ -1,5 +1,5 @@
-import React from "react";
-import {IonButton, IonIcon} from "@ionic/react";
+import React, {useState} from "react";
+import {IonAlert, IonButton, IonIcon} from "@ionic/react";
 import { LabelInterface } from "./LabelInterface";
 import {colorFromId} from '../../../utils/colormap';
 
@@ -16,6 +16,57 @@ interface InputLabelProps {
     onNewLabelId: (id: number) => void;
 }
 
+interface WarningWindowInterface {
+    openWarningWindow: boolean
+    onOpenWarningWindow: (flag: boolean) => void;
+
+    labelList: LabelInterface[];
+    onLabelList: (labels: LabelInterface[]) => void;
+    onNewLabelId: (id: number) => void;
+}
+
+const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
+                                                             onOpenWarningWindow,
+                                                             labelList,
+                                                             onLabelList,
+                                                             onNewLabelId}) => {
+
+    const closeWarningWindow = () => {
+        onOpenWarningWindow(false);
+    }
+
+    const removeAllLabels = () => {
+        const newVec = labelList.filter(lab => lab.id === 0);
+        onLabelList(newVec);
+        onNewLabelId(0); // This value resets the id generator
+        closeWarningWindow();
+    }
+
+    return(
+        <IonAlert
+            isOpen={openWarningWindow}
+            onDidDismiss={closeWarningWindow}
+            header={"Deleting all labels"}
+            message={"Do you wish to delete all labels ?"}
+            buttons={[
+                {
+                    text: "No",
+                    id: "no-button",
+                    handler: () => {
+                        closeWarningWindow();
+                    }
+                },
+                {
+                    text: "Yes",
+                    id: "yes-button",
+                    handler: () => {
+                        removeAllLabels();
+                    }
+                }
+            ]}/>
+    )
+}
+
 /**
  * This component creates the option for add any label in the label section
  * @param props a list that contains the toolbar components
@@ -23,6 +74,12 @@ interface InputLabelProps {
  * @return This function returns a window for the user add a label name and color a vector with this new label
  */
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
+
+    const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
+
+    const handleShowWarningWindow = (flag: boolean) => {
+        setOpenWarningWindow(flag);
+    }
 
     const addNewLabel = () => {
         const newColor = colorFromId(props.colors, props.newLabelId); 
@@ -35,12 +92,6 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         props.onNewLabelId(props.newLabelId);
     }
 
-    const removeAllLabels = () => {
-        const newVec = props.labelList.filter(lab => lab.id === 0);
-        props.onLabelList(newVec);
-        props.onNewLabelId(0); // This value resets the id generator
-    }
-
     return(
         <div style={ {display: "flex", justifyContent: "flex-end"} }>
             <IonButton size="small" onClick={addNewLabel}>
@@ -48,10 +99,21 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                 Add
             </IonButton>
 
-            <IonButton color="danger" size="small" slot={"end"} onClick={removeAllLabels}>
+            <IonButton color="danger" size="small" slot={"end"}
+                       disabled={props.labelList.length <= 1}
+                       onClick={() => setOpenWarningWindow(true)}>
                 <IonIcon icon={trashOutline} slot={"end"}/>
                 Delete all
             </IonButton>
+            {(openWarningWindow) ?
+                <WarningWindow
+                    openWarningWindow={openWarningWindow}
+                    onOpenWarningWindow={handleShowWarningWindow}
+                    labelList={props.labelList}
+                    onLabelList={props.onLabelList}
+                    onNewLabelId={props.onNewLabelId}/> :
+                <></>
+            }
         </div>
     );
 };

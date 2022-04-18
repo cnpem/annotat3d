@@ -58,11 +58,7 @@ def open_annot():
     except:
         return "Error while trying to get the annotation path", 400
 
-    with open(annot_path, "rb") as f:
-        annot = pickle.load(f)
-    print("annot", len(annot))
-
-    annot_module.annotation = annot
+    annot_module.load_annotation(annot_path)
     module_repo.set_module('annotation', module=annot_module)
 
     return "success", 200
@@ -73,11 +69,11 @@ def open_annot():
 def close_annot():
     try:
         annot_module = module_repo.get_module('annotation')
-        annot_module.annotation = {}
+        annot_module.erase_all_markers()
     except:
-        return "failure", 400
+        return "Failed to erase all markers", 400
 
-    return "success", 200
+    return "All markers erased successfully", 200
 
 
 @app.route("/save_annot", methods=["POST"])
@@ -133,11 +129,7 @@ def draw():
 @app.route("/get_annot_slice", methods=["POST"])
 @cross_origin()
 def get_annot_slice():
-    # annot = data_repo.get_annotation()
     image = data_repo.get_image()
-
-    # if annot is None:
-    #     return "failure", 400
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]

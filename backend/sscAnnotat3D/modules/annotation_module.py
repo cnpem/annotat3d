@@ -565,7 +565,8 @@ class AnnotationModule():
 
         # updating the current marker id
         marker_ids = aux_functions.get_marker_ids(self.annotation)
-        self.current_mk_id = max(self.current_mk_id, max(marker_ids) if len(marker_ids) > 0 else 0)
+        for marker in marker_ids:
+            self.order_markers.add(marker)
 
         for i in sorted(labels):
             if i not in self.added_labels:
