@@ -134,7 +134,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard>
+            <IonCard disabled={activateMenuOp}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Show Annotations</IonLabel>
