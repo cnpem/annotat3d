@@ -13,14 +13,12 @@ interface MenuButtonProps {
     onChange?: (button: ButtonProps) => void;
     openSide: 'top' | 'bottom' | 'start' | 'end';
     hidden?: boolean;
-};
+}
 
 const MenuFabButton: React.FC<MenuButtonProps> = ({value, buttonsList, onChange, openSide, hidden}) => {
 
     const [selected, setSelected] = useState(buttonsList.find(b => b.id === value)
                                              || buttonsList[0]);
-
-
 
     return (
         <div hidden={hidden}>

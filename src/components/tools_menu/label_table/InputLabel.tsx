@@ -7,6 +7,8 @@ import {colorFromId} from '../../../utils/colormap';
 import {addOutline, trashOutline} from "ionicons/icons";
 
 import './OptionsIcons.css';
+import {sfetch} from "../../../utils/simplerequest";
+import {dispatch} from "../../../utils/eventbus";
 
 interface InputLabelProps {
     colors: [number, number, number][];
@@ -39,6 +41,12 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
         const newVec = labelList.filter(lab => lab.id === 0);
         onLabelList(newVec);
         onNewLabelId(0); // This value resets the id generator
+
+        sfetch("POST", "/close_annot", "").then(
+            () => {
+                dispatch('annotationChanged', null);
+            });
+
         closeWarningWindow();
     }
 

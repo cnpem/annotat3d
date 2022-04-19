@@ -12,7 +12,7 @@ const AnnotationCard : React.FC = () => {
         .then(() => {
             dispatch('annotationChanged', null);
         });
-    };
+    }
 
     return(
         <IonCard>
