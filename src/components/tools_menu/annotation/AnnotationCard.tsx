@@ -1,12 +1,19 @@
-import React from "react";
+import React, {useState} from "react";
 import {IonButton, IonCard, IonCardContent, IonIcon} from "@ionic/react";
 import {arrowUndoOutline} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
-import {dispatch} from "../../../utils/eventbus";
+import {dispatch, useEventBus} from "../../../utils/eventbus";
 import AnnotationLoadDialog from "./AnnotationLoadDialog";
 import AnnotationSaveDialog from "./AnnotationSaveDialog";
 
 const AnnotationCard : React.FC = () => {
+
+    const [activateMenu, setActivateMenu] = useState<boolean>(true);
+
+    useEventBus("ActivateSliceMenu", (activateSliceMenu) => {
+        setActivateMenu(activateSliceMenu);
+    })
+
     function undoAnnotation() {
         sfetch('POST', '/undo_annot', '')
         .then(() => {
@@ -22,7 +29,7 @@ const AnnotationCard : React.FC = () => {
 
                         <AnnotationSaveDialog/>
 
-                        <IonButton color="danger" size="small"
+                        <IonButton color="danger" size="small" disabled={activateMenu}
                             onClick={ () => {
                                 undoAnnotation();
                             }}>

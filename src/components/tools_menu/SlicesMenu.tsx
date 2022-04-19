@@ -70,10 +70,8 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         });
     })
 
-    useEventBus("ActivateSliceMenu", (bla) => {
-        console.log("\n---------------------------\n");
-        console.log("bla : ", bla);
-        console.log("\n---------------------------\n");
+    useEventBus("ActivateSliceMenu", (activateSliceMenu) => {
+        setActivateMenu(activateSliceMenu);
     })
 
     return(

@@ -7,6 +7,7 @@ import {colorFromId} from '../../../utils/colormap';
 import {addOutline, trashOutline} from "ionicons/icons";
 
 import './OptionsIcons.css';
+import {useEventBus} from "../../../utils/eventbus";
 
 interface InputLabelProps {
     colors: [number, number, number][];
@@ -76,6 +77,11 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
+    const [activateMenu, setActivateMenu] = useState<boolean>(true);
+
+    useEventBus("ActivateSliceMenu", (activateAddLabelButton) => {
+        setActivateMenu(activateAddLabelButton);
+    })
 
     const handleShowWarningWindow = (flag: boolean) => {
         setOpenWarningWindow(flag);
@@ -94,7 +100,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     return(
         <div style={ {display: "flex", justifyContent: "flex-end"} }>
-            <IonButton size="small" onClick={addNewLabel}>
+            <IonButton size="small" onClick={addNewLabel} disabled={activateMenu}>
                 <IonIcon icon={addOutline} slot={"end"}/>
                 Add
             </IonButton>

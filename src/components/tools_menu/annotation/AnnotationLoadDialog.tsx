@@ -12,7 +12,7 @@ import {
 
 import {folderOpenOutline} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
-import {dispatch} from "../../../utils/eventbus";
+import {dispatch, useEventBus} from "../../../utils/eventbus";
 
 const AnnotationLoadDialog : React.FC = () => {
     // Init States
@@ -22,6 +22,11 @@ const AnnotationLoadDialog : React.FC = () => {
     });
     const [showToast,] = useIonToast();
     const [path, setPath] = useState<string>("");
+    const [activateMenu, setActivateMenu] = useState<boolean>(true);
+
+    useEventBus("ActivateSliceMenu", (activateAnnotationMenu) => {
+        setActivateMenu(activateAnnotationMenu);
+    })
 
     const handleAnnotationLoad = () => {
 
@@ -71,7 +76,7 @@ const AnnotationLoadDialog : React.FC = () => {
                 </IonButton>
             </IonPopover>
             {/* Load Button */}
-            <IonButton size="small"
+            <IonButton size="small" disabled={activateMenu}
                 onClick={ (e) => setShowPopover({open: true, event: e.nativeEvent }) }
             >
                 <IonIcon slot="end" icon={folderOpenOutline}/>
