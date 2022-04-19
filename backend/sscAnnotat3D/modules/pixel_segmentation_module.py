@@ -24,10 +24,8 @@ from sklearn.utils import assert_all_finite, parallel_backend
 
 from sscAnnotat3D import aux_functions as functions
 from sscAnnotat3D import progressbar, utils
-from sscAnnotat3D.classifier_segmentation_module import \
+from .classifier_segmentation_module import \
     ClassifierSegmentationModule
-from sscAnnotat3D.widgets_parameters import SuperpixelSegmentationParamWidget
-
 
 class PixelSegmentationModule(ClassifierSegmentationModule):
     _module_name = "PixelSegmentationModule"
@@ -205,7 +203,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                 max_coord = np.array(self._image.shape, dtype='int32') - 1
 
                 preview_bounding_box = self._preview_bounding_box(annotations, selected_slices, selected_axis)
-                
                 image_params['preview_bounding_box'] = preview_bounding_box
                 sentry_sdk.set_context('Image Params', image_params)
 

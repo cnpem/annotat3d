@@ -120,31 +120,25 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         }
 
         sfetch("POST", "/open_image/"+loadImgOp, JSON.stringify(params), "json")
-            .then((image) => {
+        .then((image) => {
 
-                if(image.hasOwnProperty("image_shape")) {
+            const info: ImageInfoInterface = {
+                imageShape: image["image_shape"],
+                imageDtype: image["image_dtype"],
+                imageName: image["image_name"],
+                imageExt: image["image_ext"],
+            }
 
-                    const info: ImageInfoInterface = {
-                        imageShape: image.image_shape,
-                        imageDtype: image.image_dtype,
-                        imageName: image.image_name,
-                        imageExt: image.image_ext,
-                    }
+            setShowErrorWindow(false);
+            dispatch("ImageLoaded", info);
+            dispatch("ActivateComponents", false);
+            setShowPopover({...showPopover, open: false});
+            showToast(`Loaded ${image["image_name"]}${image["image_ext"]}`, 2000);
 
-                    setShowErrorWindow(false);
-                    dispatch("ImageLoaded", info);
-                    dispatch("ActivateComponents", false);
-                    setShowPopover({...showPopover, open: false});
-                    showToast(`Loaded ${image.image_name}${image.image_ext}`, 2000);
-
-                } else {
-                    setShowErrorWindow(true);
-                    throw new Error(image["error_msg"]);
-                }
-
-            }).catch(error => {
-                setErrorMsg(error.message);
-            })
+        }).catch(error => {
+            setShowErrorWindow(true);
+            setErrorMsg(error["error_msg"]);
+        })
 
     }
 
