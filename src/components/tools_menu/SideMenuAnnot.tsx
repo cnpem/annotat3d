@@ -10,7 +10,6 @@ import AnnotationCard from "./annotation/AnnotationCard";
 
 /**
  * Component that creates the lateral bar menu
- * @todo i need to make this component more small
  * @constructor
  * @return this function return a list of all lateral components
  */

@@ -72,7 +72,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
     return(
         <Fragment>
-            <IonSegment value={sliceName} onIonChange={handleSliceName}>
+            <IonSegment value={sliceName} onIonChange={handleSliceName} disabled={activateMenu}>
                 <IonSegmentButton value={"XY"}>
                     <IonLabel>{"XY"}</IonLabel>
                 </IonSegmentButton>

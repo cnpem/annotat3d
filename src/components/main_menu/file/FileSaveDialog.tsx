@@ -124,7 +124,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
 
                 } else {
                     setShowErrorWindow(true);
-                    throw new Error(image.error_msg, image);
+                    throw new Error(image["error_msg"]);
                 }
 
             }).catch(error => {

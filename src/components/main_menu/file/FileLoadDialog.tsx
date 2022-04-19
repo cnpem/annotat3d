@@ -137,10 +137,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                     showToast(`Loaded ${image.image_name}${image.image_ext}`, 2000);
 
                 } else {
-
                     setShowErrorWindow(true);
-                    throw new Error(image.error_msg, image);
-
+                    throw new Error(image["error_msg"]);
                 }
 
             }).catch(error => {
