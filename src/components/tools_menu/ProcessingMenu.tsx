@@ -40,7 +40,7 @@ const ProcessingMenu: React.FC = () => {
 
     return (
         <Fragment>
-            <IonCard>
+            <IonCard disabled={activateMenu}>
                 <IonItem color="primary">
                     <IonLabel>Module</IonLabel>
                     <GroupSelect value={curModule} id="module-select" options={moduleOptions}

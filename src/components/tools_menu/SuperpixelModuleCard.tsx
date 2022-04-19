@@ -1,9 +1,8 @@
 import { IonItem, IonLabel, IonInput, IonSelect, IonSelectOption } from '@ionic/react';
 import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem} from './ModuleCard';
-import {dispatch} from '../../utils/eventbus';
+import {dispatch, useEventBus} from '../../utils/eventbus';
 import {useStorageState} from 'react-storage-hooks';
-import {useState} from "react";
 
 interface SuperpixelState {
     compactness: number;
@@ -20,7 +19,11 @@ const SuperpixelModuleCard: React.FC = () => {
         method: 'waterpixels'
     });
 
-    const [disabled, setDisabled] = useState<boolean>(false);
+    const [disabled, setDisabled] = useStorageState<boolean>(sessionStorage, "ActivateComponents", false);
+
+    useEventBus("ActivateComponents", (activateMenu) => {
+        setDisabled(activateMenu);
+    })
 
     function onApply() {
         setDisabled(true);
