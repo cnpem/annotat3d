@@ -1,11 +1,9 @@
-
-
 import { IonItem, IonLabel, IonInput, IonSelect, IonSelectOption } from '@ionic/react';
-import {useState} from 'react';
 import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem} from './ModuleCard';
 import {dispatch} from '../../utils/eventbus';
 import {useStorageState} from 'react-storage-hooks';
+import {useState} from "react";
 
 interface SuperpixelState {
     compactness: number;
@@ -33,7 +31,6 @@ const SuperpixelModuleCard: React.FC = () => {
         };
         sfetch('POST', '/superpixel', JSON.stringify(params))
         .then(() => {
-            console.log('computed superpixel ok');
             dispatch('superpixelChanged', {});
         })
         .finally(() => {
