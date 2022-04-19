@@ -1,4 +1,5 @@
 import io
+import os
 import pickle
 import socket
 import zlib
@@ -8,14 +9,15 @@ import skimage.io
 from flask import *
 
 from sscAnnotat3D.api import annotation, filters, io as apiio, superpixel, remotevis, image as apiimage
+from sscAnnotat3D.__version__ import __version__
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import superpixels, utils
 from sscAnnotat3D.modules import superpixel_segmentation_module
 
-from sscAnnotat3D.api.modules import superpixel_segmentation_module as apisuperpixel_segmentation_module
+from sscAnnotat3D.api.modules import superpixel_segmentation_module as apisuperpixel_segmentation_module, \
+    pixel_segmentation_module as apipixel_segmentation_module
 
 from flask_cors import CORS, cross_origin
-
 
 app = Flask(__name__)
 # import pdb
@@ -31,6 +33,7 @@ app.register_blueprint(superpixel.app)
 app.register_blueprint(remotevis.app)
 app.register_blueprint(apiimage.app)
 app.register_blueprint(apisuperpixel_segmentation_module.app)
+app.register_blueprint(apipixel_segmentation_module.app)
 app.register_blueprint(filters.app)
 
 image = None
@@ -75,12 +78,35 @@ def reconnect_session():
     print(annotat3d_session)
     return jsonify(annotat3d_session)
 
+
 @app.route('/test', methods=['POST', 'GET'])
 @cross_origin()
 def test():
     return 'test', 200
 
+@app.route('/versions', methods=['POST', 'GET'])
+@cross_origin()
+def versions():
+    import sscPySpin
+    import sscIO
+    import sscDeepsirius
+    import ssc_remotevis
+    return jsonify([
+        dict(name='sscRemoteVis', version=ssc_remotevis.__version__),
+        dict(name='sscPySpin', version=sscPySpin.__version__),
+        dict(name='sscIO', version=sscIO.__version__),
+        dict(name='sscAnnotat3D', version=__version__),
+        dict(name='sscDeepsirius', version=sscDeepsirius.__version__)
+    ])
+
+
 if __name__ == "__main__":
+
+    import logging
+
+    LOG_LEVEL = os.getenv('ANNOTAT3D_LOG_LEVEL', 'DEBUG')
+    logging.root.setLevel(LOG_LEVEL)
+
     #WARNING: only one process can be used, as we store images in memory
     #to be able to use more processes we should find a better way to store data
     app.run("0.0.0.0", 5000, True, processes=1, threaded=True)

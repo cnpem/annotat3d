@@ -16,6 +16,8 @@ import DeepLearning from "./DeepLearning";
 import Remote from "./Remote";
 
 import React, {useState} from "react";
+import About from './About';
+import People from './People';
 
 /**
  * Menu component
@@ -49,6 +51,8 @@ const Menu: React.FC = () => {
                     <Classification/>
                     <DeepLearning/>
                     <Remote/>
+                    <About />
+                    <People />
                 </IonAccordionGroup>
             </IonContent>
             <ThemeToggle/>

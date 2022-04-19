@@ -281,3 +281,4 @@ def map_lookup_table(array, lut):
     sort_idx = numpy.argsort(from_values)
     idx = numpy.searchsorted(from_values, array, sorter=sort_idx)
     return to_values[sort_idx][idx]
+

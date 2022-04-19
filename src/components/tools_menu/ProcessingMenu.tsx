@@ -4,6 +4,7 @@ import {useStorageState} from "react-storage-hooks";
 import {dispatch} from "../../utils/eventbus";
 import {BM3DFilteringModuleCard} from "./FilteringModuleCard";
 import GroupSelect from "./GroupSelect";
+import PixelSegmentationModuleCard from "./PixelSegmentationModuleCard";
 import SuperpixelModuleCard from "./SuperpixelModuleCard";
 import SuperpixelSegmentationModuleCard from "./SuperpixelSegmentationModuleCard";
 
@@ -48,8 +49,11 @@ const ProcessingMenu: React.FC = () => {
                 <SuperpixelModuleCard/>
                 <SuperpixelSegmentationModuleCard/>
             </IonList>
+            <IonList hidden={curModule !== "pixel"}>
+                <PixelSegmentationModuleCard/>
+            </IonList>
             <IonList hidden={curModule !== "bm3d_filter"}>
-                <BM3DFilteringModuleCard />
+                <BM3DFilteringModuleCard/>
             </IonList>
         </Fragment>
     );

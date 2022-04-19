@@ -1,12 +1,12 @@
 
 
 import {TextFieldTypes} from '@ionic/core';
-import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox } from '@ionic/react';
+import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonAlert } from '@ionic/react';
 import {isEqual} from 'lodash';
 import {Fragment, useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
-import {currentEventValue} from '../../utils/eventbus';
-import {useEventBus, dispatch} from '../../utils/eventbus';
+import {currentEventValue, useEventBus} from '../../utils/eventbus';
+import {dispatch} from '../../utils/eventbus';
 import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem } from './ModuleCard';
 
@@ -61,18 +61,6 @@ interface ModelClassifierParams {
 
 const defaultMultiscale = [1, 2, 4, 8];
 
-const defaultPooling: Pooling[] = [
-    { id: 'min', name: 'Minimum', active: false },
-    { id: 'max', name: 'Maximum', active: false },
-    { id: 'mean', name: 'Mean', active: true }
-]
-
-interface Pooling {
-    id: string;
-    name: string;
-    active: boolean;
-}
-
 interface Feature {
     id: string;
     name: string;
@@ -90,38 +78,31 @@ interface ClassifierParams {
 }
 
 interface FeatureParams {
-    pooling: Pooling[];
     feats: Feature[];
     multiscale: number[];
     thresholdSelection?: number;
 }
 
-const SuperpixelSegmentationModuleCard: React.FC = () => {
+const PixelSegmentationModuleCard: React.FC = () => {
 
-    const [prevFeatParams, setPrevFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelPrevFeatParams');
+    const [present] = useIonAlert();
 
-    const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelFeatParams', {
-        pooling: defaultPooling,
+    const [prevFeatParams, setPrevFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'pixelPrevFeatParams');
+
+    const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'pixelFeatParams', {
         feats: defaultFeatures,
         multiscale: defaultMultiscale,
         thresholdSelection: 0.1
     });
 
-    const [classParams, setClassParams] = useStorageState<ClassifierParams>(sessionStorage, 'superpixelClassParams', {
+    const [classParams, setClassParams] = useStorageState<ClassifierParams>(sessionStorage, 'pixelClassParams', {
         classifier: 'rf',
         params: defaultModelClassifierParams['rf']
     });
 
-    const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'superpixelSegmPreprocessed', false);
+    const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'pixelSegmPreprocessed', false);
 
-    const [disabled, setDisabled] = useState<boolean>(true);
-
-    useEffect(() => {
-        sfetch('POST', 'is_available_image/superpixel', '', 'json')
-        .then((response) => {
-            setDisabled(!response.available);
-        });
-    });
+    const [disabled, setDisabled] = useState<boolean>(false);
 
     useEffect(() => {
         console.log(prevFeatParams, featParams);
@@ -129,12 +110,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         const hasChanged = !isEqual(prevFeatParams, featParams);
         setHasPreprocessed(!hasChanged);
     }, [featParams, prevFeatParams, setHasPreprocessed]);
-
-    useEventBus('superpixelChanged', () => {
-        setDisabled(false);
-        setHasPreprocessed(false);
-        setPrevFeatParams(null);
-    });
 
     useEventBus('ImageLoaded', () => {
         setPrevFeatParams(null);
@@ -151,9 +126,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 'selected_features': featParams.feats
                 .filter(p => p.active)
                 .map(p => p.id),
-                'selected_supervoxel_feat_pooling': featParams.pooling
-                .filter(p => p.active)
-                .map(p => p.id),
                 'feat_selection_enabled': featParams.thresholdSelection !== null,
                 'feat_selection_method_threshold': featParams.thresholdSelection
             }
@@ -165,9 +137,15 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
-        sfetch('POST', 'superpixel_segmentation_module/execute', '')
+        sfetch('POST', 'pixel_segmentation_module/execute', '')
         .then(() => {
             dispatch('labelChanged', '');
+        })
+        .catch(error => {
+            present({
+                header: error.error,
+                message: error.error_msg
+            });
         })
         .finally(() => {
             setDisabled(false);
@@ -184,9 +162,15 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         console.log(curSlice);
 
         setDisabled(true);
-        sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice))
+        sfetch('POST', '/pixel_segmentation_module/preview', JSON.stringify(curSlice))
         .then(() => {
             dispatch('labelChanged', '');
+        })
+        .catch((error) => {
+            present({
+                header: error.error,
+                message: error.error_msg
+            });
         })
         .finally(() => {
             setDisabled(false);
@@ -198,7 +182,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         const params = getModuleBackendParams();
 
         setDisabled(true);
-        sfetch('POST', '/superpixel_segmentation_module/create', JSON.stringify(params))
+        sfetch('POST', '/pixel_segmentation_module/create', JSON.stringify(params))
         .then(() => {
             console.log('preprocessou');
             //setPrevFeatParams(prevFeatParams);
@@ -245,29 +229,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         );
     }
 
-    function renderCheckboxPooling(pooling: Pooling) {
-        return (
-            <IonItem key={pooling.id}>
-                <IonLabel>{pooling.name}</IonLabel>
-                <IonCheckbox value={pooling.id} checked={pooling.active}
-                    onIonChange={ (e) => {
-                        console.log(e);
-                        const newpooling = featParams.pooling.map( np => {
-                            if (np.id === pooling.id) {
-                                return {
-                                    ...np,
-                                    active : e.detail.checked
-                                }
-                            } else {
-                                return np
-                            }
-                        } );
-                        setFeatParams({...featParams, pooling: newpooling})
-                    } }/>
-            </IonItem>
-        );
-    }
-
     function stringToNumberArray(text: string): number[] {
         return text.split(',')
         .map(t => parseInt(t))
@@ -297,19 +258,15 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     }
 
     return (
-        <ModuleCard name="Superpixel Segmentation" disabled={disabled}
+        <ModuleCard name="Pixel Segmentation" disabled={disabled}
             onApply={onApply} onPreview={onPreview} onPreprocess={onPreprocess}
             disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed} disabledPreprocess={hasPreprocessed}>
 
-            <ModuleCardItem name="Superpixel Segmentation Parameters">
+            <ModuleCardItem name="Pixel Segmentation Parameters">
                 <ModuleCardItem name="Feature Extraction Parameters">
                     <IonList>
                         { featParams.feats.map(renderCheckboxFeature) }
                     </IonList>
-                </ModuleCardItem>
-
-                <ModuleCardItem name="Superpixel Feature Pooling">
-                    { featParams.pooling.map(renderCheckboxPooling) }
                 </ModuleCardItem>
 
                 <ModuleCardItem name="Multi-scale Parameters">
@@ -400,4 +357,5 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     );
 };
 
-export default SuperpixelSegmentationModuleCard;
+export default PixelSegmentationModuleCard;
+

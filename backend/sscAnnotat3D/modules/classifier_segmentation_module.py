@@ -576,6 +576,8 @@ class ClassifierSegmentationModule(SegmentationModule):
         # to use threading as the backend.
         prediction = np.zeros(X.shape[0], dtype='uint16')
 
+        logging.debug(f'Prediction output: {prediction.shape} -> {X.shape}')
+
         if isinstance(self._model, svm.LinearSVC):
             nsamples_step = 10_000_000
             # ngpus = 3
@@ -1014,7 +1016,8 @@ class ClassifierSegmentationModule(SegmentationModule):
         return valid_data
 
     def remove_auto_saved_data(self):
-        if os.path.exists(self._workspace):
+        from os import path
+        if path.exists(self._workspace):
             shutil.rmtree(self._workspace)
 
     def undo(self, checkpoint):
