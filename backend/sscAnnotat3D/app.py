@@ -9,6 +9,7 @@ import skimage.io
 from flask import *
 
 from sscAnnotat3D.api import annotation, filters, io as apiio, superpixel, remotevis, image as apiimage
+from sscAnnotat3D.__version__ import __version__
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import superpixels, utils
 from sscAnnotat3D.modules import superpixel_segmentation_module
@@ -82,6 +83,21 @@ def reconnect_session():
 @cross_origin()
 def test():
     return 'test', 200
+
+@app.route('/versions', methods=['POST', 'GET'])
+@cross_origin()
+def versions():
+    import sscPySpin
+    import sscIO
+    import sscDeepsirius
+    import ssc_remotevis
+    return jsonify([
+        dict(name='sscRemoteVis', version=ssc_remotevis.__version__),
+        dict(name='sscPySpin', version=sscPySpin.__version__),
+        dict(name='sscIO', version=sscIO.__version__),
+        dict(name='sscAnnotat3D', version=__version__),
+        dict(name='sscDeepsirius', version=sscDeepsirius.__version__)
+    ])
 
 
 if __name__ == "__main__":

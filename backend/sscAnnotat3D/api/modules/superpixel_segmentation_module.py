@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
 import numpy as np
 
 from sscAnnotat3D import utils
