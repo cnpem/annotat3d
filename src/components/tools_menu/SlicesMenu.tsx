@@ -9,7 +9,7 @@ import {ImageShapeInterface} from './ImageShapeInterface';
 import {dispatch, useEventBus} from '../../utils/eventbus';
 import {SliceInfoInterface} from "./SliceInfoInterface";
 import {useStorageState} from "react-storage-hooks";
-import {Fragment, useEffect, useState} from "react";
+import {Fragment, useEffect} from "react";
 
 interface SlicesMenuProps{
     imageShape: ImageShapeInterface;
@@ -29,7 +29,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
     const [sliceName, setSliceName] = useStorageState<'XY' | 'XZ' | 'YZ'>(sessionStorage, 'sliceName', "XY");
     const [sliceValue, setSliceValue] = useStorageState<number>(sessionStorage, 'sliceValue', 0);
-    const [activateMenu, setActivateMenu] = useState<boolean>(true);
+    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
 
     const maxValSlider: Record<'XY'|'XZ'|'YZ', number> = {
         'XY': props.imageShape.z - 1,
@@ -70,7 +70,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         });
     })
 
-    useEventBus("ActivateSliceMenu", (activateSliceMenu) => {
+    useEventBus("ActivateComponents", (activateSliceMenu) => {
         setActivateMenu(activateSliceMenu);
     })
 

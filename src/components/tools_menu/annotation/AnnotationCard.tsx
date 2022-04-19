@@ -1,16 +1,17 @@
-import React, {useState} from "react";
+import React from "react";
 import {IonButton, IonCard, IonCardContent, IonIcon} from "@ionic/react";
 import {arrowUndoOutline} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch, useEventBus} from "../../../utils/eventbus";
 import AnnotationLoadDialog from "./AnnotationLoadDialog";
 import AnnotationSaveDialog from "./AnnotationSaveDialog";
+import {useStorageState} from "react-storage-hooks";
 
 const AnnotationCard : React.FC = () => {
 
-    const [activateMenu, setActivateMenu] = useState<boolean>(true);
+    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
 
-    useEventBus("ActivateSliceMenu", (activateSliceMenu) => {
+    useEventBus("ActivateComponents", (activateSliceMenu) => {
         setActivateMenu(activateSliceMenu);
     })
 

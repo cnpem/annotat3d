@@ -133,7 +133,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
                     setShowErrorWindow(false);
                     dispatch("ImageLoaded", info);
-                    dispatch("ActivateSliceMenu", false);
+                    dispatch("ActivateComponents", false);
                     setShowPopover({...showPopover, open: false});
                     showToast(`Loaded ${image.image_name}${image.image_ext}`, 2000);
 

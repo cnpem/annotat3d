@@ -8,6 +8,7 @@ import {addOutline, trashOutline} from "ionicons/icons";
 
 import './OptionsIcons.css';
 import {useEventBus} from "../../../utils/eventbus";
+import {useStorageState} from "react-storage-hooks";
 
 interface InputLabelProps {
     colors: [number, number, number][];
@@ -77,9 +78,9 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
-    const [activateMenu, setActivateMenu] = useState<boolean>(true);
+    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
 
-    useEventBus("ActivateSliceMenu", (activateAddLabelButton) => {
+    useEventBus("ActivateComponents", (activateAddLabelButton) => {
         setActivateMenu(activateAddLabelButton);
     })
 

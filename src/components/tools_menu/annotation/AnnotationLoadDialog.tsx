@@ -13,6 +13,7 @@ import {
 import {folderOpenOutline} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch, useEventBus} from "../../../utils/eventbus";
+import {useStorageState} from "react-storage-hooks";
 
 const AnnotationLoadDialog : React.FC = () => {
     // Init States
@@ -22,9 +23,9 @@ const AnnotationLoadDialog : React.FC = () => {
     });
     const [showToast,] = useIonToast();
     const [path, setPath] = useState<string>("");
-    const [activateMenu, setActivateMenu] = useState<boolean>(true);
+    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
 
-    useEventBus("ActivateSliceMenu", (activateAnnotationMenu) => {
+    useEventBus("ActivateComponents", (activateAnnotationMenu) => {
         setActivateMenu(activateAnnotationMenu);
     })
 
