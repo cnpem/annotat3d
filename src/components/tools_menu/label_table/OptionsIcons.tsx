@@ -13,6 +13,7 @@ import {ChromePicker} from "react-color";
 import {useStorageState} from "react-storage-hooks";
 import {defaultColormap} from "../../../utils/colormap";
 import {dispatch} from "../../../utils/eventbus";
+import {sfetch} from "../../../utils/simplerequest";
 
 interface OptionsProps{
     label: LabelInterface;
@@ -143,6 +144,17 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
                         <IonButton onClick={() => {
                             dispatch("deleteLabel", props.label);
+
+                            const params = {
+                                label: props.label,
+                            }
+
+                            sfetch("POST", "/delete_label_annot", JSON.stringify(params), "json").then(
+                                (image) => {
+                                    console.log("opa, ", image);
+                                }
+                            )
+
                             setShowDeletePopUp(false);
                             setUserDeleteOp(true);}}>Confirm</IonButton>
                     </IonItem>

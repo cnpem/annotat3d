@@ -1,5 +1,4 @@
 from flask import Blueprint, request, send_file, jsonify
-import numpy as np
 import pickle
 import io
 import zlib
@@ -156,3 +155,18 @@ def undo_annot():
     annot_module.undo()
 
     return 'success', 200
+
+@app.route("/delete_label_annot", methods=["POST"])
+@cross_origin()
+def delete_label_annot():
+
+    try:
+        label = request.json["label"]
+        print("\n-----------------------\n")
+        print(label)
+        print("\n-----------------------\n")
+
+    except Exception as e:
+        print(str(e))
+
+    return "sucess", 200
