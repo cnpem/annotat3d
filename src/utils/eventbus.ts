@@ -83,4 +83,4 @@ function currentEventValue(evt: string): any | null {
     return cur;
 }
 
-export { subscribe, unsubscribe, dispatch, useEventBus,  currentEventValue };
+export { subscribe, unsubscribe, dispatch, useEventBus, currentEventValue };

@@ -6,7 +6,7 @@ import {albumsOutline} from "ionicons/icons";
 
 import {ImageShapeInterface} from './ImageShapeInterface';
 
-import {dispatch} from '../../utils/eventbus';
+import {dispatch, useEventBus} from '../../utils/eventbus';
 import {SliceInfoInterface} from "./SliceInfoInterface";
 import {useStorageState} from "react-storage-hooks";
 import {Fragment, useEffect, useState} from "react";
@@ -68,6 +68,12 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             axis: sliceName,
             slice: sliceValue
         });
+    })
+
+    useEventBus("ActivateSliceMenu", (bla) => {
+        console.log("\n---------------------------\n");
+        console.log("bla : ", bla);
+        console.log("\n---------------------------\n");
     })
 
     return(
