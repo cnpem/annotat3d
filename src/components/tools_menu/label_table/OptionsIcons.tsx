@@ -12,6 +12,7 @@ import {LabelInterface} from './LabelInterface';
 import {ChromePicker} from "react-color";
 import {useStorageState} from "react-storage-hooks";
 import {defaultColormap} from "../../../utils/colormap";
+import {dispatch} from "../../../utils/eventbus";
 
 interface OptionsProps{
     label: LabelInterface;
@@ -141,6 +142,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                             setUserDeleteOp(false);}}>Cancel</IonButton>
 
                         <IonButton onClick={() => {
+                            dispatch("deleteLabel", props.label);
                             setShowDeletePopUp(false);
                             setUserDeleteOp(true);}}>Confirm</IonButton>
                     </IonItem>

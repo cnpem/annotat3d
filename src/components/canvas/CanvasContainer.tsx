@@ -17,6 +17,7 @@ import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
 import {dispatch, subscribe, unsubscribe} from '../../utils/eventbus';
 import {defaultColormap} from '../../utils/colormap';
+import {LabelInterface} from "../tools_menu/label_table/LabelInterface";
 
 class Brush {
 
@@ -685,6 +686,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onAnnotationChanged!: () => void;
     onLabelContourChanged!: (contour: boolean) => void;
     onFutureChanged!: (hasPreview: boolean) => void;
+    onDeleteLabel: (label: LabelInterface) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -820,6 +822,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas?.brush.setLabel(payload.id);
             };
 
+            this.onDeleteLabel = (label: LabelInterface) => {
+                console.log("\n-------------------------\n");
+                console.log("label to delete : ", label);
+                console.log("\n-------------------------\n");
+            };
+
             this.onImageLoaded = () => {
                 console.log('onImageLoaded');
                 const promise = this.fetchAll(true);
@@ -906,6 +914,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('superpixelVisibilityChanged', this.onSuperpixelVisibilityChanged);
             subscribe('superpixelColorChanged', this.onSuperpixelColorChanged);
             subscribe('labelSelected', this.onLabelSelected);
+            subscribe("deleteLabel", this.onDeleteLabel);
             subscribe('superpixelChanged', this.onSuperpixelChanged);
             subscribe('contrastChanged', this.onContrastChanged);
             subscribe('labelChanged', this.onLabelChanged);
@@ -929,6 +938,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe("ImageLoaded", this.onImageLoaded);
         unsubscribe('superpixelChanged', this.onSuperpixelChanged);
         unsubscribe('contrastChanged', this.onContrastChanged);
+        unsubscribe("deleteLabel", this.onDeleteLabel);
         unsubscribe('labelChanged', this.onLabelChanged);
     }
 
