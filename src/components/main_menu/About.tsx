@@ -1,4 +1,4 @@
-import {information, informationCircle, people} from "ionicons/icons";
+import {informationCircle} from "ionicons/icons";
 import {IonAccordion, IonChip, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
 import {useEffect, useState} from "react";
 import {sfetch} from "../../utils/simplerequest";
