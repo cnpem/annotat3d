@@ -95,7 +95,12 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                 <IonButtons>
                     <IonButton disabled={true} color={"dark"} size={"default"}>{buttonSliceName[sliceName]}</IonButton>
                 </IonButtons>
-                <IonInput type={"number"} min={0} max={maxValSlider[sliceName]} clearInput value={sliceValue} onIonChange={handleSliceValue}/>
+                <IonInput
+                    type={"number"}
+                    min={0} max={maxValSlider[sliceName]}
+                    clearInput value={sliceValue}
+                    onIonChange={handleSliceValue}
+                    disabled={activateMenu}/>
             </IonItem>
         </Fragment>
     );
