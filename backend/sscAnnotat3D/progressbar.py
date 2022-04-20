@@ -1,5 +1,4 @@
 from threading import Timer
-from tqdm import tqdm
 
 _progress_bars = {}
 

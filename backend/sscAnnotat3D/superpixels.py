@@ -79,14 +79,6 @@ def superpixel_extraction(img, superpixel_type, seed_spacing, compactness,
 
     if min_label <= 0:
         raise Exception('Zero-valued superpixel detected! Please contact developer')
-        # QMessageBox.warning(
-            # None, 'Warning',
-            # 'Zero/negative-valued superpixel (%d) detected! Please contact developer'
-            # % min_label)
-        # ((img_superpixels == 0) * 255).astype('uint8').tofile(
-            # 'superpixels_zero_%dx%dx%d_%dbits.raw' %
-            # (img_superpixels.shape[2], img_superpixels.shape[1],
-             # img_superpixels.shape[0], 8))
 
     return img_superpixels, num_superpixels
 

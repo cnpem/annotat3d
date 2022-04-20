@@ -147,13 +147,16 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
                             const params = {
                                 label: props.label,
-                            }
+                            };
 
-                            sfetch("POST", "/delete_label_annot", JSON.stringify(params), "json").then(
-                                (image) => {
-                                    console.log("opa, ", image);
+                            sfetch("POST", "/delete_label_annot", JSON.stringify(params), "").then(
+                                (info) => {
+                                    console.log("printing info ", info)
                                 }
-                            )
+                            ).catch((error) => {
+                                    console.log(error);
+                                }
+                            );
 
                             setShowDeletePopUp(false);
                             setUserDeleteOp(true);}}>Confirm</IonButton>

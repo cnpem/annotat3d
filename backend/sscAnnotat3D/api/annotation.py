@@ -8,8 +8,17 @@ from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D import utils
 
 from flask_cors import cross_origin
+from werkzeug.exceptions import BadRequest
 
 app = Blueprint('annotation', __name__)
+
+
+@app.errorhandler(BadRequest)
+def handle_exception(error_msg: str):
+    return jsonify({"error_msg": error_msg}), 400
+
+
+app.register_error_handler(400, handle_exception)
 
 
 @app.route("/new_annot/<annot_id>", methods=["POST"])
@@ -20,7 +29,7 @@ def new_annot(annot_id: str):
 
     img = data_repo.get_image('image')
     if img is None:
-        return 'No image associated', 400
+        return handle_exception('No image associated')
 
     annot_module = annotation_module.AnnotationModule(img.shape)
 
@@ -48,7 +57,7 @@ def is_available_annot(annot_id: str):
 def open_annot():
     img = data_repo.get_image('image')
     if img is None:
-        return 'No image associated', 400
+        return handle_exception('No image associated')
 
     annot_module = annotation_module.AnnotationModule(img.shape)
 
@@ -70,7 +79,7 @@ def close_annot():
         annot_module = module_repo.get_module('annotation')
         annot_module.erase_all_markers()
     except:
-        return "Failed to erase all markers", 400
+        return handle_exception("Failed to erase all markers")
 
     return "All markers erased successfully", 200
 
@@ -82,12 +91,12 @@ def save_annot():
     annot = annot_module.annotation
 
     if annot is None:
-        return "Failed to fetch annotation", 400
+        return handle_exception("Failed to fetch annotation")
 
     try:
         annot_path = request.json["annot_path"]
     except:
-        return "Failed to receive annotation path", 400
+        return handle_exception("Failed to receive annotation path")
 
     with open(annot_path, "wb") as f:
         pickle.dump(annot, f)
@@ -111,7 +120,7 @@ def draw():
     annot_module = module_repo.get_module('annotation')
     
     if annot_module is None:
-        return "Annotation module not found", 400
+        return handle_exception("Annotation module not found")
 
     annot_module.set_current_axis(axis_dim)
     annot_module.set_current_slice(slice_num)
@@ -123,8 +132,6 @@ def draw():
 
     for coord in request.json['coords']:
         annot_module.draw_marker_dot(coord[1], coord[0], label, mk_id, erase)
-
-    # data_repo.set_annotation(annot_module.annotation)
 
     return "success", 200
 
@@ -168,5 +175,16 @@ def delete_label_annot():
 
     except Exception as e:
         print(str(e))
+        return handle_exception(str(e))
 
-    return "sucess", 200
+    try:
+        annot_module = module_repo.get_module('annotation')
+        removed_annot = annot_module.remove_label(label["id"])
+        print("removed_label : {}".format(removed_annot))
+
+    except Exception as e:
+        print(str(e))
+        return handle_exception(str(e))
+
+    return "success", 200
+

@@ -1,11 +1,8 @@
 import ctypes
 import os
-from threading import Thread
 import io
 import numpy
-# from PyQt5 import QtCore, QtWidgets
-# from pyqtconsole.console import PythonConsole
-# from pyqtconsole.highlighter import format
+
 from sklearn.preprocessing import LabelEncoder
 
 try:

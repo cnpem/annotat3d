@@ -380,8 +380,6 @@ class AnnotationModule():
         self.added_labels.append(Label(new_label, name))
 
     def remove_label(self, label):
-        label = int(label)
-
         self.remove_annotation(labels=(label, ))
 
         #update the label list
