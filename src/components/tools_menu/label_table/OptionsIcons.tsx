@@ -143,7 +143,6 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                             setUserDeleteOp(false);}}>Cancel</IonButton>
 
                         <IonButton onClick={() => {
-                            dispatch("deleteLabel", props.label);
 
                             const params = {
                                 label: props.label,
@@ -151,6 +150,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
                             sfetch("POST", "/delete_label_annot", JSON.stringify(params), "").then(
                                 (info) => {
+                                    dispatch("annotationChanged", null);
                                     console.log("printing info ", info)
                                 }
                             ).catch((error) => {
