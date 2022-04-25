@@ -17,6 +17,8 @@ function rgbToHex(r: number, g: number, b: number) {
 
 const SideMenuVis: React.FC = () => {
 
+    const [activateMenuOp, setActivateMenuOp] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+
     const [contrast, setContrast] = useStorageState(sessionStorage, 'contrast', {
         lower: 10,
         upper: 90
