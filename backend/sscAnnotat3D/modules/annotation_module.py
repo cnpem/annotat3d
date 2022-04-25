@@ -379,8 +379,8 @@ class AnnotationModule():
 
         self.added_labels.append(Label(new_label, name))
 
-    def remove_label(self, label):
-        self.remove_annotation(labels=(label, ))
+    def remove_label(self, label_id: int):
+        self.remove_annotation(labels=(label_id, ))
 
         removed_labels = aux_functions.get_marker_ids(self.removed_annotation)
         try:
@@ -389,7 +389,7 @@ class AnnotationModule():
             print(str(e))
 
         #update the label list
-        added_labels = [l for l in self.added_labels if l.id != label]
+        added_labels = [l for l in self.added_labels if l.id != label_id]
         self.added_labels = added_labels
         return removed_labels
 

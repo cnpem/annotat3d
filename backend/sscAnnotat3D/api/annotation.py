@@ -166,13 +166,13 @@ def undo_annot():
 def delete_label_annot():
 
     try:
-        label = request.json["label"]
+        label_id = request.json["label_id"]
     except Exception as e:
         return handle_exception(str(e))
 
     try:
         annot_module = module_repo.get_module('annotation')
-        annot_module.remove_label(label["id"])
+        annot_module.remove_label(label_id)
     except Exception as e:
         return handle_exception(str(e))
 

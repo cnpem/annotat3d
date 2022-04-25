@@ -145,7 +145,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                         <IonButton onClick={() => {
 
                             const params = {
-                                label: props.label,
+                                label_id: props.label.id,
                             };
 
                             sfetch("POST", "/delete_label_annot", JSON.stringify(params), "").then(
