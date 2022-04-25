@@ -383,25 +383,14 @@ class AnnotationModule():
         self.remove_annotation(labels=(label, ))
 
         removed_labels = aux_functions.get_marker_ids(self.removed_annotation)
-        print("\n---------------------------")
-        print("markers ids : {}".format(removed_labels))
-        print("---------------------------\n")
         try:
             self.order_markers -= removed_labels
-            print("\n---------------------------")
-            print("orders markers after the deletion : {}".format(self.order_markers))
-            print("---------------------------\n")
         except Exception as e:
-            print("\n------------------------------")
             print(str(e))
-            print("--------------------------------\n")
 
         #update the label list
         added_labels = [l for l in self.added_labels if l.id != label]
         self.added_labels = added_labels
-        print("\n------------------------------")
-        print("added_labels : {}".format(self.added_labels))
-        print("--------------------------------\n")
         return removed_labels
 
     def erase_all_markers(self):

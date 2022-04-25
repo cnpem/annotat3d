@@ -24,8 +24,6 @@ app.register_error_handler(400, handle_exception)
 @app.route("/new_annot/<annot_id>", methods=["POST"])
 @cross_origin()
 def new_annot(annot_id: str):
-    annot = {}
-    annot_path = ""
 
     img = data_repo.get_image('image')
     if img is None:
@@ -174,7 +172,7 @@ def delete_label_annot():
 
     try:
         annot_module = module_repo.get_module('annotation')
-        removed_annot = annot_module.remove_label(label["id"])
+        annot_module.remove_label(label["id"])
     except Exception as e:
         return handle_exception(str(e))
 
