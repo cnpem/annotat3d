@@ -598,7 +598,7 @@ class Canvas {
     }
 
     decreaseBrushSize() {
-        if (this.brush.size <= 1)
+        if (this.brush.size <= 2) 
             return;
         this.brush.setSize(this.brush.size - 1);
     }
