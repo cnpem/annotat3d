@@ -9,6 +9,8 @@ import {addOutline, trashOutline} from "ionicons/icons";
 import './OptionsIcons.css';
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
+import {useEventBus} from "../../../utils/eventbus";
+import {useStorageState} from "react-storage-hooks";
 
 interface InputLabelProps {
     colors: [number, number, number][];
@@ -84,6 +86,11 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
+    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+
+    useEventBus("ActivateComponents", (activateAddLabelButton) => {
+        setActivateMenu(activateAddLabelButton);
+    })
 
     const handleShowWarningWindow = (flag: boolean) => {
         setOpenWarningWindow(flag);
@@ -102,7 +109,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     return(
         <div style={ {display: "flex", justifyContent: "flex-end"} }>
-            <IonButton size="small" onClick={addNewLabel}>
+            <IonButton size="small" onClick={addNewLabel} disabled={activateMenu}>
                 <IonIcon icon={addOutline} slot={"end"}/>
                 Add
             </IonButton>

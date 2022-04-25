@@ -1,7 +1,7 @@
 import {IonCard, IonItem, IonLabel, IonList} from "@ionic/react";
 import {Fragment, useEffect} from "react";
 import {useStorageState} from "react-storage-hooks";
-import {dispatch} from "../../utils/eventbus";
+import {dispatch, useEventBus} from "../../utils/eventbus";
 import {BM3DFilteringModuleCard} from "./FilteringModuleCard";
 import GroupSelect from "./GroupSelect";
 import PixelSegmentationModuleCard from "./PixelSegmentationModuleCard";
@@ -29,6 +29,11 @@ const canvas: Record<string, 'drawing' | 'imaging'> = {
 const ProcessingMenu: React.FC = () => {
 
     const [curModule, setCurModule] = useStorageState<string>(localStorage, 'curModule', 'superpixel');
+    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+
+    useEventBus("ActivateComponents", (activateSliceMenu) => {
+        setActivateMenu(activateSliceMenu);
+    })
 
     useEffect(() => {
         dispatch('canvasModeChanged', canvas[curModule]);
@@ -36,7 +41,7 @@ const ProcessingMenu: React.FC = () => {
 
     return (
         <Fragment>
-            <IonCard>
+            <IonCard disabled={activateMenu}>
                 <IonItem color="primary">
                     <IonLabel>Module</IonLabel>
                     <GroupSelect value={curModule} id="module-select" options={moduleOptions}

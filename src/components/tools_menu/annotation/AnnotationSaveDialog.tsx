@@ -12,6 +12,8 @@ import {
 
 import {saveOutline} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
+import {useEventBus} from "../../../utils/eventbus";
+import {useStorageState} from "react-storage-hooks";
 
 const extList : string[] = [
     ".pkl"
@@ -26,6 +28,11 @@ const AnnotationSaveDialog : React.FC = () => {
     const [showToast,] = useIonToast();
     const [path, setPath] = useState<string>("");
     const [ext, setExt] = useState<".pkl">(".pkl");
+    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+
+    useEventBus("ActivateComponents", (activateDialogMenu) => {
+        setActivateMenu(activateDialogMenu);
+    })
 
     const handleAnnotationSave = () => {
 
@@ -92,7 +99,7 @@ const AnnotationSaveDialog : React.FC = () => {
                 </IonButton>
             </IonPopover>
             {/* Load Button */}
-            <IonButton size="small"
+            <IonButton size="small" disabled={activateMenu}
             onClick={ (e) => setShowPopover({open: true, event: e.nativeEvent }) }
             >
                 <IonIcon slot="end" icon={saveOutline}/>

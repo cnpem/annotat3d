@@ -109,20 +109,20 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             (image) => {
 
                 const info: ImageInfoInterface = {
-                    imageShape: image.image_shape,
-                    imageDtype: image.image_dtype,
-                    imageName: image.image_name,
-                    imageExt: image.image_ext,
+                    imageShape: image["image_shape"],
+                    imageDtype: image["image_dtype"],
+                    imageName: image["image_name"],
+                    imageExt: image["image_ext"],
                 }
 
                 setShowErrorWindow(false);
                 dispatch("SaveImage", info);
                 setShowPopover({...showPopover, open: false});
-                showToast(`image saved in ${image.image_name}${image.image_ext}`, 2000);
+                showToast(`image saved in ${image["image_name"]}${image["image_ext"]}`, 2000);
 
             }).catch(error => {
                 setShowErrorWindow(true);
-                setErrorMsg(error.error_msg);
+                setErrorMsg(error["error_msg"]);
             })
     }
 

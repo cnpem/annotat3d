@@ -1,5 +1,3 @@
-
-
 import {TextFieldTypes} from '@ionic/core';
 import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox } from '@ionic/react';
 import {isEqual} from 'lodash';
@@ -159,7 +157,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
             }
         };
 
-        console.log(params);
         return params;
     }
 
@@ -180,8 +177,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
             slice: number,
             axis: string
         };
-
-        console.log(curSlice);
 
         setDisabled(true);
         sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice))

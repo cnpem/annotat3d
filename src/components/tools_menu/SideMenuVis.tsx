@@ -1,7 +1,7 @@
 import React, {useEffect, useRef} from "react";
 import {IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonItem} from "@ionic/react";
 import {moon, sunny} from "ionicons/icons";
-import {dispatch} from "../../utils/eventbus";
+import {dispatch, useEventBus} from "../../utils/eventbus";
 import { useStorageState } from 'react-storage-hooks';
 import {isEqual} from "lodash";
 
@@ -21,6 +21,10 @@ const SideMenuVis: React.FC = () => {
         lower: 10,
         upper: 90
     });
+
+    useEventBus("ActivateComponents", (activateMenuComps) => {
+        setActivateMenuOp(activateMenuComps);
+    })
 
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
@@ -60,7 +64,7 @@ const SideMenuVis: React.FC = () => {
 
     return(
         <React.Fragment>
-            <IonCard>
+            <IonCard disabled={activateMenuOp}>
                 <IonCardContent>
                     <IonRange ref={contrastRangeRef} pin={true} debounce={300}
                         dualKnobs={true} onIonChange={ (e) => {
@@ -75,7 +79,7 @@ const SideMenuVis: React.FC = () => {
                     </IonRange>
                 </IonCardContent>
             </IonCard>
-            <IonCard>
+            <IonCard disabled={activateMenuOp}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Superpixel</IonLabel>
@@ -98,7 +102,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard>
+            <IonCard disabled={activateMenuOp}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Label</IonLabel>
@@ -129,7 +133,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard>
+            <IonCard disabled={activateMenuOp}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Show Annotations</IonLabel>

@@ -123,20 +123,21 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         .then((image) => {
 
             const info: ImageInfoInterface = {
-                imageShape: image.image_shape,
-                imageDtype: image.image_dtype,
-                imageName: image.image_name,
-                imageExt: image.image_ext,
+                imageShape: image["image_shape"],
+                imageDtype: image["image_dtype"],
+                imageName: image["image_name"],
+                imageExt: image["image_ext"],
             }
 
             setShowErrorWindow(false);
             dispatch("ImageLoaded", info);
+            dispatch("ActivateComponents", false);
             setShowPopover({...showPopover, open: false});
-            showToast(`Loaded ${image.image_name}${image.image_ext}`, 2000);
+            showToast(`Loaded ${image["image_name"]}${image["image_ext"]}`, 2000);
 
         }).catch(error => {
             setShowErrorWindow(true);
-            setErrorMsg(error.error_msg);
+            setErrorMsg(error["error_msg"]);
         })
 
     }
