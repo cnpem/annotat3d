@@ -169,21 +169,13 @@ def delete_label_annot():
 
     try:
         label = request.json["label"]
-        print("\n-----------------------\n")
-        print(label)
-        print("\n-----------------------\n")
-
     except Exception as e:
-        print(str(e))
         return handle_exception(str(e))
 
     try:
         annot_module = module_repo.get_module('annotation')
         removed_annot = annot_module.remove_label(label["id"])
-        print("removed_label : {}".format(removed_annot))
-
     except Exception as e:
-        print(str(e))
         return handle_exception(str(e))
 
     return "success", 200

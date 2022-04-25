@@ -382,13 +382,27 @@ class AnnotationModule():
     def remove_label(self, label):
         self.remove_annotation(labels=(label, ))
 
+        removed_labels = aux_functions.get_marker_ids(self.removed_annotation)
+        print("\n---------------------------")
+        print("markers ids : {}".format(removed_labels))
+        print("---------------------------\n")
+        try:
+            self.order_markers -= removed_labels
+            print("\n---------------------------")
+            print("orders markers after the deletion : {}".format(self.order_markers))
+            print("---------------------------\n")
+        except Exception as e:
+            print("\n------------------------------")
+            print(str(e))
+            print("--------------------------------\n")
+
         #update the label list
         added_labels = [l for l in self.added_labels if l.id != label]
-        removed = added_labels != self.added_labels
-
         self.added_labels = added_labels
-
-        return removed
+        print("\n------------------------------")
+        print("added_labels : {}".format(self.added_labels))
+        print("--------------------------------\n")
+        return removed_labels
 
     def erase_all_markers(self):
         # Copying all removed annotation
@@ -397,6 +411,7 @@ class AnnotationModule():
         self.annotation = {}
         self.label_merging_scribbles = {}
         self.label_splitting_scribbles = {}
+        self.order_markers = set()
 
     def clear_removed_data(self):
         self.removed_annotation = {}
