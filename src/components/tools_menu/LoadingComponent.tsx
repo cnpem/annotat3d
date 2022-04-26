@@ -1,40 +1,33 @@
 import React from "react";
-import {IonAlert} from "@ionic/react";
+import {
+    IonButton,
+    IonLabel,
+    IonPopover,
+    IonProgressBar
+} from "@ionic/react";
 
 interface LoadingComponentInterface{
-    openWarningWindow: boolean
-    onOpenWarningWindow: (flag: boolean) => void;
+    openLoadingWindow: boolean
+    onOpenLoadingWindow: (flag: boolean) => void;
 }
 
-const LoadingComponent: React.FC<LoadingComponentInterface> = ({openWarningWindow,
-                                                               onOpenWarningWindow}) => {
-
+const LoadingComponent: React.FC<LoadingComponentInterface> = ({openLoadingWindow,
+                                                               onOpenLoadingWindow}) => {
     const closeWarningWindow = () => {
-        onOpenWarningWindow(false);
+        onOpenLoadingWindow(false);
     }
 
     return(
-        <IonAlert
-            isOpen={openWarningWindow}
-            onDidDismiss={closeWarningWindow}
-            header={"Olha que coisa fofa"}
-            message={"tá mostrando uma menssagem linda :D"}
-            buttons={[
-                {
-                    text: "No",
-                    id: "no-button",
-                    handler: () => {
-                        closeWarningWindow();
-                    }
-                },
-                {
-                    text: "Yes",
-                    id: "yes-button",
-                    handler: () => {
-                        console.log("aoba\n");
-                    }
-                }
-            ]}/>
+        <IonPopover
+            isOpen={openLoadingWindow}
+            onDidDismiss={() => closeWarningWindow()}
+            className={"loading-popover"}
+            backdropDismiss={false}>
+
+            <IonLabel>bla</IonLabel>
+            <IonProgressBar type="indeterminate"/><br />
+            <IonButton onClick={() => closeWarningWindow()}>Exit</IonButton>
+        </IonPopover>
     )
 }
 export default LoadingComponent

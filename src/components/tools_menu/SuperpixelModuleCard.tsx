@@ -76,12 +76,9 @@ const SuperpixelModuleCard: React.FC = () => {
                         onIonChange = { (e) => { setSuperpixelParams({ ...superpixelParams, compactness: +e.detail.value!  }) } }>
                     </IonInput>
                 </IonItem>
-                {(openLoadingWindow) ?
-                    <LoadingComponent
-                        openWarningWindow={openLoadingWindow}
-                        onOpenWarningWindow={handleShowLoadingMenu}/> :
-                    <></>
-                }
+                <LoadingComponent
+                        openLoadingWindow={openLoadingWindow}
+                        onOpenLoadingWindow={handleShowLoadingMenu}/>
             </ModuleCardItem>
         </ModuleCard>
 
