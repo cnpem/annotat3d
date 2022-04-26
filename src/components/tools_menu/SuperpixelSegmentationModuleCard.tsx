@@ -7,6 +7,7 @@ import {currentEventValue} from '../../utils/eventbus';
 import {useEventBus, dispatch} from '../../utils/eventbus';
 import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem } from './ModuleCard';
+import LoadingComponent from "./LoadingComponent";
 
 const classifiers = [
     { id: 'rf', name: 'Random Forest' },
@@ -97,6 +98,7 @@ interface FeatureParams {
 const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     const [prevFeatParams, setPrevFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelPrevFeatParams');
+    const [loadingMsg, setLoadingMsg] = useState<string>("");
 
     const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelFeatParams', {
         pooling: defaultPooling,
@@ -118,6 +120,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         sfetch('POST', 'is_available_image/superpixel', '', 'json')
         .then((response) => {
             setDisabled(!response.available);
+            setLoadingMsg("Doing Preprocess");
         });
     });
 
@@ -130,6 +133,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     useEventBus('superpixelChanged', () => {
         setDisabled(false);
+        setLoadingMsg("Doing Preprocess");
         setHasPreprocessed(false);
         setPrevFeatParams(null);
     });
@@ -299,12 +303,12 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
             <ModuleCardItem name="Superpixel Segmentation Parameters">
                 <ModuleCardItem name="Feature Extraction Parameters">
                     <IonList>
-                        { featParams.feats.map(renderCheckboxFeature) }
+                        { featParams!.feats.map(renderCheckboxFeature) }
                     </IonList>
                 </ModuleCardItem>
 
                 <ModuleCardItem name="Superpixel Feature Pooling">
-                    { featParams.pooling.map(renderCheckboxPooling) }
+                    { featParams!.pooling.map(renderCheckboxPooling) }
                 </ModuleCardItem>
 
                 <ModuleCardItem name="Multi-scale Parameters">
@@ -323,6 +327,9 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                             }}>
                         </IonInput>
                     </IonItem>
+                    <LoadingComponent
+                        openLoadingWindow={disabled}
+                        loadingText={"Doing the preprocess"}/>
                 </ModuleCardItem>
 
                 <ModuleCardItem name="Feature Selection Parameters">
@@ -369,9 +376,9 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                         </IonSelect>
                     </IonItem>
                     <Fragment>
-                        { classParams.params.map((p) => {
+                        { classParams!.params.map((p) => {
                             return renderModelParameter(p, (value) => {
-                                const newParams = classParams.params.map((np) => {
+                                const newParams = classParams!.params.map((np) => {
                                     if (np.id === p.id) {
                                         return {...np, value: value}
                                     } else {

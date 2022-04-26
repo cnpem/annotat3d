@@ -70,7 +70,8 @@ const SuperpixelModuleCard: React.FC = () => {
                     </IonInput>
                 </IonItem>
                 <LoadingComponent
-                        openLoadingWindow={disabled}/>
+                        openLoadingWindow={disabled}
+                        loadingText={"Generating superpixel"}/>
             </ModuleCardItem>
         </ModuleCard>
 
