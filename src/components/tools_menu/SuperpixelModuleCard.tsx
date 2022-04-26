@@ -78,7 +78,8 @@ const SuperpixelModuleCard: React.FC = () => {
                 </IonItem>
                 <LoadingComponent
                         openLoadingWindow={openLoadingWindow}
-                        onOpenLoadingWindow={handleShowLoadingMenu}/>
+                        onOpenLoadingWindow={handleShowLoadingMenu}
+                        computatedSuperpixel={disabled}/>
             </ModuleCardItem>
         </ModuleCard>
 
