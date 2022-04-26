@@ -38,7 +38,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     });
 
     const removeLabelElement = (label: LabelInterface) => {
-        setLabelList(labelList.filter(l => l.id !== label.id));
+        setLabelList(labelList!.filter(l => l.id !== label.id));
 
         if(labelList.length === 2) {
             setNewLabelId(1);
@@ -48,12 +48,12 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
     const changeLabelList = (newLabelName: string, labelId: number, color: [number, number, number]) => {
 
-        const newList = labelList
+        const newList = labelList!
         .map(l => l.id === labelId
             ? {...l, labelName: newLabelName, color: color}
             : l);
 
-        if (!isEqual(labelList.filter(l=>l.id === labelId)[0].color, color)) {
+        if (!isEqual(labelList!.filter(l=>l.id === labelId)[0].color, color)) {
             dispatch('labelColorsChanged', [{id: labelId, color: color}]);
         }
 
@@ -102,7 +102,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     const OPTIONS_WIDTH = "col-1";
 
     //if selected label is removed, defaults to background
-    if (!labelList.map((l) => l.id).includes(selectedLabel)) {
+    if (!labelList!.map((l) => l.id).includes(selectedLabel)) {
         selectLabel(0);
     }
 
@@ -124,7 +124,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {labelList.map(renderLabel)}
+                        {labelList!.map(renderLabel)}
                     </tbody>
                 </ReactBootStrap.Table>
             </div>

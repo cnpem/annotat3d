@@ -3,6 +3,8 @@ import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem} from './ModuleCard';
 import {dispatch, useEventBus} from '../../utils/eventbus';
 import {useStorageState} from 'react-storage-hooks';
+import {useState} from "react";
+import LoadingComponent from "./LoadingComponent";
 
 interface SuperpixelState {
     compactness: number;
@@ -12,12 +14,16 @@ interface SuperpixelState {
 
 const SuperpixelModuleCard: React.FC = () => {
 
-
+    const [openLoadingWindow, setOpenLoadingWindow] = useState<boolean>(false);
     const [superpixelParams, setSuperpixelParams] = useStorageState<SuperpixelState>(localStorage, 'superpixelParams', {
         compactness: 1000,
         seedsSpacing: 4,
         method: 'waterpixels'
     });
+
+    const handleShowLoadingMenu = (flag: boolean) => {
+        setOpenLoadingWindow(flag);
+    }
 
     const [disabled, setDisabled] = useStorageState<boolean>(sessionStorage, "ActivateComponents", false);
 
@@ -27,6 +33,7 @@ const SuperpixelModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
+        setOpenLoadingWindow(true);
         const params = {
             superpixel_type: superpixelParams.method,
             seed_spacing: superpixelParams.seedsSpacing,
@@ -69,6 +76,12 @@ const SuperpixelModuleCard: React.FC = () => {
                         onIonChange = { (e) => { setSuperpixelParams({ ...superpixelParams, compactness: +e.detail.value!  }) } }>
                     </IonInput>
                 </IonItem>
+                {(openLoadingWindow) ?
+                    <LoadingComponent
+                        openWarningWindow={openLoadingWindow}
+                        onOpenWarningWindow={handleShowLoadingMenu}/> :
+                    <></>
+                }
             </ModuleCardItem>
         </ModuleCard>
 
