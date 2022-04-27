@@ -1,5 +1,5 @@
 import {TextFieldTypes} from '@ionic/core';
-import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox } from '@ionic/react';
+import {IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonToast} from '@ionic/react';
 import {isEqual} from 'lodash';
 import {Fragment, useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
@@ -116,6 +116,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     const [showPreprocess, setShowPreprocess] = useState<boolean>(false);
     const [showApply, setShowApply] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(true);
+    const [showToast] = useIonToast();
 
     useEffect(() => {
         sfetch('POST', 'is_available_image/superpixel', '', 'json')
@@ -174,6 +175,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowApply(false);
+            showToast("Successfully applied the superpixel segmentation !", 2000);
         });
     }
 
@@ -194,6 +196,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowPreview(false);
+            showToast("Successfully applied the preview !", 1000);
         });
     }
 
@@ -216,6 +219,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowPreprocess(false);
+            showToast("Successfully applied the preprocess !", 1000);
         });
     }
 

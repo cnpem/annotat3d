@@ -1,4 +1,4 @@
-import { IonItem, IonLabel, IonInput, IonSelect, IonSelectOption } from '@ionic/react';
+import {IonItem, IonLabel, IonInput, IonSelect, IonSelectOption, useIonToast} from '@ionic/react';
 import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem} from './ModuleCard';
 import {dispatch, useEventBus} from '../../utils/eventbus';
@@ -20,6 +20,7 @@ const SuperpixelModuleCard: React.FC = () => {
         method: 'waterpixels'
     });
 
+    const [showToast] = useIonToast();
     const [disabled, setDisabled] = useStorageState<boolean>(sessionStorage, "ActivateComponents", false);
     const [activateLoading, setActivateLoading] = useState<boolean>(false);
 
@@ -42,6 +43,7 @@ const SuperpixelModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setActivateLoading(false);
+            showToast("Superpixel successfully applied !", 5000);
         });
     }
 
