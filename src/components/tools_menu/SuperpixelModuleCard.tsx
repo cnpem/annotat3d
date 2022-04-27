@@ -1,8 +1,10 @@
-import { IonItem, IonLabel, IonInput, IonSelect, IonSelectOption } from '@ionic/react';
+import {IonItem, IonLabel, IonInput, IonSelect, IonSelectOption, useIonToast} from '@ionic/react';
 import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem} from './ModuleCard';
 import {dispatch, useEventBus} from '../../utils/eventbus';
 import {useStorageState} from 'react-storage-hooks';
+import LoadingComponent from "./LoadingComponent";
+import {useState} from "react";
 
 interface SuperpixelState {
     compactness: number;
@@ -12,14 +14,15 @@ interface SuperpixelState {
 
 const SuperpixelModuleCard: React.FC = () => {
 
-
     const [superpixelParams, setSuperpixelParams] = useStorageState<SuperpixelState>(localStorage, 'superpixelParams', {
         compactness: 1000,
         seedsSpacing: 4,
         method: 'waterpixels'
     });
 
+    const [showToast] = useIonToast();
     const [disabled, setDisabled] = useStorageState<boolean>(sessionStorage, "ActivateComponents", false);
+    const [activateLoading, setActivateLoading] = useState<boolean>(false);
 
     useEventBus("ActivateComponents", (activateMenu) => {
         setDisabled(activateMenu);
@@ -27,6 +30,7 @@ const SuperpixelModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
+        setActivateLoading(true);
         const params = {
             superpixel_type: superpixelParams.method,
             seed_spacing: superpixelParams.seedsSpacing,
@@ -38,6 +42,8 @@ const SuperpixelModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
+            setActivateLoading(false);
+            showToast("Superpixel successfully applied !", 5000);
         });
     }
 
@@ -69,6 +75,9 @@ const SuperpixelModuleCard: React.FC = () => {
                         onIonChange = { (e) => { setSuperpixelParams({ ...superpixelParams, compactness: +e.detail.value!  }) } }>
                     </IonInput>
                 </IonItem>
+                <LoadingComponent
+                        openLoadingWindow={activateLoading}
+                        loadingText={"Generating superpixel"}/>
             </ModuleCardItem>
         </ModuleCard>
 
