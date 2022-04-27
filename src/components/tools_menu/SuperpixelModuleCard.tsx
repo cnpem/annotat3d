@@ -22,7 +22,7 @@ const SuperpixelModuleCard: React.FC = () => {
 
     const [showToast] = useIonToast();
     const [disabled, setDisabled] = useStorageState<boolean>(sessionStorage, "ActivateComponents", false);
-    const [activateLoading, setActivateLoading] = useState<boolean>(false);
+    const [showLoadingComp, setShowMenuComp] = useState<boolean>(false);
 
     useEventBus("ActivateComponents", (activateMenu) => {
         setDisabled(activateMenu);
@@ -30,7 +30,7 @@ const SuperpixelModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
-        setActivateLoading(true);
+        setShowMenuComp(true);
         const params = {
             superpixel_type: superpixelParams.method,
             seed_spacing: superpixelParams.seedsSpacing,
@@ -42,7 +42,7 @@ const SuperpixelModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
-            setActivateLoading(false);
+            setShowMenuComp(false);
             showToast("Superpixel successfully applied !", 5000);
         });
     }
@@ -76,7 +76,7 @@ const SuperpixelModuleCard: React.FC = () => {
                     </IonInput>
                 </IonItem>
                 <LoadingComponent
-                        openLoadingWindow={activateLoading}
+                        openLoadingWindow={showLoadingComp}
                         loadingText={"Generating superpixel"}/>
             </ModuleCardItem>
         </ModuleCard>

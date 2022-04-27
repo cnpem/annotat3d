@@ -112,9 +112,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'superpixelSegmPreprocessed', false);
     const [loadingMsg, setLoadingMsg] = useState<string>("");
-    const [showPreview, setShowPreview] = useState<boolean>(false);
-    const [showPreprocess, setShowPreprocess] = useState<boolean>(false);
-    const [showApply, setShowApply] = useState<boolean>(false);
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(true);
     const [showToast] = useIonToast();
 
@@ -166,7 +164,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
-        setShowApply(true);
+        setShowLoadingComp(true);
         setLoadingMsg("doing the apply operation");
         sfetch('POST', 'superpixel_segmentation_module/execute', '')
         .then(() => {
@@ -174,7 +172,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         })!
         .finally(() => {
             setDisabled(false);
-            setShowApply(false);
+            setShowLoadingComp(false);
             showToast("Successfully applied the superpixel segmentation !", 2000);
         });
     }
@@ -187,7 +185,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         };
 
         setDisabled(true);
-        setShowPreview(true);
+        setShowLoadingComp(true);
         setLoadingMsg("Doing the preview operation");
         sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice))
         .then(() => {
@@ -195,7 +193,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
-            setShowPreview(false);
+            setShowLoadingComp(false);
             showToast("Successfully applied the preview !", 1000);
         });
     }
@@ -205,7 +203,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         const params = getModuleBackendParams();
 
         setDisabled(true);
-        setShowPreprocess(true);
+        setShowLoadingComp(true);
         setLoadingMsg("doing the preprocess operation");
         sfetch('POST', '/superpixel_segmentation_module/create', JSON.stringify(params))
         .then(() => {
@@ -218,7 +216,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
-            setShowPreprocess(false);
+            setShowLoadingComp(false);
             showToast("Successfully applied the preprocess !", 1000);
         });
     }
@@ -238,7 +236,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 <IonCheckbox value={feature.id} checked={feature.active}
                     onIonChange={(e) => {
                         console.log(e);
-                        const newfeats = featParams.feats.map( nf => {
+                        const newfeats = featParams?.feats.map( nf => {
                             if (nf.id === feature.id) {
                                 return {
                                     ...nf,
@@ -339,17 +337,9 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                         </IonInput>
                     </IonItem>
                     <LoadingComponent
-                        openLoadingWindow={showPreview}
-                        loadingText={loadingMsg}/>
-                    <LoadingComponent
-                        openLoadingWindow={showPreprocess}
-                        loadingText={loadingMsg}/>
-                    <LoadingComponent
-                        openLoadingWindow={showApply}
+                        openLoadingWindow={showLoadingComp}
                         loadingText={loadingMsg}/>
                 </ModuleCardItem>
-
-
                 <ModuleCardItem name="Feature Selection Parameters">
                     <IonItem>
                         <IonLabel>Enable?</IonLabel>

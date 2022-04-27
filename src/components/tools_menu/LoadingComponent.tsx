@@ -16,7 +16,7 @@ const LoadingComponent: React.FC<LoadingComponentInterface> = ({openLoadingWindo
             backdropDismiss={false}>
 
             <IonLabel>{loadingText}</IonLabel>
-            <IonLabel>Please, wait a little</IonLabel>
+            <IonLabel>Please, wait a moment...</IonLabel>
             <IonProgressBar type={"indeterminate"}/><br />
         </IonPopover>
     )
