@@ -9,7 +9,6 @@ interface LoadingComponentInterface{
 const LoadingComponent: React.FC<LoadingComponentInterface> = ({openLoadingWindow,
                                                                loadingText}) => {
 
-    //@TODO: need to place the real function when the application's over
     return(
         <IonPopover
             isOpen={openLoadingWindow}

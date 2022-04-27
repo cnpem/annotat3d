@@ -4,6 +4,7 @@ import {ModuleCard, ModuleCardItem} from './ModuleCard';
 import {dispatch, useEventBus} from '../../utils/eventbus';
 import {useStorageState} from 'react-storage-hooks';
 import LoadingComponent from "./LoadingComponent";
+import {useState} from "react";
 
 interface SuperpixelState {
     compactness: number;
@@ -20,6 +21,7 @@ const SuperpixelModuleCard: React.FC = () => {
     });
 
     const [disabled, setDisabled] = useStorageState<boolean>(sessionStorage, "ActivateComponents", false);
+    const [activateLoading, setActivateLoading] = useState<boolean>(false);
 
     useEventBus("ActivateComponents", (activateMenu) => {
         setDisabled(activateMenu);
@@ -27,6 +29,7 @@ const SuperpixelModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
+        setActivateLoading(true);
         const params = {
             superpixel_type: superpixelParams.method,
             seed_spacing: superpixelParams.seedsSpacing,
@@ -38,6 +41,7 @@ const SuperpixelModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
+            setActivateLoading(false);
         });
     }
 
@@ -70,7 +74,7 @@ const SuperpixelModuleCard: React.FC = () => {
                     </IonInput>
                 </IonItem>
                 <LoadingComponent
-                        openLoadingWindow={disabled}
+                        openLoadingWindow={activateLoading}
                         loadingText={"Generating superpixel"}/>
             </ModuleCardItem>
         </ModuleCard>

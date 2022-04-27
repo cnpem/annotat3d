@@ -98,8 +98,6 @@ interface FeatureParams {
 const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     const [prevFeatParams, setPrevFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelPrevFeatParams');
-    const [loadingMsg, setLoadingMsg] = useState<string>("");
-
     const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelFeatParams', {
         pooling: defaultPooling,
         feats: defaultFeatures,
@@ -113,7 +111,8 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     });
 
     const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'superpixelSegmPreprocessed', false);
-
+    const [loadingMsg, setLoadingMsg] = useState<string>("");
+    const [showLoading, setShowLoading] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(true);
 
     useEffect(() => {
@@ -166,12 +165,14 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
+        setShowLoading(true);
         sfetch('POST', 'superpixel_segmentation_module/execute', '')
         .then(() => {
             dispatch('labelChanged', '');
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoading(false);
         });
     }
 
@@ -183,12 +184,14 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         };
 
         setDisabled(true);
+        setShowLoading(true);
         sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice))
         .then(() => {
             dispatch('labelChanged', '');
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoading(false);
         });
     }
 
@@ -197,10 +200,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         const params = getModuleBackendParams();
 
         setDisabled(true);
+        setShowLoading(true);
         sfetch('POST', '/superpixel_segmentation_module/create', JSON.stringify(params))
         .then(() => {
             console.log('preprocessou');
-            //setPrevFeatParams(prevFeatParams);
             setPrevFeatParams(featParams);
         })
         .catch(() => {
@@ -209,6 +212,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoading(false);
         });
     }
 
@@ -328,7 +332,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                         </IonInput>
                     </IonItem>
                     <LoadingComponent
-                        openLoadingWindow={disabled}
+                        openLoadingWindow={showLoading}
                         loadingText={"Doing the preprocess"}/>
                 </ModuleCardItem>
 
