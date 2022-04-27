@@ -56,7 +56,9 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
         <IonPopover
                 trigger={props.labelNameTrigger}
                 isOpen={props.showPopover}
-                onDidDismiss={exitPopup}>
+                onDidDismiss={exitPopup}
+                alignment={"end"}
+                side={"left"}>
 
                 <IonContent>
                     <IonItem>
