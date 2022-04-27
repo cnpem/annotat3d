@@ -37,7 +37,7 @@ const defaultModelClassifierParams: Record<string, ModelClassifierParams[]> = {
 
 const defaultFeatures: Feature[] = [
     { id: 'fft_gauss', name: 'FFT Gauss', type: 'Smoothing', description: 'Filters structures (smoothing) of the specified gaussian filtering in fourier space. Promotes smoothing without worrying about edges.'},
-    { id: 'average', name: 'Average', type: 'Smoothing', description: 'It is a method of \"smoothing\" images by reducing the amount of intensity variation inside a window (Noise removal)'},
+    { id: 'average', name: 'Average', type: 'Smoothing', description: 'It is a method of "smoothing" images by reducing the amount of intensity variation inside a window (Noise removal)'},
     { id: 'median', name: 'Median', type: 'Smoothing', description: 'It makes the target pixel intensity equal to the median value in the running window (Noise removal)' },
     { id: 'sobel', name: 'Sobel', type: 'Edge detection', description: 'It creates an image emphasizing edges because it performs a 2-D spatial gradient measurement on an image and so emphasizes regions of high spatial frequency that correspond to edges.' },
     { id: 'fft_dog', name: 'FFT Difference Of Gaussians', type: 'Edge detection', description: 'Calculates two gaussian blur images from the original image and subtracts one from the other. It is used to detect edges in the image.' },
