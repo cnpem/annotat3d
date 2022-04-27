@@ -112,14 +112,15 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'superpixelSegmPreprocessed', false);
     const [loadingMsg, setLoadingMsg] = useState<string>("");
-    const [showLoading, setShowLoading] = useState<boolean>(false);
+    const [showPreview, setShowPreview] = useState<boolean>(false);
+    const [showPreprocess, setShowPreprocess] = useState<boolean>(false);
+    const [showApply, setShowApply] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(true);
 
     useEffect(() => {
         sfetch('POST', 'is_available_image/superpixel', '', 'json')
         .then((response) => {
             setDisabled(!response.available);
-            setLoadingMsg("Doing Preprocess");
         });
     });
 
@@ -132,7 +133,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     useEventBus('superpixelChanged', () => {
         setDisabled(false);
-        setLoadingMsg("Doing Preprocess");
         setHasPreprocessed(false);
         setPrevFeatParams(null);
     });
@@ -149,10 +149,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
             },
             feature_extraction_params: {
                 'sigmas': featParams.multiscale,
-                'selected_features': featParams.feats
+                'selected_features': featParams?.feats
                 .filter(p => p.active)
                 .map(p => p.id),
-                'selected_supervoxel_feat_pooling': featParams.pooling
+                'selected_supervoxel_feat_pooling': featParams?.pooling
                 .filter(p => p.active)
                 .map(p => p.id),
                 'feat_selection_enabled': featParams.thresholdSelection !== null,
@@ -165,14 +165,15 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
-        setShowLoading(true);
+        setShowApply(true);
+        setLoadingMsg("doing the apply operation");
         sfetch('POST', 'superpixel_segmentation_module/execute', '')
         .then(() => {
             dispatch('labelChanged', '');
-        })
+        })!
         .finally(() => {
             setDisabled(false);
-            setShowLoading(false);
+            setShowApply(false);
         });
     }
 
@@ -184,14 +185,15 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         };
 
         setDisabled(true);
-        setShowLoading(true);
+        setShowPreview(true);
+        setLoadingMsg("Doing the preview operation");
         sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice))
         .then(() => {
             dispatch('labelChanged', '');
         })
         .finally(() => {
             setDisabled(false);
-            setShowLoading(false);
+            setShowPreview(false);
         });
     }
 
@@ -200,7 +202,8 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         const params = getModuleBackendParams();
 
         setDisabled(true);
-        setShowLoading(true);
+        setShowPreprocess(true);
+        setLoadingMsg("doing the preprocess operation");
         sfetch('POST', '/superpixel_segmentation_module/create', JSON.stringify(params))
         .then(() => {
             console.log('preprocessou');
@@ -212,7 +215,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
-            setShowLoading(false);
+            setShowPreprocess(false);
         });
     }
 
@@ -255,7 +258,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 <IonCheckbox value={pooling.id} checked={pooling.active}
                     onIonChange={ (e) => {
                         console.log(e);
-                        const newpooling = featParams.pooling.map( np => {
+                        const newpooling = featParams?.pooling.map( np => {
                             if (np.id === pooling.id) {
                                 return {
                                     ...np,
@@ -307,12 +310,12 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
             <ModuleCardItem name="Superpixel Segmentation Parameters">
                 <ModuleCardItem name="Feature Extraction Parameters">
                     <IonList>
-                        { featParams!.feats.map(renderCheckboxFeature) }
+                        { featParams?.feats.map(renderCheckboxFeature) }
                     </IonList>
                 </ModuleCardItem>
 
                 <ModuleCardItem name="Superpixel Feature Pooling">
-                    { featParams!.pooling.map(renderCheckboxPooling) }
+                    { featParams?.pooling.map(renderCheckboxPooling) }
                 </ModuleCardItem>
 
                 <ModuleCardItem name="Multi-scale Parameters">
@@ -320,7 +323,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                         <IonLabel position="floating">
                             <small>Multi-scale Filter Windows</small>
                         </IonLabel>
-                        <IonInput value={featParams.multiscale.join(',')}
+                        <IonInput value={featParams?.multiscale.join(',')}
                             onIonChange={(e) => {
                                 if (e.detail.value) {
                                     const value = stringToNumberArray(e.detail.value);
@@ -332,9 +335,16 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                         </IonInput>
                     </IonItem>
                     <LoadingComponent
-                        openLoadingWindow={showLoading}
-                        loadingText={"Doing the preprocess"}/>
+                        openLoadingWindow={showPreview}
+                        loadingText={loadingMsg}/>
+                    <LoadingComponent
+                        openLoadingWindow={showPreprocess}
+                        loadingText={loadingMsg}/>
+                    <LoadingComponent
+                        openLoadingWindow={showApply}
+                        loadingText={loadingMsg}/>
                 </ModuleCardItem>
+
 
                 <ModuleCardItem name="Feature Selection Parameters">
                     <IonItem>
