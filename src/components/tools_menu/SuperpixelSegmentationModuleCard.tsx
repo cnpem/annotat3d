@@ -35,18 +35,18 @@ const defaultModelClassifierParams: Record<string, ModelClassifierParams[]> = {
 }
 
 const defaultFeatures: Feature[] = [
-    { id: 'fft_gauss', name: 'FFT Gauss', active: true },
-    { id: 'none', name: 'None (Original Image)', active: true },
-    { id: 'sobel', name: 'Sobel' },
-    { id: 'minimum', name: 'Minimum' },
-    { id: 'average', name: 'Average' },
-    { id: 'median', name: 'Median' },
-    { id: 'fft_gabor', name: 'FFT Gabor' },
-    { id: 'fft_dog', name: 'FFT Difference of Gaussians', active: true },
-    { id: 'membrane_projections', name: 'Membrane Projections', active: true },
-    { id: 'maximum', name: 'Maximum' },
-    { id: 'variance', name: 'Variance' },
-    { id: 'lbp', name: 'Local Binary Pattern' }
+    { id: 'fft_gauss', name: 'FFT Gauss', descriptor: 'hello', active: true },
+    { id: 'none', name: 'None (Original Image)', descriptor: 'hi', active: true },
+    { id: 'sobel', name: 'Sobel', descriptor: 'hi'},
+    { id: 'minimum', name: 'Minimum', descriptor: 'hi'},
+    { id: 'average', name: 'Average', descriptor: 'hi' },
+    { id: 'median', name: 'Median', descriptor: 'hi' },
+    { id: 'fft_gabor', name: 'FFT Gabor', descriptor: 'hi' },
+    { id: 'fft_dog', name: 'FFT Difference of Gaussians', active: true, descriptor: 'hi' },
+    { id: 'membrane_projections', name: 'Membrane Projections', active: true, descriptor: 'hi' },
+    { id: 'maximum', name: 'Maximum', descriptor: 'hi' },
+    { id: 'variance', name: 'Variance', descriptor: 'hi' },
+    { id: 'lbp', name: 'Local Binary Pattern', descriptor: 'hi' }
 ];
 
 interface ModelClassifierParams {
@@ -74,6 +74,7 @@ interface Pooling {
 interface Feature {
     id: string;
     name: string;
+    descriptor: string;
     active?: boolean;
 }
 
@@ -122,6 +123,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     });
 
     useEffect(() => {
+        // testing
+        console.log('hey!')
+        console.log(featParams.feats)
+        console.log('normal output starts here:')
         console.log(prevFeatParams, featParams);
         console.log(isEqual(prevFeatParams, featParams));
         const hasChanged = !isEqual(prevFeatParams, featParams);
@@ -216,10 +221,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         );
     }
 
-    function renderCheckboxFeature(feature: Feature) {
+    function renderCheckboxFeature( feature: Feature) {
         return (
             <IonItem key={feature.id}>
-                <IonLabel><small>{feature.name}</small></IonLabel>
+                <IonLabel><small>{`${feature.name} ${feature.descriptor}`} </small></IonLabel>
                 <IonCheckbox value={feature.id} checked={feature.active}
                     onIonChange={(e) => {
                         console.log(e);
@@ -227,7 +232,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                             if (nf.id === feature.id) {
                                 return {
                                     ...nf,
-                                    active: e.detail.checked
+                                    active: e.detail.checked 
                                 }
                             } else {
                                 return nf;
