@@ -1,0 +1,3 @@
+[submodule "annotat3d_auth"]
+	path = annotat3d_auth
+	url = git@gitlab.cnpem.br:GCC/segmentation/annotat3d_auth.git
