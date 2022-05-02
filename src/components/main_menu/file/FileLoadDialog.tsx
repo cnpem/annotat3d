@@ -129,6 +129,11 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 imageExt: image["image_ext"],
             }
 
+            if(loadImgOp === "superpixel")
+            {
+                dispatch("superpixelChanged", {});
+            }
+
             setShowErrorWindow(false);
             dispatch("ImageLoaded", info);
             dispatch("ActivateComponents", false);
