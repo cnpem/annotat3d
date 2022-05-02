@@ -2,7 +2,7 @@ import {IonCard, IonItem, IonLabel, IonList} from "@ionic/react";
 import {Fragment, useEffect} from "react";
 import {useStorageState} from "react-storage-hooks";
 import {dispatch, useEventBus} from "../../utils/eventbus";
-import {BM3DFilteringModuleCard} from "./FilteringModuleCard";
+import {BM3DFilteringModuleCard, GaussianFilteringModuleCard} from "./FilteringModuleCard";
 import GroupSelect from "./GroupSelect";
 import PixelSegmentationModuleCard from "./PixelSegmentationModuleCard";
 import SuperpixelModuleCard from "./SuperpixelModuleCard";
@@ -14,7 +14,8 @@ const moduleOptions = [
     {id: "edit", label: 'Label Edit'},
     {
         id: "filter", label: "Smoothing", options: [
-            {id: "bm3d_filter", label: 'BM3D Smoothing Filter'}
+            {id: "bm3d_filter", label: 'BM3D Smoothing Filter'},
+            {id: "gaussian_filter", label: 'Gaussian Filter'}
         ]
     }
 ];
@@ -23,7 +24,8 @@ const canvas: Record<string, 'drawing' | 'imaging'> = {
     superpixel: 'drawing',
     pixel: 'drawing',
     edit: 'drawing',
-    bm3d_filter: 'imaging'
+    bm3d_filter: 'imaging',
+    gaussian_filter: 'imaging'
 };
 
 const ProcessingMenu: React.FC = () => {
@@ -59,6 +61,9 @@ const ProcessingMenu: React.FC = () => {
             </IonList>
             <IonList hidden={curModule !== "bm3d_filter"}>
                 <BM3DFilteringModuleCard/>
+            </IonList>
+            <IonList hidden={curModule !== "gaussian_filter"}>
+                <GaussianFilteringModuleCard/>
             </IonList>
         </Fragment>
     );

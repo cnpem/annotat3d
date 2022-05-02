@@ -8,7 +8,8 @@ import io
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import utils, label
 
-from sscPySpin import filters
+from sscPySpin import filters as sp_filters
+from skimage import filters as sk_filters
 
 from flask_cors import cross_origin
 
@@ -32,7 +33,7 @@ def bm3d_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)))
 
-    output_img = filters.filter_bm3d(input_img_3d, sigma, twostep)
+    output_img = sp_filters.filter_bm3d(input_img_3d, sigma, twostep)
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -49,7 +50,30 @@ def bm3d_apply(input_id: str, output_id: str):
     sigma = request.json['sigma']
     twostep = request.json['twostep']
 
-    output_img = filters.filter_bm3d(input_img, sigma, twostep)
+    output_img = sp_filters.filter_bm3d(input_img, sigma, twostep)
+
+    data_repo.set_image(output_id, data=output_img)
+
+    return 'success', 200
+
+@app.route('/gaussian/preview/<input_id>/<output_id>', methods=['POST'])
+@cross_origin()
+def gaussian_preview(input_id: str, output_id: str):
+    input_img = data_repo.get_image(input_id)
+
+    if input_img is None:
+        return f"Image {input_id} not found.", 400
+
+    sigma = request.json['sigma']
+
+    slice_num = request.json["slice"]
+    axis = request.json["axis"]
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    input_img_slice = input_img[slice_range]
+    input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)))
+
+    output_img = sk_filters.gaussian(input_img_3d, sigma)
 
     data_repo.set_image(output_id, data=output_img)
 

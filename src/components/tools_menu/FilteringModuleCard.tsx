@@ -69,11 +69,74 @@ const BM3DFilteringModuleCard: React.FC = () => {
                 <IonItem>
                     <IonLabel>Two Step</IonLabel>
                     <IonToggle checked={twostep}
-                        onIonChange={(e) => setTwostep(e.detail.checked)}></IonToggle>
+                        onIonChange={(e) => setTwostep(e.detail.checked)}>
+                    </IonToggle>
                 </IonItem>
             </ModuleCardItem>
         </ModuleCard>
     );
 }
 
-export {BM3DFilteringModuleCard};
+const GaussianFilteringModuleCard: React.FC = () => {
+
+    const [disabled, setDisabled] = useState<boolean>(false);
+
+    const [sigma, setSigma] = useStorageState<number>(sessionStorage, "gaussianSigma", 1024);
+
+    function onPreview() {
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number,
+            axis: string
+        };
+
+        const params = {
+            sigma: sigma,
+            axis: curSlice.axis,
+            slice: curSlice.slice
+        };
+
+        console.log(curSlice);
+
+        setDisabled(true);
+        sfetch('POST', '/gaussian/preview/image/future', JSON.stringify(params))
+        .then(() => {
+            dispatch('futureChanged', curSlice);
+        })
+        .finally(() => {
+            setDisabled(false);
+        });
+    }
+
+    function onApply() {
+
+        const params = {
+            sigma: sigma
+        };
+
+        setDisabled(true);
+        sfetch('POST', '/gaussian/preview/image/image', JSON.stringify(params))
+        .then(() => {
+            dispatch('ImageLoaded', null);
+        })
+        .finally(() => {
+            setDisabled(false);
+        });
+    }
+
+    return (
+        <ModuleCard disabled={disabled} name="Gaussian Filtering"
+            onPreview={onPreview} onApply={onApply}>
+            <ModuleCardItem name="Filter Parameters">
+                <IonItem>
+                    <IonLabel>Sigma</IonLabel>
+                    <IonInput value={sigma}
+                        type="number" step="0.1" min={0.1}
+                        onIonChange={ (e) => setSigma(+(e.detail.value!!)) }>
+                    </IonInput>
+                </IonItem>
+            </ModuleCardItem>
+        </ModuleCard>
+    );
+}
+
+export {BM3DFilteringModuleCard, GaussianFilteringModuleCard};
