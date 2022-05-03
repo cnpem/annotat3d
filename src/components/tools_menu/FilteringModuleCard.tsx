@@ -81,8 +81,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
 
     const [disabled, setDisabled] = useState<boolean>(false);
     
-    const [sigma, setSigma] = useStorageState<number>(sessionStorage, "gaussianSigma", 1024); // mudar depois para gaussian
-    // const [twostep, setTwostep] = useStorageState<boolean>(sessionStorage, 'bm3dTwostep', false); // apagar depois bruno
+    const [sigma, setSigma] = useStorageState<number>(sessionStorage, "gaussianSigma", 1024); 
 
     function onPreview() {
         const curSlice = currentEventValue('sliceChanged') as {
@@ -103,36 +102,11 @@ const GaussianFilteringModuleCard: React.FC = () => {
         setDisabled(true);
         sfetch('POST', '/filters/gaussian/preview/image/future', JSON.stringify(params))
         .then(() => {
-            console.log("hello 2"+{params});
-            // dispatch('futureChanged', curSlice);
+            dispatch('futureChanged', curSlice);
         })
         .finally(() => {
             setDisabled(false);
         });
-
-        // delete from here
-        // const curSlice = currentEventValue('sliceChanged') as {
-        //     slice: number,
-        //     axis: string
-        // };
-
-        // const params = {
-        //     sigma: sigma,
-        //     twostep: twostep,
-        //     axis: curSlice.axis,
-        //     slice: curSlice.slice
-        // };
-
-        // console.log(curSlice);
-
-        // setDisabled(true);
-        // sfetch('POST', '/bm3d/gaussian/preview/image/future', JSON.stringify(params))
-        // .then(() => {
-        //     dispatch('futureChanged', curSlice);
-        // })
-        // .finally(() => {
-        //     setDisabled(false);
-        // });
     }
 
     function onApply() {
