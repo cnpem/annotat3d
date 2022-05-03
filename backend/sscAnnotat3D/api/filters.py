@@ -84,7 +84,7 @@ def gaussian_preview(input_id: str, output_id: str):
 
 @app.route('/filters/gaussian/apply/<input_id>/<output_id>', methods=['POST'])
 @cross_origin()
-def bm3d_apply(input_id: str, output_id: str):
+def gaussian_apply(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
 
     if input_img is None:
