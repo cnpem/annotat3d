@@ -116,7 +116,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
         };
 
         setDisabled(true);
-        sfetch('POST', '/bm3d/preview/image/image', JSON.stringify(params))
+        sfetch('POST', '/filters/gaussian/apply/image/image', JSON.stringify(params))
         .then(() => {
             dispatch('ImageLoaded', null);
         })
