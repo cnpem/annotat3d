@@ -26,8 +26,6 @@ const BM3DFilteringModuleCard: React.FC = () => {
             slice: curSlice.slice
         };
 
-        console.log(curSlice);
-
         setDisabled(true);
         sfetch('POST', '/filters/bm3d/preview/image/future', JSON.stringify(params))
         .then(() => {
@@ -81,7 +79,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
 
     const [disabled, setDisabled] = useState<boolean>(false);
     
-    const [sigma, setSigma] = useStorageState<number>(sessionStorage, "gaussianSigma", 1024); 
+    const [sigma, setSigma] = useStorageState<number>(sessionStorage, "gaussianSigma", 2); 
 
     function onPreview() {
         const curSlice = currentEventValue('sliceChanged') as {
@@ -94,10 +92,6 @@ const GaussianFilteringModuleCard: React.FC = () => {
             axis: curSlice.axis,
             slice: curSlice.slice
         };
-
-        console.log(curSlice);
-        console.log("hello 1");
-        console.log(params);
 
         setDisabled(true);
         sfetch('POST', '/filters/gaussian/preview/image/future', JSON.stringify(params))

@@ -8,8 +8,7 @@ import io
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import utils, label
 
-# from sscPySpin.filters import filter_bm3d as spin_bm3d
-from sscPySpin import filters as sp_filters
+from sscPySpin.filters import filter_bm3d as spin_bm3d
 from skimage.filters import gaussian as skimage_gaussian
 
 from flask_cors import cross_origin
@@ -34,8 +33,7 @@ def bm3d_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)))
 
-    # output_img = spin_bm3d(input_img_3d, sigma, twostep)
-    output_img = sp_filters.filter_bm3d(input_img_3d, sigma, twostep)
+    output_img = spin_bm3d(input_img_3d, sigma, twostep)
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -52,8 +50,7 @@ def bm3d_apply(input_id: str, output_id: str):
     sigma = request.json['sigma']
     twostep = request.json['twostep']
 
-    # output_img = spin_bm3d(input_img, sigma, twostep)
-    output_img = sp_filters.filter_bm3d(input_img, sigma, twostep)
+    output_img = spin_bm3d(input_img, sigma, twostep)
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -91,9 +88,10 @@ def gaussian_apply(input_id: str, output_id: str):
         return f"Image {input_id} not found.", 400
 
     sigma = request.json['sigma']
-    # no legacy tem um loop for aqui
-    output_img = skimage_gaussian(input_img, sigma, preserve_range=True).astype(input_img.dtype)
 
+    output_img = np.zeros_like(input_img)
+    for z in range(input_img.shape[0]):
+        output_img[z] = skimage_gaussian(input_img[z], sigma, preserve_range=True).astype(input_img.dtype)
 
     data_repo.set_image(output_id, data=output_img)
 
