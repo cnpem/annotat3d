@@ -89,9 +89,15 @@ def gaussian_apply(input_id: str, output_id: str):
 
     sigma = request.json['sigma']
 
-    output_img = np.zeros_like(input_img)
-    for z in range(input_img.shape[0]):
-        output_img[z] = skimage_gaussian(input_img[z], sigma, preserve_range=True).astype(input_img.dtype)
+    # convolution in x and y
+    # output_img = np.zeros_like(input_img)
+    # for z in range(input_img.shape[0]):
+    #     output_img[z] = skimage_gaussian(input_img[z], sigma, preserve_range=True).astype(input_img.dtype)
+
+    # convolution in x, y, z
+    output_img = skimage_gaussian(input_img, sigma, preserve_range=True).astype(input_img.dtype)
+    # output_img = output_img - output_img2
+
 
     data_repo.set_image(output_id, data=output_img)
 
