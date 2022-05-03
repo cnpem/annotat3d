@@ -9,13 +9,13 @@ from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import utils, label
 
 from sscPySpin import filters as sp_filters
-from skimage import filters as sk_filters
+from skimage.filters import gaussian as sk_gaussian
 
 from flask_cors import cross_origin
 
 app = Blueprint('filter', __name__)
 
-@app.route('/bm3d/preview/<input_id>/<output_id>', methods=['POST'])
+@app.route('/filters/bm3d/preview/<input_id>/<output_id>', methods=['POST'])
 @cross_origin()
 def bm3d_preview(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
@@ -39,7 +39,7 @@ def bm3d_preview(input_id: str, output_id: str):
 
     return 'success', 200
 
-@app.route('/bm3d/apply/<input_id>/<output_id>', methods=['POST'])
+@app.route('/filters/bm3d/apply/<input_id>/<output_id>', methods=['POST'])
 @cross_origin()
 def bm3d_apply(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
@@ -56,7 +56,7 @@ def bm3d_apply(input_id: str, output_id: str):
 
     return 'success', 200
 
-@app.route('/gaussian/preview/<input_id>/<output_id>', methods=['POST'])
+@app.route('/filters/gaussian/preview/<input_id>/<output_id>', methods=['POST'])
 @cross_origin()
 def gaussian_preview(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
@@ -73,7 +73,7 @@ def gaussian_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)))
 
-    output_img = sk_filters.gaussian(input_img_3d, sigma)
+    output_img = sk_gaussian(input_img_3d, sigma, preserve_range=True).astype(input_img_3d.dtype)
 
     data_repo.set_image(output_id, data=output_img)
 
