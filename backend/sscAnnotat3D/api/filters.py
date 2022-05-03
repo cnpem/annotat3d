@@ -1,9 +1,5 @@
-
-from flask import Blueprint, request, send_file, jsonify
+from flask import Blueprint, request
 import numpy as np
-import pickle
-import zlib
-import io
 
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import utils, label
@@ -54,3 +50,8 @@ def bm3d_apply(input_id: str, output_id: str):
     data_repo.set_image(output_id, data=output_img)
 
     return 'success', 200
+
+@app.route('/gaussian/preview/<input_id>/<output_id>', methods=['POST'])
+@cross_origin()
+def gaussian_preview(input_id: str, output_id: str):
+    print("allow")

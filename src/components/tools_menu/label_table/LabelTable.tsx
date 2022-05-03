@@ -34,6 +34,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     });
 
     useEffect(() => {
+        console.log("doing this dispatch rn");
         dispatch('labelColorsChanged', labelList);
     });
 

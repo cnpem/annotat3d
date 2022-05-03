@@ -29,10 +29,21 @@ def new_annot(annot_id: str):
     if img is None:
         return handle_exception('No image associated')
 
+    print("\n-----------------------------------")
+    print("annot_id in new_annot : {}".format(annot_id))
+    print("-------------------------------------\n")
+
     annot_module = annotation_module.AnnotationModule(img.shape)
-
+    print("\n-----------------------------")
+    print("annot_module in new_annot : {}".format(annot_module))
+    print("annot_module methods : {}".format([method for method in dir(annot_module) if method.startswith('__') is False]))
+    print("\n-----------------------------")
     module_repo.set_module(annot_id, module=annot_module)
-
+    print("\n-----------------------------")
+    print("getting the labels with get_labels_object : {}\n".format(annot_module.get_labels_object()))
+    print("getting the labels with get_labels : {}\n".format(annot_module.get_labels()))
+    print("getting the labels with get_annotation : {}\n".format(annot_module.get_annotation()))
+    print("\n-----------------------------")
     return "success", 200
 
 
@@ -62,7 +73,7 @@ def open_annot():
     try:
         annot_path = request.json["annot_path"]
     except:
-        return "Error while trying to get the annotation path", 400
+        return handle_exception("Error while trying to get the annotation path")
 
     annot_module.load_annotation(annot_path)
     module_repo.set_module('annotation', module=annot_module)
@@ -112,11 +123,12 @@ def draw():
     size = request.json["size"]
     label = request.json["label"]
     mode = request.json["mode"]
-
+    print("label : {}".format(label))
     axis_dim = utils.get_axis_num(axis)
 
     annot_module = module_repo.get_module('annotation')
-    
+    print("annot_module : {}".format(annot_module))
+
     if annot_module is None:
         return handle_exception("Annotation module not found")
 
@@ -146,11 +158,14 @@ def get_annot_slice():
 
     annot_module = module_repo.get_module('annotation')
 
-    img_slice = annot_module.annotation_image[slice_range]
+    if(annot_module != None):
+        img_slice = annot_module.annotation_image[slice_range]
 
-    img_slice = zlib.compress(utils.toNpyBytes(img_slice))
+        img_slice = zlib.compress(utils.toNpyBytes(img_slice))
 
-    return send_file(io.BytesIO(img_slice), "application/gzip")
+        return send_file(io.BytesIO(img_slice), "application/gzip")
+
+    return "test", "application/gzip"
 
 
 @app.route("/undo_annot", methods=['POST'])
