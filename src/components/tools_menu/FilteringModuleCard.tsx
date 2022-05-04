@@ -96,7 +96,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
         };
 
         setDisabled(true);
-        sfetch('POST', '/filters/gaussian2d/preview/image/future', JSON.stringify(params))
+        sfetch('POST', '/filters/gaussian/preview/image/future', JSON.stringify(params))
         .then(() => {
             dispatch('futureChanged', curSlice);
         })
@@ -107,13 +107,19 @@ const GaussianFilteringModuleCard: React.FC = () => {
 
     function onApply() {
 
+        // const curSlice = currentEventValue('sliceChanged') as {
+        //     slice: number,
+        //     axis: string
+        // };
+
         const params = {
             sigma: sigma,
-            convType: convType
+            convType: convType,
+            // axis: curSlice.axis,
         };
 
         setDisabled(true);
-        sfetch('POST', '/filters/gaussian2d/apply/image/image', JSON.stringify(params))
+        sfetch('POST', '/filters/gaussian/apply/image/image', JSON.stringify(params))
         .then(() => {
             dispatch('ImageLoaded', null);
         })
