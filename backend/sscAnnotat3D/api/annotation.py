@@ -29,10 +29,6 @@ def new_annot(annot_id: str):
     if img is None:
         return handle_exception('No image associated')
 
-    print("\n-----------------------------------")
-    print("annot_id in new_annot : {}".format(annot_id))
-    print("-------------------------------------\n")
-
     annot_module = annotation_module.AnnotationModule(img.shape)
     print("\n-----------------------------")
     print("annot_module in new_annot : {}".format(annot_module))
@@ -116,7 +112,6 @@ def save_annot():
 @app.route("/draw", methods=["POST"])
 @cross_origin()
 def draw():
-    print(request.json)
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]

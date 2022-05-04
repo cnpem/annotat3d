@@ -4,7 +4,8 @@ import os.path
 
 import sscIO.io
 import numpy as np
-from sscAnnotat3D.repository import data_repo
+from sscAnnotat3D.repository import data_repo, module_repo
+from sscAnnotat3D.modules import annotation_module
 
 from flask_cors import cross_origin
 
@@ -72,6 +73,14 @@ def open_image(image_id: str):
         image_dtype = _convert_dtype_to_str(dtype=image.dtype)
     except:
         return handle_exception(error_msg)
+
+    if(image_id == "label"):
+        print("\n--------------------------------------")
+        print("opa, li uma operação de label")
+        print("-----------------------------------------\n")
+        annot_module = annotation_module.AnnotationModule(image.shape)
+        print(annot_module)
+        annot_module.load_label(image)
 
     image_info = {"image_shape": image_shape, "image_ext": extension,
                   "image_name": file_name, "image_dtype": image_dtype}

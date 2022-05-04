@@ -1,13 +1,13 @@
 import logging
 import math
 import pickle
-import sys
-import threading
+
+from collections import OrderedDict
 from skimage import draw
 from operator import itemgetter
 import numpy as np
 
-from sscAnnotat3D import aux_functions, utils
+from sscAnnotat3D import aux_functions
 
 class Label(object):
     def __init__(self, id, name=None):
@@ -546,6 +546,35 @@ class AnnotationModule():
 
     def get_annotation(self):
         return self.annotation
+
+    def load_label(self, label):
+        print("\n------------------------------------")
+        print("Just testing : {}".format(np.zeros((self.zsize, self.ysize, self.xsize), dtype="uint16")))
+
+    def update_label_list(self):
+        print("self.order_markers : {}".format(self.order_markers))
+        labels = self.annotation.get_labels_object()
+        labels = list(OrderedDict.fromkeys(labels))  # unique keeping order
+
+        self.labels_image.clear()
+
+        colormap = self.annotation.get_marker_colormap()
+        for label in labels:
+            # label_name, color_id = self.annotation.get_label_name_and_color_id(label)
+            label_name, color_id = label.name, label.color_id(colormap)
+            print("--------------------------------------------\n")
+            print("label_name : {}".format(label_name))
+            print("color_id : {}".format(color_id))
+            print("\n----------------------------------------------")
+            """new_item = QListWidgetItem()
+            new_item.setText(label_name)
+
+            color = colormap.colors.rgba[color_id]
+            r = int(color[0] * 255)
+            g = int(color[1] * 255)
+            b = int(color[2] * 255)
+            new_item.setForeground(QColor(r, g, b, 255))
+            self.labels_image.addItem(new_item)"""
 
     def update_annotation(self, annotations):
         # Drawing markers on top of the marker label/id images
