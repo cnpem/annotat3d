@@ -1,4 +1,4 @@
-import {IonInput, IonItem, IonLabel, IonToggle} from "@ionic/react";
+import {IonInput, IonItem, IonLabel, IonListHeader, IonRadio, IonRadioGroup, IonToggle} from "@ionic/react";
 import {useState} from "react";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch} from "../../utils/eventbus";
@@ -80,6 +80,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
     const [disabled, setDisabled] = useState<boolean>(false);
     
     const [sigma, setSigma] = useStorageState<number>(sessionStorage, "gaussianSigma", 2); 
+    const [convType, setConvType] = useStorageState<string>(sessionStorage, "gaussianConvType", "2d"); 
 
     function onPreview() {
         const curSlice = currentEventValue('sliceChanged') as {
@@ -89,12 +90,13 @@ const GaussianFilteringModuleCard: React.FC = () => {
 
         const params = {
             sigma: sigma,
+            convType: convType,
             axis: curSlice.axis,
             slice: curSlice.slice
         };
 
         setDisabled(true);
-        sfetch('POST', '/filters/gaussian/preview/image/future', JSON.stringify(params))
+        sfetch('POST', '/filters/gaussian2d/preview/image/future', JSON.stringify(params))
         .then(() => {
             dispatch('futureChanged', curSlice);
         })
@@ -106,11 +108,12 @@ const GaussianFilteringModuleCard: React.FC = () => {
     function onApply() {
 
         const params = {
-            sigma: sigma
+            sigma: sigma,
+            convType: convType
         };
 
         setDisabled(true);
-        sfetch('POST', '/filters/gaussian/apply/image/image', JSON.stringify(params))
+        sfetch('POST', '/filters/gaussian2d/apply/image/image', JSON.stringify(params))
         .then(() => {
             dispatch('ImageLoaded', null);
         })
@@ -130,6 +133,16 @@ const GaussianFilteringModuleCard: React.FC = () => {
                         onIonChange={ (e) => setSigma(+(e.detail.value!!)) }>
                     </IonInput>
                 </IonItem>
+                <IonRadioGroup value={convType} onIonChange={e => setConvType(e.detail.value)}>
+                    <IonItem>
+                        <IonLabel>2D Convolution</IonLabel>
+                        <IonRadio value="2d"/>
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel>3D Convolution</IonLabel>
+                        <IonRadio value="3d"></IonRadio>
+                    </IonItem>
+                </IonRadioGroup>
             </ModuleCardItem>
         </ModuleCard>
     );

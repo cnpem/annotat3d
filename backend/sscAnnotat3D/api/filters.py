@@ -56,9 +56,9 @@ def bm3d_apply(input_id: str, output_id: str):
 
     return 'success', 200
 
-@app.route('/filters/gaussian/preview/<input_id>/<output_id>', methods=['POST'])
+@app.route('/filters/gaussian2d/preview/<input_id>/<output_id>', methods=['POST'])
 @cross_origin()
-def gaussian_preview(input_id: str, output_id: str):
+def gaussian2d_preview(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
 
     if input_img is None:
@@ -79,9 +79,9 @@ def gaussian_preview(input_id: str, output_id: str):
 
     return 'success', 200
 
-@app.route('/filters/gaussian/apply/<input_id>/<output_id>', methods=['POST'])
+@app.route('/filters/gaussian2d/apply/<input_id>/<output_id>', methods=['POST'])
 @cross_origin()
-def gaussian_apply(input_id: str, output_id: str):
+def gaussian2d_apply(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
 
     if input_img is None:
@@ -89,15 +89,33 @@ def gaussian_apply(input_id: str, output_id: str):
 
     sigma = request.json['sigma']
 
-    # convolution in x and y
-    # output_img = np.zeros_like(input_img)
-    # for z in range(input_img.shape[0]):
-    #     output_img[z] = skimage_gaussian(input_img[z], sigma, preserve_range=True).astype(input_img.dtype)
+    # convolution in x, y applied for all slices in the the z direction
+    output_img = np.zeros_like(input_img)
+    for z in range(input_img.shape[0]):
+        output_img[z] = skimage_gaussian(input_img[z], sigma, preserve_range=True).astype(input_img.dtype)
+
+    data_repo.set_image(output_id, data=output_img)
+
+    return 'success', 200
+
+@app.route('/filters/gaussian3d/preview/<input_id>/<output_id>', methods=['POST'])
+@cross_origin()
+def gaussian3d_preview(input_id: str, output_id: str):
+    # there's no difference in the preview implementation for the 2d and 3d versions
+    return gaussian2d_preview(input_id, output_id)
+
+@app.route('/filters/gaussian3d/apply/<input_id>/<output_id>', methods=['POST'])
+@cross_origin()
+def gaussian3d_apply(input_id: str, output_id: str):
+    input_img = data_repo.get_image(input_id)
+
+    if input_img is None:
+        return f"Image {input_id} not found.", 400
+
+    sigma = request.json['sigma']
 
     # convolution in x, y, z
     output_img = skimage_gaussian(input_img, sigma, preserve_range=True).astype(input_img.dtype)
-    # output_img = output_img - output_img2
-
 
     data_repo.set_image(output_id, data=output_img)
 
