@@ -74,12 +74,12 @@ def open_image(image_id: str):
     except:
         return handle_exception(error_msg)
 
+    #TODO : need to finish this implementation to dev-issue-15
     if(image_id == "label"):
         print("\n--------------------------------------")
         print("opa, li uma operação de label")
         print("-----------------------------------------\n")
         annot_module = annotation_module.AnnotationModule(image.shape)
-        print(annot_module)
         annot_module.load_label(image)
 
     image_info = {"image_shape": image_shape, "image_ext": extension,

@@ -8,6 +8,7 @@ from operator import itemgetter
 import numpy as np
 
 from sscAnnotat3D import aux_functions
+from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmentationModule as sm
 
 class Label(object):
     def __init__(self, id, name=None):
@@ -43,7 +44,7 @@ class AnnotationModule():
                                 image_shape=image_shape)
 
         self.zsize, self.ysize, self.xsize = image_shape
-
+        self.volume_data = None
         self.xyslice = 0
         self.xzslice = 0
         self.yzslice = 0
@@ -74,7 +75,26 @@ class AnnotationModule():
         self.create_labels()
 
         self.selected_cmap = 'grays'
+        self.classifier = None
+        self._cur_module_name = sm.module_name()  # force a new module to be loaded
+        #self.set_segmentation_module(sm, auto_save=True)
 
+    def set_segmentation_module(self, module, **kwargs):
+
+        if self.classifier is not None and self._cur_module_name == module.module_name():
+            return
+
+        logging.debug('Loading segmentation module: {}'.format(str(module)))
+        self.classifier = module(self.volume_data, parent=self, **kwargs)
+
+        if 'marker_label_selection_type' in kwargs:
+            self.__default_marker_label_selection_type = kwargs['marker_label_selection_type']
+            self.set_marker_label_selection_type(self.__default_marker_label_selection_type)
+
+        self._cur_module_name = module.module_name()
+
+    #todo : this variable self.classifier.maker_mode_support wans't declared anywhere.
+    # So we need to pay attention if anything broke on the code
     @property
     def marker_mode_support(self):
         return self.classifier.marker_mode_support
@@ -548,8 +568,17 @@ class AnnotationModule():
         return self.annotation
 
     def load_label(self, label):
-        print("\n------------------------------------")
-        print("Just testing : {}".format(np.zeros((self.zsize, self.ysize, self.xsize), dtype="uint16")))
+        #print("\n------------------------------------")
+        #print("Just testing : {}".format(np.zeros((self.zsize, self.ysize, self.xsize), dtype="uint16")))
+        new_labels = np.unique(label)
+        # if we have more labels than our colormap supports, load a bigger colormap
+        self.include_labels(new_labels)
+        print("\n=======================================================")
+        print("sm Module : {}".format(sm.module_name()))
+        self.classifier = sm.module_name()
+        #self.classifier.load_label(label) TODO : need to edit this variable
+
+        aux_functions.log_usage(op_type='load_label', label_shape=label.shape, label_dtype=str(label.dtype))
 
     def update_label_list(self):
         print("self.order_markers : {}".format(self.order_markers))
