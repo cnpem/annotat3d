@@ -579,16 +579,10 @@ class AnnotationModule():
         self.include_labels(new_labels)
         self.classifier = sm.module_name()
         print("\n===========================================")
-        print("self.annotation : {}".format(self.annotation))
-        print("=============================================\n")
-        print("\n===========================================")
-        print("self.added_labels: {}".format(self.added_labels))
+        print("self.added_labels : {}".format(self.added_labels))
+        print("self.added_labels type : {}".format(type(self.added_labels)))
         print("=============================================\n")
 
-        print("\n======================================================")
-        print("All the self.classifier methods : {}".format([method_name for method_name in dir(object)
-                  if callable(getattr(object, method_name))]))
-        print("=========================================================\n")
         #self.classifier.load_label(label)
 
         aux_functions.log_usage(op_type='load_label',

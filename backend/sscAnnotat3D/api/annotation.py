@@ -109,11 +109,15 @@ def draw():
     size = request.json["size"]
     label = request.json["label"]
     mode = request.json["mode"]
+    print("\n=================================")
     print("label : {}".format(label))
+    print("====================================\n")
     axis_dim = utils.get_axis_num(axis)
 
     annot_module = module_repo.get_module('annotation')
+    print("\n=================================")
     print("annot_module : {}".format(annot_module))
+    print("====================================\n")
 
     if annot_module is None:
         return handle_exception("Annotation module not found")
