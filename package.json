@@ -81,6 +81,9 @@
     "prettier": "2.6.1",
     "react-scripts": "5.0.0"
   },
+  "resolutions": {
+    "autoprefixer": "10.4.5"
+  },
   "description": "An Ionic project",
   "proxy": "http://localhost:5000"
 }
