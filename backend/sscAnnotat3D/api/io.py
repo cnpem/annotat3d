@@ -79,7 +79,8 @@ def open_image(image_id: str):
         print("\n--------------------------------------")
         print("opa, li uma operação de label")
         print("-----------------------------------------\n")
-        annot_module = annotation_module.AnnotationModule(image.shape)
+        kwargs = {"image": image}
+        annot_module = annotation_module.AnnotationModule(image.shape, **kwargs)
         annot_module.load_label(image)
 
     image_info = {"image_shape": image_shape, "image_ext": extension,

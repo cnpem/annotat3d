@@ -12,6 +12,7 @@ from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmen
 
 class Label(object):
     def __init__(self, id, name=None):
+        self.name = name
         self.id = id
 
     def __lt__(self, other):
@@ -44,7 +45,10 @@ class AnnotationModule():
                                 image_shape=image_shape)
 
         self.zsize, self.ysize, self.xsize = image_shape
-        self.volume_data = None
+        """print("\n=================================================")
+        print("kwargs image : {}".format(kwargs["image"] if "image" in kwargs else None))
+        print("==================================================\n")"""
+        self.volume_data = kwargs["image"] if "image" in kwargs else None
         self.xyslice = 0
         self.xzslice = 0
         self.yzslice = 0
@@ -573,12 +577,23 @@ class AnnotationModule():
         new_labels = np.unique(label)
         # if we have more labels than our colormap supports, load a bigger colormap
         self.include_labels(new_labels)
-        print("\n=======================================================")
-        print("sm Module : {}".format(sm.module_name()))
         self.classifier = sm.module_name()
-        #self.classifier.load_label(label) TODO : need to edit this variable
+        print("\n===========================================")
+        print("self.annotation : {}".format(self.annotation))
+        print("=============================================\n")
+        print("\n===========================================")
+        print("self.added_labels: {}".format(self.added_labels))
+        print("=============================================\n")
 
-        aux_functions.log_usage(op_type='load_label', label_shape=label.shape, label_dtype=str(label.dtype))
+        print("\n======================================================")
+        print("All the self.classifier methods : {}".format([method_name for method_name in dir(object)
+                  if callable(getattr(object, method_name))]))
+        print("=========================================================\n")
+        #self.classifier.load_label(label)
+
+        aux_functions.log_usage(op_type='load_label',
+                                label_shape=label.shape,
+                                label_dtype=str(label.dtype))
 
     def update_label_list(self):
         print("self.order_markers : {}".format(self.order_markers))

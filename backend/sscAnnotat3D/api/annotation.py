@@ -30,16 +30,7 @@ def new_annot(annot_id: str):
         return handle_exception('No image associated')
 
     annot_module = annotation_module.AnnotationModule(img.shape)
-    print("\n-----------------------------")
-    print("annot_module in new_annot : {}".format(annot_module))
-    print("annot_module methods : {}".format([method for method in dir(annot_module) if method.startswith('__') is False]))
-    print("\n-----------------------------")
     module_repo.set_module(annot_id, module=annot_module)
-    print("\n-----------------------------")
-    print("getting the labels with get_labels_object : {}\n".format(annot_module.get_labels_object()))
-    print("getting the labels with get_labels : {}\n".format(annot_module.get_labels()))
-    print("getting the labels with get_annotation : {}\n".format(annot_module.get_annotation()))
-    print("\n-----------------------------")
     return "success", 200
 
 
