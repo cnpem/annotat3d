@@ -107,15 +107,15 @@ const GaussianFilteringModuleCard: React.FC = () => {
 
     function onApply() {
 
-        // const curSlice = currentEventValue('sliceChanged') as {
-        //     slice: number,
-        //     axis: string
-        // };
-
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number,
+            axis: string
+        };
+        
         const params = {
             sigma: sigma,
             convType: convType,
-            // axis: curSlice.axis,
+            axis: curSlice.axis,
         };
 
         setDisabled(true);

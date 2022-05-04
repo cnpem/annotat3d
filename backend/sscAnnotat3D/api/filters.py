@@ -66,9 +66,6 @@ def gaussian_preview(input_id: str, output_id: str):
 
     sigma = request.json['sigma']
 
-    # brunoNotes
-    print("\n\n>>>>Conv Type is :{ct}: selected plane is :{plane}: and shape is :{shape}:<<<<\n\n".format( ct=request.json['convType'], plane=request.json["axis"], shape=input_img.shape ) )
-
     slice_num = request.json["slice"]
     axis = request.json["axis"]
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
@@ -91,25 +88,26 @@ def gaussian_apply(input_id: str, output_id: str):
         return f"Image {input_id} not found.", 400
 
     sigma = request.json['sigma']
-    convType = request.json['convType'] #2d or 3d
+    convType = request.json['convType'] # 2d or 3d
     
     if convType == "2d":
         # convolution in x, y applied for all slices in the the z direction
         output_img = np.zeros_like(input_img)
         # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
-        axisIndexRef = {"XY": 0, "XZ": 1, "YZ": 2}
-        axisIndex = axisIndexRef[request.json["axis"]]
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[request.json["axis"]]
+        typeImg2d = input_img[0].dtype
         for i in range(input_img.shape[axisIndex]):
-            # on the annotat3D legacy, this was implemented forcing the stack trough the z axis
-            if axisIndexRef == 0:
+            # on the annotat3D legacy, this was implemented forcing the stack through the z axis
+            if axisIndex == 0:
                 # stack following the z axis
-                output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(input_img.dtype)
-            elif axisIndexRef == 1:
+                output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
+            elif axisIndex == 1:
                 # stack following the y axis
-                output_img[:,i,:] = skimage_gaussian(input_img[:,i,:], sigma, preserve_range=True).astype(input_img.dtype)
-            elif axisIndexRef == 2:
+                output_img[:,i,:] = skimage_gaussian(input_img[:,i,:], sigma, preserve_range=True).astype(typeImg2d)
+            elif axisIndex == 2:
                 # stack following the x axis
-                output_img[:,:,i] = skimage_gaussian(input_img[:,:,i], sigma, preserve_range=True).astype(input_img.dtype)
+                output_img[:,:,i] = skimage_gaussian(input_img[:,:,i], sigma, preserve_range=True).astype(typeImg2d)
     elif convType == "3d":
         # convolution in x, y, z
         output_img = skimage_gaussian(input_img, sigma, preserve_range=True).astype(input_img.dtype)
