@@ -1,8 +1,9 @@
 import {IonInput, IonItem, IonLabel, IonListHeader, IonRadio, IonRadioGroup, IonToggle} from "@ionic/react";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch} from "../../utils/eventbus";
 import {sfetch} from "../../utils/simplerequest";
+import LoadingComponent from "./LoadingComponent";
 import {ModuleCard, ModuleCardItem} from "./ModuleCard";
 
 
@@ -82,7 +83,14 @@ const GaussianFilteringModuleCard: React.FC = () => {
     const [sigma, setSigma] = useStorageState<number>(sessionStorage, "gaussianSigma", 2); 
     const [convType, setConvType] = useStorageState<string>(sessionStorage, "gaussianConvType", "2d"); 
 
+    // const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
+
+    // useEffect(() => {
+    //     setShowLoadingComp(false);
+    // }, [showLoadingComp]);
+
     function onPreview() {
+
         const curSlice = currentEventValue('sliceChanged') as {
             slice: number,
             axis: string
@@ -95,13 +103,17 @@ const GaussianFilteringModuleCard: React.FC = () => {
             slice: curSlice.slice
         };
 
+        // setShowLoadingComp(true);
         setDisabled(true);
+
         sfetch('POST', '/filters/gaussian/preview/image/future', JSON.stringify(params))
         .then(() => {
             dispatch('futureChanged', curSlice);
         })
         .finally(() => {
             setDisabled(false);
+            // setShowLoadingComp(false);
+            showToast("Preview done !", 5000);
         });
     }
 
@@ -118,13 +130,17 @@ const GaussianFilteringModuleCard: React.FC = () => {
             axis: curSlice.axis,
         };
 
+        // setShowLoadingComp(true);
         setDisabled(true);
+
         sfetch('POST', '/filters/gaussian/apply/image/image', JSON.stringify(params))
         .then(() => {
             dispatch('ImageLoaded', null);
         })
         .finally(() => {
             setDisabled(false);
+            // setShowLoadingComp(false);
+            showToast("Apply done !", 5000);
         });
     }
 
@@ -149,9 +165,16 @@ const GaussianFilteringModuleCard: React.FC = () => {
                         <IonRadio value="3d"></IonRadio>
                     </IonItem>
                 </IonRadioGroup>
+                {/* <LoadingComponent
+                        openLoadingWindow={showLoadingComp}
+                        loadingText={"Processing filter"}/> */}
             </ModuleCardItem>
         </ModuleCard>
     );
 }
 
 export {BM3DFilteringModuleCard, GaussianFilteringModuleCard};
+    function showToast(arg0: string, arg1: number) {
+        throw new Error("Function not implemented.");
+    }
+
