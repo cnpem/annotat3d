@@ -559,12 +559,16 @@ class AnnotationModule():
         new_labels = np.unique(label)
         # if we have more labels than our colormap supports, load a bigger colormap
         self.include_labels(new_labels)
+        #TODO : Need to make possible for the user to choose a colormap
+        colormap = np.load("./backend/sscAnnotat3D/colormaps/colormap_8bits.npy")
+        label_list = []
+        i = 1
+        for _ in self.added_labels:
+            label_list.append({"id": i, "color": 1, "labelName": "Label {}".format(i)})
+            i += 1
 
-        label_list = [{"a" : 1, "b" : "b", "c" : [1, 2, 3]}]
         print(json.dumps(label_list))
-        label_list.append({"a" : 1, "b" : "b", "c" : [1, 2, 3]})
-        print(json.dumps(label_list))
-        print(jsonify(label_list))
+
         aux_functions.log_usage(op_type='load_label',
                                 label_shape=label.shape,
                                 label_dtype=str(label.dtype))
