@@ -126,8 +126,8 @@ def nlm_preview(input_id: str, output_id: str):
         return f"Image {input_id} not found.", 400
 
     sigma = request.json['sigma']
-    nl_step = request.json['nl_step']
-    gaussian_step = request.json['gaussian_step']
+    nlmStep = request.json['nlmStep']
+    gaussianStep = request.json['gaussianStep']
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
@@ -137,7 +137,7 @@ def nlm_preview(input_id: str, output_id: str):
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)))
 
     output_img = np.zeros_like(input_img_3d)    
-    spin_nlm(output_img, input_img_3d, sigma, nl_step, gaussian_step)
+    spin_nlm(output_img, input_img_3d, sigma, nlmStep, gaussianStep)
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -152,11 +152,11 @@ def nlm_apply(input_id: str, output_id: str):
         return f"Image {input_id} not found.", 400
 
     sigma = request.json['sigma']
-    nl_step = request.json['nl_step']
-    gaussian_step = request.json['gaussian_step']
+    nlmStep = request.json['nlmStep']
+    gaussianStep = request.json['gaussianStep']
 
     output_img = np.zeros_like(input_img)
-    spin_nlm(output_img, input_img, sigma, nl_step, gaussian_step)
+    spin_nlm(output_img, input_img, sigma, nlmStep, gaussianStep)
 
     data_repo.set_image(output_id, data=output_img)
 

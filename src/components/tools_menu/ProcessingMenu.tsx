@@ -2,7 +2,7 @@ import {IonCard, IonItem, IonLabel, IonList} from "@ionic/react";
 import {Fragment, useEffect} from "react";
 import {useStorageState} from "react-storage-hooks";
 import {dispatch, useEventBus} from "../../utils/eventbus";
-import {BM3DFilteringModuleCard, GaussianFilteringModuleCard} from "./FilteringModuleCard";
+import {BM3DFilteringModuleCard, GaussianFilteringModuleCard, NonLocalMeansFilteringModuleCard} from "./FilteringModuleCard";
 import GroupSelect from "./GroupSelect";
 import PixelSegmentationModuleCard from "./PixelSegmentationModuleCard";
 import SuperpixelModuleCard from "./SuperpixelModuleCard";
@@ -15,7 +15,8 @@ const moduleOptions = [
     {
         id: "filter", label: "Smoothing", options: [
             {id: "bm3d_filter", label: 'BM3D Smoothing Filter'},
-            {id: "gaussian_filter", label: 'Gaussian Filter'}
+            {id: "gaussian_filter", label: 'Gaussian Filter'},
+            {id: "nlm_filter", label: 'Non Local Means Filter'}
         ]
     }
 ];
@@ -25,7 +26,8 @@ const canvas: Record<string, 'drawing' | 'imaging'> = {
     pixel: 'drawing',
     edit: 'drawing',
     bm3d_filter: 'imaging',
-    gaussian_filter: 'imaging'
+    gaussian_filter: 'imaging',
+    nlm_filter: 'imaging'
 };
 
 const ProcessingMenu: React.FC = () => {
@@ -64,6 +66,9 @@ const ProcessingMenu: React.FC = () => {
             </IonList>
             <IonList hidden={curModule !== "gaussian_filter"}>
                 <GaussianFilteringModuleCard/>
+            </IonList>
+            <IonList hidden={curModule !== "nlm_filter"}>
+                <NonLocalMeansFilteringModuleCard/>
             </IonList>
         </Fragment>
     );

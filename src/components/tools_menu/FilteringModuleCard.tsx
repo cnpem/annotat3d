@@ -83,12 +83,6 @@ const GaussianFilteringModuleCard: React.FC = () => {
     const [sigma, setSigma] = useStorageState<number>(sessionStorage, "gaussianSigma", 2); 
     const [convType, setConvType] = useStorageState<string>(sessionStorage, "gaussianConvType", "2d"); 
 
-    // const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
-
-    // useEffect(() => {
-    //     setShowLoadingComp(false);
-    // }, [showLoadingComp]);
-
     function onPreview() {
 
         const curSlice = currentEventValue('sliceChanged') as {
@@ -103,7 +97,6 @@ const GaussianFilteringModuleCard: React.FC = () => {
             slice: curSlice.slice
         };
 
-        // setShowLoadingComp(true);
         setDisabled(true);
 
         sfetch('POST', '/filters/gaussian/preview/image/future', JSON.stringify(params))
@@ -112,7 +105,6 @@ const GaussianFilteringModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
-            // setShowLoadingComp(false);
             showToast("Preview done !", 5000);
         });
     }
@@ -130,7 +122,6 @@ const GaussianFilteringModuleCard: React.FC = () => {
             axis: curSlice.axis,
         };
 
-        // setShowLoadingComp(true);
         setDisabled(true);
 
         sfetch('POST', '/filters/gaussian/apply/image/image', JSON.stringify(params))
@@ -139,7 +130,6 @@ const GaussianFilteringModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
-            // setShowLoadingComp(false);
             showToast("Apply done !", 5000);
         });
     }
@@ -165,15 +155,104 @@ const GaussianFilteringModuleCard: React.FC = () => {
                         <IonRadio value="3d"></IonRadio>
                     </IonItem>
                 </IonRadioGroup>
-                {/* <LoadingComponent
-                        openLoadingWindow={showLoadingComp}
-                        loadingText={"Processing filter"}/> */}
             </ModuleCardItem>
         </ModuleCard>
     );
 }
 
-export {BM3DFilteringModuleCard, GaussianFilteringModuleCard};
+const NonLocalMeansFilteringModuleCard: React.FC = () => {
+
+    const [disabled, setDisabled] = useState<boolean>(false);
+    
+    const [sigma, setSigma] = useStorageState<number>(sessionStorage, "nlmSigma", 2); 
+    const [nlmStep, setNlmStep] = useStorageState<number>(sessionStorage, "nlmStep", 21); 
+    const [gaussianStep, setGaussianStep] = useStorageState<number>(sessionStorage, "gaussianStep", 10); 
+
+
+    function onPreview() {
+
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number,
+            axis: string
+        };
+
+        const params = {
+            sigma: sigma,
+            nlmStep: nlmStep,
+            gaussianStep: gaussianStep,
+            axis: curSlice.axis,
+            slice: curSlice.slice
+        };
+
+        setDisabled(true);
+
+        sfetch('POST', '/filters/nlm/preview/image/future', JSON.stringify(params))
+        .then(() => {
+            dispatch('futureChanged', curSlice);
+        })
+        .finally(() => {
+            setDisabled(false);
+            showToast("Preview done !", 5000);
+        });
+    }
+
+    function onApply() {
+
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number,
+            axis: string
+        };
+        
+        const params = {
+            sigma: sigma,
+            nlmStep: nlmStep,
+            gaussianStep: gaussianStep,
+            axis: curSlice.axis,
+        };
+
+        setDisabled(true);
+
+        sfetch('POST', '/filters/nlm/apply/image/image', JSON.stringify(params))
+        .then(() => {
+            dispatch('ImageLoaded', null);
+        })
+        .finally(() => {
+            setDisabled(false);
+            showToast("Apply done !", 5000);
+        });
+    }
+
+    return (
+        <ModuleCard disabled={disabled} name="Non Local Means Filtering"
+            onPreview={onPreview} onApply={onApply}>
+            <ModuleCardItem name="Filter Parameters">
+                <IonItem>
+                    <IonLabel>Sigma</IonLabel>
+                    <IonInput value={sigma}
+                        type="number" step="0.1" min={0.1}
+                        onIonChange={ (e) => setSigma(+(e.detail.value!!)) }>
+                    </IonInput>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>NLM Step</IonLabel>
+                    <IonInput value={nlmStep}
+                        type="number" step="0.1" min={0.1}
+                        onIonChange={ (e) => setNlmStep(+(e.detail.value!!)) }>
+                    </IonInput>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>Gaussian Step</IonLabel>
+                    <IonInput value={gaussianStep}
+                        type="number" step="0.1" min={0.1}
+                        onIonChange={ (e) => setGaussianStep(+(e.detail.value!!)) }>
+                    </IonInput>
+                </IonItem>
+            </ModuleCardItem>
+        </ModuleCard>
+    );
+}
+
+export {BM3DFilteringModuleCard, GaussianFilteringModuleCard, NonLocalMeansFilteringModuleCard};
     function showToast(arg0: string, arg1: number) {
         throw new Error("Function not implemented.");
     }
