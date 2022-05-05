@@ -1,14 +1,15 @@
+import json
 import logging
 import math
 import pickle
+import numpy as np
 
+from flask import jsonify
 from collections import OrderedDict
 from skimage import draw
 from operator import itemgetter
-import numpy as np
 
 from sscAnnotat3D import aux_functions
-from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmentationModule as sm
 
 class Label(object):
     def __init__(self, id, name=None):
@@ -45,9 +46,6 @@ class AnnotationModule():
                                 image_shape=image_shape)
 
         self.zsize, self.ysize, self.xsize = image_shape
-        """print("\n=================================================")
-        print("kwargs image : {}".format(kwargs["image"] if "image" in kwargs else None))
-        print("==================================================\n")"""
         self.volume_data = kwargs["image"] if "image" in kwargs else None
         self.xyslice = 0
         self.xzslice = 0
@@ -80,24 +78,7 @@ class AnnotationModule():
 
         self.selected_cmap = 'grays'
         self.classifier = None
-        self._cur_module_name = sm.module_name()  # force a new module to be loaded
-        #self.set_segmentation_module(sm, auto_save=True)
 
-    def set_segmentation_module(self, module, **kwargs):
-
-        if self.classifier is not None and self._cur_module_name == module.module_name():
-            return
-
-        logging.debug('Loading segmentation module: {}'.format(str(module)))
-        self.classifier = module(self.volume_data, parent=self, **kwargs)
-
-        if 'marker_label_selection_type' in kwargs:
-            self.__default_marker_label_selection_type = kwargs['marker_label_selection_type']
-            self.set_marker_label_selection_type(self.__default_marker_label_selection_type)
-
-        self._cur_module_name = module.module_name()
-
-    #todo : this variable self.classifier.maker_mode_support wans't declared anywhere.
     # So we need to pay attention if anything broke on the code
     @property
     def marker_mode_support(self):
@@ -540,6 +521,9 @@ class AnnotationModule():
                             str(labels), str(ids))
 
         self.__update_annotation_image(self.annotation, 0)
+        print("\n===========================================")
+        print("self.annotation in remove label : {}".format(self.annotation))
+        print("===========================================\n")
 
         if labels is not None:
             remaining_annotation = {key: value for key, value in self.annotation.items() if value[0] not in labels}
@@ -575,24 +559,12 @@ class AnnotationModule():
         new_labels = np.unique(label)
         # if we have more labels than our colormap supports, load a bigger colormap
         self.include_labels(new_labels)
-        self.classifier = sm.module_name()
-        print("\n===========================================")
-        print("self.added_labels : {}".format(self.added_labels))
-        print("self.added_labels type : {}".format(type(self.added_labels)))
-        print("=============================================\n")
 
-        print("\n================================================")
-        print("Using the __update_annotation_image\n")
-        self.__update_annotation_image(self.annotation, self.added_labels)
-        self.update_annotation(self.annotation)
-        print("self.annotation : {}".format(self.annotation))
-        print("==================================================\n")
-
-        """print("\n=================================================")
-        print("Using the update_label_list")
-        self.update_label_list()
-        print("==================================================\n")"""
-
+        label_list = [{"a" : 1, "b" : "b", "c" : [1, 2, 3]}]
+        print(json.dumps(label_list))
+        label_list.append({"a" : 1, "b" : "b", "c" : [1, 2, 3]})
+        print(json.dumps(label_list))
+        print(jsonify(label_list))
         aux_functions.log_usage(op_type='load_label',
                                 label_shape=label.shape,
                                 label_dtype=str(label.dtype))
