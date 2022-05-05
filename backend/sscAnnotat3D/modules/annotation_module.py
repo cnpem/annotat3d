@@ -572,8 +572,6 @@ class AnnotationModule():
         return self.annotation
 
     def load_label(self, label):
-        #print("\n------------------------------------")
-        #print("Just testing : {}".format(np.zeros((self.zsize, self.ysize, self.xsize), dtype="uint16")))
         new_labels = np.unique(label)
         # if we have more labels than our colormap supports, load a bigger colormap
         self.include_labels(new_labels)
@@ -583,7 +581,17 @@ class AnnotationModule():
         print("self.added_labels type : {}".format(type(self.added_labels)))
         print("=============================================\n")
 
-        #self.classifier.load_label(label)
+        print("\n================================================")
+        print("Using the __update_annotation_image\n")
+        self.__update_annotation_image(self.annotation, self.added_labels)
+        self.update_annotation(self.annotation)
+        print("self.annotation : {}".format(self.annotation))
+        print("==================================================\n")
+
+        """print("\n=================================================")
+        print("Using the update_label_list")
+        self.update_label_list()
+        print("==================================================\n")"""
 
         aux_functions.log_usage(op_type='load_label',
                                 label_shape=label.shape,

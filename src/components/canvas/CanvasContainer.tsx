@@ -17,7 +17,6 @@ import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
 import {dispatch, subscribe, unsubscribe} from '../../utils/eventbus';
 import {defaultColormap} from '../../utils/colormap';
-import {LabelInterface} from "../tools_menu/label_table/LabelInterface";
 
 class Brush {
 
