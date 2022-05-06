@@ -554,7 +554,7 @@ class AnnotationModule():
         new_labels = np.unique(label)
         # if we have more labels than our colormap supports, load a bigger colormap
         self.include_labels(new_labels)
-        label_list = [{"id": 0, "color": [], "labelName": "Label 0"}]
+        label_list = [{"id": 0, "color": [], "labelName": "Background"}]
         i = 1
         for _ in self.added_labels:
             label_list.append({"id": i, "color": [], "labelName": "Label {}".format(i)})

@@ -64,15 +64,19 @@ def open_annot():
 
     annot_module.load_annotation(annot_path)
     module_repo.set_module('annotation', module=annot_module)
-    label_list = set()
+    label_list = []
+    annotation = set()
     for label in annot_module.get_annotation().values():
-        label_list.add(label[0])
 
-    print("\n==================================================")
-    print("label_list set : {}".format(label_list))
-    print("==================================================\n")
+        if(label[0] not in annotation):
+            annotation.add(label[0])
+            label_list.append({
+                "labelName": "Label {}".format(label[0]) if label[0] > 0 else "Background",
+                "id": label[0],
+                "color": []
+            })
 
-    return "success", 200
+    return jsonify(label_list)
 
 
 @app.route("/close_annot", methods=["POST"])

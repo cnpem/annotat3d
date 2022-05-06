@@ -139,7 +139,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 sfetch("POST", "/load_label_from_file_load_dialog/", "", "json").then(
                     (labelList) => {
                         console.log("printing the loaded label : ", labelList);
-                        dispatch("LabelLoadedFromFileLoadDialog", labelList);
+                        dispatch("LabelLoaded", labelList);
                     }
                 ).catch(error => {
                     //TODO : need to implement an error component here

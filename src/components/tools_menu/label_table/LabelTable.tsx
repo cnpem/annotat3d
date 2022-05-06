@@ -33,7 +33,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         setDarkMode(darkMode);
     });
 
-    useEventBus("LabelLoadedFromFileLoadDialog", (labelVec: LabelInterface[]) => {
+    useEventBus("LabelLoaded", (labelVec: LabelInterface[]) => {
             console.log("Label color : ", props.colors);
             for(let label of labelVec){
                 label.color = colorFromId(props.colors, label.id);
