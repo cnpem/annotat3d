@@ -5,6 +5,7 @@ import os.path
 import sscIO.io
 import numpy as np
 from sscAnnotat3D.repository import data_repo
+from sscAnnotat3D.modules import annotation_module
 
 from flask_cors import cross_origin
 
@@ -78,6 +79,15 @@ def open_image(image_id: str):
     data_repo.set_image(key=image_id, data=image)
     return jsonify(image_info)
 
+
+@app.route("/load_label_from_file_load_dialog/", methods=["POST"])
+@cross_origin()
+def load_label_from_file_load_dialog():
+    image = data_repo.get_image("label")
+    kwargs = {"image": image}
+    annot_module = annotation_module.AnnotationModule(image.shape, **kwargs)
+    label_list = annot_module.load_label_from_file_load_dialog(image)
+    return jsonify(label_list)
 
 @app.route("/close_image/<image_id>", methods=["POST"])
 @cross_origin()

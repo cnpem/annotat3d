@@ -14,6 +14,7 @@ import {folderOpenOutline} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch, useEventBus} from "../../../utils/eventbus";
 import {useStorageState} from "react-storage-hooks";
+import {LabelInterface} from "../label_table/LabelInterface";
 
 const AnnotationLoadDialog : React.FC = () => {
     // Init States
@@ -35,14 +36,18 @@ const AnnotationLoadDialog : React.FC = () => {
             annot_path: path
         }
 
-        sfetch("POST", "/open_annot", JSON.stringify(params), "")
-            .then((success) => {
-                console.log(success)
+        sfetch("POST", "/open_annot", JSON.stringify(params), "json")
+            .then((labelList:LabelInterface[]) => {
+                console.log("Printing the loaded .pkl label list\n");
+                console.log(labelList);
                 setShowPopover({...showPopover, open: false});
+                dispatch("LabelLoaded", labelList);
                 dispatch("annotationChanged",null);
                 showToast("Annotation loaded", 2000);
 
             }).catch(error => {
+                //TODO : Need to implement an error and loading component to load an operation
+                console.log("Error trying to load the .pkl label\n");
                 console.log(error);
             })
 

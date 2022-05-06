@@ -1,9 +1,5 @@
-
-from flask import Blueprint, request, send_file, jsonify
+from flask import Blueprint, request
 import numpy as np
-import pickle
-import zlib
-import io
 
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import utils, label

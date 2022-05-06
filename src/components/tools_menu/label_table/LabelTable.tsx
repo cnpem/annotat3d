@@ -4,7 +4,7 @@ import {IonRow, IonCol, IonLabel} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
 import {LabelInterface} from './LabelInterface';
-import {defaultColormap} from '../../../utils/colormap';
+import {colorFromId, defaultColormap} from '../../../utils/colormap';
 import {dispatch, useEventBus, currentEventValue} from '../../../utils/eventbus';
 
 import './LabelTable.css';
@@ -27,13 +27,25 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
 
-    const [darkMode, setDarkMode] = useState<boolean>( currentEventValue('toggleMode'));
+    const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
 
     useEventBus('toggleMode', (darkMode) => {
         setDarkMode(darkMode);
     });
 
+    useEventBus("LabelLoaded", (labelVec: LabelInterface[]) => {
+            console.log("Label color : ", props.colors);
+            for(let label of labelVec){
+                label.color = colorFromId(props.colors, label.id);
+                console.log("label list into the change : ", labelVec);
+            }
+            setLabelList(labelVec);
+            setNewLabelId(labelVec.length);
+            console.log("label List rn : ", labelVec);
+        })
+
     useEffect(() => {
+        console.log("doing this dispatch rn");
         dispatch('labelColorsChanged', labelList);
     });
 

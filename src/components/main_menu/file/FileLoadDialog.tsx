@@ -129,6 +129,25 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 imageExt: image["image_ext"],
             }
 
+            if(loadImgOp === "superpixel")
+            {
+                dispatch("superpixelChanged", {});
+            }
+
+            else if(loadImgOp === "label")
+            {
+                sfetch("POST", "/load_label_from_file_load_dialog/", "", "json").then(
+                    (labelList) => {
+                        console.log("printing the loaded label : ", labelList);
+                        dispatch("LabelLoaded", labelList);
+                    }
+                ).catch(error => {
+                    //TODO : need to implement an error component here
+                    console.log("error to load the label\n");
+                    console.log(error);
+                })
+            }
+
             setShowErrorWindow(false);
             dispatch("ImageLoaded", info);
             dispatch("ActivateComponents", false);

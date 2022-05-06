@@ -1,16 +1,16 @@
 import logging
 import math
 import pickle
-import sys
-import threading
-from skimage import draw
-from operator import itemgetter
 import numpy as np
 
-from sscAnnotat3D import aux_functions, utils
+from skimage import draw
+from operator import itemgetter
+
+from sscAnnotat3D import aux_functions
 
 class Label(object):
     def __init__(self, id, name=None):
+        self.name = name
         self.id = id
 
     def __lt__(self, other):
@@ -43,7 +43,7 @@ class AnnotationModule():
                                 image_shape=image_shape)
 
         self.zsize, self.ysize, self.xsize = image_shape
-
+        self.volume_data = kwargs["image"] if "image" in kwargs else None
         self.xyslice = 0
         self.xzslice = 0
         self.yzslice = 0
@@ -74,7 +74,9 @@ class AnnotationModule():
         self.create_labels()
 
         self.selected_cmap = 'grays'
+        self.classifier = None
 
+    # So we need to pay attention if anything broke on the code
     @property
     def marker_mode_support(self):
         return self.classifier.marker_mode_support
@@ -546,6 +548,26 @@ class AnnotationModule():
 
     def get_annotation(self):
         return self.annotation
+
+    #TODO : Need to make possible for the user to choose a colormap
+    def load_label_from_file_load_dialog(self, label):
+        new_labels = np.unique(label)
+        # if we have more labels than our colormap supports, load a bigger colormap
+        self.include_labels(new_labels)
+        label_list = []
+        i = 0
+        for _ in self.added_labels:
+            label_list.append({
+                "labelName": "Label {}".format(i) if i > 0 else "Background",
+                "id": i,
+                "color": []})
+            i += 1
+
+        aux_functions.log_usage(op_type='load_label',
+                                label_shape=label.shape,
+                                label_dtype=str(label.dtype))
+
+        return label_list
 
     def update_annotation(self, annotations):
         # Drawing markers on top of the marker label/id images

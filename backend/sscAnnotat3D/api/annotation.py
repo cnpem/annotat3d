@@ -30,9 +30,7 @@ def new_annot(annot_id: str):
         return handle_exception('No image associated')
 
     annot_module = annotation_module.AnnotationModule(img.shape)
-
     module_repo.set_module(annot_id, module=annot_module)
-
     return "success", 200
 
 
@@ -62,12 +60,23 @@ def open_annot():
     try:
         annot_path = request.json["annot_path"]
     except:
-        return "Error while trying to get the annotation path", 400
+        return handle_exception("Error while trying to get the annotation path")
 
     annot_module.load_annotation(annot_path)
     module_repo.set_module('annotation', module=annot_module)
+    label_list = []
+    annotation = set()
+    for label in annot_module.get_annotation().values():
 
-    return "success", 200
+        if(label[0] not in annotation):
+            annotation.add(label[0])
+            label_list.append({
+                "labelName": "Label {}".format(label[0]) if label[0] > 0 else "Background",
+                "id": label[0],
+                "color": []
+            })
+
+    return jsonify(label_list)
 
 
 @app.route("/close_annot", methods=["POST"])
@@ -105,7 +114,6 @@ def save_annot():
 @app.route("/draw", methods=["POST"])
 @cross_origin()
 def draw():
-    print(request.json)
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
@@ -116,7 +124,7 @@ def draw():
     axis_dim = utils.get_axis_num(axis)
 
     annot_module = module_repo.get_module('annotation')
-    
+
     if annot_module is None:
         return handle_exception("Annotation module not found")
 
@@ -146,11 +154,14 @@ def get_annot_slice():
 
     annot_module = module_repo.get_module('annotation')
 
-    img_slice = annot_module.annotation_image[slice_range]
+    if(annot_module != None):
+        img_slice = annot_module.annotation_image[slice_range]
 
-    img_slice = zlib.compress(utils.toNpyBytes(img_slice))
+        img_slice = zlib.compress(utils.toNpyBytes(img_slice))
 
-    return send_file(io.BytesIO(img_slice), "application/gzip")
+        return send_file(io.BytesIO(img_slice), "application/gzip")
+
+    return "test", "application/gzip"
 
 
 @app.route("/undo_annot", methods=['POST'])
