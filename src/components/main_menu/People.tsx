@@ -19,6 +19,12 @@ const peopleList: Person[] = [
         lattes: 'http://lattes.cnpq.br/1977864892800649'
     },
     {
+        name: "Allan Pinto",
+        linkedin: "https://www.linkedin.com/in/allansp84/",
+        lattes: "https://allansp84.github.io/",
+        github: "https://github.com/allansp84"
+    },
+    {
         name: 'Alan Peixinho',
         linkedin: 'https://www.linkedin.com/in/alan-zanoni-peixinho-2816ab23',
         github: 'https://github.com/alanpeixinho'
@@ -30,7 +36,14 @@ const peopleList: Person[] = [
     {
         name: 'Gabriel Borin',
         lattes: 'http://lattes.cnpq.br/2649693387467428',
-        linkedin: 'https://www.linkedin.com/in/gabriel-borin-3b7b7a14b'
+        linkedin: 'https://www.linkedin.com/in/gabriel-borin-3b7b7a14b',
+        github: "https://github.com/borin98"
+    },
+    {
+        name: "Bruno Carlos",
+        lattes: "https://www.linkedin.com/in/bruno-vasco-de-paula-carlos-711345231/",
+        linkedin: "https://www.linkedin.com/in/bruno-vasco-711345231/",
+
     },
     {
         name: 'Victor Cesaroni',
