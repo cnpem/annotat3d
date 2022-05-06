@@ -1,11 +1,8 @@
-import json
 import logging
 import math
 import pickle
 import numpy as np
 
-from flask import jsonify
-from collections import OrderedDict
 from skimage import draw
 from operator import itemgetter
 
@@ -555,48 +552,22 @@ class AnnotationModule():
     def get_annotation(self):
         return self.annotation
 
-    def load_label(self, label):
+    #TODO : Need to make possible for the user to choose a colormap
+    def load_label_from_file_load_dialog(self, label):
         new_labels = np.unique(label)
         # if we have more labels than our colormap supports, load a bigger colormap
         self.include_labels(new_labels)
-        #TODO : Need to make possible for the user to choose a colormap
-        colormap = np.load("./backend/sscAnnotat3D/colormaps/colormap_8bits.npy")
-        label_list = []
+        label_list = [{"id": 0, "color": [], "labelName": "Label 0"}]
         i = 1
         for _ in self.added_labels:
-            label_list.append({"id": i, "color": 1, "labelName": "Label {}".format(i)})
+            label_list.append({"id": i, "color": [], "labelName": "Label {}".format(i)})
             i += 1
-
-        print(json.dumps(label_list))
 
         aux_functions.log_usage(op_type='load_label',
                                 label_shape=label.shape,
                                 label_dtype=str(label.dtype))
 
-    def update_label_list(self):
-        print("self.order_markers : {}".format(self.order_markers))
-        labels = self.annotation.get_labels_object()
-        labels = list(OrderedDict.fromkeys(labels))  # unique keeping order
-
-        self.labels_image.clear()
-
-        colormap = self.annotation.get_marker_colormap()
-        for label in labels:
-            # label_name, color_id = self.annotation.get_label_name_and_color_id(label)
-            label_name, color_id = label.name, label.color_id(colormap)
-            print("--------------------------------------------\n")
-            print("label_name : {}".format(label_name))
-            print("color_id : {}".format(color_id))
-            print("\n----------------------------------------------")
-            """new_item = QListWidgetItem()
-            new_item.setText(label_name)
-
-            color = colormap.colors.rgba[color_id]
-            r = int(color[0] * 255)
-            g = int(color[1] * 255)
-            b = int(color[2] * 255)
-            new_item.setForeground(QColor(r, g, b, 255))
-            self.labels_image.addItem(new_item)"""
+        return label_list
 
     def update_annotation(self, annotations):
         # Drawing markers on top of the marker label/id images

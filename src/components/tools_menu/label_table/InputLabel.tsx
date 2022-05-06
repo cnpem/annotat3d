@@ -47,9 +47,13 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
         sfetch("POST", "/close_annot", "").then(
             () => {
                 dispatch('annotationChanged', null);
-            });
-
-        closeWarningWindow();
+            }).catch((error) => {
+                //TODO : need to implement an error component here
+                console.log("error to delete all labels\n");
+                console.log(error);
+        }).finally(() => {
+            closeWarningWindow();
+        });
     }
 
     return(
