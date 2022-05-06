@@ -64,6 +64,13 @@ def open_annot():
 
     annot_module.load_annotation(annot_path)
     module_repo.set_module('annotation', module=annot_module)
+    label_list = set()
+    for label in annot_module.get_annotation().values():
+        label_list.add(label[0])
+
+    print("\n==================================================")
+    print("label_list set : {}".format(label_list))
+    print("==================================================\n")
 
     return "success", 200
 

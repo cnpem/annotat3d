@@ -518,9 +518,6 @@ class AnnotationModule():
                             str(labels), str(ids))
 
         self.__update_annotation_image(self.annotation, 0)
-        print("\n===========================================")
-        print("self.annotation in remove label : {}".format(self.annotation))
-        print("===========================================\n")
 
         if labels is not None:
             remaining_annotation = {key: value for key, value in self.annotation.items() if value[0] not in labels}
