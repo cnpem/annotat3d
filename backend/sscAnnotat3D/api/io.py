@@ -87,9 +87,6 @@ def load_label_from_file_load_dialog():
     kwargs = {"image": image}
     annot_module = annotation_module.AnnotationModule(image.shape, **kwargs)
     label_list = annot_module.load_label_from_file_load_dialog(image)
-    print("\n===========================================")
-    print("printing the label_list from backend : {}".format(label_list))
-    print("===============================================\n")
     return jsonify(label_list)
 
 @app.route("/close_image/<image_id>", methods=["POST"])
