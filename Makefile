@@ -15,6 +15,9 @@ build-frontend: install-frontend
 	@echo "Building the frontend application"
 	${YARN} build
 
+build: build-frontend
+	@cho "Done!"
+
 build-all: build-backend build-frontend
 
 install-backend:
@@ -24,6 +27,12 @@ install-backend:
 install-frontend:
 	@echo "Install the frontend application"
 	${YARN} install
+
+install: install-frontend
+	@cho "Done!"
+
+install-all: install-backend install-frontend
+	@cho "Done!"
 
 run-backend:
 	@echo "Running the backend application"
