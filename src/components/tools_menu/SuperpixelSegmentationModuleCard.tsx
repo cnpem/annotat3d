@@ -237,11 +237,11 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 <IonLabel>
                     <small>
                         {feature.name} 
-                        <IonButton id={"showFeatInfo-button-"+feature.id} size="small" fill='clear'>
+                        <IonButton id={"showSuperpixelSegFeatInfo-button-"+feature.id} size="small" fill='clear'>
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </small>
-                    <IonPopover trigger={"showFeatInfo-button-" + feature.id} reference="event">
+                    <IonPopover trigger={"showSuperpixelSegFeatInfo-button-"+feature.id} reference="event">
                         <IonContent>
                             <IonCard>
                                 <IonCardHeader><div style={ { fontWeight: 600, fontSize: 14 } }>{feature.type}</div></IonCardHeader>

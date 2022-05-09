@@ -53,7 +53,6 @@ const defaultFeatures: Feature[] = [
 ];
 
 interface ModelClassifierParams {
-
     id: string,
     label: string,
     value: any,
@@ -207,18 +206,18 @@ const PixelSegmentationModuleCard: React.FC = () => {
             </IonSelectOption>
         );
     }
-
-    function renderCheckboxFeature(feature: Feature) {
+ 
+    function renderCheckboxFeature( feature: Feature) {
         return (
             <IonItem key={feature.id}>
                 <IonLabel>
                     <small>
                         {feature.name} 
-                        <IonButton id={"showFeatInfo-button-"+feature.id} size="small" fill='clear'>
+                        <IonButton id={"showPixelSegFeatInfo-button-"+feature.id} size="small" fill='clear'>
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </small>
-                    <IonPopover trigger={"showFeatInfo-button-" + feature.id} reference="event">
+                    <IonPopover trigger={"showPixelSegFeatInfo-button-"+feature.id} reference="event">
                         <IonContent>
                             <IonCard>
                                 <IonCardHeader><div style={ { fontWeight: 600, fontSize: 14 } }>{feature.type}</div></IonCardHeader>
@@ -230,11 +229,11 @@ const PixelSegmentationModuleCard: React.FC = () => {
                 <IonCheckbox value={feature.id} checked={feature.active}
                     onIonChange={(e) => {
                         console.log(e);
-                        const newfeats = featParams.feats.map( nf => {
+                        const newfeats = featParams?.feats.map( nf => {
                             if (nf.id === feature.id) {
                                 return {
                                     ...nf,
-                                    active: e.detail.checked
+                                    active: e.detail.checked 
                                 }
                             } else {
                                 return nf;
@@ -283,7 +282,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
             <ModuleCardItem name="Pixel Segmentation Parameters">
                 <ModuleCardItem name="Feature Extraction Parameters">
                     <IonList>
-                        { featParams.feats.map(renderCheckboxFeature) }
+                        { featParams?.feats.map(renderCheckboxFeature) }
                     </IonList>
                 </ModuleCardItem>
 
