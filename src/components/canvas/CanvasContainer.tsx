@@ -1,6 +1,6 @@
 import {Component} from 'react';
 import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
-import { expand, brush, browsers, add, remove, eye, eyeOff } from 'ionicons/icons';
+import { expand, brush, browsers, add, remove, eye, eyeOff, analytics } from 'ionicons/icons';
 import { debounce, isEqual } from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -107,6 +107,11 @@ class Brush {
             this.cursor.visible = true;
         } else if(this.mode === 'erase_brush') {
             this.color = 0xFFFFFF;
+            this.cursor.visible = true;
+        } else if(this.mode === "extend_label") {
+            console.log("extend_label option selected");
+            const color = this.colors[(this.label) % this.colors.length];
+            this.color = this.rgbToHex(...color);
             this.cursor.visible = true;
         } else {
             this.cursor.visible = false;
@@ -421,7 +426,7 @@ class Canvas {
         const context = this.annotation.context;
         const mode = this.brush_mode;
 
-        if (mode === 'no_brush') {
+        if (mode === 'no_brush' || mode === "extend_label") {
             return [];
         } else if (mode === 'erase_brush') {
             this.annotation.context.globalCompositeOperation = 'destination-out';
@@ -640,7 +645,7 @@ class Canvas {
     }
 }
 
-type brush_mode_type = 'draw_brush' | 'erase_brush' | 'no_brush';
+type brush_mode_type = 'draw_brush' | 'erase_brush' | 'no_brush' | "extend_label";
 
 interface ICanvasProps {
     slice: number;
@@ -662,6 +667,10 @@ const brushList = [
     {
         id: 'erase_brush',
         logo: browsers
+    },
+    {
+        id: "extend_label",
+        logo: analytics
     }
 ];
 
