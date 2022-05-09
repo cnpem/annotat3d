@@ -181,6 +181,7 @@ class Annotation {
         const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
         const data = imageData.data;
+        console.log("image data on draw method of Annotation : ", data);
         for (let i = 0; i < slice.data.length; i++) {
             if (slice.data[i] >= 0) {
                 const color = colors[(slice.data[i]) % colors.length];
@@ -188,6 +189,12 @@ class Annotation {
                 data[i * 4 + 1] = color[1];
                 data[i * 4 + 2] = color[2];
                 data[i * 4 + 3] = 255;
+            }
+        }
+
+        for (let i = 0; i < data.length; i++){
+            if(data[i] != 0){
+                console.log("Printando i = ", i + " com elemento : ", data[i]);
             }
         }
 
@@ -212,6 +219,9 @@ class Canvas {
     brush: Brush;
 
     brush_mode: brush_mode_type;
+
+    canvas: HTMLCanvasElement;
+    context: CanvasRenderingContext2D;
 
     slice: PIXI.Sprite;
     labelSlice: PIXI.Sprite;
@@ -261,6 +271,9 @@ class Canvas {
 
         this.futureSlice = new PIXI.Sprite();
         this.futureSlice.visible = false;
+
+        this.canvas = document.createElement('canvas');
+        this.context = this.canvas.getContext('2d')!;
 
         this.superpixelSlice = new PIXI.Sprite();
         this.superpixelSlice.tint = this.superpixelColor;
@@ -378,6 +391,9 @@ class Canvas {
 
         const currPosition = this.viewport.toWorld(event.data.global);
         this.prevPosition = currPosition;
+        const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        console.log("image Data : ", imageData);
+        console.log(currPosition);
 
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
@@ -437,6 +453,7 @@ class Canvas {
         if (currPosition === this.prevPosition) {
             const x = this.prevPosition.x;
             const y = this.prevPosition.y;
+            console.log("They're equal :D ", currPosition);
             this.brush.contextDrawBrush(context, x, y);
 
             this.annotation.sprite.texture.update();
