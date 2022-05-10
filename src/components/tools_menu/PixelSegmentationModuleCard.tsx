@@ -94,7 +94,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
     const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'pixelFeatParams', {
         feats: defaultFeatures,
         multiscale: defaultMultiscale,
-        thresholdSelection: 0.1
+        thresholdSelection: 0.01
     });
 
     const [classParams, setClassParams] = useStorageState<ClassifierParams>(sessionStorage, 'pixelClassParams', {
