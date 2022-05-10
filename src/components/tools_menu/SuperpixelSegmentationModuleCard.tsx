@@ -104,7 +104,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         pooling: defaultPooling,
         feats: defaultFeatures,
         multiscale: defaultMultiscale,
-        thresholdSelection: 0.1
+        thresholdSelection: 0.01
     });
 
     const [classParams, setClassParams] = useStorageState<ClassifierParams>(sessionStorage, 'superpixelClassParams', {
@@ -114,7 +114,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'superpixelSegmPreprocessed', false);
     const [loadingMsg, setLoadingMsg] = useState<string>("");
-    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
+    const [showLoadingCompSpS, setShowLoadingCompSpS] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(true);
     const [showToast] = useIonToast();
 
@@ -166,15 +166,15 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
-        setShowLoadingComp(true);
-        setLoadingMsg("doing the apply operation");
+        setShowLoadingCompSpS(true);
+        setLoadingMsg("Applying...");
         sfetch('POST', 'superpixel_segmentation_module/execute', '')
         .then(() => {
             dispatch('labelChanged', '');
         })!
         .finally(() => {
             setDisabled(false);
-            setShowLoadingComp(false);
+            setShowLoadingCompSpS(false);
             showToast("Successfully applied the superpixel segmentation !", 2000);
         });
     }
@@ -187,7 +187,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         };
 
         setDisabled(true);
-        setShowLoadingComp(true);
+        setShowLoadingCompSpS(true);
         setLoadingMsg("Doing the preview operation");
         sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice))
         .then(() => {
@@ -195,7 +195,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
-            setShowLoadingComp(false);
+            setShowLoadingCompSpS(false);
             showToast("Successfully applied the preview !", 1000);
         });
     }
@@ -205,20 +205,19 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         const params = getModuleBackendParams();
 
         setDisabled(true);
-        setShowLoadingComp(true);
+        setShowLoadingCompSpS(true);
         setLoadingMsg("doing the preprocess operation");
         sfetch('POST', '/superpixel_segmentation_module/create', JSON.stringify(params))
         .then(() => {
-            console.log('preprocessou');
             setPrevFeatParams(featParams);
         })
         .catch(() => {
-            console.log('falhou no preprocessou');
+            console.log('Fail on preprocess');
             setHasPreprocessed(false);
         })
         .finally(() => {
             setDisabled(false);
-            setShowLoadingComp(false);
+            setShowLoadingCompSpS(false);
             showToast("Successfully applied the preprocess !", 1000);
         });
     }
@@ -353,9 +352,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                             }}>
                         </IonInput>
                     </IonItem>
-                    <LoadingComponent
-                        openLoadingWindow={showLoadingComp}
-                        loadingText={loadingMsg}/>
                 </ModuleCardItem>
                 <ModuleCardItem name="Feature Selection Parameters">
                     <IonItem>
@@ -422,6 +418,9 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                     </Fragment>
                 </ModuleCardItem>
             </ModuleCardItem>
+            <LoadingComponent
+                        openLoadingWindow={showLoadingCompSpS}
+                        loadingText={loadingMsg}/>
 
         </ModuleCard>
     );

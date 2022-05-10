@@ -1,7 +1,7 @@
 
 
 import {TextFieldTypes} from '@ionic/core';
-import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonAlert, IonButton, IonIcon, IonCard, IonCardContent, IonCardHeader, IonContent, IonPopover } from '@ionic/react';
+import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonAlert, IonButton, IonIcon, IonCard, IonCardContent, IonCardHeader, IonContent, IonPopover, useIonToast } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
 import {isEqual} from 'lodash';
 import {Fragment, useEffect, useState} from 'react';
@@ -9,6 +9,7 @@ import {useStorageState} from 'react-storage-hooks';
 import {currentEventValue, useEventBus} from '../../utils/eventbus';
 import {dispatch} from '../../utils/eventbus';
 import {sfetch} from '../../utils/simplerequest';
+import LoadingComponent from './LoadingComponent';
 import {ModuleCard, ModuleCardItem } from './ModuleCard';
 
 const classifiers = [
@@ -103,8 +104,10 @@ const PixelSegmentationModuleCard: React.FC = () => {
     });
 
     const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'pixelSegmPreprocessed', false);
-
+    const [loadingMsg, setLoadingMsg] = useState<string>("");
+    const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(false);
+    const [showToast] = useIonToast(); 
 
     useEffect(() => {
         console.log(prevFeatParams, featParams);
@@ -139,6 +142,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
+        setShowLoadingCompPS(true);
+        setLoadingMsg("Applying...");
         sfetch('POST', 'pixel_segmentation_module/execute', '')
         .then(() => {
             dispatch('labelChanged', '');
@@ -151,6 +156,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoadingCompPS(false);
+            showToast("Successfully applied the superpixel segmentation !", 2000);
         });
     }
 
@@ -164,6 +171,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         console.log(curSlice);
 
         setDisabled(true);
+        setShowLoadingCompPS(true);
+        setLoadingMsg("Calculating the preview...");
         sfetch('POST', '/pixel_segmentation_module/preview', JSON.stringify(curSlice))
         .then(() => {
             dispatch('labelChanged', '');
@@ -176,6 +185,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoadingCompPS(false);
+            showToast("Successfully calculated the preview !", 2000);
         });
     }
 
@@ -184,6 +195,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         const params = getModuleBackendParams();
 
         setDisabled(true);
+        setShowLoadingCompPS(true);
+        setLoadingMsg("Preprocessing...");
         sfetch('POST', '/pixel_segmentation_module/create', JSON.stringify(params))
         .then(() => {
             console.log('preprocessou');
@@ -191,11 +204,13 @@ const PixelSegmentationModuleCard: React.FC = () => {
             setPrevFeatParams(featParams);
         })
         .catch(() => {
-            console.log('falhou no preprocessou');
+            console.log('Fail on preprocess');
             setHasPreprocessed(false);
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoadingCompPS(false);
+            showToast("Successfully applied the preprocess !", 1000);
         });
     }
 
@@ -369,6 +384,9 @@ const PixelSegmentationModuleCard: React.FC = () => {
                     </Fragment>
                 </ModuleCardItem>
             </ModuleCardItem>
+            <LoadingComponent
+                        openLoadingWindow={showLoadingCompPS}
+                        loadingText={loadingMsg}/>
 
         </ModuleCard>
     );
