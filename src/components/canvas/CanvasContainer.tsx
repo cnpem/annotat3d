@@ -74,6 +74,8 @@ class Brush {
 
     contextDrawBrush(context: CanvasRenderingContext2D, x: number, y: number) {
         const [r, g, b] = this.colors[(this.label) % this.colors.length];
+        //TODO : This's the function to get the actual color in the last click
+        console.log("Actual color : " + "r = "+ r + " g = " + g + " b = " + b);
         context.beginPath();
         context.fillStyle = `rgb(${r},${g},${b})`;
         context.arc(x, y, this.radius, 0, 2 * Math.PI);
@@ -130,6 +132,8 @@ class Annotation {
     sprite: PIXI.Sprite;
 
     colors: [number, number, number][];
+
+    drawStorage?: drawStorageInterface[];
 
     annotData?: NdArray<TypedArray>;
 
