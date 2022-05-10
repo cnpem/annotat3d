@@ -391,22 +391,9 @@ class Canvas {
 
         const currPosition = this.viewport.toWorld(event.data.global);
         this.prevPosition = currPosition;
-        const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        const imgTest = imageData?.data;
-        console.log("image Data : ", imageData);
         console.log(currPosition);
 
-        //TODO : vou mexer nisso daqui e verificar pq ele tá dando xadu
-        for (let i = 0; i < imgTest.length; i++)
-        {
-            if(imgTest[i] > 0)
-            {
-                console.log("printando o valor positivo : ", imgTest[i] + " do índice ", i);
-            }
-        }
-
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
-
 
         const data = {
             'coords': this.pointsBuffer,
@@ -684,6 +671,12 @@ interface ICanvasState {
     brush_mode: brush_mode_type;
     label_contour: boolean;
     future_sight_on: boolean;
+}
+
+interface drawStorageInterface {
+    color: [number, number, number],
+    xCoord: number,
+    yCoord: number
 }
 
 const brushList = [
