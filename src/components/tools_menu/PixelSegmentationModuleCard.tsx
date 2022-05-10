@@ -1,13 +1,15 @@
 
 
 import {TextFieldTypes} from '@ionic/core';
-import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonAlert } from '@ionic/react';
+import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonAlert, IonButton, IonIcon, IonCard, IonCardContent, IonCardHeader, IonContent, IonPopover, useIonToast } from '@ionic/react';
+import { informationCircleOutline } from 'ionicons/icons';
 import {isEqual} from 'lodash';
 import {Fragment, useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
 import {currentEventValue, useEventBus} from '../../utils/eventbus';
 import {dispatch} from '../../utils/eventbus';
 import {sfetch} from '../../utils/simplerequest';
+import LoadingComponent from './LoadingComponent';
 import {ModuleCard, ModuleCardItem } from './ModuleCard';
 
 const classifiers = [
@@ -37,22 +39,21 @@ const defaultModelClassifierParams: Record<string, ModelClassifierParams[]> = {
 }
 
 const defaultFeatures: Feature[] = [
-    { id: 'fft_gauss', name: 'FFT Gauss', active: true },
-    { id: 'none', name: 'None (Original Image)', active: true },
-    { id: 'sobel', name: 'Sobel' },
-    { id: 'minimum', name: 'Minimum' },
-    { id: 'average', name: 'Average' },
-    { id: 'median', name: 'Median' },
-    { id: 'fft_gabor', name: 'FFT Gabor' },
-    { id: 'fft_dog', name: 'FFT Difference of Gaussians', active: true },
-    { id: 'membrane_projections', name: 'Membrane Projections', active: true },
-    { id: 'maximum', name: 'Maximum' },
-    { id: 'variance', name: 'Variance' },
-    { id: 'lbp', name: 'Local Binary Pattern' }
+    { active: true, id: 'fft_gauss', name: 'FFT Gauss', type: 'Smoothing', description: 'Filters structures (smoothing) of the specified gaussian filtering in fourier space. Promotes smoothing without worrying about edges.'},
+    { id: 'average', name: 'Average', type: 'Smoothing', description: 'It is a method of "smoothing" images by reducing the amount of intensity variation inside a window (Noise removal)'},
+    { id: 'median', name: 'Median', type: 'Smoothing', description: 'It makes the target pixel intensity equal to the median value in the running window (Noise removal)' },
+    { id: 'sobel', name: 'Sobel', type: 'Edge detection', description: 'It creates an image emphasizing edges because it performs a 2-D spatial gradient measurement on an image and so emphasizes regions of high spatial frequency that correspond to edges.' },
+    { active: true, id: 'fft_dog', name: 'FFT Difference Of Gaussians', type: 'Edge detection', description: 'Calculates two gaussian blur images from the original image and subtracts one from the other. It is used to detect edges in the image.' },
+    { id: 'fft_gabor', name: 'FFT Gabor', type: 'Edge detection,Texture detection', description: 'It determines if there is any specific frequency content in the image in specific directions in a localized region around the point or region of analysis. In the spatial domain, it is a Gaussian kernel function modulated by a sinusoidal plane wave. It is one of the most suitable option for texture segmentation and boundary detection' },
+    { id: 'variance', name: 'Variance', type: 'Texture detection', description: 'It is a statistical measure of the amount of variation inside the window. This determines how uniform or not that filtering window is (important for assessing homogeneity and texture)' },
+    { id: 'lbp', name: 'Local Binary Pattern', type: 'Texture detection', description: 'It is a texture operator that tries to capture how are the neighborhoods allocated. It labels the pixels of an image by thresholding the neighborhood of each pixel and considers the result as a binary number.' },
+    { active: true, id: 'membrane_projections', name: 'Membrane Projections', type: 'Membrane Detection', description: 'Enhances membrane-like structures of the image through directional filtering.' },
+    { id: 'minimum', name: 'Minimum', type: 'Color Identification', description: 'It replaces the value of the pixel with the value of the darkest pixel inside the filtering window' },
+    { id: 'maximum', name: 'Maximum', type: 'Color Identification', description: 'It replaces the value of the pixel with the value of the lightest pixel inside the filtering window' },
+    { active: true, id: 'none', name: 'None (Original Image)', type: 'Identity', description: 'Used to guarantee the preservation of some characteristics of the original image.' }
 ];
 
 interface ModelClassifierParams {
-
     id: string,
     label: string,
     value: any,
@@ -64,6 +65,8 @@ const defaultMultiscale = [1, 2, 4, 8];
 interface Feature {
     id: string;
     name: string;
+    type: string;
+    description: string;
     active?: boolean;
 }
 
@@ -92,7 +95,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
     const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'pixelFeatParams', {
         feats: defaultFeatures,
         multiscale: defaultMultiscale,
-        thresholdSelection: 0.1
+        thresholdSelection: 0.01
     });
 
     const [classParams, setClassParams] = useStorageState<ClassifierParams>(sessionStorage, 'pixelClassParams', {
@@ -101,8 +104,10 @@ const PixelSegmentationModuleCard: React.FC = () => {
     });
 
     const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'pixelSegmPreprocessed', false);
-
+    const [loadingMsg, setLoadingMsg] = useState<string>("");
+    const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(false);
+    const [showToast] = useIonToast(); 
 
     useEffect(() => {
         console.log(prevFeatParams, featParams);
@@ -137,6 +142,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
+        setShowLoadingCompPS(true);
+        setLoadingMsg("Applying...");
         sfetch('POST', 'pixel_segmentation_module/execute', '')
         .then(() => {
             dispatch('labelChanged', '');
@@ -149,6 +156,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoadingCompPS(false);
+            showToast("Successfully applied the superpixel segmentation !", 2000);
         });
     }
 
@@ -162,6 +171,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         console.log(curSlice);
 
         setDisabled(true);
+        setShowLoadingCompPS(true);
+        setLoadingMsg("Calculating the preview...");
         sfetch('POST', '/pixel_segmentation_module/preview', JSON.stringify(curSlice))
         .then(() => {
             dispatch('labelChanged', '');
@@ -174,6 +185,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoadingCompPS(false);
+            showToast("Successfully calculated the preview !", 2000);
         });
     }
 
@@ -182,6 +195,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         const params = getModuleBackendParams();
 
         setDisabled(true);
+        setShowLoadingCompPS(true);
+        setLoadingMsg("Preprocessing...");
         sfetch('POST', '/pixel_segmentation_module/create', JSON.stringify(params))
         .then(() => {
             console.log('preprocessou');
@@ -189,11 +204,13 @@ const PixelSegmentationModuleCard: React.FC = () => {
             setPrevFeatParams(featParams);
         })
         .catch(() => {
-            console.log('falhou no preprocessou');
+            console.log('Fail on preprocess');
             setHasPreprocessed(false);
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoadingCompPS(false);
+            showToast("Successfully applied the preprocess !", 1000);
         });
     }
 
@@ -204,19 +221,34 @@ const PixelSegmentationModuleCard: React.FC = () => {
             </IonSelectOption>
         );
     }
-
-    function renderCheckboxFeature(feature: Feature) {
+ 
+    function renderCheckboxFeature( feature: Feature) {
         return (
             <IonItem key={feature.id}>
-                <IonLabel><small>{feature.name}</small></IonLabel>
+                <IonLabel>
+                    <small>
+                        {feature.name} 
+                        <IonButton id={"showPixelSegFeatInfo-button-"+feature.id} size="small" fill='clear'>
+                            <IonIcon icon={informationCircleOutline} />
+                        </IonButton>
+                    </small>
+                    <IonPopover trigger={"showPixelSegFeatInfo-button-"+feature.id} reference="event">
+                        <IonContent>
+                            <IonCard>
+                                <IonCardHeader><div style={ { fontWeight: 600, fontSize: 14 } }>{feature.type}</div></IonCardHeader>
+                                <IonCardContent>{feature.description}</IonCardContent>
+                            </IonCard>
+                        </IonContent>
+                    </IonPopover>
+                </IonLabel>
                 <IonCheckbox value={feature.id} checked={feature.active}
                     onIonChange={(e) => {
                         console.log(e);
-                        const newfeats = featParams.feats.map( nf => {
+                        const newfeats = featParams?.feats.map( nf => {
                             if (nf.id === feature.id) {
                                 return {
                                     ...nf,
-                                    active: e.detail.checked
+                                    active: e.detail.checked 
                                 }
                             } else {
                                 return nf;
@@ -265,7 +297,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
             <ModuleCardItem name="Pixel Segmentation Parameters">
                 <ModuleCardItem name="Feature Extraction Parameters">
                     <IonList>
-                        { featParams.feats.map(renderCheckboxFeature) }
+                        { featParams?.feats.map(renderCheckboxFeature) }
                     </IonList>
                 </ModuleCardItem>
 
@@ -352,6 +384,9 @@ const PixelSegmentationModuleCard: React.FC = () => {
                     </Fragment>
                 </ModuleCardItem>
             </ModuleCardItem>
+            <LoadingComponent
+                        openLoadingWindow={showLoadingCompPS}
+                        loadingText={loadingMsg}/>
 
         </ModuleCard>
     );
