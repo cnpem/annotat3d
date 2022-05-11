@@ -58,6 +58,8 @@ def open_image(image_id: str):
         if (extension in tif_extensions or use_image_raw_parse):
             image, info = sscIO.io.read_volume(image_path, 'numpy')
             error_msg = "No such file or directory {}".format(image_path)
+            print("\n\n\n\>>>>")
+            print(os.path.abspath(os.getcwd()))
 
         else:
             image_raw_shape = request.json["image_raw_shape"]
