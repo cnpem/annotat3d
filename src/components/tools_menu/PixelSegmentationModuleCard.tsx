@@ -219,13 +219,13 @@ const PixelSegmentationModuleCard: React.FC = () => {
             </IonSelectOption>
         );
     }
- 
+
     function renderCheckboxFeature( feature: Feature) {
         return (
             <IonItem key={feature.id}>
                 <IonLabel>
                     <small>
-                        {feature.name} 
+                        {feature.name}
                         <IonButton id={"showPixelSegFeatInfo-button-"+feature.id} size="small" fill='clear'>
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
@@ -246,7 +246,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
                             if (nf.id === feature.id) {
                                 return {
                                     ...nf,
-                                    active: e.detail.checked 
+                                    active: e.detail.checked
                                 }
                             } else {
                                 return nf;
@@ -304,7 +304,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
                         <IonLabel position="floating">
                             <small>Multi-scale Filter Windows</small>
                         </IonLabel>
-                        <IonInput value={featParams.multiscale.join(',')}
+                        <IonInput value={featParams.multiscale!.join(',')}
                             onIonChange={(e) => {
                                 if (e.detail.value) {
                                     const value = stringToNumberArray(e.detail.value);
@@ -361,9 +361,9 @@ const PixelSegmentationModuleCard: React.FC = () => {
                         </IonSelect>
                     </IonItem>
                     <Fragment>
-                        { classParams.params.map((p) => {
+                        { classParams.params!.map((p) => {
                             return renderModelParameter(p, (value) => {
-                                const newParams = classParams.params.map((np) => {
+                                const newParams = classParams.params!.map((np) => {
                                     if (np.id === p.id) {
                                         return {...np, value: value}
                                     } else {
