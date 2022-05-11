@@ -112,9 +112,9 @@ class Brush {
             this.cursor.visible = true;
         } else if(this.mode === "extend_label") {
             console.log("extend_label option selected");
+            this.cursor.visible = true;
             const color = this.colors[(this.label) % this.colors.length];
             this.color = this.rgbToHex(...color);
-            this.cursor.visible = true;
         } else {
             this.cursor.visible = false;
         }
@@ -132,8 +132,6 @@ class Annotation {
     sprite: PIXI.Sprite;
 
     colors: [number, number, number][];
-
-    drawStorage?: drawStorageInterface[];
 
     annotData?: NdArray<TypedArray>;
 
@@ -185,7 +183,7 @@ class Annotation {
         const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
         const data = imageData.data;
-        console.log("image data on draw method of Annotation : ", data);
+
         for (let i = 0; i < slice.data.length; i++) {
             if (slice.data[i] >= 0) {
                 const color = colors[(slice.data[i]) % colors.length];
@@ -195,13 +193,6 @@ class Annotation {
                 data[i * 4 + 3] = 255;
             }
         }
-
-        for (let i = 0; i < data.length; i++){
-            if(data[i] != 0){
-                console.log("Printando i = ", i + " com elemento : ", data[i]);
-            }
-        }
-
         this.context.putImageData(imageData, 0, 0);
         this.sprite.texture.update();
     }
@@ -216,6 +207,7 @@ class Canvas {
     div: HTMLDivElement;
 
     prevPosition: any;
+    actualPosition: any;
 
     isPainting: boolean;
 
@@ -295,6 +287,7 @@ class Canvas {
 
         this.isPainting = false;
         this.prevPosition = null;
+        this.actualPosition = null;
 
         this.app.stage.addChild(this.viewport);
         this.viewport.addChild(this.slice);
@@ -357,6 +350,7 @@ class Canvas {
         this.isPainting = true;
 
         this.prevPosition = this.viewport.toWorld(event.data.global);
+        this.actualPosition = this.prevPosition;
     }
 
 
@@ -383,6 +377,7 @@ class Canvas {
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
         this.prevPosition = currPosition;
+        this.actualPosition = currPosition;
     }
 
 
@@ -395,6 +390,7 @@ class Canvas {
 
         const currPosition = this.viewport.toWorld(event.data.global);
         this.prevPosition = currPosition;
+        this.actualPosition = currPosition;
         console.log(currPosition);
 
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
@@ -442,9 +438,24 @@ class Canvas {
 
         const context = this.annotation.context;
         const mode = this.brush_mode;
+        this.actualPosition = currPosition;
 
-        if (mode === 'no_brush' || mode === "extend_label") {
+        if (mode === 'no_brush') {
             return [];
+        } else if (mode === "extend_label") {
+            console.log("aoba\n");
+
+            const data = {
+                "x_coord" : this.actualPosition.x,
+                "y_coord" : this.actualPosition.y,
+            }
+
+            sfetch("POST", "/find_label_by_click", JSON.stringify(data), "").then(
+                (info) => {
+                    console.log("entrou");
+                }
+            )
+            return []
         } else if (mode === 'erase_brush') {
             this.annotation.context.globalCompositeOperation = 'destination-out';
         } else {
@@ -473,6 +484,8 @@ class Canvas {
             coords.push([x, y]);
         }
         this.annotation.sprite.texture.update();
+        console.log("prev coords : ", this.prevPosition);
+        console.log("coords : ", coords);
         return coords;
     }
 
@@ -677,12 +690,6 @@ interface ICanvasState {
     future_sight_on: boolean;
 }
 
-interface drawStorageInterface {
-    color: [number, number, number],
-    xCoord: number,
-    yCoord: number
-}
-
 const brushList = [
     {
         id: 'draw_brush',
@@ -807,6 +814,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         .then((slice) => {
             console.log('annot slice');
             this.canvas!!.annotation.draw(slice);
+            console.log("prevPosition\n ", this.canvas!!.prevPosition);
+            console.log("Actual Position\n ", this.canvas!!.actualPosition);
+            console.log("pointerBuff", this.canvas!!.pointsBuffer);
         });
     }
 

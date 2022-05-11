@@ -189,3 +189,21 @@ def delete_label_annot():
 
     return "success", 200
 
+@app.route("/find_label_by_click", methods=["POST"])
+@cross_origin()
+def find_label_by_click():
+
+    try:
+        x = request.json["x_coord"]
+        y = request.json["y_coord"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    print("\n===============================")
+    print("(x = {}, y = {})".format(x, y))
+    print("=================================\n")
+
+    return "success", 200
+
+
+

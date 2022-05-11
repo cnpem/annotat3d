@@ -64,6 +64,8 @@ const defaultMultiscale = [1, 2, 4, 8];
 interface Feature {
     id: string;
     name: string;
+    type: string;
+    description: string;
     active?: boolean;
 }
 
@@ -92,7 +94,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
     const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'pixelFeatParams', {
         feats: defaultFeatures,
         multiscale: defaultMultiscale,
-        thresholdSelection: 0.1
+        thresholdSelection: 0.01
     });
 
     const [classParams, setClassParams] = useStorageState<ClassifierParams>(sessionStorage, 'pixelClassParams', {
@@ -101,8 +103,10 @@ const PixelSegmentationModuleCard: React.FC = () => {
     });
 
     const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'pixelSegmPreprocessed', false);
-
+    const [loadingMsg, setLoadingMsg] = useState<string>("");
+    const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(false);
+    const [showToast] = useIonToast(); 
 
     useEffect(() => {
         console.log(prevFeatParams, featParams);
@@ -137,6 +141,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
 
     function onApply() {
         setDisabled(true);
+        setShowLoadingCompPS(true);
+        setLoadingMsg("Applying...");
         sfetch('POST', 'pixel_segmentation_module/execute', '')
         .then(() => {
             dispatch('labelChanged', '');
@@ -149,6 +155,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoadingCompPS(false);
+            showToast("Successfully applied the superpixel segmentation !", 2000);
         });
     }
 
@@ -162,6 +170,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         console.log(curSlice);
 
         setDisabled(true);
+        setShowLoadingCompPS(true);
+        setLoadingMsg("Calculating the preview...");
         sfetch('POST', '/pixel_segmentation_module/preview', JSON.stringify(curSlice))
         .then(() => {
             dispatch('labelChanged', '');
@@ -174,6 +184,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoadingCompPS(false);
+            showToast("Successfully calculated the preview !", 2000);
         });
     }
 
@@ -182,6 +194,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
         const params = getModuleBackendParams();
 
         setDisabled(true);
+        setShowLoadingCompPS(true);
+        setLoadingMsg("Preprocessing...");
         sfetch('POST', '/pixel_segmentation_module/create', JSON.stringify(params))
         .then(() => {
             console.log('preprocessou');
@@ -189,11 +203,13 @@ const PixelSegmentationModuleCard: React.FC = () => {
             setPrevFeatParams(featParams);
         })
         .catch(() => {
-            console.log('falhou no preprocessou');
+            console.log('Fail on preprocess');
             setHasPreprocessed(false);
         })
         .finally(() => {
             setDisabled(false);
+            setShowLoadingCompPS(false);
+            showToast("Successfully applied the preprocess !", 1000);
         });
     }
 
@@ -204,19 +220,34 @@ const PixelSegmentationModuleCard: React.FC = () => {
             </IonSelectOption>
         );
     }
-
-    function renderCheckboxFeature(feature: Feature) {
+ 
+    function renderCheckboxFeature( feature: Feature) {
         return (
             <IonItem key={feature.id}>
-                <IonLabel><small>{feature.name}</small></IonLabel>
+                <IonLabel>
+                    <small>
+                        {feature.name} 
+                        <IonButton id={"showPixelSegFeatInfo-button-"+feature.id} size="small" fill='clear'>
+                            <IonIcon icon={informationCircleOutline} />
+                        </IonButton>
+                    </small>
+                    <IonPopover trigger={"showPixelSegFeatInfo-button-"+feature.id} reference="event">
+                        <IonContent>
+                            <IonCard>
+                                <IonCardHeader><div style={ { fontWeight: 600, fontSize: 14 } }>{feature.type}</div></IonCardHeader>
+                                <IonCardContent>{feature.description}</IonCardContent>
+                            </IonCard>
+                        </IonContent>
+                    </IonPopover>
+                </IonLabel>
                 <IonCheckbox value={feature.id} checked={feature.active}
                     onIonChange={(e) => {
                         console.log(e);
-                        const newfeats = featParams.feats.map( nf => {
+                        const newfeats = featParams?.feats.map( nf => {
                             if (nf.id === feature.id) {
                                 return {
                                     ...nf,
-                                    active: e.detail.checked
+                                    active: e.detail.checked 
                                 }
                             } else {
                                 return nf;
@@ -265,7 +296,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
             <ModuleCardItem name="Pixel Segmentation Parameters">
                 <ModuleCardItem name="Feature Extraction Parameters">
                     <IonList>
-                        { featParams.feats.map(renderCheckboxFeature) }
+                        { featParams?.feats.map(renderCheckboxFeature) }
                     </IonList>
                 </ModuleCardItem>
 
@@ -352,6 +383,9 @@ const PixelSegmentationModuleCard: React.FC = () => {
                     </Fragment>
                 </ModuleCardItem>
             </ModuleCardItem>
+            <LoadingComponent
+                        openLoadingWindow={showLoadingCompPS}
+                        loadingText={loadingMsg}/>
 
         </ModuleCard>
     );
