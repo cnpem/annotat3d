@@ -145,7 +145,6 @@ def draw():
 @app.route("/get_annot_slice", methods=["POST"])
 @cross_origin()
 def get_annot_slice():
-    image = data_repo.get_image()
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
@@ -196,12 +195,37 @@ def find_label_by_click():
     try:
         x = request.json["x_coord"]
         y = request.json["y_coord"]
+        slice = request.json["slice"]
+        axis = request.json["axis"]
     except Exception as e:
         return handle_exception(str(e))
 
-    print("\n===============================")
-    print("(x = {}, y = {})".format(x, y))
-    print("=================================\n")
+    try:
+        annot_module = module_repo.get_module('annotation')
+        annotations = annot_module.get_annotation()
+    except Exception as e:
+        return handle_exception(str(e))
+
+    if(axis == "XY"):
+        #data = (x, y, slice)
+        data = (slice, y, x)
+
+    elif(axis == "XZ"):
+        #data = (x, slice, y)
+        data = (y, slice, x)
+
+    else:
+        #data = (slice, y, x)
+        data = (x, y, slice)
+
+    print("\n=====================================")
+    print("Trying to find the data : {}".format(data))
+    print("In the dict : {}".format(annotations))
+    print("=======================================\n")
+
+    if (data in annotations):
+        print("YIKES !!!!")
+        print("data : {}".format(data))
 
     return "success", 200
 

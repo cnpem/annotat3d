@@ -1,13 +1,13 @@
-
-
 import {TextFieldTypes} from '@ionic/core';
-import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonAlert } from '@ionic/react';
+import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonAlert, IonButton, IonIcon, IonCard, IonCardContent, IonCardHeader, IonContent, IonPopover, useIonToast } from '@ionic/react';
+import { informationCircleOutline } from 'ionicons/icons';
 import {isEqual} from 'lodash';
 import {Fragment, useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
 import {currentEventValue, useEventBus} from '../../utils/eventbus';
 import {dispatch} from '../../utils/eventbus';
 import {sfetch} from '../../utils/simplerequest';
+import LoadingComponent from './LoadingComponent';
 import {ModuleCard, ModuleCardItem } from './ModuleCard';
 
 const classifiers = [
@@ -37,22 +37,21 @@ const defaultModelClassifierParams: Record<string, ModelClassifierParams[]> = {
 }
 
 const defaultFeatures: Feature[] = [
-    { id: 'fft_gauss', name: 'FFT Gauss', active: true },
-    { id: 'none', name: 'None (Original Image)', active: true },
-    { id: 'sobel', name: 'Sobel' },
-    { id: 'minimum', name: 'Minimum' },
-    { id: 'average', name: 'Average' },
-    { id: 'median', name: 'Median' },
-    { id: 'fft_gabor', name: 'FFT Gabor' },
-    { id: 'fft_dog', name: 'FFT Difference of Gaussians', active: true },
-    { id: 'membrane_projections', name: 'Membrane Projections', active: true },
-    { id: 'maximum', name: 'Maximum' },
-    { id: 'variance', name: 'Variance' },
-    { id: 'lbp', name: 'Local Binary Pattern' }
+    { active: true, id: 'fft_gauss', name: 'FFT Gauss', type: 'Smoothing', description: 'Filters structures (smoothing) of the specified gaussian filtering in fourier space. Promotes smoothing without worrying about edges.'},
+    { id: 'average', name: 'Average', type: 'Smoothing', description: 'It is a method of "smoothing" images by reducing the amount of intensity variation inside a window (Noise removal)'},
+    { id: 'median', name: 'Median', type: 'Smoothing', description: 'It makes the target pixel intensity equal to the median value in the running window (Noise removal)' },
+    { id: 'sobel', name: 'Sobel', type: 'Edge detection', description: 'It creates an image emphasizing edges because it performs a 2-D spatial gradient measurement on an image and so emphasizes regions of high spatial frequency that correspond to edges.' },
+    { active: true, id: 'fft_dog', name: 'FFT Difference Of Gaussians', type: 'Edge detection', description: 'Calculates two gaussian blur images from the original image and subtracts one from the other. It is used to detect edges in the image.' },
+    { id: 'fft_gabor', name: 'FFT Gabor', type: 'Edge detection,Texture detection', description: 'It determines if there is any specific frequency content in the image in specific directions in a localized region around the point or region of analysis. In the spatial domain, it is a Gaussian kernel function modulated by a sinusoidal plane wave. It is one of the most suitable option for texture segmentation and boundary detection' },
+    { id: 'variance', name: 'Variance', type: 'Texture detection', description: 'It is a statistical measure of the amount of variation inside the window. This determines how uniform or not that filtering window is (important for assessing homogeneity and texture)' },
+    { id: 'lbp', name: 'Local Binary Pattern', type: 'Texture detection', description: 'It is a texture operator that tries to capture how are the neighborhoods allocated. It labels the pixels of an image by thresholding the neighborhood of each pixel and considers the result as a binary number.' },
+    { active: true, id: 'membrane_projections', name: 'Membrane Projections', type: 'Membrane Detection', description: 'Enhances membrane-like structures of the image through directional filtering.' },
+    { id: 'minimum', name: 'Minimum', type: 'Color Identification', description: 'It replaces the value of the pixel with the value of the darkest pixel inside the filtering window' },
+    { id: 'maximum', name: 'Maximum', type: 'Color Identification', description: 'It replaces the value of the pixel with the value of the lightest pixel inside the filtering window' },
+    { active: true, id: 'none', name: 'None (Original Image)', type: 'Identity', description: 'Used to guarantee the preservation of some characteristics of the original image.' }
 ];
 
 interface ModelClassifierParams {
-
     id: string,
     label: string,
     value: any,
@@ -106,7 +105,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
     const [loadingMsg, setLoadingMsg] = useState<string>("");
     const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(false);
-    const [showToast] = useIonToast(); 
+    const [showToast] = useIonToast();
 
     useEffect(() => {
         console.log(prevFeatParams, featParams);
@@ -127,7 +126,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
             },
             feature_extraction_params: {
                 'sigmas': featParams.multiscale,
-                'selected_features': featParams.feats
+                'selected_features': featParams.feats!
                 .filter(p => p.active)
                 .map(p => p.id),
                 'feat_selection_enabled': featParams.thresholdSelection !== null,

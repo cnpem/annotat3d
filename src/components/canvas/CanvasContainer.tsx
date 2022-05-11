@@ -444,10 +444,12 @@ class Canvas {
             return [];
         } else if (mode === "extend_label") {
             console.log("aoba\n");
-
+            //TOOO : need to delete this.actualPosition
             const data = {
-                "x_coord" : this.actualPosition.x,
-                "y_coord" : this.actualPosition.y,
+                "x_coord" : Math.round(this.prevPosition.x),
+                "y_coord" : Math.round(this.prevPosition.y),
+                "slice": this.sliceNum,
+                "axis": this.axis,
             }
 
             sfetch("POST", "/find_label_by_click", JSON.stringify(data), "").then(
