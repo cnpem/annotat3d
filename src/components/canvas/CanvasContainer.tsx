@@ -458,14 +458,13 @@ class Canvas {
             console.log("Finding label by click");
             sfetch("POST", "/find_label_by_click", JSON.stringify(data), "json").then(
                 (labelId: number) => {
-                    console.log("entrou");
                     console.log("label ID found : ", labelId);
-
                     if (labelId >= 0) {
                         this.brush.setLabel(labelId)
                         this.brush.cursor.visible = true;
                         this.brush.updateColor();
-                        //this.brush_mode = "draw_brush";
+                        dispatch("changeSelectedLabel", labelId);
+                        this.setBrushMode("draw_brush");
                     }
 
                 }
@@ -829,9 +828,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         .then((slice) => {
             console.log('annot slice');
             this.canvas!!.annotation.draw(slice);
-            console.log("prevPosition\n ", this.canvas!!.prevPosition);
-            console.log("Actual Position\n ", this.canvas!!.actualPosition);
-            console.log("pointerBuff", this.canvas!!.pointsBuffer);
         });
     }
 

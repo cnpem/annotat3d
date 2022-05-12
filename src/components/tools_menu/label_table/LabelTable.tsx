@@ -33,6 +33,12 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         setDarkMode(darkMode);
     });
 
+    useEventBus("changeSelectedLabel", (labelId: number) => {
+        console.log("changeSelectedLabel");
+        console.log("Value : ", labelId);
+        setSelectedLabel(labelId);
+    })
+
     useEventBus("LabelLoaded", (labelVec: LabelInterface[]) => {
             console.log("Label color : ", props.colors);
             for(let label of labelVec){
