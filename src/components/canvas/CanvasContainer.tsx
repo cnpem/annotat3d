@@ -74,8 +74,6 @@ class Brush {
 
     contextDrawBrush(context: CanvasRenderingContext2D, x: number, y: number) {
         const [r, g, b] = this.colors[(this.label) % this.colors.length];
-        //TODO : This's the function to get the actual color in the last click
-        console.log("Actual color : " + "r = "+ r + " g = " + g + " b = " + b);
         context.beginPath();
         context.fillStyle = `rgb(${r},${g},${b})`;
         context.arc(x, y, this.radius, 0, 2 * Math.PI);
@@ -97,6 +95,12 @@ class Brush {
         this.update();
     }
 
+    updateColor() {
+        const color = this.colors[(this.label) % this.colors.length];
+        console.log("color type : ", color);
+        this.color = this.rgbToHex(...color);
+    }
+
     private rgbToHex(r: number, g: number, b: number) {
         const bin = (r << 16) | (g << 8) | b;
         return bin;
@@ -107,12 +111,12 @@ class Brush {
             const color = this.colors[(this.label) % this.colors.length];
             this.color = this.rgbToHex(...color);
             this.cursor.visible = true;
-        } else if(this.mode === 'erase_brush') {
+        } else if (this.mode === 'erase_brush') {
             this.color = 0xFFFFFF;
             this.cursor.visible = true;
-        } else if(this.mode === "extend_label") {
+        } else if (this.mode === "extend_label") {
             console.log("extend_label option selected");
-            this.cursor.visible = true;
+            this.cursor.visible = false;
             const color = this.colors[(this.label) % this.colors.length];
             this.color = this.rgbToHex(...color);
         } else {
@@ -443,7 +447,6 @@ class Canvas {
         if (mode === 'no_brush') {
             return [];
         } else if (mode === "extend_label") {
-            console.log("aoba\n");
             //TOOO : need to delete this.actualPosition
             const data = {
                 "x_coord" : Math.round(this.prevPosition.x),
@@ -452,9 +455,19 @@ class Canvas {
                 "axis": this.axis,
             }
 
-            sfetch("POST", "/find_label_by_click", JSON.stringify(data), "").then(
-                (info) => {
+            console.log("Finding label by click");
+            sfetch("POST", "/find_label_by_click", JSON.stringify(data), "json").then(
+                (labelId: number) => {
                     console.log("entrou");
+                    console.log("label ID found : ", labelId);
+
+                    if (labelId >= 0) {
+                        this.brush.setLabel(labelId)
+                        this.brush.cursor.visible = true;
+                        this.brush.updateColor();
+                        //this.brush_mode = "draw_brush";
+                    }
+
                 }
             )
             return []

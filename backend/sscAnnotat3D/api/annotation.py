@@ -207,27 +207,20 @@ def find_label_by_click():
         return handle_exception(str(e))
 
     if(axis == "XY"):
-        #data = (x, y, slice)
         data = (slice, y, x)
 
     elif(axis == "XZ"):
-        #data = (x, slice, y)
         data = (y, slice, x)
 
     else:
-        #data = (slice, y, x)
         data = (x, y, slice)
 
-    print("\n=====================================")
-    print("Trying to find the data : {}".format(data))
-    print("In the dict : {}".format(annotations))
-    print("=======================================\n")
-
     if (data in annotations):
-        print("YIKES !!!!")
         print("data : {}".format(data))
+        print("data found by key : {}".format(annotations[data]))
+        return jsonify(annotations[data][0])
 
-    return "success", 200
+    return jsonify(-1)
 
 
 
