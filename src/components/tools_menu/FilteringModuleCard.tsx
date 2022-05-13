@@ -1,5 +1,5 @@
-import {IonInput, IonItem, IonLabel, IonListHeader, IonRadio, IonRadioGroup, IonToggle, useIonToast} from "@ionic/react";
-import {useEffect, useState} from "react";
+import {IonInput, IonItem, IonLabel, IonRadio, IonRadioGroup, IonToggle, useIonToast} from "@ionic/react";
+import {useState} from "react";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch} from "../../utils/eventbus";
 import {sfetch} from "../../utils/simplerequest";
@@ -15,6 +15,7 @@ const BM3DFilteringModuleCard: React.FC = () => {
     const [twostep, setTwostep] = useStorageState<boolean>(sessionStorage, 'bm3dTwostep', false);
 
     const [showToast] = useIonToast();
+    const timeShowToast = 1000;
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [loadingMsg, setLoadingMsg] = useState<string>(""); 
 
@@ -43,7 +44,7 @@ const BM3DFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Preview done!");
+            showToast("Preview done!", timeShowToast);
         });
     }
 
@@ -65,7 +66,7 @@ const BM3DFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Apply done!");
+            showToast("Apply done!", timeShowToast);
         });
     }
 
@@ -102,6 +103,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
     const [convType, setConvType] = useStorageState<string>(sessionStorage, "gaussianConvType", "2d"); 
 
     const [showToast] = useIonToast();
+    const timeShowToast = 1000;
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [loadingMsg, setLoadingMsg] = useState<string>("");  
 
@@ -130,7 +132,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Preview done !", 5000);
+            showToast("Preview done!", timeShowToast);
         });
     }
 
@@ -158,7 +160,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Apply done !", 5000);
+            showToast("Apply done!", timeShowToast);
         });
     }
 
@@ -196,12 +198,13 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
     const [disabled, setDisabled] = useState<boolean>(false);
     
     const [sigma, setSigma] = useStorageState<number>(sessionStorage, "nlmSigma", 2); 
-    const [nlmStep, setNlmStep] = useStorageState<number>(sessionStorage, "nlmStep", 21); 
-    const [gaussianStep, setGaussianStep] = useStorageState<number>(sessionStorage, "gaussianStep", 10); 
+    const [nlmStep, setNlmStep] = useStorageState<number>(sessionStorage, "nlmStep", 2); 
+    const [gaussianStep, setGaussianStep] = useStorageState<number>(sessionStorage, "gaussianStep", 2); 
 
     const [showToast] = useIonToast();
+    const timeShowToast = 1000;
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
-    const [loadingMsg, setLoadingMsg] = useState<string>("");   
+    const [loadingMsg, setLoadingMsg] = useState<string>("");
 
     function onPreview() {
 
@@ -229,7 +232,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Preview done !", 5000);
+            showToast("Preview done!", timeShowToast);
         });
     }
 
@@ -258,7 +261,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Apply done !", 5000);
+            showToast("Apply done!", timeShowToast);
         });
     }
 
@@ -276,15 +279,21 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
                 <IonItem>
                     <IonLabel>NLM Step</IonLabel>
                     <IonInput value={nlmStep}
-                        type="number" step="0.1" min={0.1}
-                        onIonChange={ (e) => setNlmStep(+(e.detail.value!!)) }>
+                        type="number" step="1" min={1}
+                        onIonChange={ (e) => 
+                            (typeof e.detail.value === "number")
+                            ? setNlmStep(+e.detail.value!!) 
+                            : showToast("Please insert an integer value!", timeShowToast)}>
                     </IonInput>
                 </IonItem>
                 <IonItem>
                     <IonLabel>Gaussian Step</IonLabel>
                     <IonInput value={gaussianStep}
-                        type="number" step="0.1" min={0.1}
-                        onIonChange={ (e) => setGaussianStep(+(e.detail.value!!)) }>
+                        type="number" step="1" min={1}
+                        onIonChange={ (e) => 
+                            (typeof e.detail.value === "number")
+                            ? setGaussianStep(+e.detail.value!!) 
+                            : showToast("Please insert an integer value!", timeShowToast)}>
                     </IonInput>
                 </IonItem>
             </ModuleCardItem>
