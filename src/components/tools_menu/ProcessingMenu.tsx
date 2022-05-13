@@ -1,5 +1,5 @@
 import {IonCard, IonItem, IonLabel, IonList} from "@ionic/react";
-import {Fragment, useEffect} from "react";
+import {Fragment, useEffect, useState} from "react";
 import {useStorageState} from "react-storage-hooks";
 import {dispatch, useEventBus} from "../../utils/eventbus";
 import {BM3DFilteringModuleCard, GaussianFilteringModuleCard, NonLocalMeansFilteringModuleCard} from "./FilteringModuleCard";
