@@ -281,7 +281,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
                     <IonInput value={nlmStep}
                         type="number" step="1" min={1}
                         onIonChange={ (e) => 
-                            (typeof e.detail.value === "number")
+                            ( Number.isInteger( +e.detail.value!! ) )
                             ? setNlmStep(+e.detail.value!!) 
                             : showToast("Please insert an integer value!", timeShowToast)}>
                     </IonInput>
@@ -291,9 +291,9 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
                     <IonInput value={gaussianStep}
                         type="number" step="1" min={1}
                         onIonChange={ (e) => 
-                            (typeof e.detail.value === "number")
-                            ? setGaussianStep(+e.detail.value!!) 
-                            : showToast("Please insert an integer value!", timeShowToast)}>
+                            ( Number.isInteger( +e.detail.value!! ) )
+                            ? setGaussianStep( +e.detail.value!! )
+                            : showToast("Please insert an integer value!", timeShowToast)}> 
                     </IonInput>
                 </IonItem>
             </ModuleCardItem>
