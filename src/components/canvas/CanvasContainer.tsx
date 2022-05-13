@@ -464,11 +464,15 @@ class Canvas {
                         this.brush.cursor.visible = true;
                         this.brush.updateColor();
                         dispatch("changeSelectedLabel", labelId);
-                        this.setBrushMode("draw_brush");
+                        //this.setBrushMode("draw_brush"); estava antes aqui
+                        dispatch("UpdateIconFab", true);
+                        dispatch("ChangeStateBrush", "draw_brush");
                     }
 
                 }
-            )
+            ).finally(() => {
+                console.log("Toast here");
+            })
             return []
         } else if (mode === 'erase_brush') {
             this.annotation.context.globalCompositeOperation = 'destination-out';
@@ -498,8 +502,6 @@ class Canvas {
             coords.push([x, y]);
         }
         this.annotation.sprite.texture.update();
-        console.log("prev coords : ", this.prevPosition);
-        console.log("coords : ", coords);
         return coords;
     }
 
@@ -723,6 +725,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     pixi_container: HTMLDivElement | null;
     canvas: Canvas | null;
+    updateIconFab: boolean;
 
     onLabelSelected: (payload: any) => void = () => {};
     onImageLoaded: (payload: any) => void = () => {};
@@ -739,11 +742,14 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onAnnotationChanged!: () => void;
     onLabelContourChanged!: (contour: boolean) => void;
     onFutureChanged!: (hasPreview: boolean) => void;
+    onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
+    onUpdateIconFab: (flag: boolean) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
         this.pixi_container = null;
         this.canvas = null;
+        this.updateIconFab = false;
         this.state = {
             brush_mode: 'draw_brush',
             label_contour: false,
@@ -949,6 +955,15 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 }
             }
 
+            this.onChangeStateBrush = (mode: brush_mode_type) => {
+                this.setBrushMode(mode);
+            }
+
+            this.onUpdateIconFab = (flag: boolean) => {
+                console.log("Updating the icon");
+                this.updateIconFab = flag;
+            }
+
             subscribe('futureChanged', this.onFutureChanged);
             subscribe('labelColorsChanged', this.onLabelColorsChanged);
             subscribe('labelContourChanged', this.onLabelContourChanged);
@@ -964,6 +979,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('contrastChanged', this.onContrastChanged);
             subscribe('labelChanged', this.onLabelChanged);
             subscribe('ImageLoaded', this.onImageLoaded);
+            subscribe("ChangeStateBrush", this.onChangeStateBrush);
+            subscribe("UpdateIconFab", this.onUpdateIconFab);
         }
     }
 
@@ -984,9 +1001,17 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('superpixelChanged', this.onSuperpixelChanged);
         unsubscribe('contrastChanged', this.onContrastChanged);
         unsubscribe('labelChanged', this.onLabelChanged);
+        unsubscribe("ChangeStateBrush", this.onChangeStateBrush);
+        unsubscribe("UpdateIconFab", this.onUpdateIconFab);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
+        console.log("On Did Update if : ", prevState.brush_mode);
+
+        if(this.updateIconFab) {
+            prevState.brush_mode = "draw_brush";
+            console.log("Test : ", prevState.brush_mode)
+        }
 
         if (isEqual(prevProps, this.props)) //if all properties are the same (deep comparison)
             return;
@@ -999,6 +1024,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.setBrushMode('draw_brush')
             }
         }
+
+        console.log("On Did Update : ", this.props.canvasMode);
 
         this.setState({...this.state, future_sight_on: false});
         this.canvas?.setSliceNum(this.props.slice);
@@ -1034,7 +1061,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 </IonFab>
 
                 <IonFab hidden={this.props.canvasMode !== 'drawing'} vertical="bottom" horizontal="end">
-                    <MenuFabButton value={this.state.brush_mode} openSide="start" buttonsList={brushList} onChange={ (b) => { this.setBrushMode(b.id as brush_mode_type) } } />
+                    <MenuFabButton value={this.state.brush_mode} openSide="start" buttonsList={brushList} onChange={ (b) => {
+                        console.log("change icon : ", b.id);
+                        this.setBrushMode(b.id as brush_mode_type) } } />
                 </IonFab>
                 <IonFab vertical="bottom" horizontal="end" style={ {marginBottom: '4em'} }>
                     <IonFabButton size="small" onClick={() => {
