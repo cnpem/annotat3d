@@ -289,7 +289,6 @@ class Canvas {
 
         this.isPainting = false;
         this.prevPosition = null;
-        this.actualPosition = null;
 
         this.app.stage.addChild(this.viewport);
         this.viewport.addChild(this.slice);
@@ -352,9 +351,7 @@ class Canvas {
         }
 
         this.isPainting = true;
-
         this.prevPosition = this.viewport.toWorld(event.data.global);
-        this.actualPosition = this.prevPosition;
     }
 
 
@@ -381,7 +378,6 @@ class Canvas {
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
         this.prevPosition = currPosition;
-        this.actualPosition = currPosition;
     }
 
 
@@ -394,9 +390,6 @@ class Canvas {
 
         const currPosition = this.viewport.toWorld(event.data.global);
         this.prevPosition = currPosition;
-        this.actualPosition = currPosition;
-        console.log(currPosition);
-
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
         const data = {
@@ -442,7 +435,6 @@ class Canvas {
 
         const context = this.annotation.context;
         const mode = this.brush_mode;
-        this.actualPosition = currPosition;
 
         if (mode === 'no_brush') {
             return [];
@@ -463,16 +455,14 @@ class Canvas {
                     console.log("label ID found : ", labelId);
                     if (labelId >= 0) {
                         this.brush.setLabel(labelId)
-                        this.brush.cursor.visible = true;
                         this.brush.updateColor();
+                        this.setBrushMode("draw_brush");
                         dispatch("changeSelectedLabel", labelId);
-                        //this.setBrushMode("draw_brush"); estava antes aqui
-                        dispatch("UpdateIconFab", true);
-                        dispatch("ChangeStateBrush", "draw_brush");
                     }
-
+                    this.brush.cursor.visible = true;
                 }
             ).finally(() => {
+                //TODO : need to implement a toast here
                 console.log("Toast here");
             })
             return []
@@ -956,9 +946,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.setBrushMode(mode);
             }
 
-            this.onUpdateIconFab = (flag: boolean) => {
-                console.log("Updating the icon");
-                this.updateIconFab = flag;
+            this.onExtendLabel = (flag: boolean) => {
+                console.log("flag val : ", flag);
+                this.canvas!!.showBrush(false);
+                this.canvas!!.extendLabel = flag;
             }
 
             subscribe('futureChanged', this.onFutureChanged);
@@ -978,6 +969,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('ImageLoaded', this.onImageLoaded);
             subscribe("ChangeStateBrush", this.onChangeStateBrush);
             subscribe("UpdateIconFab", this.onUpdateIconFab);
+            subscribe("ExtendLabel", this.onExtendLabel);
         }
     }
 
@@ -1000,15 +992,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('labelChanged', this.onLabelChanged);
         unsubscribe("ChangeStateBrush", this.onChangeStateBrush);
         unsubscribe("UpdateIconFab", this.onUpdateIconFab);
+        unsubscribe("ExtendLabel", this.onExtendLabel);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
-        console.log("On Did Update if : ", prevState.brush_mode);
-
-        if(this.updateIconFab) {
-            prevState.brush_mode = "draw_brush";
-            console.log("Test : ", prevState.brush_mode)
-        }
 
         if (isEqual(prevProps, this.props)) //if all properties are the same (deep comparison)
             return;
