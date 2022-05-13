@@ -1,6 +1,6 @@
 import {Component} from 'react';
 import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
-import { expand, brush, browsers, add, remove, eye, eyeOff, analytics } from 'ionicons/icons';
+import { expand, brush, browsers, add, remove, eye, eyeOff } from 'ionicons/icons';
 import { debounce, isEqual } from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -8,7 +8,7 @@ import * as PIXI from 'pixi.js';
 // this fix is on the import on utils/pixibufferloader
 import '../../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
-//import npyjs from 'npyjs';
+
 import { NdArray, TypedArray } from 'ndarray';
 import {clamp} from '../../utils/math';
 import { sfetch } from '../../utils/simplerequest';
@@ -26,6 +26,7 @@ class Brush {
     radius: number = 0;
 
     mode: brush_mode_type = 'draw_brush';
+    extendLabel: boolean;
 
     canvas: HTMLCanvasElement;
     context: CanvasRenderingContext2D;
@@ -37,6 +38,7 @@ class Brush {
     constructor(colors: [number, number, number][]) {
         this.label = 0;
         this.color = 0xffffff;
+        this.extendLabel = false;
 
         this.canvas = document.createElement('canvas');
 
@@ -114,15 +116,9 @@ class Brush {
         } else if (this.mode === 'erase_brush') {
             this.color = 0xFFFFFF;
             this.cursor.visible = true;
-        } else if (this.mode === "extend_label") {
-            console.log("extend_label option selected");
-            this.cursor.visible = false;
-            const color = this.colors[(this.label) % this.colors.length];
-            this.color = this.rgbToHex(...color);
         } else {
             this.cursor.visible = false;
         }
-
         this.updateBrush();
     }
 }
@@ -214,6 +210,7 @@ class Canvas {
     actualPosition: any;
 
     isPainting: boolean;
+    extendLabel: boolean;
 
     annotation: Annotation;
     brush: Brush;
@@ -266,6 +263,7 @@ class Canvas {
 
         this.slice = new PIXI.Sprite();
         this.slice.visible = true;
+        this.extendLabel = true;
 
         this.labelSlice = new PIXI.Sprite();
 
@@ -337,7 +335,9 @@ class Canvas {
         this.sliceNum = sliceNum;
     }
 
-
+    showBrush(flag: boolean) {
+        this.brush.cursor.visible = flag;
+    }
 
     setAxis(axis: 'XY' | 'XZ' | 'YZ') {
         this.axis = axis;
@@ -446,8 +446,10 @@ class Canvas {
 
         if (mode === 'no_brush') {
             return [];
-        } else if (mode === "extend_label") {
-            //TOOO : need to delete this.actualPosition
+        } else if (this.extendLabel) {
+            this.extendLabel = false;
+            this.brush.cursor.visible = false;
+
             const data = {
                 "x_coord" : Math.round(this.prevPosition.x),
                 "y_coord" : Math.round(this.prevPosition.y),
@@ -692,7 +694,7 @@ class Canvas {
     }
 }
 
-type brush_mode_type = 'draw_brush' | 'erase_brush' | 'no_brush' | "extend_label";
+type brush_mode_type = 'draw_brush' | 'erase_brush' | 'no_brush';
 
 interface ICanvasProps {
     slice: number;
@@ -715,17 +717,12 @@ const brushList = [
         id: 'erase_brush',
         logo: browsers
     },
-    {
-        id: "extend_label",
-        logo: analytics
-    }
 ];
 
 class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     pixi_container: HTMLDivElement | null;
     canvas: Canvas | null;
-    updateIconFab: boolean;
 
     onLabelSelected: (payload: any) => void = () => {};
     onImageLoaded: (payload: any) => void = () => {};
@@ -744,12 +741,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onFutureChanged!: (hasPreview: boolean) => void;
     onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
     onUpdateIconFab: (flag: boolean) => void = () => {};
+    onExtendLabel: (flag: boolean) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
         this.pixi_container = null;
         this.canvas = null;
-        this.updateIconFab = false;
         this.state = {
             brush_mode: 'draw_brush',
             label_contour: false,

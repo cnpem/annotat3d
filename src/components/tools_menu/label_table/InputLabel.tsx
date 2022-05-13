@@ -111,8 +111,17 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         props.onNewLabelId(props.newLabelId);
     }
 
+    const extendLabel = () => {
+        console.log("Doing dispatch for ExtendLabel");
+        dispatch("ExtendLabel", true);
+    }
+
     return(
         <div style={ {display: "flex", justifyContent: "flex-end"} }>
+            <IonButton size={"small"} onClick={extendLabel} disabled={activateMenu}>
+                Extent
+            </IonButton>
+
             <IonButton size="small" onClick={addNewLabel} disabled={activateMenu}>
                 <IonIcon icon={addOutline} slot={"end"}/>
                 Add
