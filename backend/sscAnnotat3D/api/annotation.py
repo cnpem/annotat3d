@@ -1,3 +1,8 @@
+"""
+This script contains functions used for annotations
+@Docs author : Gabriel Borin Macedo (gabriel.macedo@lnls.com.br or borinmacedo@gmail.com)
+"""
+
 from flask import Blueprint, request, send_file, jsonify
 import pickle
 import io
@@ -15,6 +20,16 @@ app = Blueprint('annotation', __name__)
 
 @app.errorhandler(BadRequest)
 def handle_exception(error_msg: str):
+    """
+    Function that handle with bad exceptions and returns a json that contains the error and a 400 error
+
+    Args:
+        error_msg (str): a string that contains the error
+
+    Returns:
+        (tuple[str, int]): this function returns respectively the json that contains the error message and the 400 error (tuple[Response, int])
+
+    """
     return jsonify({"error_msg": error_msg}), 400
 
 
@@ -24,7 +39,21 @@ app.register_error_handler(400, handle_exception)
 @app.route("/new_annot/<annot_id>", methods=["POST"])
 @cross_origin()
 def new_annot(annot_id: str):
+    """
+    function that creates a new annotation using an id as reference
 
+    Args:
+        annot_id (str): string used as id to get the annotation
+
+    Examples:
+        This is an example on how you can use this function to get the annotation using the id\n
+        sfetch('POST', '/new_annot/annotation');\n
+        Where in this case annot_id=annotation
+
+    Returns:
+        (tuple[str, int]): this function returns "success" and 200 if a new annotation is created.Otherwise, this tuple will return the error string and 400
+
+    """
     img = data_repo.get_image('image')
     if img is None:
         return handle_exception('No image associated')
@@ -37,6 +66,20 @@ def new_annot(annot_id: str):
 @app.route("/is_available_annot/<annot_id>", methods=["POST"])
 @cross_origin
 def is_available_annot(annot_id: str):
+    """
+    Function that verify if an annotation is available
+
+    Args:
+        annot_id(string): string used as id to get the annotation
+    Examples:
+        This is an example on how you can use this function to get the annotation using the id\n
+        sfetch('POST', '/is_available_annot/annotation');\n
+        Where in this case annot_id=annotation
+
+    Returns:
+        (tuple[bool, int]): this function returns "True" and 200 if an annotation is available.Otherwise, this tuple will return "False" and error 400
+
+    """
     annot = module_repo.get_module(annot_id)
 
     available = True
