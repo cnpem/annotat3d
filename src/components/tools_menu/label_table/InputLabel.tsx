@@ -1,5 +1,15 @@
 import React, {useState} from "react";
-import {IonAlert, IonButton, IonIcon, useIonToast} from "@ionic/react";
+import {
+    IonAlert,
+    IonButton, IonContent,
+    IonIcon,
+    IonItem,
+    IonLabel,
+    IonPopover,
+    IonSelect,
+    IonSelectOption,
+    useIonToast
+} from "@ionic/react";
 import { LabelInterface } from "./LabelInterface";
 import {colorFromId} from '../../../utils/colormap';
 
@@ -28,6 +38,30 @@ interface WarningWindowInterface {
     onLabelList: (labels: LabelInterface[]) => void;
     onNewLabelId: (id: number) => void;
 }
+
+const users = [
+  {
+    id: 1,
+    first: 'Alice',
+    last: 'Smith'
+  },
+  {
+    id: 2,
+    first: 'Bob',
+    last: 'Davis'
+  },
+  {
+    id: 3,
+    first: 'Charlie',
+    last: 'Rosenburg',
+  }
+];
+
+type User = typeof users[number];
+
+const compareWith = (o1: User, o2: User) => {
+  return o1 && o2 ? o1.id === o2.id : o1 === o2;
+};
 
 const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
                                                              onOpenWarningWindow,
@@ -89,7 +123,11 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
  */
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
+    const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+    const [chosenLabel1, setChosenLabel1] = useState<string>("Background");
+    const [chosenLabel2, setChosenLabel2] = useState<string>("Background");
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
+    const [showMergeMenu, setShowMergeMenu] = useState<boolean>(false);
     const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
     const [ionToastActivateExtendOp, ] = useIonToast();
     const timeToast = 2000;
@@ -119,12 +157,51 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         ionToastActivateExtendOp(`Extend label operation activated !`, timeToast);
     }
 
+    const mergeLabel = () => {
+        console.log("Doing dispatch for mergeLabel");
+        setShowMergeMenu(true);
+        dispatch("mergeLabel", true);
+        ionToastActivateExtendOp(`Merge label operation activated !`, timeToast);
+    }
+
     return(
         <div style={ {display: "flex", justifyContent: "flex-end"} }>
             <IonButton size={"small"} onClick={extendLabel} disabled={activateMenu}>
                 Extend
             </IonButton>
 
+             <IonButton id={"merge-label"} size={"small"} onClick={mergeLabel} disabled={activateMenu}>
+                 Merge
+            </IonButton>
+
+            <IonPopover
+                trigger={"merge-label"}
+                isOpen={showMergeMenu}
+                onDidDismiss={() => setShowMergeMenu(false)}
+                className={"ion-popover-merge"}>
+
+                <IonContent>
+                    <IonItem>
+                        <IonLabel>{chosenLabel1}</IonLabel>
+                         <IonSelect compareWith={compareWith} value={selectedUsers} onIonChange={e => setSelectedUsers(e.detail.value)}>
+                             {users.map(user => (
+                                <IonSelectOption key={user.id} value={user}>
+                                  {user.first} {user.last}
+                                </IonSelectOption>
+                              ))}
+                        </IonSelect>
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel>{chosenLabel2}</IonLabel>
+                         <IonSelect value={chosenLabel2} onIonChange={e => setChosenLabel2(e.detail.value)}>
+                              <IonSelectOption value="bird">Bird</IonSelectOption>
+                              <IonSelectOption value="cat">Cat</IonSelectOption>
+                              <IonSelectOption value="dog">Dog</IonSelectOption>
+                              <IonSelectOption value="honeybadger">Honey Badger</IonSelectOption>
+                        </IonSelect>
+                    </IonItem>
+                </IonContent>
+            </IonPopover>
             <IonButton size="small" onClick={addNewLabel} disabled={activateMenu}>
                 <IonIcon icon={addOutline} slot={"end"}/>
                 Add

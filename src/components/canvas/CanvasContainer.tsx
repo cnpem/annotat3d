@@ -207,10 +207,10 @@ class Canvas {
     div: HTMLDivElement;
 
     prevPosition: any;
-    actualPosition: any;
 
     isPainting: boolean;
     extendLabel: boolean;
+    mergeLabel: boolean;
 
     annotation: Annotation;
     brush: Brush;
@@ -263,7 +263,8 @@ class Canvas {
 
         this.slice = new PIXI.Sprite();
         this.slice.visible = true;
-        this.extendLabel = true;
+        this.extendLabel = false;
+        this.mergeLabel = false;
 
         this.labelSlice = new PIXI.Sprite();
 
@@ -727,8 +728,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onLabelContourChanged!: (contour: boolean) => void;
     onFutureChanged!: (hasPreview: boolean) => void;
     onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
-    onUpdateIconFab: (flag: boolean) => void = () => {};
     onExtendLabel: (flag: boolean) => void = () => {};
+    onMergeLabel: (flag: boolean) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -949,6 +950,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas!!.extendLabel = flag;
             }
 
+            this.onMergeLabel = (flag: boolean) => {
+                console.log("flag val on merge option : ", flag);
+                this.canvas!!.mergeLabel = flag;
+            }
+
             subscribe('futureChanged', this.onFutureChanged);
             subscribe('labelColorsChanged', this.onLabelColorsChanged);
             subscribe('labelContourChanged', this.onLabelContourChanged);
@@ -965,8 +971,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('labelChanged', this.onLabelChanged);
             subscribe('ImageLoaded', this.onImageLoaded);
             subscribe("ChangeStateBrush", this.onChangeStateBrush);
-            subscribe("UpdateIconFab", this.onUpdateIconFab);
             subscribe("ExtendLabel", this.onExtendLabel);
+            subscribe("mergeLabel", this.onMergeLabel);
         }
     }
 
@@ -988,8 +994,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('contrastChanged', this.onContrastChanged);
         unsubscribe('labelChanged', this.onLabelChanged);
         unsubscribe("ChangeStateBrush", this.onChangeStateBrush);
-        unsubscribe("UpdateIconFab", this.onUpdateIconFab);
         unsubscribe("ExtendLabel", this.onExtendLabel);
+        unsubscribe("mergeLabel", this.onMergeLabel);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
