@@ -39,29 +39,9 @@ interface WarningWindowInterface {
     onNewLabelId: (id: number) => void;
 }
 
-const users = [
-  {
-    id: 1,
-    first: 'Alice',
-    last: 'Smith'
-  },
-  {
-    id: 2,
-    first: 'Bob',
-    last: 'Davis'
-  },
-  {
-    id: 3,
-    first: 'Charlie',
-    last: 'Rosenburg',
-  }
-];
-
-type User = typeof users[number];
-
-const compareWith = (o1: User, o2: User) => {
-  return o1 && o2 ? o1.id === o2.id : o1 === o2;
-};
+const compareWith = (label1: LabelInterface, label2: LabelInterface) => {
+  return label1 && label2 ? label1.id === label2.id : label1 === label2;
+}
 
 const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
                                                              onOpenWarningWindow,
@@ -123,9 +103,7 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
  */
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
-    const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
-    const [chosenLabel1, setChosenLabel1] = useState<string>("Background");
-    const [chosenLabel2, setChosenLabel2] = useState<string>("Background");
+    const [selectedLabels, setSelectedLabels] = useState<LabelInterface[]>([]);
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
     const [showMergeMenu, setShowMergeMenu] = useState<boolean>(false);
     const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
@@ -174,31 +152,45 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                  Merge
             </IonButton>
 
+            {/*Merge Pop-up*/}
             <IonPopover
                 trigger={"merge-label"}
                 isOpen={showMergeMenu}
-                onDidDismiss={() => setShowMergeMenu(false)}
+                onDidDismiss={() => {
+                    setShowMergeMenu(false);
+                    setSelectedLabels([]);
+                }}
                 className={"ion-popover-merge"}>
 
                 <IonContent>
                     <IonItem>
-                        <IonLabel>{chosenLabel1}</IonLabel>
-                         <IonSelect compareWith={compareWith} value={selectedUsers} onIonChange={e => setSelectedUsers(e.detail.value)}>
-                             {users.map(user => (
-                                <IonSelectOption key={user.id} value={user}>
-                                  {user.first} {user.last}
+                        <IonLabel>bla</IonLabel>
+                         <IonSelect
+                             compareWith={compareWith}
+                             value={selectedLabels}
+                             multiple
+                             onIonChange={(e: CustomEvent) => {setSelectedLabels(e.detail.value)}}>
+                             {props.labelList.map((label: LabelInterface) => (
+                                <IonSelectOption key={label.id} value={label}>
+                                    {label.labelName}
                                 </IonSelectOption>
                               ))}
                         </IonSelect>
                     </IonItem>
+
+                    {/*Merge Buttons*/}
                     <IonItem>
-                        <IonLabel>{chosenLabel2}</IonLabel>
-                         <IonSelect value={chosenLabel2} onIonChange={e => setChosenLabel2(e.detail.value)}>
-                              <IonSelectOption value="bird">Bird</IonSelectOption>
-                              <IonSelectOption value="cat">Cat</IonSelectOption>
-                              <IonSelectOption value="dog">Dog</IonSelectOption>
-                              <IonSelectOption value="honeybadger">Honey Badger</IonSelectOption>
-                        </IonSelect>
+                        <IonButton onClick={() => {
+                            setShowMergeMenu(false);
+                        }}>Cancel</IonButton>
+
+                        <IonButton onClick={() => {
+                            //TODO : need to implement a backend function to
+                            const params = {
+                                "selected_labels": selectedLabels,
+                            }
+
+                        }}></IonButton>
                     </IonItem>
                 </IonContent>
             </IonPopover>
