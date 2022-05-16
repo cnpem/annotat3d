@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import * as ReactBootStrap from "react-bootstrap";
-import {IonRow, IonCol, IonLabel} from "@ionic/react";
+import {IonRow, IonCol, IonLabel, useIonToast} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
 import {LabelInterface} from './LabelInterface';
@@ -28,15 +28,23 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
 
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
+    const [ionToastLabelFounded, ] = useIonToast();
+    const toastTimer = 2000;
 
-    useEventBus('toggleMode', (darkMode) => {
+    useEventBus('toggleMode', (darkMode: boolean) => {
         setDarkMode(darkMode);
     });
 
     useEventBus("changeSelectedLabel", (labelId: number) => {
         console.log("changeSelectedLabel");
         console.log("Value : ", labelId);
-        setSelectedLabel(labelId);
+        if (labelId >= 0) {
+            setSelectedLabel(labelId);
+            ionToastLabelFounded(`Label named "${labelList[labelId].labelName}" founded !`, toastTimer);
+        } else {
+            ionToastLabelFounded(`Cannot find a label by click !`, toastTimer);
+        }
+
     })
 
     useEventBus("LabelLoaded", (labelVec: LabelInterface[]) => {

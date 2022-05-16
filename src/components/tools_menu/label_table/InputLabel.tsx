@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {IonAlert, IonButton, IonIcon} from "@ionic/react";
+import {IonAlert, IonButton, IonIcon, useIonToast} from "@ionic/react";
 import { LabelInterface } from "./LabelInterface";
 import {colorFromId} from '../../../utils/colormap';
 
@@ -91,9 +91,15 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
     const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+    const [ionToastActivateExtendOp, ] = useIonToast();
+    const toastTimer = 2000;
 
     useEventBus("ActivateComponents", (activateAddLabelButton) => {
         setActivateMenu(activateAddLabelButton);
+    })
+
+    useEventBus("labelFounded", (labeId: number) => {
+        console.log("Label id founded : ", labeId);
     })
 
     const handleShowWarningWindow = (flag: boolean) => {
@@ -114,6 +120,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     const extendLabel = () => {
         console.log("Doing dispatch for ExtendLabel");
         dispatch("ExtendLabel", true);
+        ionToastActivateExtendOp(`Extended label operation activated !`, toastTimer);
     }
 
     return(

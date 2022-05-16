@@ -1,5 +1,5 @@
 import {Component} from 'react';
-import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
+import {IonFab, IonFabButton, IonIcon, useIonToast} from '@ionic/react';
 import { expand, brush, browsers, add, remove, eye, eyeOff } from 'ionicons/icons';
 import { debounce, isEqual } from "lodash";
 import * as PIXI from 'pixi.js';
@@ -457,9 +457,10 @@ class Canvas {
                         this.brush.setLabel(labelId)
                         this.brush.updateColor();
                         this.setBrushMode("draw_brush");
-                        dispatch("changeSelectedLabel", labelId);
                     }
                     this.brush.cursor.visible = true;
+                    dispatch("changeSelectedLabel", labelId);
+                    dispatch("labelFounded", labelId);
                 }
             ).finally(() => {
                 //TODO : need to implement a toast here
