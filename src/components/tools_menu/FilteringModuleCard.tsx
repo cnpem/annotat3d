@@ -15,7 +15,7 @@ const BM3DFilteringModuleCard: React.FC = () => {
     const [twostep, setTwostep] = useStorageState<boolean>(sessionStorage, 'bm3dTwostep', false);
 
     const [showToast] = useIonToast();
-    const timeShowToast = 1000;
+    const timeToast = 2000;
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [loadingMsg, setLoadingMsg] = useState<string>(""); 
 
@@ -44,7 +44,7 @@ const BM3DFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Preview done!", timeShowToast);
+            showToast("Preview done!", timeToast);
         });
     }
 
@@ -66,7 +66,7 @@ const BM3DFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Apply done!", timeShowToast);
+            showToast("Apply done!", timeToast);
         });
     }
 
@@ -103,7 +103,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
     const [convType, setConvType] = useStorageState<string>(sessionStorage, "gaussianConvType", "2d"); 
 
     const [showToast] = useIonToast();
-    const timeShowToast = 1000;
+    const timeToast = 2000;
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [loadingMsg, setLoadingMsg] = useState<string>("");  
 
@@ -132,7 +132,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Preview done!", timeShowToast);
+            showToast("Preview done!", timeToast);
         });
     }
 
@@ -160,7 +160,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Apply done!", timeShowToast);
+            showToast("Apply done!", timeToast);
         });
     }
 
@@ -202,7 +202,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
     const [gaussianStep, setGaussianStep] = useStorageState<number>(sessionStorage, "gaussianStep", 2); 
 
     const [showToast] = useIonToast();
-    const timeShowToast = 1000;
+    const timeToast = 2000;
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [loadingMsg, setLoadingMsg] = useState<string>("");
 
@@ -232,7 +232,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Preview done!", timeShowToast);
+            showToast("Preview done!", timeToast);
         });
     }
 
@@ -261,7 +261,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Apply done!", timeShowToast);
+            showToast("Apply done!", timeToast);
         });
     }
 
@@ -283,7 +283,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
                         onIonChange={ (e) => 
                             ( Number.isInteger( +e.detail.value!! ) )
                             ? setNlmStep(+e.detail.value!!) 
-                            : showToast("Please insert an integer value!", timeShowToast)}>
+                            : showToast("Please insert an integer value!", timeToast)}>
                     </IonInput>
                 </IonItem>
                 <IonItem>
@@ -293,7 +293,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
                         onIonChange={ (e) => 
                             ( Number.isInteger( +e.detail.value!! ) )
                             ? setGaussianStep( +e.detail.value!! )
-                            : showToast("Please insert an integer value!", timeShowToast)}> 
+                            : showToast("Please insert an integer value!", timeToast)}>
                     </IonInput>
                 </IonItem>
             </ModuleCardItem>

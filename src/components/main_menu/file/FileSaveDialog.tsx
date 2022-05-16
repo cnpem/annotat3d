@@ -77,6 +77,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     });
 
     const [showToast,] = useIonToast();
+    const toastTime = 2000;
 
     const [path, setPath] = useState<string>("");
     const [dtype, setDtype] = useState<"uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
@@ -118,7 +119,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                 setShowErrorWindow(false);
                 dispatch("SaveImage", info);
                 setShowPopover({...showPopover, open: false});
-                showToast(`image saved in ${image["image_name"]}${image["image_ext"]}`, 2000);
+                showToast(`image saved in ${image["image_name"]}${image["image_ext"]}`, toastTime);
 
             }).catch(error => {
                 setShowErrorWindow(true);

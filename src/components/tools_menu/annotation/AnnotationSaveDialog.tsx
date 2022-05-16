@@ -26,6 +26,7 @@ const AnnotationSaveDialog : React.FC = () => {
         event: undefined,
     });
     const [showToast,] = useIonToast();
+    const timeToast = 2000;
     const [path, setPath] = useState<string>("");
     const [ext, setExt] = useState<".pkl">(".pkl");
     const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
@@ -45,7 +46,7 @@ const AnnotationSaveDialog : React.FC = () => {
             .then((success) => {
                 console.log(success);
                 setShowPopover({...showPopover, open: false});
-                showToast("Annotation saved", 2000);
+                showToast("Annotation saved", timeToast);
 
             }).catch(error => {
                 console.log(error);

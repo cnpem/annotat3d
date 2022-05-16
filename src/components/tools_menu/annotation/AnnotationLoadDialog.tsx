@@ -23,6 +23,7 @@ const AnnotationLoadDialog : React.FC = () => {
         event: undefined,
     });
     const [showToast,] = useIonToast();
+    const timeToast = 2000;
     const [path, setPath] = useState<string>("");
     const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
 
@@ -43,13 +44,14 @@ const AnnotationLoadDialog : React.FC = () => {
                 setShowPopover({...showPopover, open: false});
                 dispatch("LabelLoaded", labelList);
                 dispatch("annotationChanged",null);
-                showToast("Annotation loaded", 2000);
 
             }).catch(error => {
                 //TODO : Need to implement an error and loading component to load an operation
                 console.log("Error trying to load the .pkl label\n");
                 console.log(error);
-            })
+            }).finally(() => {
+                showToast("Annotation loaded", timeToast);
+        })
 
     }
     /**

@@ -92,14 +92,10 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
     const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
     const [ionToastActivateExtendOp, ] = useIonToast();
-    const toastTimer = 2000;
+    const timeToast = 2000;
 
     useEventBus("ActivateComponents", (activateAddLabelButton) => {
         setActivateMenu(activateAddLabelButton);
-    })
-
-    useEventBus("labelFounded", (labeId: number) => {
-        console.log("Label id founded : ", labeId);
     })
 
     const handleShowWarningWindow = (flag: boolean) => {
@@ -120,13 +116,13 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     const extendLabel = () => {
         console.log("Doing dispatch for ExtendLabel");
         dispatch("ExtendLabel", true);
-        ionToastActivateExtendOp(`Extended label operation activated !`, toastTimer);
+        ionToastActivateExtendOp(`Extend label operation activated !`, timeToast);
     }
 
     return(
         <div style={ {display: "flex", justifyContent: "flex-end"} }>
             <IonButton size={"small"} onClick={extendLabel} disabled={activateMenu}>
-                Extent
+                Extend
             </IonButton>
 
             <IonButton size="small" onClick={addNewLabel} disabled={activateMenu}>

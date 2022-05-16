@@ -106,6 +106,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
     const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(false);
     const [showToast] = useIonToast();
+    const timeToast = 2000;
 
     useEffect(() => {
         console.log(prevFeatParams, featParams);
@@ -155,7 +156,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompPS(false);
-            showToast("Successfully applied the superpixel segmentation !", 2000);
+            showToast("Successfully applied the superpixel segmentation !", timeToast);
         });
     }
 
@@ -184,7 +185,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompPS(false);
-            showToast("Successfully calculated the preview !", 2000);
+            showToast("Successfully calculated the preview !", timeToast);
         });
     }
 
@@ -208,7 +209,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompPS(false);
-            showToast("Successfully applied the preprocess !", 1000);
+            showToast("Successfully applied the preprocess !", timeToast);
         });
     }
 

@@ -85,6 +85,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     });
 
     const [showToast,] = useIonToast();
+    const toastTime = 2000;
 
     const [path, setPath] = useState<string>("");
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
@@ -152,7 +153,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             dispatch("ImageLoaded", info);
             dispatch("ActivateComponents", false);
             setShowPopover({...showPopover, open: false});
-            showToast(`Loaded ${image["image_name"]}${image["image_ext"]}`, 1000);
+            showToast(`Loaded ${image["image_name"]}${image["image_ext"]}`, toastTime);
 
         }).catch(error => {
             setShowErrorWindow(true);
