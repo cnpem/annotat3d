@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonItem} from "@ionic/react";
 import {moon, sunny} from "ionicons/icons";
 import {dispatch, useEventBus} from "../../utils/eventbus";
@@ -9,6 +9,9 @@ import {isEqual} from "lodash";
 //TODO: investigate if this is fixed, otherwise declare the types manually
 // @ts-ignore
 import { AlphaPicker, SliderPicker } from 'react-color';
+import CropMenu from "./CropMenu";
+import { ImageShapeInterface } from "./ImageShapeInterface";
+import { sfetch } from "../../utils/simplerequest";
 
 function rgbToHex(r: number, g: number, b: number) {
     const bin = (r << 16) | (g << 8) | b;
@@ -63,6 +66,30 @@ const SideMenuVis: React.FC = () => {
         dispatch('annotationVisibilityChanged', showAnnotations);
         dispatch('annotationAlphaChanged', annotationAlpha);
     });
+
+    const [imageShape, setImageShape] = useState<ImageShapeInterface>({
+        x: 0, y: 0, z: 0
+    });
+
+    // useEffect(() => {
+    //     sfetch('POST', '/get_image_info/image', '', 'json')
+    //     .then((imgInfo) => {
+    //         console.log('image info: ', imgInfo);
+    //         setImageShape({
+    //             x: imgInfo.shape[2],
+    //             y: imgInfo.shape[1],
+    //             z: imgInfo.shape[0]
+    //         });
+    //     });
+    // }, [setImageShape]);
+
+    useEventBus('ImageLoaded', (imgInfo) => {
+        setImageShape({
+            x: imgInfo.imageShape[2],
+            y: imgInfo.imageShape[1],
+            z: imgInfo.imageShape[0]
+        });
+    })
 
     return(
         <React.Fragment>
@@ -155,6 +182,11 @@ const SideMenuVis: React.FC = () => {
                             }}>
                         </AlphaPicker>
                     </div>
+                </IonCardContent>
+            </IonCard>
+            <IonCard>
+                <IonCardContent>
+                    <CropMenu imageShape={imageShape}/>
                 </IonCardContent>
             </IonCard>
         </React.Fragment>
