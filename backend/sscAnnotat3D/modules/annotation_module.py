@@ -549,7 +549,7 @@ class AnnotationModule():
     def get_annotation(self):
         return self.annotation
 
-    def set_annotation(self, label_annotation):
+    def set_annotation(self, label_annotation: dict):
         self.annotation = label_annotation
         return self.annotation
 

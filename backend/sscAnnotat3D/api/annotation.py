@@ -234,13 +234,13 @@ def merge_labels():
     if (len(selected_labels) <= 1):
         return handle_exception("Please, choose at least 2 labels to merge")
 
-    pivot_label = selected_labels[0]["id"]
+    pivot_label = selected_labels[0]
     annot_module = module_repo.get_module('annotation')
     annotations = annot_module.get_annotation()
 
     if (annotations != None):
         for i in range(1, len(selected_labels)):
-            label_to_find = selected_labels[i]["id"]
+            label_to_find = selected_labels[i]
 
             for key, value in annotations.items():
                 """
@@ -258,7 +258,7 @@ def merge_labels():
     annot_module.set_annotation(annotations)
     data_repo.set_annotation(data=annotations)
 
-    return jsonify({"selected_labels": selected_labels})
+    return jsonify(selected_labels[1:])
 
 
 
