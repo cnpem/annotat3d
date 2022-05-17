@@ -234,9 +234,29 @@ def merge_labels():
     if (len(selected_labels) <= 1):
         return handle_exception("Please, choose at least 2 labels to merge")
 
-    print("\n==================================================")
-    print("Selected labels : {}".format(selected_labels))
-    print("====================================================\n")
+    pivot_label = selected_labels[0]["id"]
+    annot_module = module_repo.get_module('annotation')
+    annotations = annot_module.get_annotation()
+
+    if (annotations != None):
+        for i in range(1, len(selected_labels)):
+            label_to_find = selected_labels[i]["id"]
+
+            for key, value in annotations.items():
+                """
+                Notes:
+                    In this case, value is a tuple with coordinates (label, click_order)
+                    
+                Examples:
+                    (0, 4): label 0 (Background) was created on the 4 click
+                        
+                        
+                """
+                if (label_to_find == value[0]):
+                    annotations[key] = (pivot_label, value[1])
+
+    annot_module.set_annotation(annotations)
+    data_repo.set_annotation(data=annotations)
 
     return jsonify({"selected_labels": selected_labels})
 

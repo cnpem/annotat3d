@@ -213,7 +213,11 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                                 console.log("error type : ", typeof(error));
                                 console.log(error);
                                 console.log("error msg : ", error["error_msg"]);
+                            }).finally(() => {
+                                dispatch("annotationChanged", null);
                             })
+
+                            setSelectedLabels([]);
 
                         }}>Confirm</IonButton>
                     </IonItem>
