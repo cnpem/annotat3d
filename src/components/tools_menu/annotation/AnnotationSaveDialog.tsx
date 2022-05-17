@@ -14,6 +14,7 @@ import {saveOutline} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {useEventBus} from "../../../utils/eventbus";
 import {useStorageState} from "react-storage-hooks";
+import ErrorInterface from "../../main_menu/file/ErrorInterface";
 
 const extList : string[] = [
     ".pkl"
@@ -48,7 +49,7 @@ const AnnotationSaveDialog : React.FC = () => {
                 setShowPopover({...showPopover, open: false});
                 showToast("Annotation saved", timeToast);
 
-            }).catch(error => {
+            }).catch((error: ErrorInterface) => {
                 console.log(error);
             });
 

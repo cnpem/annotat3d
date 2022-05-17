@@ -18,6 +18,7 @@ import ErrorWindowComp from "./ErrorWindowComp";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import ImageInfoInterface from "./ImageInfoInterface";
+import ErrorInterface from "./ErrorInterface";
 
 /**
  * dtypes array
@@ -121,7 +122,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                 setShowPopover({...showPopover, open: false});
                 showToast(`image saved in ${image["image_name"]}${image["image_ext"]}`, toastTime);
 
-            }).catch(error => {
+            }).catch((error: ErrorInterface) => {
                 setShowErrorWindow(true);
                 setErrorMsg(error["error_msg"]);
             })

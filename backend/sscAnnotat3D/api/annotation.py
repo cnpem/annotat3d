@@ -222,5 +222,23 @@ def find_label_by_click():
 
     return jsonify(-1)
 
+@app.route("/merge_labels", methods=["POST"])
+@cross_origin()
+def merge_labels():
+
+    try:
+        selected_labels = request.json["selected_labels"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    if (len(selected_labels) <= 1):
+        return handle_exception("Please, choose at least 2 labels to merge")
+
+    print("\n==================================================")
+    print("Selected labels : {}".format(selected_labels))
+    print("====================================================\n")
+
+    return jsonify({"selected_labels": selected_labels})
+
 
 

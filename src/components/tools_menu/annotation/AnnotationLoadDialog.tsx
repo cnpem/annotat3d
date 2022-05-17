@@ -15,6 +15,7 @@ import {sfetch} from "../../../utils/simplerequest";
 import {dispatch, useEventBus} from "../../../utils/eventbus";
 import {useStorageState} from "react-storage-hooks";
 import {LabelInterface} from "../label_table/LabelInterface";
+import ErrorInterface from "../../main_menu/file/ErrorInterface";
 
 const AnnotationLoadDialog : React.FC = () => {
     // Init States
@@ -45,7 +46,7 @@ const AnnotationLoadDialog : React.FC = () => {
                 dispatch("LabelLoaded", labelList);
                 dispatch("annotationChanged",null);
 
-            }).catch(error => {
+            }).catch((error: ErrorInterface) => {
                 //TODO : Need to implement an error and loading component to load an operation
                 console.log("Error trying to load the .pkl label\n");
                 console.log(error);

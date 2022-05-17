@@ -21,6 +21,8 @@ import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import {useEventBus} from "../../../utils/eventbus";
 import {useStorageState} from "react-storage-hooks";
+import ErrorWindowComp from "../../main_menu/file/ErrorWindowComp";
+import ErrorInterface from "../../main_menu/file/ErrorInterface";
 
 interface InputLabelProps {
     colors: [number, number, number][];
@@ -106,6 +108,8 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     const [selectedLabels, setSelectedLabels] = useState<LabelInterface[]>([]);
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
     const [showMergeMenu, setShowMergeMenu] = useState<boolean>(false);
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
     const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
     const [ionToastActivateExtendOp, ] = useIonToast();
     const timeToast = 2000;
@@ -116,6 +120,14 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     const handleShowWarningWindow = (flag: boolean) => {
         setOpenWarningWindow(flag);
+    }
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
     }
 
     const addNewLabel = () => {
@@ -139,7 +151,6 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         console.log("Doing dispatch for mergeLabel");
         setShowMergeMenu(true);
         dispatch("mergeLabel", true);
-        ionToastActivateExtendOp(`Merge label operation activated !`, timeToast);
     }
 
     return(
@@ -159,12 +170,13 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                 onDidDismiss={() => {
                     setShowMergeMenu(false);
                     setSelectedLabels([]);
+                    setErrorMsg("");
                 }}
                 className={"ion-popover-merge"}>
 
                 <IonContent>
                     <IonItem>
-                        <IonLabel>bla</IonLabel>
+                        <IonLabel>Click here to merge the labels</IonLabel>
                          <IonSelect
                              compareWith={compareWith}
                              value={selectedLabels}
@@ -185,12 +197,25 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                         }}>Cancel</IonButton>
 
                         <IonButton onClick={() => {
-                            //TODO : need to implement a backend function to
                             const params = {
                                 "selected_labels": selectedLabels,
                             }
 
-                        }}></IonButton>
+                            sfetch("POST", "/merge_labels", JSON.stringify(params), "json").then(
+                                (res: LabelInterface[]) => {
+                                    console.log("Opa, bão ?");
+                                    console.log(res);
+                                    setShowErrorWindow(false);
+                                }
+                            ).catch((error: ErrorInterface) => {
+                                //TODO : Need to implement the error component here
+                                setShowErrorWindow(true);
+                                console.log("error type : ", typeof(error));
+                                console.log(error);
+                                console.log("error msg : ", error["error_msg"]);
+                            })
+
+                        }}>Confirm</IonButton>
                     </IonItem>
                 </IonContent>
             </IonPopover>
@@ -214,6 +239,14 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                     onNewLabelId={props.onNewLabelId}/> :
                 <></>
             }
+
+            {/*Error window*/}
+            <ErrorWindowComp
+                errorMsg={errorMsg}
+                windowOp={"loading"}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
         </div>
     );
 };
