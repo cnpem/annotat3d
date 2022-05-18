@@ -345,7 +345,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             {/*Error window*/}
             <ErrorWindowComp
                 errorMsg={errorMsg}
-                windowOp={"loading"}
+                headerMsg={"Error while loading the file"}
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>

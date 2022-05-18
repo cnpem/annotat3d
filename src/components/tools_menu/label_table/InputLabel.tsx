@@ -108,7 +108,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     const [selectedLabels, setSelectedLabels] = useState<LabelInterface[]>([]);
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
     const [showMergeMenu, setShowMergeMenu] = useState<boolean>(false);
-    const [showMergeErrorWindow, setShowMergeErrorWindow] = useState<boolean>(false);
+    const [showError, setShowError] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
     const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
     const [ionToastActivateExtendOp, ] = useIonToast();
@@ -127,7 +127,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     }
 
     const handleErrorWindow = (flag: boolean) => {
-        setShowMergeErrorWindow(flag);
+        setShowError(flag);
     }
 
     const addNewLabel = () => {
@@ -209,22 +209,20 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
                             sfetch("POST", "/merge_labels", JSON.stringify(params), "json").then(
                                 (labelsToDelete: Array<number>) => {
-                                    console.log("Opa, bão ?");
+                                    console.log("Labels to delete");
                                     console.log(labelsToDelete);
-                                    setShowMergeErrorWindow(false);
+                                    setErrorMsg("");
                                     deleteLabelsToMerge(labelsToDelete);
+                                    console.log("annotationChanged dispatch on merge");
+                                    dispatch("annotationChanged", null);
+                                    setShowMergeMenu(false);
+                                    setSelectedLabels([]);
                                 }
                             ).catch((error: ErrorInterface) => {
                                 //TODO : Need to implement the error component here
-                                console.log("error type : ", typeof(error));
-                                console.log(error);
                                 console.log("error msg : ", error["error_msg"]);
-                            }).finally(() => {
-                                dispatch("annotationChanged", null);
-                                setSelectedLabels([]);
-                                setShowMergeMenu(false);
-                                setShowMergeErrorWindow(true);
-                                setErrorMsg("");
+                                setShowError(true);
+                                setErrorMsg(error["error_msg"]);
                             })
 
                         }}>Confirm</IonButton>
@@ -255,9 +253,9 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
             {/*Error window*/}
             <ErrorWindowComp
                 errorMsg={errorMsg}
-                windowOp={"loading"}
+                headerMsg={"Error trying to merge a label"}
                 onErrorMsg={handleErrorMsg}
-                errorFlag={showMergeErrorWindow}
+                errorFlag={showError}
                 onErrorFlag={handleErrorWindow}/>
         </div>
     );

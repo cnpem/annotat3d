@@ -200,7 +200,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             <ErrorWindowComp
                 errorMsg={errorMsg}
                 onErrorMsg={handleErrorMsg}
-                windowOp={"saving"}
+                headerMsg={"Error while saving the file"}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
         </>
