@@ -71,17 +71,17 @@ const SideMenuVis: React.FC = () => {
         x: 0, y: 0, z: 0
     });
 
-    // useEffect(() => {
-    //     sfetch('POST', '/get_image_info/image', '', 'json')
-    //     .then((imgInfo) => {
-    //         console.log('image info: ', imgInfo);
-    //         setImageShape({
-    //             x: imgInfo.shape[2],
-    //             y: imgInfo.shape[1],
-    //             z: imgInfo.shape[0]
-    //         });
-    //     });
-    // }, [setImageShape]);
+    useEffect(() => {
+        sfetch('POST', '/get_image_info/image', '', 'json')
+        .then((imgInfo) => {
+            console.log('image info: ', imgInfo);
+            setImageShape({
+                x: imgInfo.shape[2],
+                y: imgInfo.shape[1],
+                z: imgInfo.shape[0]
+            });
+        });
+    }, [setImageShape]);
 
     useEventBus('ImageLoaded', (imgInfo) => {
         setImageShape({

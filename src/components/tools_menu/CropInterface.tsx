@@ -3,12 +3,12 @@
  */
 
 export interface CropInterface{
-    x1: number;
-    x2: number;
-    y1: number;
-    y2: number;
-    z1: number;
-    z2: number;
+    xLower: number;
+    xUpper: number;
+    yLower: number;
+    yUpper: number;
+    zLower: number;
+    zUpper: number;
 }
 
 export interface CropAxis{
