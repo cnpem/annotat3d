@@ -68,8 +68,7 @@ const dtypeList: dataType[] = [
 
 /**
  * Save Image dialog
- * @param name
- * @constructor
+ * @param {string} name - Name of the submenu to open this window
  */
 const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     const [showPopover, setShowPopover] = useState<{ open: boolean, event: Event | undefined }>({

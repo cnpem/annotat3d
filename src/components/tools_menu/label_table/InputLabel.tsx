@@ -45,6 +45,14 @@ const compareWith = (label1: LabelInterface, label2: LabelInterface) => {
   return label1 && label2 ? label1.id === label2.id : label1 === label2;
 }
 
+/**
+ * Component that shows a warning window when the user delete a label
+ * @param {boolean} openWarningWindow - Variable that opens the Warning window
+ * @param {(flag: boolean) => void} onOpenWarningWindow - Setter for openWarningWindow
+ * @param {LabelInterface[]} labelList - A vector of objects that contains each element contains the label name, label id and label color
+ * @param {(labels: LabelInterface[]) => void} onLabelList - Setter for labelList
+ * @param {(id: number) => void} onNewLabelId - Setter of new label id
+ */
 const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
                                                              onOpenWarningWindow,
                                                              labelList,
@@ -99,8 +107,7 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
 
 /**
  * This component creates the option for add any label in the label section
- * @param props a list that contains the toolbar components
- * @constructor
+ * @param {InputLabelProps} props a list that contains the toolbar components
  * @return This function returns a window for the user add a label name and color a vector with this new label
  */
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
@@ -182,7 +189,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
                 <IonContent>
                     <IonItem>
-                        <IonLabel>Click here to merge the labels</IonLabel>
+                        <IonLabel>Labels to merge</IonLabel>
                          <IonSelect
                              compareWith={compareWith}
                              value={selectedLabels}
@@ -219,7 +226,6 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                                     setSelectedLabels([]);
                                 }
                             ).catch((error: ErrorInterface) => {
-                                //TODO : Need to implement the error component here
                                 console.log("error msg : ", error["error_msg"]);
                                 setShowError(true);
                                 setErrorMsg(error["error_msg"]);

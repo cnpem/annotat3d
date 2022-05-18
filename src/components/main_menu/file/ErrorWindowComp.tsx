@@ -11,6 +11,14 @@ export interface ErrorWindowInterface{
     onErrorFlag: (errorFlag: boolean) => void;
 }
 
+/**
+ * Generic component for any error window
+ * @param {string} errorMsg - A string that contains the error message
+ * @param {string} headerMsg - A string that contains the h
+ * @param {(msg: string) => void} onErrorMsg - errorMsg setter
+ * @param {boolean} errorFlag - Boolean that opens the ErrorWindowComp if "true" and close otherwise
+ * @param {(errorFlag: boolean)} onErrorFlag - errorFlag setter
+ */
 const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg,
                                                              headerMsg,
                                                              onErrorMsg,

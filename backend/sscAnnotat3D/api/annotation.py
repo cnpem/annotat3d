@@ -225,6 +225,16 @@ def find_label_by_click():
 @app.route("/merge_labels", methods=["POST"])
 @cross_origin()
 def merge_labels():
+    """
+    Function that merge n labels into one label.
+
+    Notes:
+        the request.json["selected_labels"] receives only the parameter "selected_labels".
+
+    Returns:
+        (list[int]): this function returns a list that contains the labels to delete in front-end component label table
+
+    """
 
     try:
         selected_labels = request.json["selected_labels"]
@@ -259,6 +269,3 @@ def merge_labels():
     data_repo.set_annotation(data=annotations)
 
     return jsonify(selected_labels[1:])
-
-
-

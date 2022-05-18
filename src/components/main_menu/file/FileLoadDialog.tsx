@@ -75,8 +75,7 @@ const dtypeList: dataType[] = [
 
 /**
  * Load Image dialog
- * @param name
- * @constructor
+ * @param {string} name - Name of the submenu to open this window
  */
 const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     // Init States

@@ -32,8 +32,9 @@ interface LabelEditProps{
 }
 
 /**
- * @param props
- * @constructor
+ * Component of buttons that statys left size of label name that permits the user to change the name, color and delete a label
+ * @param {LabelEditProps} props - Object that contains the
+ * @interface {LabelEditProps} - LabelEditProps interface for props
  */
 const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
 
