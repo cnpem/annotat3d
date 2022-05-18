@@ -10,8 +10,3 @@ export interface CropInterface{
     zLower: number;
     zUpper: number;
 }
-
-export interface CropAxis{
-    begin: number;
-    end: number;
-}

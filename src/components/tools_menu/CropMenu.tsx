@@ -1,10 +1,7 @@
 import {
-    IonButton, IonButtons, IonIcon,
-    IonInput, IonItem, IonLabel,
-    IonNote,
+    IonItem, IonLabel,
     IonRange, IonSegment, IonSegmentButton, IonToggle
 } from "@ionic/react";
-import { albumsOutline } from "ionicons/icons";
 
 import { ImageShapeInterface } from './ImageShapeInterface';
 
@@ -12,7 +9,7 @@ import { dispatch, useEventBus } from '../../utils/eventbus';
 import { SliceInfoInterface } from "./SliceInfoInterface";
 import { useStorageState } from "react-storage-hooks";
 import { Fragment, useEffect, useState } from "react";
-import { CropInterface, CropAxis } from "./CropInterface";
+import { CropInterface } from "./CropInterface";
 import { sfetch } from "../../utils/simplerequest";
 
 interface SlicesMenuProps {
@@ -36,43 +33,19 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
     const [toggleCrop, setToggleCrop] = useStorageState<boolean>(sessionStorage, 'showAnnotations', true);
     
-    const [imageShape, setImageShape] = useState<ImageShapeInterface>({
-        x: 0, y: 0, z: 0
-    });
-
-    useEffect(() => {
-        sfetch('POST', '/get_image_info/image', '', 'json')
-        .then((imgInfo) => {
-            console.log('image info: ', imgInfo);
-            setImageShape({
-                x: imgInfo.shape[2],
-                y: imgInfo.shape[1],
-                z: imgInfo.shape[0]
-            });
-        });
-    }, [setImageShape]);
-
-    useEventBus('ImageLoaded', (imgInfo) => {
-        setImageShape({
-            x: imgInfo.imageShape[2],
-            y: imgInfo.imageShape[1],
-            z: imgInfo.imageShape[0]
-        });
-    })
-
     const [imageCrop, setImageCrop] = useStorageState<CropInterface>(sessionStorage, 'crop',{
         xLower: 0, 
         yLower: 0, 
         zLower: 0,
-        xUpper: imageShape.x, 
-        yUpper: imageShape.y, 
-        zUpper: imageShape.z
+        xUpper: props.imageShape.x, 
+        yUpper: props.imageShape.y, 
+        zUpper: props.imageShape.z
     })
 
     const maxValSlider: Record<'XY' | 'XZ' | 'YZ', number> = {
-        'XY': imageShape.z - 1,
-        'XZ': imageShape.y - 1,
-        'YZ': imageShape.x - 1
+        'XY': props.imageShape.z - 1,
+        'XZ': props.imageShape.y - 1,
+        'YZ': props.imageShape.x - 1
     }
 
     const [cropValX, setCropValX] = useState<{
@@ -91,7 +64,7 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     }>({ lower: 0, upper: 0 });
 
     const updateCrop = () => {
-        console.log("bruno update");
+        console.log("bruno update", props.imageShape);
         const newCrop: CropInterface = {
             xLower: cropValX.lower, 
             yLower: cropValY.lower, 
@@ -126,15 +99,15 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         updateCrop();
     }
 
-    // const handleSliceValue = (e: CustomEvent) => {
-    //     setSliceValue(+e.detail.value);
-    //     const payload: SliceInfoInterface = {
-    //         axis: sliceName,
-    //         slice: +e.detail.value
-    //     };
+    const handleSliceValue = (e: CustomEvent) => {
+        setSliceValue(+e.detail.value);
+        const payload: SliceInfoInterface = {
+            axis: sliceName,
+            slice: +e.detail.value
+        };
 
-    //     dispatch('sliceChanged', payload);
-    // }
+        dispatch('sliceChanged', payload);
+    }
 
     const handleSliceName = (e: CustomEvent) => {
         const curSliceName = e.detail.value as 'XY' | 'YZ' | 'XZ';
@@ -190,17 +163,17 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                 </IonSegment>
             </IonItem>
             <IonItem>
-                <IonRange dualKnobs={true} min={0} max={imageShape.x} step={1} snaps={false} onIonChange={handleCropX}>
+                <IonRange dualKnobs={true} min={0} max={props.imageShape.x} step={1} snaps={false} onIonChange={handleCropX}>
                     <IonLabel slot="start">X</IonLabel>
                 </IonRange>
             </IonItem>
             <IonItem>
-                <IonRange dualKnobs={true} min={0} max={imageShape.y} step={1} snaps={false} onIonChange={handleCropY}>
+                <IonRange dualKnobs={true} min={0} max={props.imageShape.y} step={1} snaps={false} onIonChange={handleCropY}>
                 <IonLabel slot="start">Y</IonLabel>
                 </IonRange>
             </IonItem>
             <IonItem>
-                <IonRange dualKnobs={true} min={0} max={imageShape.z} step={1} snaps={false} onIonChange={handleCropZ}>
+                <IonRange dualKnobs={true} min={0} max={props.imageShape.z} step={1} snaps={false} onIonChange={handleCropZ}>
                 <IonLabel slot="start">Z</IonLabel>
                 </IonRange>
             </IonItem>
