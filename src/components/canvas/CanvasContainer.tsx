@@ -729,7 +729,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onFutureChanged!: (hasPreview: boolean) => void;
     onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
     onExtendLabel: (flag: boolean) => void = () => {};
-    onMergeLabel: (flag: boolean) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -950,11 +949,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas!!.extendLabel = flag;
             }
 
-            this.onMergeLabel = (flag: boolean) => {
-                console.log("flag val on merge option : ", flag);
-                this.canvas!!.mergeLabel = flag;
-            }
-
             subscribe('futureChanged', this.onFutureChanged);
             subscribe('labelColorsChanged', this.onLabelColorsChanged);
             subscribe('labelContourChanged', this.onLabelContourChanged);
@@ -972,7 +966,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('ImageLoaded', this.onImageLoaded);
             subscribe("ChangeStateBrush", this.onChangeStateBrush);
             subscribe("ExtendLabel", this.onExtendLabel);
-            subscribe("mergeLabel", this.onMergeLabel);
         }
     }
 
@@ -995,7 +988,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('labelChanged', this.onLabelChanged);
         unsubscribe("ChangeStateBrush", this.onChangeStateBrush);
         unsubscribe("ExtendLabel", this.onExtendLabel);
-        unsubscribe("mergeLabel", this.onMergeLabel);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {

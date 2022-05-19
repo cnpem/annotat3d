@@ -34,8 +34,6 @@ interface WarningWindowInterface {
 interface LabelMergeListInterface {
     label: string,
     value: number,
-    id: string,
-    checked: boolean,
 }
 
 /**
@@ -130,30 +128,11 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         setShowError(flag);
     }
 
-    const handleSelectedLabels = (label: LabelMergeListInterface) => {
-        let newSelectedLabelVec = selectedLabels.map(l => {
-            if(+l.id === +label.id) {
-                return{...l, checked: label.checked}
-            }
-
-            return {...l, checked: !label.checked};
-
-        });
-
-        console.log("handleSelectedLabels");
-        console.log(newSelectedLabelVec);
-        setSelectedLabels(newSelectedLabelVec);
-
-    }
-
     const initSelectedLabels = () => {
         let initSelectedVec = [{
                 type: 'checkbox',
                 label: props.labelList[0].labelName,
-                value: props.labelList[0].id,
-                id: ""+props.labelList[0].id,
-                handler: handleSelectedLabels,
-                checked: false}];
+                value: props.labelList[0].id}];
 
         for (let i = 1; i < props.labelList.length; i++)
         {
@@ -167,10 +146,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
             initSelectedVec = [...initSelectedVec, {
                 type: "checkbox",
                 label: props.labelList[i].labelName,
-                value: props.labelList[i].id,
-                handler: handleSelectedLabels,
-                id: ""+props.labelList[i].id,
-                checked: false}];
+                value: props.labelList[i].id}];
 
         }
 
@@ -196,16 +172,13 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         ionToastActivateExtendOp(`Extend label operation activated !`, timeToast);
     }
 
-    const mergeLabel = () => {
-        console.log("Doing dispatch for mergeLabel");
-        setShowMergeMenu(true);
-        dispatch("mergeLabel", true);
-    }
-
     const deleteLabelsToMerge = (labelsToDelete: Array<number>) => {
         let newLabelList = props.labelList.filter(label => !labelsToDelete.includes(label.id));
         console.log("newLabelList : ", newLabelList);
         props.onLabelList(newLabelList);
+        if(newLabelList.length == 1) {
+            props.onNewLabelId(0);
+        }
     }
 
     return(
@@ -237,16 +210,29 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
                         text: 'Okay',
                         id: 'confirm-button',
-                        handler: (bla) => {
-
-                            console.log("selected_label : ", selectedLabels);
-                            console.log("bla : ", bla);
-
+                        handler: (selectedLabelsId: Array<number>) => {
+                            console.log("Selected Labels Id : ", selectedLabelsId);
                              const params = {
-                                "selected_labels": selectedLabels.map(label => label.checked),
+                                "selected_labels": selectedLabelsId,
                             }
-
                             console.log("params : ", params);
+                             sfetch("POST", "/merge_labels", JSON.stringify(params), "json").then(
+                                (labelsToDelete: Array<number>) => {
+                                    console.log("Labels to delete");
+                                    console.log(labelsToDelete);
+                                    setErrorMsg("");
+                                    deleteLabelsToMerge(labelsToDelete);
+                                    console.log("annotationChanged dispatch on merge");
+                                    dispatch("annotationChanged", null);
+                                    setShowMergeMenu(false);
+                                    setSelectedLabels([]);
+                                }
+                            ).catch((error: ErrorInterface) => {
+                                console.log("error msg : ", error["error_msg"]);
+                                setShowError(true);
+                                setErrorMsg(error["error_msg"]);
+                            })
+
                             console.log('Confirm Okay');
                         }
                     }
