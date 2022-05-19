@@ -31,9 +31,9 @@ interface WarningWindowInterface {
     onNewLabelId: (id: number) => void;
 }
 
-interface labelMergeListInterface {
+interface LabelMergeListInterface {
     label: string,
-    value: string,
+    value: number,
     id: string,
     checked: boolean,
 }
@@ -105,7 +105,7 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
  */
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
-    const [selectedLabels, setSelectedLabels] = useState<labelMergeListInterface[]>([]);
+    const [selectedLabels, setSelectedLabels] = useState<LabelMergeListInterface[]>([]);
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
     const [showMergeMenu, setShowMergeMenu] = useState<boolean>(false);
     const [showError, setShowError] = useState<boolean>(false);
@@ -130,15 +130,19 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         setShowError(flag);
     }
 
-    const handleSelectedLabels = (label: labelMergeListInterface) => {
-        const newSelectedLabelVec = selectedLabels.map(l => {
-            if(l.id === label.id) {
-                return{...selectedLabels, checked: !label.checked}
+    const handleSelectedLabels = (label: LabelMergeListInterface) => {
+        let newSelectedLabelVec = selectedLabels.map(l => {
+            if(+l.id === +label.id) {
+                return{...l, checked: label.checked}
             }
+
+            return {...l, checked: !label.checked};
+
         });
 
-        console.log("Oia o handles ai\n");
+        console.log("handleSelectedLabels");
         console.log(newSelectedLabelVec);
+        setSelectedLabels(newSelectedLabelVec);
 
     }
 
@@ -146,7 +150,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         let initSelectedVec = [{
                 type: 'checkbox',
                 label: props.labelList[0].labelName,
-                value: props.labelList[0].labelName,
+                value: props.labelList[0].id,
                 id: ""+props.labelList[0].id,
                 handler: handleSelectedLabels,
                 checked: false}];
@@ -163,7 +167,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
             initSelectedVec = [...initSelectedVec, {
                 type: "checkbox",
                 label: props.labelList[i].labelName,
-                value: props.labelList[i].labelName,
+                value: props.labelList[i].id,
                 handler: handleSelectedLabels,
                 id: ""+props.labelList[i].id,
                 checked: false}];
@@ -218,7 +222,36 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                 isOpen={showMergeMenu}
                 onDidDismiss={() => setShowMergeMenu(false)}
                 header={"Select your labels to merge"}
-                inputs={selectedLabels}/>
+                inputs={selectedLabels}
+                buttons={[
+                    {
+                        text: 'Cancel',
+                        role: 'cancel',
+                        cssClass: 'secondary',
+                        id: 'cancel-button',
+                        handler: () => {
+                            console.log('Confirm Cancel: blah');
+                        }
+                    },
+                    {
+
+                        text: 'Okay',
+                        id: 'confirm-button',
+                        handler: (bla) => {
+
+                            console.log("selected_label : ", selectedLabels);
+                            console.log("bla : ", bla);
+
+                             const params = {
+                                "selected_labels": selectedLabels.map(label => label.checked),
+                            }
+
+                            console.log("params : ", params);
+                            console.log('Confirm Okay');
+                        }
+                    }
+                ]}/>
+
             <IonButton size="small" onClick={addNewLabel} disabled={activateMenu}>
                 <IonIcon icon={addOutline} slot={"end"}/>
                 Add
