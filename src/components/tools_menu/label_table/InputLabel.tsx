@@ -1,15 +1,5 @@
 import React, {useState} from "react";
-import {
-    IonAlert,
-    IonButton, IonContent,
-    IonIcon,
-    IonItem,
-    IonLabel,
-    IonPopover,
-    IonSelect,
-    IonSelectOption,
-    useIonToast
-} from "@ionic/react";
+import {IonAlert, IonButton, IonIcon, useIonToast} from "@ionic/react";
 import { LabelInterface } from "./LabelInterface";
 import {colorFromId} from '../../../utils/colormap';
 
@@ -41,8 +31,11 @@ interface WarningWindowInterface {
     onNewLabelId: (id: number) => void;
 }
 
-const compareWith = (label1: LabelInterface, label2: LabelInterface) => {
-  return label1 && label2 ? label1.id === label2.id : label1 === label2;
+interface labelMergeListInterface {
+    label: string,
+    value: string,
+    id: string,
+    checked: boolean,
 }
 
 /**
@@ -112,7 +105,7 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
  */
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
-    const [selectedLabels, setSelectedLabels] = useState<LabelInterface[]>([]);
+    const [selectedLabels, setSelectedLabels] = useState<labelMergeListInterface[]>([]);
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
     const [showMergeMenu, setShowMergeMenu] = useState<boolean>(false);
     const [showError, setShowError] = useState<boolean>(false);
@@ -135,6 +128,51 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     const handleErrorWindow = (flag: boolean) => {
         setShowError(flag);
+    }
+
+    const handleSelectedLabels = (label: labelMergeListInterface) => {
+        const newSelectedLabelVec = selectedLabels.map(l => {
+            if(l.id === label.id) {
+                return{...selectedLabels, checked: !label.checked}
+            }
+        });
+
+        console.log("Oia o handles ai\n");
+        console.log(newSelectedLabelVec);
+
+    }
+
+    const initSelectedLabels = () => {
+        let initSelectedVec = [{
+                type: 'checkbox',
+                label: props.labelList[0].labelName,
+                value: props.labelList[0].labelName,
+                id: ""+props.labelList[0].id,
+                handler: handleSelectedLabels,
+                checked: false}];
+
+        for (let i = 1; i < props.labelList.length; i++)
+        {
+            /**
+             * type: string,
+             * label: string,
+             * value: string,
+             * id: string,
+             * checked: boolean,
+             */
+            initSelectedVec = [...initSelectedVec, {
+                type: "checkbox",
+                label: props.labelList[i].labelName,
+                value: props.labelList[i].labelName,
+                handler: handleSelectedLabels,
+                id: ""+props.labelList[i].id,
+                checked: false}];
+
+        }
+
+        console.log("init val : ", initSelectedVec);
+        setSelectedLabels(initSelectedVec);
+        setShowMergeMenu(true);
     }
 
     const addNewLabel = () => {
@@ -172,69 +210,15 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                 Extend
             </IonButton>
 
-             <IonButton id={"merge-label"} size={"small"} onClick={mergeLabel} disabled={activateMenu}>
-                 Merge
+            <IonButton size={"small"} onClick={initSelectedLabels} disabled={activateMenu}>
+                Merge
             </IonButton>
 
-            {/*Merge Pop-up*/}
-            <IonPopover
-                trigger={"merge-label"}
+            <IonAlert
                 isOpen={showMergeMenu}
-                onDidDismiss={() => {
-                    setShowMergeMenu(false);
-                    setSelectedLabels([]);
-                    setErrorMsg("");
-                }}
-                className={"ion-popover-merge"}>
-
-                <IonContent>
-                    <IonItem>
-                        <IonLabel>Labels to merge</IonLabel>
-                         <IonSelect
-                             compareWith={compareWith}
-                             value={selectedLabels}
-                             multiple
-                             onIonChange={(e: CustomEvent) => {setSelectedLabels(e.detail.value)}}>
-                             {props.labelList.map((label: LabelInterface) => (
-                                <IonSelectOption key={label.id} value={label}>
-                                    {label.labelName}
-                                </IonSelectOption>
-                              ))}
-                        </IonSelect>
-                    </IonItem>
-
-                    {/*Merge Buttons*/}
-                    <IonItem>
-                        <IonButton onClick={() => {
-                            setShowMergeMenu(false);
-                        }}>Cancel</IonButton>
-
-                        <IonButton onClick={() => {
-                            const params = {
-                                "selected_labels": selectedLabels.map(label => label.id),
-                            }
-
-                            sfetch("POST", "/merge_labels", JSON.stringify(params), "json").then(
-                                (labelsToDelete: Array<number>) => {
-                                    console.log("Labels to delete");
-                                    console.log(labelsToDelete);
-                                    setErrorMsg("");
-                                    deleteLabelsToMerge(labelsToDelete);
-                                    console.log("annotationChanged dispatch on merge");
-                                    dispatch("annotationChanged", null);
-                                    setShowMergeMenu(false);
-                                    setSelectedLabels([]);
-                                }
-                            ).catch((error: ErrorInterface) => {
-                                console.log("error msg : ", error["error_msg"]);
-                                setShowError(true);
-                                setErrorMsg(error["error_msg"]);
-                            })
-
-                        }}>Confirm</IonButton>
-                    </IonItem>
-                </IonContent>
-            </IonPopover>
+                onDidDismiss={() => setShowMergeMenu(false)}
+                header={"Select your labels to merge"}
+                inputs={selectedLabels}/>
             <IonButton size="small" onClick={addNewLabel} disabled={activateMenu}>
                 <IonIcon icon={addOutline} slot={"end"}/>
                 Add
