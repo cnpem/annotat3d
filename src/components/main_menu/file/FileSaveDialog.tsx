@@ -18,6 +18,7 @@ import ErrorWindowComp from "./ErrorWindowComp";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import ImageInfoInterface from "./ImageInfoInterface";
+import ErrorInterface from "./ErrorInterface";
 
 /**
  * dtypes array
@@ -67,8 +68,7 @@ const dtypeList: dataType[] = [
 
 /**
  * Save Image dialog
- * @param name
- * @constructor
+ * @param {string} name - Name of the submenu to open this window
  */
 const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     const [showPopover, setShowPopover] = useState<{ open: boolean, event: Event | undefined }>({
@@ -121,7 +121,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                 setShowPopover({...showPopover, open: false});
                 showToast(`image saved in ${image["image_name"]}${image["image_ext"]}`, toastTime);
 
-            }).catch(error => {
+            }).catch((error: ErrorInterface) => {
                 setShowErrorWindow(true);
                 setErrorMsg(error["error_msg"]);
             })
@@ -199,7 +199,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             <ErrorWindowComp
                 errorMsg={errorMsg}
                 onErrorMsg={handleErrorMsg}
-                windowOp={"saving"}
+                headerMsg={"Error while saving the file"}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
         </>

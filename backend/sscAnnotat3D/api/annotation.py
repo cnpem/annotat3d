@@ -265,5 +265,50 @@ def find_label_by_click():
 
     return jsonify(-1)
 
+@app.route("/merge_labels", methods=["POST"])
+@cross_origin()
+def merge_labels():
+    """
+    Function that merge n labels into one label.
 
+    Notes:
+        the request.json["selected_labels"] receives only the parameter "selected_labels".
 
+    Returns:
+        (list[int]): this function returns a list that contains the labels to delete in front-end component label table
+
+    """
+
+    try:
+        selected_labels = request.json["selected_labels"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    if (len(selected_labels) <= 1):
+        return handle_exception("Please, choose at least 2 labels to merge")
+
+    pivot_label = selected_labels[0]
+    annot_module = module_repo.get_module('annotation')
+    annotations = annot_module.get_annotation()
+
+    if (annotations != None):
+        for i in range(1, len(selected_labels)):
+            label_to_find = selected_labels[i]
+
+            for key, value in annotations.items():
+                """
+                Notes:
+                    In this case, value is a tuple with coordinates (label, click_order)
+                    
+                Examples:
+                    (0, 4): label 0 (Background) was created on the 4 click
+                        
+                        
+                """
+                if (label_to_find == value[0]):
+                    annotations[key] = (pivot_label, value[1])
+
+    annot_module.set_annotation(annotations)
+    data_repo.set_annotation(data=annotations)
+
+    return jsonify(selected_labels[1:])

@@ -25,6 +25,7 @@ import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import ErrorWindowComp from "./ErrorWindowComp";
 import ImageInfoInterface from "./ImageInfoInterface";
+import ErrorInterface from "./ErrorInterface";
 
 /**
  * dtypes array
@@ -74,8 +75,7 @@ const dtypeList: dataType[] = [
 
 /**
  * Load Image dialog
- * @param name
- * @constructor
+ * @param {string} name - Name of the submenu to open this window
  */
 const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     // Init States
@@ -142,7 +142,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                         console.log("printing the loaded label : ", labelList);
                         dispatch("LabelLoaded", labelList);
                     }
-                ).catch(error => {
+                ).catch((error: ErrorInterface) => {
                     //TODO : need to implement an error component here
                     console.log("error to load the label\n");
                     console.log(error);
@@ -155,7 +155,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             setShowPopover({...showPopover, open: false});
             showToast(`Loaded ${image["image_name"]}${image["image_ext"]}`, toastTime);
 
-        }).catch(error => {
+        }).catch((error: ErrorInterface) => {
             setShowErrorWindow(true);
             setErrorMsg(error["error_msg"]);
         })
@@ -344,7 +344,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             {/*Error window*/}
             <ErrorWindowComp
                 errorMsg={errorMsg}
-                windowOp={"loading"}
+                headerMsg={"Error while loading the file"}
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>

@@ -191,7 +191,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
                 }
 
-            }).catch(error => {
+            }).catch((error: ErrorInterface) => {
                 setErrorMsg(error.message);
             })
 

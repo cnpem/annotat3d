@@ -17,7 +17,8 @@ interface LabelTableProps {
 
 /**
  * Component that creates the label table
- * @constructor
+ * @param {LabelInterface} props - Object of LabelInterface that contains the props of label table
+ * @interface {LabelInterface} - LabelInterface
  * @return this components returns the label table
  */
 const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
