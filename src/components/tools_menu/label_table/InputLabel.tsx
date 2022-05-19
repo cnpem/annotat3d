@@ -176,7 +176,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         let newLabelList = props.labelList.filter(label => !labelsToDelete.includes(label.id));
         console.log("newLabelList : ", newLabelList);
         props.onLabelList(newLabelList);
-        if(newLabelList.length == 1) {
+        if(newLabelList.length === 1) {
             props.onNewLabelId(0);
         }
     }
@@ -191,6 +191,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                 Merge
             </IonButton>
 
+            {/*Merge Menu*/}
             <IonAlert
                 isOpen={showMergeMenu}
                 onDidDismiss={() => setShowMergeMenu(false)}
@@ -226,6 +227,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                                     dispatch("annotationChanged", null);
                                     setShowMergeMenu(false);
                                     setSelectedLabels([]);
+                                    ionToastActivateExtendOp(`Labels merged successfully !`, timeToast);
                                 }
                             ).catch((error: ErrorInterface) => {
                                 console.log("error msg : ", error["error_msg"]);
