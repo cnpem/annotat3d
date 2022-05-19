@@ -94,6 +94,21 @@ def is_available_annot(annot_id: str):
 @app.route("/open_annot", methods=["POST"])
 @cross_origin()
 def open_annot():
+    f"""
+    Function that opens an annotation
+
+    Notes:
+        This function is used on AnnotationLoadDialog.tsx
+
+    Examples:
+        This is an example on how you can use this function to open the annotation\n
+        sfetch("POST", "/open_annot", JSON.stringify(params), "json")\n
+        where params is a JSON that contains the file path
+
+    Returns:
+        list: This function the front-end a list that contains the all the loaded labels that'll be used in label table
+
+    """
     img = data_repo.get_image('image')
     if img is None:
         return handle_exception('No image associated')
@@ -125,6 +140,19 @@ def open_annot():
 @app.route("/close_annot", methods=["POST"])
 @cross_origin()
 def close_annot():
+    """
+    Function that delete all annotations
+
+    Notes:
+        This function is used on InputLabel.tsx
+
+    Examples:
+        sfetch("POST", "/close_annot", "")
+
+    Returns:
+        (tuple[str, int]): This function returns a tuple that contains the string "All markers erased successfully"if all labels are deleted and 200
+
+    """
     try:
         annot_module = module_repo.get_module('annotation')
         annot_module.erase_all_markers()
@@ -272,7 +300,7 @@ def merge_labels():
     Function that merge n labels into one label.
 
     Notes:
-        the request.json["selected_labels"] receives only the parameter "selected_labels".
+        the request.json["selected_labels"] receives only the parameter "selected_labels"(list[int]).
 
     Returns:
         (list[int]): this function returns a list that contains the labels to delete in front-end component label table
@@ -301,9 +329,7 @@ def merge_labels():
                     In this case, value is a tuple with coordinates (label, click_order)
                     
                 Examples:
-                    (0, 4): label 0 (Background) was created on the 4 click
-                        
-                        
+                    (0, 4): label 0 (Background) was created on the 4 click  
                 """
                 if (label_to_find == value[0]):
                     annotations[key] = (pivot_label, value[1])
