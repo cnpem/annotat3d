@@ -203,12 +203,8 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                         role: 'cancel',
                         cssClass: 'secondary',
                         id: 'cancel-button',
-                        handler: () => {
-                            console.log('Confirm Cancel: blah');
-                        }
                     },
                     {
-
                         text: 'Okay',
                         id: 'confirm-button',
                         handler: (selectedLabelsId: Array<number>) => {
