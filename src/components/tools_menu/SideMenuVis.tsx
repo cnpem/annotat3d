@@ -20,20 +20,16 @@ function rgbToHex(r: number, g: number, b: number) {
 
 const SideMenuVis: React.FC = () => {
 
-    const [disableVisCards, setDisableVisCards] = useStorageState<boolean>(sessionStorage, "DisableVis", true);
+    const [lockVisCards, setLockVisCards] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
 
     const [contrast, setContrast] = useStorageState(sessionStorage, 'contrast', {
         lower: 10,
         upper: 90
     });
 
-    console.log("bruno: local vis antes ", disableVisCards);
-
-    useEventBus("DisableVis", (changeDisableVis) => {
-        setDisableVisCards(changeDisableVis);
+    useEventBus('LockComponents', (changeDisableVis) => {
+        setLockVisCards(changeDisableVis);
     })
-
-    console.log("bruno: local vis depois ", disableVisCards);
 
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
@@ -86,8 +82,8 @@ const SideMenuVis: React.FC = () => {
             });
         });
     }, [setImageShape]);
-
-    useEventBus('ImageLoaded', (imgInfo) => {
+    // usava ImageLoaded
+    useEventBus('LockComponents', (imgInfo) => {
         setImageShape({
             x: imgInfo.imageShape[2],
             y: imgInfo.imageShape[1],
@@ -97,7 +93,7 @@ const SideMenuVis: React.FC = () => {
 
     return(
         <React.Fragment>
-            <IonCard disabled={disableVisCards}>
+            <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <IonRange ref={contrastRangeRef} pin={true} debounce={300}
                         dualKnobs={true} onIonChange={ (e) => {
@@ -112,7 +108,7 @@ const SideMenuVis: React.FC = () => {
                     </IonRange>
                 </IonCardContent>
             </IonCard>
-            <IonCard disabled={disableVisCards}>
+            <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Superpixel</IonLabel>
@@ -135,7 +131,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard disabled={disableVisCards}>
+            <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Label</IonLabel>
@@ -166,7 +162,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard disabled={disableVisCards}>
+            <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Show Annotations</IonLabel>
@@ -189,7 +185,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard disabled={disableVisCards}>
+            <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <CropMenu imageShape={imageShape}/>
                 </IonCardContent>

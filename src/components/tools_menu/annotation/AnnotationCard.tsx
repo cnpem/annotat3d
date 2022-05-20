@@ -9,10 +9,10 @@ import {useStorageState} from "react-storage-hooks";
 
 const AnnotationCard : React.FC = () => {
 
-    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+    const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
 
-    useEventBus("ActivateComponents", (activateSliceMenu) => {
-        setActivateMenu(activateSliceMenu);
+    useEventBus('LockComponents', (activateSliceMenu) => {
+        setLockMenu(activateSliceMenu);
     })
 
     function undoAnnotation() {
@@ -30,7 +30,7 @@ const AnnotationCard : React.FC = () => {
 
                         <AnnotationSaveDialog/>
 
-                        <IonButton color="danger" size="small" disabled={activateMenu}
+                        <IonButton color="danger" size="small" disabled={lockMenu}
                             onClick={ () => {
                                 undoAnnotation();
                             }}>

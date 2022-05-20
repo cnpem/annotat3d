@@ -70,13 +70,9 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         });
     })
 
-    console.log("bruno: local slices antes", LockMenu);
-
     useEventBus('LockComponents', (changeLockMenu) => {
         setLockMenu(changeLockMenu);
     })
-
-    console.log("bruno: local slices depois", LockMenu);
 
     return(
         <Fragment>

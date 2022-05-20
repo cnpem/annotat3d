@@ -33,10 +33,10 @@ const canvas: Record<string, 'drawing' | 'imaging'> = {
 const ProcessingMenu: React.FC = () => {
 
     const [curModule, setCurModule] = useStorageState<string>(localStorage, 'curModule', 'superpixel');
-    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+    const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
 
-    useEventBus("ActivateComponents", (activateSliceMenu) => {
-        setActivateMenu(activateSliceMenu);
+    useEventBus('LockComponents', (changeLockMenu) => {
+        setLockMenu(changeLockMenu);
     })
 
     useEffect(() => {
@@ -45,7 +45,7 @@ const ProcessingMenu: React.FC = () => {
 
     return (
         <Fragment>
-            <IonCard disabled={activateMenu}>
+            <IonCard disabled={lockMenu}>
                 <IonItem color="primary">
                     <IonLabel>Module</IonLabel>
                     <GroupSelect value={curModule} id="module-select" options={moduleOptions}

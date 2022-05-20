@@ -30,10 +30,10 @@ const AnnotationSaveDialog : React.FC = () => {
     const timeToast = 2000;
     const [path, setPath] = useState<string>("");
     const [ext, setExt] = useState<".pkl">(".pkl");
-    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+    const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
 
-    useEventBus("ActivateComponents", (activateDialogMenu) => {
-        setActivateMenu(activateDialogMenu);
+    useEventBus('LockComponents', (activateDialogMenu) => {
+        setLockMenu(activateDialogMenu);
     })
 
     const handleAnnotationSave = () => {
@@ -101,7 +101,7 @@ const AnnotationSaveDialog : React.FC = () => {
                 </IonButton>
             </IonPopover>
             {/* Load Button */}
-            <IonButton size="small" disabled={activateMenu}
+            <IonButton size="small" disabled={lockMenu}
             onClick={ (e) => setShowPopover({open: true, event: e.nativeEvent }) }
             >
                 <IonIcon slot="end" icon={saveOutline}/>

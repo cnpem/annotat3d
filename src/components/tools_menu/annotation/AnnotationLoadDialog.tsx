@@ -26,10 +26,10 @@ const AnnotationLoadDialog : React.FC = () => {
     const [showToast,] = useIonToast();
     const timeToast = 2000;
     const [path, setPath] = useState<string>("");
-    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+    const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
 
-    useEventBus("ActivateComponents", (activateAnnotationMenu) => {
-        setActivateMenu(activateAnnotationMenu);
+    useEventBus('LockComponents', (activateAnnotationMenu) => {
+        setLockMenu(activateAnnotationMenu);
     })
 
     const handleAnnotationLoad = () => {
@@ -85,7 +85,7 @@ const AnnotationLoadDialog : React.FC = () => {
                 </IonButton>
             </IonPopover>
             {/* Load Button */}
-            <IonButton size="small" disabled={activateMenu}
+            <IonButton size="small" disabled={lockMenu}
                 onClick={ (e) => setShowPopover({open: true, event: e.nativeEvent }) }
             >
                 <IonIcon slot="end" icon={folderOpenOutline}/>

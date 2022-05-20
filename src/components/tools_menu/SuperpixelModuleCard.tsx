@@ -22,15 +22,15 @@ const SuperpixelModuleCard: React.FC = () => {
 
     const [showToast] = useIonToast();
     const timeToast = 2000;
-    const [disabled, setDisabled] = useStorageState<boolean>(sessionStorage, "ActivateComponents", false);
+    const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', false);
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
 
-    useEventBus("ActivateComponents", (activateMenu) => {
-        setDisabled(activateMenu);
+    useEventBus('LockComponents', (changeLockMenu) => {
+        setLockMenu(changeLockMenu);
     })
 
     function onApply() {
-        setDisabled(true);
+        setLockMenu(true);
         setShowLoadingComp(true);
         const params = {
             superpixel_type: superpixelParams.method,
@@ -42,14 +42,14 @@ const SuperpixelModuleCard: React.FC = () => {
             dispatch('superpixelChanged', {});
         })
         .finally(() => {
-            setDisabled(false);
+            setLockMenu(false);
             setShowLoadingComp(false);
             showToast("Superpixel successfully applied !", timeToast);
         });
     }
 
     return (
-        <ModuleCard name="Superpixel" onApply={onApply} disabled={disabled}>
+        <ModuleCard name="Superpixel" onApply={onApply} disabled={lockMenu}>
 
             <ModuleCardItem name="Superpixel Parameters">
                 <IonItem>

@@ -108,12 +108,12 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     const [showMergeMenu, setShowMergeMenu] = useState<boolean>(false);
     const [showError, setShowError] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
-    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "DisableVis", true);
+    const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
     const [ionToastActivateExtendOp, ] = useIonToast();
     const timeToast = 2000;
 
-    useEventBus("DisableVis", (activateAddLabelButton) => {
-        setActivateMenu(activateAddLabelButton);
+    useEventBus('LockComponents', (activateAddLabelButton) => {
+        setLockMenu(activateAddLabelButton);
     })
 
     const handleShowWarningWindow = (flag: boolean) => {
@@ -183,11 +183,11 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     return(
         <div style={ {display: "flex", justifyContent: "flex-end"} }>
-            <IonButton size={"small"} onClick={extendLabel} disabled={activateMenu}>
+            <IonButton size={"small"} onClick={extendLabel} disabled={lockMenu}>
                 Extend
             </IonButton>
 
-            <IonButton size={"small"} onClick={initSelectedLabels} disabled={activateMenu}>
+            <IonButton size={"small"} onClick={initSelectedLabels} disabled={lockMenu}>
                 Merge
             </IonButton>
 
@@ -236,7 +236,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                     }
                 ]}/>
 
-            <IonButton size="small" onClick={addNewLabel} disabled={activateMenu}>
+            <IonButton size="small" onClick={addNewLabel} disabled={lockMenu}>
                 <IonIcon icon={addOutline} slot={"end"}/>
                 Add
             </IonButton>
