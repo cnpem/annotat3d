@@ -90,9 +90,9 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
-    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "DisableVis", true);
 
-    useEventBus("ActivateComponents", (activateAddLabelButton) => {
+    useEventBus("DisableVis", (activateAddLabelButton) => {
         setActivateMenu(activateAddLabelButton);
     })
 

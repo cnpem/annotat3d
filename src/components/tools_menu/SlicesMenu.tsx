@@ -29,7 +29,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
     const [sliceName, setSliceName] = useStorageState<'XY' | 'XZ' | 'YZ'>(sessionStorage, 'sliceName', "XY");
     const [sliceValue, setSliceValue] = useStorageState<number>(sessionStorage, 'sliceValue', 0);
-    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+    const [LockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
 
     const maxValSlider: Record<'XY'|'XZ'|'YZ', number> = {
         'XY': props.imageShape.z - 1,
@@ -70,13 +70,17 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         });
     })
 
-    useEventBus("ActivateComponents", (activateSliceMenu) => {
-        setActivateMenu(activateSliceMenu);
+    console.log("bruno: local slices antes", LockMenu);
+
+    useEventBus('LockComponents', (changeLockMenu) => {
+        setLockMenu(changeLockMenu);
     })
+
+    console.log("bruno: local slices depois", LockMenu);
 
     return(
         <Fragment>
-            <IonSegment value={sliceName} onIonChange={handleSliceName} disabled={activateMenu}>
+            <IonSegment value={sliceName} onIonChange={handleSliceName} disabled={LockMenu}>
                 <IonSegmentButton value={"XY"}>
                     <IonLabel>{"XY"}</IonLabel>
                 </IonSegmentButton>
@@ -91,7 +95,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             </IonSegment>
 
             <IonItem>
-                <IonRange min={0} max={maxValSlider[sliceName]} pin={true} value={sliceValue} onIonChange={handleSliceValue} disabled={activateMenu}>
+                <IonRange min={0} max={maxValSlider[sliceName]} pin={true} value={sliceValue} onIonChange={handleSliceValue} disabled={LockMenu}>
                     <IonIcon size={"small"} slot={"start"} icon={albumsOutline}/>
                 </IonRange>
             </IonItem>
@@ -104,7 +108,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                     min={0} max={maxValSlider[sliceName]}
                     clearInput value={sliceValue}
                     onIonChange={handleSliceValue}
-                    disabled={activateMenu}/>
+                    disabled={LockMenu}/>
             </IonItem>
         </Fragment>
     );

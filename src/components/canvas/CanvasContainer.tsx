@@ -169,6 +169,7 @@ class Annotation {
         const colors = this.colors;
 
         console.log('draw slice: ', slice.shape);
+        // dispatch('LockComponents', false);
 
         this.clear();
         this.setSize(slice.shape[1], slice.shape[0]);
@@ -576,6 +577,9 @@ class Canvas {
 
     setImage(imgSlice: NdArray<TypedArray>) {
 
+        console.log('bruno: Image exists: Unlocking components.');
+        dispatch('LockComponents', false);
+
         this.imgData = imgSlice;
 
         const uint8data = this.toUint8Array(imgSlice);
@@ -926,7 +930,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('superpixelVisibilityChanged', this.onSuperpixelVisibilityChanged);
         unsubscribe('superpixelColorChanged', this.onSuperpixelColorChanged);
         unsubscribe('labelSelected', this.onLabelSelected);
-        unsubscribe("ImageLoaded", this.onImageLoaded);
+        unsubscribe('ImageLoaded', this.onImageLoaded);
         unsubscribe('superpixelChanged', this.onSuperpixelChanged);
         unsubscribe('contrastChanged', this.onContrastChanged);
         unsubscribe('labelChanged', this.onLabelChanged);

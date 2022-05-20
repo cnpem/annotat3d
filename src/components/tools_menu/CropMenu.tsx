@@ -1,26 +1,20 @@
 import {
     IonItem, IonLabel,
-    IonRange, IonSegment, IonSegmentButton, IonToggle
+    IonRange, IonToggle
 } from "@ionic/react";
 
 import { ImageShapeInterface } from './ImageShapeInterface';
 
-import { dispatch, useEventBus } from '../../utils/eventbus';
-import { SliceInfoInterface } from "./SliceInfoInterface";
+import { dispatch } from '../../utils/eventbus';
+// import { dispatch, useEventBus } from '../../utils/eventbus';
+// import { SliceInfoInterface } from "./SliceInfoInterface";
 import { useStorageState } from "react-storage-hooks";
 import { Fragment, useEffect, useState } from "react";
 import { CropInterface } from "./CropInterface";
-import { sfetch } from "../../utils/simplerequest";
 
 interface SlicesMenuProps {
     imageShape: ImageShapeInterface;
 }
-
-const buttonSliceName: Record<'XY' | 'XZ' | 'YZ', 'X' | 'Y' | 'Z'> = {
-    'XY': 'Z',
-    'XZ': 'Y',
-    'YZ': 'X'
-};
 
 /**
  * @param props
@@ -28,12 +22,9 @@ const buttonSliceName: Record<'XY' | 'XZ' | 'YZ', 'X' | 'Y' | 'Z'> = {
  */
 const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
-    const [sliceName, setSliceName] = useStorageState<'XY' | 'XZ' | 'YZ'>(sessionStorage, 'sliceName', "XY");
-    const [sliceValue, setSliceValue] = useStorageState<number>(sessionStorage, 'sliceValue', 0);
-    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
-    const [toggleCrop, setToggleCrop] = useStorageState<boolean>(sessionStorage, 'showAnnotations', true);
+    const [toggleCrop, setToggleCrop] = useStorageState<boolean>(sessionStorage, 'toggleCrop', false);
     
-    const [imageCrop, setImageCrop] = useStorageState<CropInterface>(sessionStorage, 'crop',{
+    const [imageCrop, setImageCrop] = useStorageState<CropInterface>(sessionStorage, 'cropIndexes',{
         xLower: 0, 
         yLower: 0, 
         zLower: 0,
@@ -41,12 +32,6 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         yUpper: props.imageShape.y, 
         zUpper: props.imageShape.z
     })
-
-    const maxValSlider: Record<'XY' | 'XZ' | 'YZ', number> = {
-        'XY': props.imageShape.z - 1,
-        'XZ': props.imageShape.y - 1,
-        'YZ': props.imageShape.x - 1
-    }
 
     const [cropValX, setCropValX] = useState<{
         lower: number;
@@ -77,16 +62,9 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         console.log("bruno: newcrop", newCrop);
     };
 
-
     const handleCropX = (e: CustomEvent) => {
         setCropValX(e.detail.value as any);
         updateCrop();
-        // const payload: SliceInfoInterface = {
-        //     axis: sliceName,
-        //     slice: +e.detail.value
-        // };
-
-        // dispatch('sliceChanged', payload);
     }
 
     const handleCropY = (e: CustomEvent) => {
@@ -99,41 +77,10 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         updateCrop();
     }
 
-    const handleSliceValue = (e: CustomEvent) => {
-        setSliceValue(+e.detail.value);
-        const payload: SliceInfoInterface = {
-            axis: sliceName,
-            slice: +e.detail.value
-        };
-
-        dispatch('sliceChanged', payload);
-    }
-
-    const handleSliceName = (e: CustomEvent) => {
-        const curSliceName = e.detail.value as 'XY' | 'YZ' | 'XZ';
-        setSliceName(curSliceName);
-        const maxSliceValue = maxValSlider[curSliceName];
-        if (sliceValue > maxSliceValue) {
-            setSliceValue(maxSliceValue);
-        }
-
-        const payload: SliceInfoInterface = {
-            axis: e.detail.value,
-            slice: sliceValue
-        };
-
-        dispatch('sliceChanged', payload);
-    }
-
     useEffect(() => {
-        dispatch('sliceChanged', {
-            axis: sliceName,
-            slice: sliceValue
+        dispatch('toggleCropChanged', {
+            crop: imageCrop
         });
-    })
-
-    useEventBus("ActivateComponents", (activateSliceMenu) => {
-        setActivateMenu(activateSliceMenu);
     })
 
     return (
@@ -142,25 +89,10 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                 <IonLabel>Crop</IonLabel>
                 <IonToggle checked={toggleCrop}
                     onIonChange={(e) => {
-                        dispatch('toggleCropChanged', e.detail.checked);
+                        dispatch('toggleCropChanged', imageCrop);
                         setToggleCrop(e.detail.checked);
                     }}>
                 </IonToggle>
-            </IonItem>
-            <IonItem>
-                <IonSegment value={sliceName} onIonChange={handleSliceName} disabled={activateMenu}>
-                    <IonSegmentButton value={"XY"}>
-                        <IonLabel>{"XY"}</IonLabel>
-                    </IonSegmentButton>
-
-                    <IonSegmentButton value={"XZ"}>
-                        <IonLabel>{"XZ"}</IonLabel>
-                    </IonSegmentButton>
-
-                    <IonSegmentButton value={"YZ"}>
-                        <IonLabel>{"YZ"}</IonLabel>
-                    </IonSegmentButton>
-                </IonSegment>
             </IonItem>
             <IonItem>
                 <IonRange dualKnobs={true} min={0} max={props.imageShape.x} step={1} snaps={false} onIonChange={handleCropX}>
@@ -182,7 +114,6 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             </IonItem>
         </Fragment>
     );
-
 }
 
 export default CropMenu;

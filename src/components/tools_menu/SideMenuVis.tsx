@@ -20,16 +20,20 @@ function rgbToHex(r: number, g: number, b: number) {
 
 const SideMenuVis: React.FC = () => {
 
-    const [activateMenuOp, setActivateMenuOp] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+    const [disableVisCards, setDisableVisCards] = useStorageState<boolean>(sessionStorage, "DisableVis", true);
 
     const [contrast, setContrast] = useStorageState(sessionStorage, 'contrast', {
         lower: 10,
         upper: 90
     });
 
-    useEventBus("ActivateComponents", (activateMenuComps) => {
-        setActivateMenuOp(activateMenuComps);
+    console.log("bruno: local vis antes ", disableVisCards);
+
+    useEventBus("DisableVis", (changeDisableVis) => {
+        setDisableVisCards(changeDisableVis);
     })
+
+    console.log("bruno: local vis depois ", disableVisCards);
 
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
@@ -93,7 +97,7 @@ const SideMenuVis: React.FC = () => {
 
     return(
         <React.Fragment>
-            <IonCard disabled={activateMenuOp}>
+            <IonCard disabled={disableVisCards}>
                 <IonCardContent>
                     <IonRange ref={contrastRangeRef} pin={true} debounce={300}
                         dualKnobs={true} onIonChange={ (e) => {
@@ -108,7 +112,7 @@ const SideMenuVis: React.FC = () => {
                     </IonRange>
                 </IonCardContent>
             </IonCard>
-            <IonCard disabled={activateMenuOp}>
+            <IonCard disabled={disableVisCards}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Superpixel</IonLabel>
@@ -131,7 +135,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard disabled={activateMenuOp}>
+            <IonCard disabled={disableVisCards}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Label</IonLabel>
@@ -162,7 +166,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard disabled={activateMenuOp}>
+            <IonCard disabled={disableVisCards}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Show Annotations</IonLabel>
@@ -184,7 +188,8 @@ const SideMenuVis: React.FC = () => {
                     </div>
                 </IonCardContent>
             </IonCard>
-            <IonCard>
+
+            <IonCard disabled={disableVisCards}>
                 <IonCardContent>
                     <CropMenu imageShape={imageShape}/>
                 </IonCardContent>

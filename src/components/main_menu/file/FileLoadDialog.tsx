@@ -149,8 +149,11 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             }
 
             setShowErrorWindow(false);
-            dispatch("ImageLoaded", info);
+            // bruno: tirar daqui e avisar todo mundo pelo canvas
+            dispatch("ImageLoaded", info); 
             dispatch("ActivateComponents", false);
+            dispatch("DisableSlice", false);
+            dispatch("DisableVis", false);
             setShowPopover({...showPopover, open: false});
             showToast(`Loaded ${image["image_name"]}${image["image_ext"]}`, 1000);
 
