@@ -12,7 +12,7 @@ import ThemeToggle from "./ThemeToggle";
 import File from "./file/File";
 import Colormap from "./Colormap";
 import Classification from "./classification/Classification";
-import DeepLearning from "./DeepLearning";
+import DeepLearning from "./deep_learning_menu/DeepLearning";
 import Remote from "./Remote";
 
 import React, {useState} from "react";
