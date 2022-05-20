@@ -32,8 +32,9 @@ interface LabelEditProps{
 }
 
 /**
- * @param props
- * @constructor
+ * Component of buttons that statys left size of label name that permits the user to change the name, color and delete a label
+ * @param {LabelEditProps} props - Object that contains the
+ * @interface {LabelEditProps} - LabelEditProps interface for props
  */
 const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
 
@@ -87,7 +88,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
     const [showColorPopover, setShowColorPopover] = useState<boolean>(false);
 
     useEffect(() => {
-        if (userDeleteOp){
+        if (userDeleteOp && props.label.id !== 0){
             props.onChangeLabelList(props.label);
         }
     }, [userDeleteOp, props]);
@@ -106,7 +107,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
     return(
         <IonButtons>
-            <IonButton id={"delete-label-button-" + props.label.id} hidden={props.label.id===0} size="small" onClick={() => setShowDeletePopUp(true)}>
+            <IonButton id={"delete-label-button-" + props.label.id} size="small" onClick={() => setShowDeletePopUp(true)}>
                 <IonIcon icon={closeOutline}/>
             </IonButton>
             <IonButton id={"edit-label-button-" + props.label.id} onClick={handleNameEditClickButton}>

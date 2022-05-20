@@ -1,5 +1,3 @@
-
-
 import {TextFieldTypes} from '@ionic/core';
 import { IonItem, IonLabel, IonList, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonAlert, IonButton, IonIcon, IonCard, IonCardContent, IonCardHeader, IonContent, IonPopover, useIonToast } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
@@ -107,7 +105,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
     const [loadingMsg, setLoadingMsg] = useState<string>("");
     const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(false);
-    const [showToast] = useIonToast(); 
+    const [showToast] = useIonToast();
+    const timeToast = 2000;
 
     useEffect(() => {
         console.log(prevFeatParams, featParams);
@@ -128,7 +127,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
             },
             feature_extraction_params: {
                 'sigmas': featParams.multiscale,
-                'selected_features': featParams.feats
+                'selected_features': featParams.feats!
                 .filter(p => p.active)
                 .map(p => p.id),
                 'feat_selection_enabled': featParams.thresholdSelection !== null,
@@ -157,7 +156,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompPS(false);
-            showToast("Successfully applied the superpixel segmentation !", 2000);
+            showToast("Successfully applied the superpixel segmentation !", timeToast);
         });
     }
 
@@ -186,7 +185,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompPS(false);
-            showToast("Successfully calculated the preview !", 2000);
+            showToast("Successfully calculated the preview !", timeToast);
         });
     }
 
@@ -210,7 +209,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompPS(false);
-            showToast("Successfully applied the preprocess !", 1000);
+            showToast("Successfully applied the preprocess !", timeToast);
         });
     }
 
@@ -221,13 +220,13 @@ const PixelSegmentationModuleCard: React.FC = () => {
             </IonSelectOption>
         );
     }
- 
+
     function renderCheckboxFeature( feature: Feature) {
         return (
             <IonItem key={feature.id}>
                 <IonLabel>
                     <small>
-                        {feature.name} 
+                        {feature.name}
                         <IonButton id={"showPixelSegFeatInfo-button-"+feature.id} size="small" fill='clear'>
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
@@ -248,7 +247,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
                             if (nf.id === feature.id) {
                                 return {
                                     ...nf,
-                                    active: e.detail.checked 
+                                    active: e.detail.checked
                                 }
                             } else {
                                 return nf;
@@ -306,7 +305,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
                         <IonLabel position="floating">
                             <small>Multi-scale Filter Windows</small>
                         </IonLabel>
-                        <IonInput value={featParams.multiscale.join(',')}
+                        <IonInput value={featParams.multiscale!.join(',')}
                             onIonChange={(e) => {
                                 if (e.detail.value) {
                                     const value = stringToNumberArray(e.detail.value);
@@ -363,9 +362,9 @@ const PixelSegmentationModuleCard: React.FC = () => {
                         </IonSelect>
                     </IonItem>
                     <Fragment>
-                        { classParams.params.map((p) => {
+                        { classParams.params!.map((p) => {
                             return renderModelParameter(p, (value) => {
-                                const newParams = classParams.params.map((np) => {
+                                const newParams = classParams.params!.map((np) => {
                                     if (np.id === p.id) {
                                         return {...np, value: value}
                                     } else {

@@ -15,6 +15,7 @@ import {sfetch} from "../../../utils/simplerequest";
 import {dispatch, useEventBus} from "../../../utils/eventbus";
 import {useStorageState} from "react-storage-hooks";
 import {LabelInterface} from "../label_table/LabelInterface";
+import ErrorInterface from "../../main_menu/file/ErrorInterface";
 
 const AnnotationLoadDialog : React.FC = () => {
     // Init States
@@ -23,6 +24,7 @@ const AnnotationLoadDialog : React.FC = () => {
         event: undefined,
     });
     const [showToast,] = useIonToast();
+    const timeToast = 2000;
     const [path, setPath] = useState<string>("");
     const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
 
@@ -43,13 +45,14 @@ const AnnotationLoadDialog : React.FC = () => {
                 setShowPopover({...showPopover, open: false});
                 dispatch("LabelLoaded", labelList);
                 dispatch("annotationChanged",null);
-                showToast("Annotation loaded", 2000);
 
-            }).catch(error => {
+            }).catch((error: ErrorInterface) => {
                 //TODO : Need to implement an error and loading component to load an operation
                 console.log("Error trying to load the .pkl label\n");
                 console.log(error);
-            })
+            }).finally(() => {
+                showToast("Annotation loaded", timeToast);
+        })
 
     }
     /**

@@ -549,6 +549,10 @@ class AnnotationModule():
     def get_annotation(self):
         return self.annotation
 
+    def set_annotation(self, label_annotation: dict):
+        self.annotation = label_annotation
+        return self.annotation
+
     #TODO : Need to make possible for the user to choose a colormap
     def load_label_from_file_load_dialog(self, label):
         new_labels = np.unique(label)

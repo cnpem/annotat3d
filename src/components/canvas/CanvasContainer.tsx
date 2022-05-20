@@ -8,7 +8,7 @@ import * as PIXI from 'pixi.js';
 // this fix is on the import on utils/pixibufferloader
 import '../../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
-//import npyjs from 'npyjs';
+
 import { NdArray, TypedArray } from 'ndarray';
 import {clamp} from '../../utils/math';
 import { sfetch } from '../../utils/simplerequest';
@@ -26,6 +26,7 @@ class Brush {
     radius: number = 0;
 
     mode: brush_mode_type = 'draw_brush';
+    extendLabel: boolean;
 
     canvas: HTMLCanvasElement;
     context: CanvasRenderingContext2D;
@@ -37,6 +38,7 @@ class Brush {
     constructor(colors: [number, number, number][]) {
         this.label = 0;
         this.color = 0xffffff;
+        this.extendLabel = false;
 
         this.canvas = document.createElement('canvas');
 
@@ -95,6 +97,12 @@ class Brush {
         this.update();
     }
 
+    updateColor() {
+        const color = this.colors[(this.label) % this.colors.length];
+        console.log("color type : ", color);
+        this.color = this.rgbToHex(...color);
+    }
+
     private rgbToHex(r: number, g: number, b: number) {
         const bin = (r << 16) | (g << 8) | b;
         return bin;
@@ -105,13 +113,12 @@ class Brush {
             const color = this.colors[(this.label) % this.colors.length];
             this.color = this.rgbToHex(...color);
             this.cursor.visible = true;
-        } else if(this.mode === 'erase_brush') {
+        } else if (this.mode === 'erase_brush') {
             this.color = 0xFFFFFF;
             this.cursor.visible = true;
         } else {
             this.cursor.visible = false;
         }
-
         this.updateBrush();
     }
 }
@@ -176,6 +183,7 @@ class Annotation {
         const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
         const data = imageData.data;
+
         for (let i = 0; i < slice.data.length; i++) {
             if (slice.data[i] >= 0) {
                 const color = colors[(slice.data[i]) % colors.length];
@@ -185,7 +193,6 @@ class Annotation {
                 data[i * 4 + 3] = 255;
             }
         }
-
         this.context.putImageData(imageData, 0, 0);
         this.sprite.texture.update();
     }
@@ -202,11 +209,16 @@ class Canvas {
     prevPosition: any;
 
     isPainting: boolean;
+    extendLabel: boolean;
+    mergeLabel: boolean;
 
     annotation: Annotation;
     brush: Brush;
 
     brush_mode: brush_mode_type;
+
+    canvas: HTMLCanvasElement;
+    context: CanvasRenderingContext2D;
 
     slice: PIXI.Sprite;
     labelSlice: PIXI.Sprite;
@@ -251,11 +263,16 @@ class Canvas {
 
         this.slice = new PIXI.Sprite();
         this.slice.visible = true;
+        this.extendLabel = false;
+        this.mergeLabel = false;
 
         this.labelSlice = new PIXI.Sprite();
 
         this.futureSlice = new PIXI.Sprite();
         this.futureSlice.visible = false;
+
+        this.canvas = document.createElement('canvas');
+        this.context = this.canvas.getContext('2d')!;
 
         this.superpixelSlice = new PIXI.Sprite();
         this.superpixelSlice.tint = this.superpixelColor;
@@ -318,7 +335,9 @@ class Canvas {
         this.sliceNum = sliceNum;
     }
 
-
+    showBrush(flag: boolean) {
+        this.brush.cursor.visible = flag;
+    }
 
     setAxis(axis: 'XY' | 'XZ' | 'YZ') {
         this.axis = axis;
@@ -333,7 +352,6 @@ class Canvas {
         }
 
         this.isPainting = true;
-
         this.prevPosition = this.viewport.toWorld(event.data.global);
     }
 
@@ -373,9 +391,7 @@ class Canvas {
 
         const currPosition = this.viewport.toWorld(event.data.global);
         this.prevPosition = currPosition;
-
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
-
 
         const data = {
             'coords': this.pointsBuffer,
@@ -423,6 +439,31 @@ class Canvas {
 
         if (mode === 'no_brush') {
             return [];
+        } else if (this.extendLabel) {
+            this.extendLabel = false;
+            this.brush.cursor.visible = false;
+
+            const data = {
+                "x_coord" : Math.round(this.prevPosition.x),
+                "y_coord" : Math.round(this.prevPosition.y),
+                "slice": this.sliceNum,
+                "axis": this.axis,
+            }
+
+            console.log("Finding label by click");
+            sfetch("POST", "/find_label_by_click", JSON.stringify(data), "json").then(
+                (labelId: number) => {
+                    console.log("label ID found : ", labelId);
+                    if (labelId >= 0) {
+                        this.brush.setLabel(labelId)
+                        this.brush.updateColor();
+                        this.setBrushMode("draw_brush");
+                    }
+                    this.brush.cursor.visible = true;
+                    dispatch("changeSelectedLabel", labelId);
+                }
+            );
+            return []
         } else if (mode === 'erase_brush') {
             this.annotation.context.globalCompositeOperation = 'destination-out';
         } else {
@@ -432,6 +473,7 @@ class Canvas {
         if (currPosition === this.prevPosition) {
             const x = this.prevPosition.x;
             const y = this.prevPosition.y;
+            console.log("They're equal :D ", currPosition);
             this.brush.contextDrawBrush(context, x, y);
 
             this.annotation.sprite.texture.update();
@@ -665,7 +707,7 @@ const brushList = [
     {
         id: 'erase_brush',
         logo: browsers
-    }
+    },
 ];
 
 class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
@@ -688,6 +730,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onAnnotationChanged!: () => void;
     onLabelContourChanged!: (contour: boolean) => void;
     onFutureChanged!: (hasPreview: boolean) => void;
+    onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
+    onExtendLabel: (flag: boolean) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -898,6 +942,16 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 }
             }
 
+            this.onChangeStateBrush = (mode: brush_mode_type) => {
+                this.setBrushMode(mode);
+            }
+
+            this.onExtendLabel = (flag: boolean) => {
+                console.log("flag val : ", flag);
+                this.canvas!!.showBrush(false);
+                this.canvas!!.extendLabel = flag;
+            }
+
             subscribe('futureChanged', this.onFutureChanged);
             subscribe('labelColorsChanged', this.onLabelColorsChanged);
             subscribe('labelContourChanged', this.onLabelContourChanged);
@@ -913,6 +967,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('contrastChanged', this.onContrastChanged);
             subscribe('labelChanged', this.onLabelChanged);
             subscribe('ImageLoaded', this.onImageLoaded);
+            subscribe("ChangeStateBrush", this.onChangeStateBrush);
+            subscribe("ExtendLabel", this.onExtendLabel);
         }
     }
 
@@ -933,6 +989,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('superpixelChanged', this.onSuperpixelChanged);
         unsubscribe('contrastChanged', this.onContrastChanged);
         unsubscribe('labelChanged', this.onLabelChanged);
+        unsubscribe("ChangeStateBrush", this.onChangeStateBrush);
+        unsubscribe("ExtendLabel", this.onExtendLabel);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
@@ -948,6 +1006,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.setBrushMode('draw_brush')
             }
         }
+
+        console.log("On Did Update : ", this.props.canvasMode);
 
         this.setState({...this.state, future_sight_on: false});
         this.canvas?.setSliceNum(this.props.slice);
@@ -983,7 +1043,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 </IonFab>
 
                 <IonFab hidden={this.props.canvasMode !== 'drawing'} vertical="bottom" horizontal="end">
-                    <MenuFabButton value={this.state.brush_mode} openSide="start" buttonsList={brushList} onChange={ (b) => { this.setBrushMode(b.id as brush_mode_type) } } />
+                    <MenuFabButton value={this.state.brush_mode} openSide="start" buttonsList={brushList} onChange={ (b) => {
+                        console.log("change icon : ", b.id);
+                        this.setBrushMode(b.id as brush_mode_type) } } />
                 </IonFab>
                 <IonFab vertical="bottom" horizontal="end" style={ {marginBottom: '4em'} }>
                     <IonFabButton size="small" onClick={() => {

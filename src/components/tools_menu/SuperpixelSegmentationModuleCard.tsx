@@ -117,6 +117,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     const [showLoadingCompSpS, setShowLoadingCompSpS] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(true);
     const [showToast] = useIonToast();
+    const timeToast = 2000;
 
     useEffect(() => {
         sfetch('POST', 'is_available_image/superpixel', '', 'json')
@@ -175,7 +176,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompSpS(false);
-            showToast("Successfully applied the superpixel segmentation !", 2000);
+            showToast("Successfully applied the superpixel segmentation !", timeToast);
         });
     }
 
@@ -196,7 +197,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompSpS(false);
-            showToast("Successfully applied the preview !", 1000);
+            showToast("Successfully applied the preview !", timeToast);
         });
     }
 
@@ -218,7 +219,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompSpS(false);
-            showToast("Successfully applied the preprocess !", 1000);
+            showToast("Successfully applied the preprocess !", timeToast);
         });
     }
 

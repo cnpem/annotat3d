@@ -21,6 +21,7 @@ const SuperpixelModuleCard: React.FC = () => {
     });
 
     const [showToast] = useIonToast();
+    const timeToast = 2000;
     const [disabled, setDisabled] = useStorageState<boolean>(sessionStorage, "ActivateComponents", false);
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
 
@@ -43,7 +44,7 @@ const SuperpixelModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Superpixel successfully applied !", 5000);
+            showToast("Superpixel successfully applied !", timeToast);
         });
     }
 
