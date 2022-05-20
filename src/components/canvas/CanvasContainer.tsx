@@ -169,7 +169,6 @@ class Annotation {
         const colors = this.colors;
 
         console.log('draw slice: ', slice.shape);
-        // dispatch('LockComponents', false);
 
         this.clear();
         this.setSize(slice.shape[1], slice.shape[0]);
@@ -577,9 +576,6 @@ class Canvas {
 
     setImage(imgSlice: NdArray<TypedArray>) {
 
-        console.log('bruno: Image exists: Unlocking components.');
-        dispatch('LockComponents', false);
-
         this.imgData = imgSlice;
 
         const uint8data = this.toUint8Array(imgSlice);
@@ -594,6 +590,9 @@ class Canvas {
 
         const texture = this.textureFromSlice(uint8data, x, y);
         this.slice.texture = texture;
+
+        console.log('bruno: Image exists: Unlocking components.');
+        dispatch('LockComponents', false);
     }
 
     increaseBrushSize() {
