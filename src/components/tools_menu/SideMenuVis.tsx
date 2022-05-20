@@ -82,8 +82,8 @@ const SideMenuVis: React.FC = () => {
             });
         });
     }, [setImageShape]);
-    // usava ImageLoaded
-    useEventBus('LockComponents', (imgInfo) => {
+    
+    useEventBus('ImageLoaded', (imgInfo) => {
         setImageShape({
             x: imgInfo.imageShape[2],
             y: imgInfo.imageShape[1],
