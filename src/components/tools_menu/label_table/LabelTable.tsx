@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import * as ReactBootStrap from "react-bootstrap";
-import {IonRow, IonCol, IonLabel, useIonToast} from "@ionic/react";
+import {IonRow, IonCol, IonLabel, useIonToast, IonButton, IonIcon, IonAlert} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
 import {LabelInterface} from './LabelInterface';
@@ -10,10 +10,84 @@ import {dispatch, useEventBus, currentEventValue} from '../../../utils/eventbus'
 import './LabelTable.css';
 import {useStorageState} from "react-storage-hooks";
 import {isEqual} from "lodash";
+import { trashOutline } from "ionicons/icons";
+import { sfetch } from "../../../utils/simplerequest";
+
+import ErrorInterface from "../../main_menu/file/ErrorInterface";
 
 interface LabelTableProps {
     colors: [number, number, number][];
 }
+
+interface WarningWindowInterface {
+    openWarningWindow: boolean
+    onOpenWarningWindow: (flag: boolean) => void;
+
+    labelList: LabelInterface[];
+    onLabelList: (labels: LabelInterface[]) => void;
+    onNewLabelId: (id: number) => void;
+}
+
+/**
+ * Component that shows a warning window when the user delete a label
+ * @param {boolean} openWarningWindow - Variable that opens the Warning window
+ * @param {(flag: boolean) => void} onOpenWarningWindow - Setter for openWarningWindow
+ * @param {LabelInterface[]} labelList - A vector of objects that contains each element contains the label name, label id and label color
+ * @param {(labels: LabelInterface[]) => void} onLabelList - Setter for labelList
+ * @param {(id: number) => void} onNewLabelId - Setter of new label id
+ */
+const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
+                                                             onOpenWarningWindow,
+                                                             labelList,
+                                                             onLabelList,
+                                                             onNewLabelId}) => {
+
+    const closeWarningWindow = () => {
+        onOpenWarningWindow(false);
+    }
+
+    const removeAllLabels = () => {
+        const newVec = labelList.filter(lab => lab.id === 0);
+        onLabelList(newVec);
+        onNewLabelId(0); // This value resets the id generator
+
+        sfetch("POST", "/close_annot", "").then(
+            () => {
+                dispatch('annotationChanged', null);
+            }).catch((error:ErrorInterface) => {
+                //TODO : need to implement an error component here
+                console.log("error to delete all labels\n");
+                console.log(error);
+        }).finally(() => {
+            closeWarningWindow();
+        });
+    }
+
+    return(
+        <IonAlert
+            isOpen={openWarningWindow}
+            onDidDismiss={closeWarningWindow}
+            header={"Deleting all labels"}
+            message={"Do you wish to delete all labels ?"}
+            buttons={[
+                {
+                    text: "No",
+                    id: "no-button",
+                    handler: () => {
+                        closeWarningWindow();
+                    }
+                },
+                {
+                    text: "Yes",
+                    id: "yes-button",
+                    handler: () => {
+                        removeAllLabels();
+                    }
+                }
+            ]}/>
+    )
+}
+
 
 /**
  * Component that creates the label table
@@ -31,6 +105,12 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
     const [ionToastLabelFounded, ] = useIonToast();
     const toastTimer = 2000;
+
+    const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
+
+    const handleShowWarningWindow = (flag: boolean) => {
+        setOpenWarningWindow(flag);
+    }
 
     useEventBus('toggleMode', (darkMode: boolean) => {
         setDarkMode(darkMode);
@@ -155,6 +235,27 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                     </tbody>
                 </ReactBootStrap.Table>
             </div>
+            <IonRow>
+                <IonCol>
+                    <div style={ {display: "flex", justifyContent: "flex-end"} }>
+                        <IonButton color="danger" size="small" slot={"end"}
+                            disabled={labelList.length <= 1}
+                            onClick={() => setOpenWarningWindow(true)}>
+                            <IonIcon icon={trashOutline} slot={"end"} />
+                            Delete all
+                        </IonButton>
+                        {(openWarningWindow) ?
+                            <WarningWindow
+                                openWarningWindow={openWarningWindow}
+                                onOpenWarningWindow={handleShowWarningWindow}
+                                labelList={labelList}
+                                onLabelList={selectLabelList}
+                                onNewLabelId={selectIdGenerator} /> :
+                            <></>
+                        }
+                    </div>
+                </IonCol>
+            </IonRow>
         </div>
     );
 

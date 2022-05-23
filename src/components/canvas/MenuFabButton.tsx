@@ -12,16 +12,16 @@ interface MenuButtonProps {
     buttonsList: ButtonProps[];
     onChange?: (button: ButtonProps) => void;
     openSide: 'top' | 'bottom' | 'start' | 'end';
-    hidden?: boolean;
+    disabled?: boolean;
 }
 
-const MenuFabButton: React.FC<MenuButtonProps> = ({value, buttonsList, onChange, openSide, hidden}) => {
+const MenuFabButton: React.FC<MenuButtonProps> = ({value, buttonsList, onChange, openSide, disabled}) => {
 
     const [selected, setSelected] = useState(buttonsList.find(b => b.id === value)
                                              || buttonsList[0]);
     return (
-        <div hidden={hidden}>
-            <IonFabButton color='dark' title={"annotation mode: "+selected.id}>
+        <div>
+            <IonFabButton disabled={disabled} color='dark' title={"annotation mode: "+selected.id}>
                 <IonIcon size="large" icon={selected.logo}/>
             </IonFabButton>
             <IonFabList side={ openSide }>

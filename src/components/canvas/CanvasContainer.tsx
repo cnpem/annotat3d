@@ -1026,13 +1026,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             <div id="root" className="canvas" style={ {"backgroundColor": "transparent"}  } ref={elem => this.pixi_container = elem} >
 
                 <IonFab vertical="bottom" horizontal="start">
-                    <IonFabButton color="medium" onClick={() => this.canvas?.recenter()}>
-                        <IonIcon icon={expand}/>
-                    </IonFabButton>
-                </IonFab>
-
-                <IonFab hidden={this.props.canvasMode !== 'imaging'} vertical="bottom" horizontal="end">
-                    <IonFabButton color="dark"
+                    <IonFabButton color="dark" title="toggle preview filter" hidden={this.props.canvasMode !== 'imaging'} 
                         onClick={() => {
                             const futureSightVisibility = !this.state.future_sight_on;
                             this.setState({...this.state, future_sight_on: futureSightVisibility});
@@ -1040,9 +1034,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                         }}>
                         <IonIcon icon={this.state.future_sight_on ? eye : eyeOff}/>
                     </IonFabButton>
+                    <IonFabButton color="medium" title="resize: fit to window" onClick={() => this.canvas?.recenter()}>
+                        <IonIcon icon={expand}/>
+                    </IonFabButton>
                 </IonFab>
 
-                <IonFab hidden={this.props.canvasMode !== 'drawing'} vertical="bottom" horizontal="end">
+                <IonFab vertical="bottom" horizontal="end">
+                    {/* <MenuFabButton disabled={this.props.canvasMode !== 'drawing'} value={this.state.brush_mode} openSide="start" buttonsList={brushList} onChange={ (b) => { */}
                     <MenuFabButton value={this.state.brush_mode} openSide="start" buttonsList={brushList} onChange={ (b) => {
                         console.log("change icon : ", b.id);
                         this.setBrushMode(b.id as brush_mode_type) } } />
