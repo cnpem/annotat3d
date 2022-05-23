@@ -49,7 +49,6 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     }>({ lower: 0, upper: 0 });
 
     const updateCrop = () => {
-        console.log("bruno update", props.imageShape);
         const newCrop: CropInterface = {
             xLower: cropValX.lower, 
             yLower: cropValY.lower, 
@@ -59,7 +58,6 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             zUpper: cropValZ.upper
         }
         setImageCrop(newCrop);
-        console.log("bruno: newcrop", newCrop);
     };
 
     const handleCropX = (e: CustomEvent) => {

@@ -1,4 +1,4 @@
-import {IonCard, IonCardContent, IonLabel, IonSegment, IonSegmentButton, SegmentChangeEventDetail} from "@ionic/react";
+import {IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonSegment, IonSegmentButton, IonTitle, SegmentChangeEventDetail} from "@ionic/react";
 import React, {Fragment, useEffect, useState} from "react";
 import {useStorageState} from "react-storage-hooks";
 import { useEventBus } from "../../utils/eventbus";
@@ -9,14 +9,33 @@ import SideMenuAnnot from "./SideMenuAnnot";
 import SideMenuVis from "./SideMenuVis";
 import SlicesMenu from "./SlicesMenu";
 
+import {eyeOutline, brushOutline, colorWandOutline} from "ionicons/icons";
+
 interface SideMenuProps {
     hideMenu: boolean
 }
+
+const menuChoicesList = [
+    {
+        id:'visualization',
+        logo: eyeOutline
+    },
+    {
+        id:'annotation',
+        logo: brushOutline
+    },
+    {
+        id:'processing',
+        logo: colorWandOutline
+    }
+];
 
 const menuChoices = ['visualization', 'annotation', 'processing'] as const;
 const menus = [ <SideMenuVis/>, <SideMenuAnnot/>, <ProcessingMenu/> ];
 
 type InputMenuChoicesType = typeof menuChoices[number];
+
+type InputMenuChoicesListType = typeof menuChoicesList[number];
 
 const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
 
@@ -26,10 +45,10 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
         setMenuOp(e.detail.value as InputMenuChoicesType);
     };
 
-    const renderSegmentButton = (choice: InputMenuChoicesType) => {
+    const renderSegmentButton = (choice: InputMenuChoicesListType) => {
         return (
-            <IonSegmentButton value={choice}>
-                <IonLabel>{choice}</IonLabel>
+            <IonSegmentButton value={choice.id} title={choice.id} >
+                <IonIcon icon={choice.logo} /> 
             </IonSegmentButton>
         );
     }
@@ -44,7 +63,7 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
         return(
             <Fragment>
                 <IonSegment value={menuOp} onIonChange={selectMenuOp}>
-                    { menuChoices.map(renderSegmentButton) }
+                    { menuChoicesList.map(renderSegmentButton) }
                 </IonSegment>
                 { menuChoices.map(renderMenu) }
             </Fragment>
@@ -78,11 +97,16 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
     return(
         <React.Fragment>
             <IonCard>
+            <IonCardHeader><IonLabel>Navigation</IonLabel></IonCardHeader>
                 <IonCardContent>
-                    <SlicesMenu imageShape={imageShape}/>   
+                    <SlicesMenu imageShape={imageShape} />
                 </IonCardContent>
             </IonCard>
-            {props.hideMenu && <ShowMenu/>}
+            <IonCard>
+                <IonCardHeader><IonLabel>Tools</IonLabel></IonCardHeader>
+                {props.hideMenu && <ShowMenu />}
+            </IonCard>
+            
         </React.Fragment>
 
     );

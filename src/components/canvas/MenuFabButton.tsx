@@ -19,23 +19,24 @@ const MenuFabButton: React.FC<MenuButtonProps> = ({value, buttonsList, onChange,
 
     const [selected, setSelected] = useState(buttonsList.find(b => b.id === value)
                                              || buttonsList[0]);
-
     return (
         <div hidden={hidden}>
-            <IonFabButton color='dark'>
+            <IonFabButton color='dark' title={"annotation mode: "+selected.id}>
                 <IonIcon size="large" icon={selected.logo}/>
             </IonFabButton>
             <IonFabList side={ openSide }>
                 {buttonsList.map((item) => {
-                    return (<IonFabButton key={item.id}>
-                        <IonIcon icon={item.logo} onClick={() => {
+                    return (
+                    <IonFabButton key={item.id} title={item.id} 
+                        onClick={() => {
                             if (selected.id !== item.id) {
                                 setSelected(item);
                                 if (onChange) {
                                     onChange(item);
                                 }
                             }
-                        }}/>
+                        }}> 
+                        <IonIcon icon={item.logo}/>
                     </IonFabButton>);
                 })}
             </IonFabList>

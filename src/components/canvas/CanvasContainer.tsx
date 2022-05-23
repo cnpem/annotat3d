@@ -633,7 +633,7 @@ class Canvas {
         const texture = this.textureFromSlice(uint8data, x, y);
         this.slice.texture = texture;
 
-        console.log('bruno: Image exists: Unlocking components.');
+        console.log('Image exists: Unlocking components.');
         dispatch('LockComponents', false);
     }
 
@@ -870,7 +870,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             this.onImageLoaded = () => {
                 console.log('onImageLoaded');
                 const promise = this.fetchAll(true);
-                console.log(promise);
+                console.log("bruno: promise: ",promise);
                 promise?.then(() => {
                     this.newAnnotation();
                 });
@@ -1048,12 +1048,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                         this.setBrushMode(b.id as brush_mode_type) } } />
                 </IonFab>
                 <IonFab vertical="bottom" horizontal="end" style={ {marginBottom: '4em'} }>
-                    <IonFabButton size="small" onClick={() => {
+                    <IonFabButton size="small" title="Increase brush/eraser size" onClick={() => {
                         this.canvas?.increaseBrushSize();
                     }}>
-                        <IonIcon icon={add} />
+                        <IonIcon icon={add}/>
                     </IonFabButton>
-                    <IonFabButton size="small" onClick={() => {
+                    <IonFabButton size="small" title="Decrease brush/eraser size"onClick={() => {
                         this.canvas?.decreaseBrushSize();
                     }}>
                         <IonIcon icon={remove}/>

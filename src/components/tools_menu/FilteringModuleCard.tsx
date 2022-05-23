@@ -3,6 +3,7 @@ import {useState} from "react";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch} from "../../utils/eventbus";
 import {sfetch} from "../../utils/simplerequest";
+import ImageInfoInterface from "../main_menu/file/ImageInfoInterface";
 import LoadingComponent from "./LoadingComponent";
 import {ModuleCard, ModuleCardItem} from "./ModuleCard";
 
@@ -61,7 +62,7 @@ const BM3DFilteringModuleCard: React.FC = () => {
 
         sfetch('POST', '/filters/bm3d/apply/image/image', JSON.stringify(params))
         .then(() => {
-            dispatch('ImageLoaded', null);
+            // dispatch('ImageLoaded', null);
         })
         .finally(() => {
             setDisabled(false);
