@@ -130,3 +130,18 @@ def save_image(image_id: str):
                   "image_name": save_status["file_name"], "image_dtype": image_dtype}
 
     return jsonify(image_info)
+
+@app.route("/open_new_workspace", methods=["POST"])
+@cross_origin()
+def open_new_workspace():
+    try:
+        workspace_path = request.json["workspace_path"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    print("============================================\n")
+    print("Workspace_path : {}".format(workspace_path))
+    print("\n==============================================")
+
+    return jsonify(workspace_path)
+

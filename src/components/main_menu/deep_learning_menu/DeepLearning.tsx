@@ -5,7 +5,7 @@ import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
 import FileLoadDeepDialog from "./FileLoadDeepDialog";
 
 /**
- * Deep Learning component
+ * Deep Learning component menu
  */
 const DeepLearning: React.FC = () => {
     /**
@@ -30,12 +30,12 @@ const DeepLearning: React.FC = () => {
             </IonItem>
             <IonList slot={"content"}>
                 {/*Workspace menu*/}
-                <FileLoadDeepDialog header={items.subItems[0]} textLoad={"blox"}/>
+                <FileLoadDeepDialog header={items.subItems[0]}/>
 
                 {/*Network menu*/}
-                <FileLoadDeepDialog header={items.subItems[2]} textLoad={"blox"}/>
+                <FileLoadDeepDialog header={items.subItems[2]}/>
                 {/*Batch Inference menu*/}
-                <FileLoadDeepDialog header={items.subItems[3]} textLoad={"blox"}/>
+                <FileLoadDeepDialog header={items.subItems[3]}/>
             </IonList>
         </IonAccordion>
     );
