@@ -6,6 +6,7 @@ import sscIO.io
 import numpy as np
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D.modules import annotation_module
+from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 
 from flask_cors import cross_origin
 
@@ -131,17 +132,24 @@ def save_image(image_id: str):
 
     return jsonify(image_info)
 
-@app.route("/open_new_workspace", methods=["POST"])
+@app.route("/open_new_workspace/<header_type>", methods=["POST"])
 @cross_origin()
-def open_new_workspace():
+def open_new_workspace(header_type: str):
     try:
         workspace_path = request.json["workspace_path"]
     except Exception as e:
         return handle_exception(str(e))
 
-    print("============================================\n")
-    print("Workspace_path : {}".format(workspace_path))
-    print("\n==============================================")
+    if(workspace_path == ""):
+        return handle_exception("Empty path isn't valid !")
 
-    return jsonify(workspace_path)
+    deep_model = DeepLearningWorkspaceDialog()
+    save_status = deep_model.open_new_workspace(workspace_path)
+
+    if(save_status):
+        data_repo.set_image(key="deeplearning", data=deep_model)
+        return jsonify(workspace_path)
+
+    return handle_exception("unable to create the {}".format(header_type))
+
 

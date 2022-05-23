@@ -2,6 +2,7 @@ import React, {useState} from "react";
 import {IonButton, IonInput, IonItem, IonLabel, IonList, IonPopover, useIonToast} from "@ionic/react";
 import ErrorWindowComp from "../file/ErrorWindowComp";
 import {sfetch} from "../../../utils/simplerequest";
+import ErrorInterface from "../file/ErrorInterface";
 
 /**
  * Component that load or save a Workspace, Network or Batch Inference
@@ -36,14 +37,18 @@ const FileLoadDeepDialog: React.FC<{header: string}> = ({header}) => {
     }
 
     const handleNewWorkspace = () => {
-        console.log("new", path);
-
         const params = {
              workspace_path: path,
         }
 
-        sfetch("POST", "/open_new_workspace", JSON.stringify(params), "");
-
+        sfetch("POST", "/open_new_workspace/"+header, JSON.stringify(params), "json").then(
+            (workspace_path: string) => {
+                console.log("Create a " + header + " in the path", workspace_path);
+                showToast(`Create a ` + header + `in the path ` + workspace_path, toastTime);
+            }
+        ).catch((errorMsg: ErrorInterface) => {
+            setErrorMsg(errorMsg.error_msg);
+        });
     }
 
     /**
