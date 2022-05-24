@@ -101,7 +101,6 @@ def close_image(image_id: str):
     return "success on deleting the image !", 200
 
 
-#TODO: need to implement a better error message
 @app.route("/save_image/<image_id>", methods=["POST"])
 @cross_origin()
 def save_image(image_id: str):
@@ -132,24 +131,40 @@ def save_image(image_id: str):
 
     return jsonify(image_info)
 
-@app.route("/open_new_workspace/<header_type>", methods=["POST"])
+@app.route("/open_new_workspace", methods=["POST"])
 @cross_origin()
-def open_new_workspace(header_type: str):
+def open_new_workspace():
     try:
         workspace_path = request.json["workspace_path"]
     except Exception as e:
         return handle_exception(str(e))
 
-    if(workspace_path == ""):
+    if (workspace_path == ""):
         return handle_exception("Empty path isn't valid !")
 
     deep_model = DeepLearningWorkspaceDialog()
     save_status = deep_model.open_new_workspace(workspace_path)
 
-    if(save_status):
-        data_repo.set_image(key="deeplearning", data=deep_model)
+    if (save_status):
+        data_repo.set_image(key='deeplearning', data=deep_model)
         return jsonify(workspace_path)
 
-    return handle_exception("unable to create the {}".format(header_type))
+    return handle_exception("unable to create the Workspace !")
 
+@app.route("/load_workspace", methods=["POST"])
+@cross_origin()
+def load_workspace():
+    try:
+        workspace_path = request.json["workspace_path"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    deep_model = DeepLearningWorkspaceDialog()
+    check_valid_workspace = deep_model.check_workspace(workspace_path)
+
+    if(check_valid_workspace):
+        data_repo.set_image(key='deeplearning', data=deep_model)
+        return jsonify(check_valid_workspace)
+
+    return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
 

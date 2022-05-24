@@ -36,7 +36,14 @@ class DeepLearningWorkspaceDialog:
 
     #TODO : provide a better way to check this other than just check if networks folder is available
     def _is_valid_workspace(self, workspace_path: str):
-        return os.path.isdir(os.path.join(self.workspace, 'networks'))
+        return os.path.isdir(os.path.join(workspace_path, 'networks'))
+
+    def check_workspace(self, workspace_path: str):
+        if (self._is_valid_workspace(workspace_path)):
+            self.workspace = workspace_path
+            return True
+        else:
+            return False
 
     def save_workspace(self):
         if self.workspace:

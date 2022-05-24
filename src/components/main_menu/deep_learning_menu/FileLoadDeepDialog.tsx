@@ -34,6 +34,20 @@ const FileLoadDeepDialog: React.FC<{header: string}> = ({header}) => {
 
     const handleLoadWorkspace = () => {
         console.log("Load on", header);
+         const params = {
+             workspace_path: path,
+        }
+
+        sfetch("POST", "/load_workspace", JSON.stringify(params), "json").then(
+            () => {
+                console.log("the workspace was loaded without problems !!");
+                showToast(`loaded a ` + header + `in the path ` + `"` + path + `"`, toastTime);
+            }
+        ).catch((error: ErrorInterface) => {
+            console.log("Error message while trying to load the " + header, error.error_msg);
+            setErrorMsg(error.error_msg);
+            setShowErrorWindow(true);
+        })
     }
 
     const handleNewWorkspace = () => {
@@ -41,7 +55,7 @@ const FileLoadDeepDialog: React.FC<{header: string}> = ({header}) => {
              workspace_path: path,
         }
 
-        sfetch("POST", "/open_new_workspace/"+header, JSON.stringify(params), "json").then(
+        sfetch("POST", "/open_new_workspace", JSON.stringify(params), "json").then(
             (workspace_path: string) => {
                 console.log("Create a " + header + " in the path", workspace_path);
                 showToast(`Create a ` + header + `in the path ` + `"` + workspace_path + `"`, toastTime);
@@ -88,7 +102,7 @@ const FileLoadDeepDialog: React.FC<{header: string}> = ({header}) => {
                     Load {header}!
                 </IonButton>
             </IonPopover>
-            {/* Load Button */}
+            {/* Function effect to close the popup */}
             <IonItem button
                 onClick={e => setShowPopover({open: true, event: e.nativeEvent }) }>
                 {header}
