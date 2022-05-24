@@ -105,8 +105,20 @@ const PixelSegmentationModuleCard: React.FC = () => {
     const [loadingMsg, setLoadingMsg] = useState<string>("");
     const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(false);
+
     const [showToast] = useIonToast();
     const timeToast = 2000;
+    const toastMessages = {
+        onPreprocess: "Preprocess done!",
+        onPreview: "Preview done!",
+        onApply: "Apply done!"
+    }
+
+    const loadingMessages = {
+        onPreprocess: "Preprocessing",
+        onPreview: "Preparing preview",
+        onApply: "Applying"
+    }
 
     useEffect(() => {
         console.log(prevFeatParams, featParams);
@@ -142,7 +154,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
     function onApply() {
         setDisabled(true);
         setShowLoadingCompPS(true);
-        setLoadingMsg("Applying...");
+        setLoadingMsg(loadingMessages.onApply);
         sfetch('POST', 'pixel_segmentation_module/execute', '')
         .then(() => {
             dispatch('labelChanged', '');
@@ -156,7 +168,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompPS(false);
-            showToast("Successfully applied the superpixel segmentation !", timeToast);
+            showToast(toastMessages.onApply, timeToast);
         });
     }
 
@@ -171,7 +183,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
 
         setDisabled(true);
         setShowLoadingCompPS(true);
-        setLoadingMsg("Calculating the preview...");
+        setLoadingMsg(loadingMessages.onPreview);
         sfetch('POST', '/pixel_segmentation_module/preview', JSON.stringify(curSlice))
         .then(() => {
             dispatch('labelChanged', '');
@@ -185,7 +197,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompPS(false);
-            showToast("Successfully calculated the preview !", timeToast);
+            showToast(toastMessages.onPreview, timeToast);
         });
     }
 
@@ -195,11 +207,9 @@ const PixelSegmentationModuleCard: React.FC = () => {
 
         setDisabled(true);
         setShowLoadingCompPS(true);
-        setLoadingMsg("Preprocessing...");
+        setLoadingMsg(loadingMessages.onPreprocess);
         sfetch('POST', '/pixel_segmentation_module/create', JSON.stringify(params))
         .then(() => {
-            console.log('preprocessou');
-            //setPrevFeatParams(prevFeatParams);
             setPrevFeatParams(featParams);
         })
         .catch(() => {
@@ -209,7 +219,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingCompPS(false);
-            showToast("Successfully applied the preprocess !", timeToast);
+            showToast(toastMessages.onPreprocess, timeToast);
         });
     }
 

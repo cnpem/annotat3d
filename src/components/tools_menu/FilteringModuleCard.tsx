@@ -3,10 +3,20 @@ import {useState} from "react";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch} from "../../utils/eventbus";
 import {sfetch} from "../../utils/simplerequest";
-import ImageInfoInterface from "../main_menu/file/ImageInfoInterface";
 import LoadingComponent from "./LoadingComponent";
 import {ModuleCard, ModuleCardItem} from "./ModuleCard";
 
+function onApplyThen(info : {slice: number, axis: string}) {
+    console.log("bruno: dispatch slice changed Gaussian then: ", info);
+    dispatch('futureChanged', info);    
+};
+
+const [showToast] = useIonToast();
+const timeToast = 2000;
+const toastMessages = {
+    onPreview: "Preview done!",
+    onApply: "Apply done!"
+}
 
 const BM3DFilteringModuleCard: React.FC = () => {
 
@@ -15,8 +25,6 @@ const BM3DFilteringModuleCard: React.FC = () => {
     const [sigma, setSigma] = useStorageState<number>(sessionStorage, "bm3dSigma", 1024);
     const [twostep, setTwostep] = useStorageState<boolean>(sessionStorage, 'bm3dTwostep', false);
 
-    const [showToast] = useIonToast();
-    const timeToast = 2000;
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [loadingMsg, setLoadingMsg] = useState<string>(""); 
 
@@ -45,7 +53,7 @@ const BM3DFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Preview done!", timeToast);
+            showToast(toastMessages.onPreview, timeToast);
         });
     }
 
@@ -56,18 +64,23 @@ const BM3DFilteringModuleCard: React.FC = () => {
             twostep: twostep
         };
 
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number,
+            axis: string
+        };
+
         setDisabled(true);
         setShowLoadingComp(true);
         setLoadingMsg("Applying");
 
         sfetch('POST', '/filters/bm3d/apply/image/image', JSON.stringify(params))
         .then(() => {
-            // dispatch('ImageLoaded', null);
+            onApplyThen(curSlice);
         })
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Apply done!", timeToast);
+            showToast(toastMessages.onApply, timeToast);
         });
     }
 
@@ -103,8 +116,6 @@ const GaussianFilteringModuleCard: React.FC = () => {
     const [sigma, setSigma] = useStorageState<number>(sessionStorage, "gaussianSigma", 2); 
     const [convType, setConvType] = useStorageState<string>(sessionStorage, "gaussianConvType", "2d"); 
 
-    const [showToast] = useIonToast();
-    const timeToast = 2000;
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [loadingMsg, setLoadingMsg] = useState<string>("");  
 
@@ -119,7 +130,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
             sigma: sigma,
             convType: convType,
             axis: curSlice.axis,
-            slice: curSlice.slice
+            slice: curSlice.slice,
         };
 
         setDisabled(true);
@@ -133,7 +144,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Preview done!", timeToast);
+            showToast(toastMessages.onPreview, timeToast);
         });
     }
 
@@ -143,7 +154,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
             slice: number,
             axis: string
         };
-        
+
         const params = {
             sigma: sigma,
             convType: convType,
@@ -156,12 +167,12 @@ const GaussianFilteringModuleCard: React.FC = () => {
 
         sfetch('POST', '/filters/gaussian/apply/image/image', JSON.stringify(params))
         .then(() => {
-            dispatch('ImageLoaded', null);
+            onApplyThen(curSlice);
         })
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Apply done!", timeToast);
+            showToast(toastMessages.onApply, timeToast);
         });
     }
 
@@ -202,8 +213,6 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
     const [nlmStep, setNlmStep] = useStorageState<number>(sessionStorage, "nlmStep", 2); 
     const [gaussianStep, setGaussianStep] = useStorageState<number>(sessionStorage, "gaussianStep", 2); 
 
-    const [showToast] = useIonToast();
-    const timeToast = 2000;
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [loadingMsg, setLoadingMsg] = useState<string>("");
 
@@ -233,7 +242,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Preview done!", timeToast);
+            showToast(toastMessages.onPreview, timeToast);
         });
     }
 
@@ -257,12 +266,12 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
 
         sfetch('POST', '/filters/nlm/apply/image/image', JSON.stringify(params))
         .then(() => {
-            dispatch('ImageLoaded', null);
+            onApplyThen(curSlice);
         })
         .finally(() => {
             setDisabled(false);
             setShowLoadingComp(false);
-            showToast("Apply done!", timeToast);
+            showToast(toastMessages.onApply, timeToast);
         });
     }
 
