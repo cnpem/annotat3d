@@ -146,6 +146,7 @@ def open_new_workspace():
     save_status = deep_model.open_new_workspace(workspace_path)
 
     if (save_status):
+        # TODO: need to change this setter to a better repository. Prob will need to go into the legacy version
         data_repo.set_image(key='deeplearning', data=deep_model)
         return jsonify(workspace_path)
 
@@ -163,6 +164,7 @@ def load_workspace():
     check_valid_workspace = deep_model.check_workspace(workspace_path)
 
     if(check_valid_workspace):
+        # TODO: need to change this setter to a better repository. Prob will need to go into the legacy version
         data_repo.set_image(key='deeplearning', data=deep_model)
         return jsonify(check_valid_workspace)
 
