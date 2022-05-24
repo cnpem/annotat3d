@@ -5,7 +5,7 @@ import {sfetch} from "../../../utils/simplerequest";
 import ErrorInterface from "../file/ErrorInterface";
 
 /**
- * Component that load or save a Workspace, Network or Batch Inference
+ * Component that load or save a Workspace
  * @example <WorkspaceComp header={"Workspace"}/>
  */
 const WorkspaceComp: React.FC = () => {
@@ -39,7 +39,7 @@ const WorkspaceComp: React.FC = () => {
         sfetch("POST", "/load_workspace", JSON.stringify(params), "json").then(
             () => {
                 console.log("the workspace was loaded without problems !!");
-                showToast("loaded a Workspace in the path \"" + path + "\"", toastTime);
+                showToast(`loaded a Workspace in the path "${path}"`, toastTime);
             }
         ).catch((error: ErrorInterface) => {
             console.log("Error message while trying to load the Workspace", error.error_msg);
@@ -56,7 +56,7 @@ const WorkspaceComp: React.FC = () => {
         sfetch("POST", "/open_new_workspace", JSON.stringify(params), "json").then(
             (workspace_path: string) => {
                 console.log("Create a Workspace in the path ", workspace_path);
-                showToast("Create a Workspace in the path " + workspace_path + "\"", toastTime);
+                showToast(`Create a Workspace in the path "${path}"`, toastTime);
             }
         ).catch((errorMsg: ErrorInterface) => {
             console.log("Error message while trying to open a new Workspace", errorMsg.error_msg);
