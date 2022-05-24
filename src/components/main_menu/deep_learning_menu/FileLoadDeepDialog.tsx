@@ -44,10 +44,12 @@ const FileLoadDeepDialog: React.FC<{header: string}> = ({header}) => {
         sfetch("POST", "/open_new_workspace/"+header, JSON.stringify(params), "json").then(
             (workspace_path: string) => {
                 console.log("Create a " + header + " in the path", workspace_path);
-                showToast(`Create a ` + header + `in the path ` + workspace_path, toastTime);
+                showToast(`Create a ` + header + `in the path ` + `"` + workspace_path + `"`, toastTime);
             }
         ).catch((errorMsg: ErrorInterface) => {
+            console.log("Error message while trying to open a new " + header, errorMsg.error_msg);
             setErrorMsg(errorMsg.error_msg);
+            setShowErrorWindow(true);
         });
     }
 
