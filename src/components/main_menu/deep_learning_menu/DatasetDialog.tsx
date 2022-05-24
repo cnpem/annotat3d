@@ -6,10 +6,9 @@ import ErrorInterface from "../file/ErrorInterface";
 
 /**
  * Component that load or save a Workspace, Network or Batch Inference
- * @param {string} header - a string variable used to show f
- * @example <FileLoadDeepDialog header={"Workspace"}/>
+ * @example <WorkspaceComp header={"Workspace"}/>
  */
-const FileLoadDeepDialog: React.FC<{header: string}> = ({header}) => {
+const WorkspaceComp: React.FC = () => {
 
     // Init States
     const [showPopover, setShowPopover] = useState<{ open: boolean, event: Event | undefined }>({
@@ -33,7 +32,6 @@ const FileLoadDeepDialog: React.FC<{header: string}> = ({header}) => {
     }
 
     const handleLoadWorkspace = () => {
-        console.log("Load on", header);
          const params = {
              workspace_path: path,
         }
@@ -41,10 +39,10 @@ const FileLoadDeepDialog: React.FC<{header: string}> = ({header}) => {
         sfetch("POST", "/load_workspace", JSON.stringify(params), "json").then(
             () => {
                 console.log("the workspace was loaded without problems !!");
-                showToast(`loaded a ` + header + `in the path ` + `"` + path + `"`, toastTime);
+                showToast(`loaded a Workspace in the path ` + `"` + path + `"`, toastTime);
             }
         ).catch((error: ErrorInterface) => {
-            console.log("Error message while trying to load the " + header, error.error_msg);
+            console.log("Error message while trying to load the Workspace", error.error_msg);
             setErrorMsg(error.error_msg);
             setShowErrorWindow(true);
         })
@@ -57,11 +55,11 @@ const FileLoadDeepDialog: React.FC<{header: string}> = ({header}) => {
 
         sfetch("POST", "/open_new_workspace", JSON.stringify(params), "json").then(
             (workspace_path: string) => {
-                console.log("Create a " + header + " in the path", workspace_path);
-                showToast(`Create a ` + header + `in the path ` + `"` + workspace_path + `"`, toastTime);
+                console.log("Create a Workspace in the path ", workspace_path);
+                showToast(`Create a Workspace in the path ` + `"` + workspace_path + `"`, toastTime);
             }
         ).catch((errorMsg: ErrorInterface) => {
-            console.log("Error message while trying to open a new " + header, errorMsg.error_msg);
+            console.log("Error message while trying to open a new Workspace", errorMsg.error_msg);
             setErrorMsg(errorMsg.error_msg);
             setShowErrorWindow(true);
         });
@@ -86,26 +84,26 @@ const FileLoadDeepDialog: React.FC<{header: string}> = ({header}) => {
                 <IonList>
                     {/* Header Path Text Input*/}
                     <IonItem>
-                        <IonLabel position="stacked">{header + " Path"}</IonLabel>
+                        <IonLabel position="stacked">{"Workspace Path"}</IonLabel>
                         <IonInput
-                            placeholder={"/path/to/"+header}
+                            placeholder={"/path/to/Workspace"}
                             value={path}
                             onIonChange={(e:CustomEvent) => setPath(e.detail.value!)} />
                     </IonItem>
                 </IonList>
                 {/* Create option */}
                 <IonButton color={"tertiary"} slot={"end"} onClick={handleNewWorkspace}>
-                    New {header}!
+                    New Workspace!
                 </IonButton>
                 {/* Load option */}
                 <IonButton color={"tertiary"} slot={"end"} onClick={handleLoadWorkspace}>
-                    Load {header}!
+                    Load Workspace!
                 </IonButton>
             </IonPopover>
             {/* Function effect to close the popup */}
             <IonItem button
                 onClick={e => setShowPopover({open: true, event: e.nativeEvent }) }>
-                {header}
+                Workspace
             </IonItem>
             {/*Error window*/}
             <ErrorWindowComp
@@ -118,4 +116,4 @@ const FileLoadDeepDialog: React.FC<{header: string}> = ({header}) => {
     );
 }
 
-export default FileLoadDeepDialog;
+export default WorkspaceComp;
