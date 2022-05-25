@@ -11,7 +11,6 @@ function onApplyThen(info : {slice: number, axis: string}) {
     dispatch('futureChanged', info);    
 };
 
-const [showToast] = useIonToast();
 const timeToast = 2000;
 const toastMessages = {
     onPreview: "Preview done!",
@@ -19,6 +18,7 @@ const toastMessages = {
 }
 
 const BM3DFilteringModuleCard: React.FC = () => {
+    const [showToast] = useIonToast();
 
     const [disabled, setDisabled] = useState<boolean>(false);
 
@@ -110,6 +110,7 @@ const BM3DFilteringModuleCard: React.FC = () => {
 }
 
 const GaussianFilteringModuleCard: React.FC = () => {
+    const [showToast] = useIonToast();
 
     const [disabled, setDisabled] = useState<boolean>(false);
     
@@ -206,6 +207,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
 }
 
 const NonLocalMeansFilteringModuleCard: React.FC = () => {
+    const [showToast] = useIonToast();
 
     const [disabled, setDisabled] = useState<boolean>(false);
     

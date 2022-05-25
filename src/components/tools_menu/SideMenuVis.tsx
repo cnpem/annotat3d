@@ -185,11 +185,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard disabled={lockVisCards}>
-                <IonCardContent>
-                    <CropMenu imageShape={imageShape}/>
-                </IonCardContent>
-            </IonCard>
+            <CropMenu imageShape={imageShape} disabled={lockVisCards} />
         </React.Fragment>
     );
 }

@@ -106,7 +106,8 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             image_dtype: dtype,
         }
 
-        sfetch("POST", "/save_image/"+saveImgOp, JSON.stringify(params), "json").then(
+        sfetch("POST", "/save_image/"+saveImgOp, JSON.stringify(params), "json")
+        .then(
             (image) => {
 
                 const info: ImageInfoInterface = {

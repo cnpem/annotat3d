@@ -5,15 +5,20 @@ import {
 
 import { ImageShapeInterface } from './ImageShapeInterface';
 
-import { dispatch } from '../../utils/eventbus';
+import { dispatch, useEventBus } from '../../utils/eventbus';
 // import { dispatch, useEventBus } from '../../utils/eventbus';
 // import { SliceInfoInterface } from "./SliceInfoInterface";
 import { useStorageState } from "react-storage-hooks";
 import { Fragment, useEffect, useState } from "react";
 import { CropInterface } from "./CropInterface";
+import { ModuleCard } from "./ModuleCard";
+import { sfetch } from "../../utils/simplerequest";
+import ImageInfoInterface from "../main_menu/file/ImageInfoInterface";
+import ErrorInterface from "../main_menu/file/ErrorInterface";
 
 interface SlicesMenuProps {
     imageShape: ImageShapeInterface;
+    disabled: boolean
 }
 
 /**
@@ -81,35 +86,78 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         });
     })
 
+    const [imageInfo, setImageInfo] = useStorageState<ImageInfoInterface>(sessionStorage, 'imageInfo');
+    useEventBus('ImageLoaded', (imgInfo) => {
+        setImageInfo(imgInfo);
+    })
+
+    function onApply() {
+
+        const params = {
+            cropIndexes: imageCrop,
+        };
+
+
+
+        // setDisabled(true);
+        // setShowLoadingComp(true);
+        // setLoadingMsg("Applying");
+
+        sfetch("POST", "/crop_image/image", JSON.stringify(params), "json")
+        .then((img_info) => {
+
+            const info: ImageInfoInterface = {
+                imageShape: img_info["image_shape"],
+                imageDtype: img_info["image_dtype"],
+                imageName: img_info["image_name"],
+                imageExt: img_info["image_ext"],
+            }
+            // setShowErrorWindow(false);
+            dispatch('ImageLoaded', info); 
+            
+
+            // setShowPopover({...showPopover, open: false});
+            // showToast(`Loaded ${image["image_name"]}${image["image_ext"]}`, toastTime);
+
+        }).catch((error: ErrorInterface) => {
+            // setShowErrorWindow(true);
+            // setErrorMsg(error["error_msg"]);
+        })
+    }    
+
     return (
         <Fragment>
-            <IonItem>
-                <IonLabel>Crop</IonLabel>
-                <IonToggle checked={toggleCrop}
-                    onIonChange={(e) => {
-                        dispatch('toggleCropChanged', imageCrop);
-                        setToggleCrop(e.detail.checked);
-                    }}>
-                </IonToggle>
-            </IonItem>
-            <IonItem>
-                <IonRange dualKnobs={true} min={0} max={props.imageShape.x} step={1} snaps={false} onIonChange={handleCropX}>
-                    <IonLabel slot="start">X</IonLabel>
-                </IonRange>
-            </IonItem>
-            <IonItem>
-                <IonRange dualKnobs={true} min={0} max={props.imageShape.y} step={1} snaps={false} onIonChange={handleCropY}>
-                <IonLabel slot="start">Y</IonLabel>
-                </IonRange>
-            </IonItem>
-            <IonItem>
-                <IonRange dualKnobs={true} min={0} max={props.imageShape.z} step={1} snaps={false} onIonChange={handleCropZ}>
-                <IonLabel slot="start">Z</IonLabel>
-                </IonRange>
-            </IonItem>
-            <IonItem>
-                <IonLabel>Selected Range: ({imageCrop.xLower}:{imageCrop.xUpper}, {imageCrop.yLower}:{imageCrop.yUpper}, {imageCrop.zLower}:{imageCrop.zUpper}) </IonLabel>
-            </IonItem>
+            <ModuleCard disabled={props.disabled} name=""
+            onApply={onApply}>
+                {/* <ModuleCardItem name="Where is this?" ></ModuleCardItem> */}
+                <IonItem>
+                    <IonLabel>Crop</IonLabel>
+                    <IonToggle checked={toggleCrop}
+                        onIonChange={(e) => {
+                            dispatch('toggleCropChanged', imageCrop);
+                            setToggleCrop(e.detail.checked);
+                        }}>
+                    </IonToggle>
+                </IonItem>
+                <IonItem>
+                    <IonRange dualKnobs={true} min={0} max={props.imageShape.x} step={1} snaps={false} onIonChange={handleCropX}>
+                        <IonLabel slot="start">X</IonLabel>
+                    </IonRange>
+                </IonItem>
+                <IonItem>
+                    <IonRange dualKnobs={true} min={0} max={props.imageShape.y} step={1} snaps={false} onIonChange={handleCropY}>
+                    <IonLabel slot="start">Y</IonLabel>
+                    </IonRange>
+                </IonItem>
+                <IonItem>
+                    <IonRange dualKnobs={true} min={0} max={props.imageShape.z} step={1} snaps={false} onIonChange={handleCropZ}>
+                    <IonLabel slot="start">Z</IonLabel>
+                    </IonRange>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>Selected Range: ({imageCrop.xLower}:{imageCrop.xUpper}, {imageCrop.yLower}:{imageCrop.yUpper}, {imageCrop.zLower}:{imageCrop.zUpper}) </IonLabel>
+                </IonItem>
+            </ModuleCard>
         </Fragment>
     );
 }
