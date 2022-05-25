@@ -39,7 +39,7 @@ const WorkspaceComp: React.FC = () => {
         sfetch("POST", "/load_workspace", JSON.stringify(params), "json").then(
             (workspace_path: string) => {
                 console.log("Loaded a Workspace in the path ", workspace_path);
-                showToast(`loaded a Workspace in the path \"${path}\"`, toastTime);
+                showToast(`loaded a Workspace in the path "${path}"`, toastTime);
                 cleanUp();
             }
         ).catch((error: ErrorInterface) => {
@@ -57,7 +57,7 @@ const WorkspaceComp: React.FC = () => {
         sfetch("POST", "/open_new_workspace", JSON.stringify(params), "json").then(
             (workspace_path: string) => {
                 console.log("Create a Workspace in the path ", workspace_path);
-                showToast(`Create a Workspace in the path \"${path}\"`, toastTime);
+                showToast(`Create a Workspace in the path "${path}"`, toastTime);
                 cleanUp();
             }
         ).catch((errorMsg: ErrorInterface) => {

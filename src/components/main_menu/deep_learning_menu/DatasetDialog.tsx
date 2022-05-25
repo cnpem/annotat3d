@@ -1,24 +1,12 @@
 import React, {useState} from "react";
 import {
-    IonAccordion,
-    IonAccordionGroup,
-    IonButton, IonContent, IonIcon,
-    IonInput,
-    IonItem,
-    IonLabel,
-    IonList,
-    IonPopover,
-    IonSegment,
-    IonSegmentButton,
-    useIonToast
-} from "@ionic/react";
+    IonAccordion, IonContent, IonIcon, IonItem, IonLabel, IonList,
+    IonPopover, IonSegment, IonSegmentButton} from "@ionic/react";
 import ErrorWindowComp from "../file/ErrorWindowComp";
-import {sfetch} from "../../../utils/simplerequest";
-import ErrorInterface from "../file/ErrorInterface";
 import {MenuItem} from "../MenuItems";
 import {layersOutline, layersSharp} from "ionicons/icons";
 
-type segmentOption = 'sampling' | 'argumentation';
+//type segmentOption = 'sampling' | 'argumentation';
 
 /**
  * Component that load or save a Workspace, Network or Batch Inference
