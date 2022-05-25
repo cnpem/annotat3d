@@ -134,6 +134,16 @@ def save_image(image_id: str):
 @app.route("/open_new_workspace", methods=["POST"])
 @cross_origin()
 def open_new_workspace():
+    """
+    Function that opens a new workspace
+
+    Notes:
+        the request.json["workspace_path"] receives only the parameter "selected_labels"(str)
+
+    Returns:
+        (str): returns a string that contains the new workspace path
+
+    """
     try:
         workspace_path = request.json["workspace_path"]
     except Exception as e:
@@ -143,18 +153,27 @@ def open_new_workspace():
         return handle_exception("Empty path isn't valid !")
 
     deep_model = DeepLearningWorkspaceDialog()
-    save_status = deep_model.open_new_workspace(workspace_path)
+    save_status, error_desc = deep_model.open_new_workspace(workspace_path)
 
     if (save_status):
-        # TODO: need to change this setter to a better repository. Prob will need to go into the legacy version
-        data_repo.set_image(key='deeplearning', data=deep_model)
+        data_repo.set_deep_model(data={"deep_model_path": workspace_path})
         return jsonify(workspace_path)
 
-    return handle_exception("unable to create the Workspace !")
+    return handle_exception("unable to create the Workspace ! : {}".format(error_desc))
 
 @app.route("/load_workspace", methods=["POST"])
 @cross_origin()
 def load_workspace():
+    """
+    Function that loads a created workspace
+
+    Notes:
+        the request.json["workspace_path"] receives only the parameter "selected_labels"(str)
+
+    Returns:
+        (str): returns a string that contains the loaded workspace path
+
+    """
     try:
         workspace_path = request.json["workspace_path"]
     except Exception as e:
@@ -164,8 +183,7 @@ def load_workspace():
     check_valid_workspace = deep_model.check_workspace(workspace_path)
 
     if(check_valid_workspace):
-        # TODO: need to change this setter to a better repository. Prob will need to go into the legacy version
-        data_repo.set_image(key='deeplearning', data=deep_model)
+        data_repo.set_deep_model(data={"deep_model_path": workspace_path})
         return jsonify(check_valid_workspace)
 
     return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))

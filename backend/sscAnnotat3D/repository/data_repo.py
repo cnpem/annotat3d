@@ -2,6 +2,14 @@ import numpy as np
 
 __images = dict()
 __annotations = dict()
+__deep_model = dict()
+
+def set_deep_model(key='deep_learning', data: dict = None):
+    if data is not None:
+        __deep_model[key] = data
+
+def get_deep_model(key='deep_learning'):
+    return __deep_model[key]
 
 def set_image(key='image', data: np.ndarray = None):
     if data is not None:

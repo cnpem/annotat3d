@@ -6,7 +6,7 @@ import ErrorInterface from "../file/ErrorInterface";
 
 /**
  * Component that load or save a Workspace
- * @example <WorkspaceComp header={"Workspace"}/>
+ * @example <WorkspaceComp/>
  */
 const WorkspaceComp: React.FC = () => {
 
@@ -37,9 +37,10 @@ const WorkspaceComp: React.FC = () => {
         }
 
         sfetch("POST", "/load_workspace", JSON.stringify(params), "json").then(
-            () => {
-                console.log("the workspace was loaded without problems !!");
-                showToast(`loaded a Workspace in the path "${path}"`, toastTime);
+            (workspace_path: string) => {
+                console.log("Loaded a Workspace in the path ", workspace_path);
+                showToast(`loaded a Workspace in the path \"${path}\"`, toastTime);
+                cleanUp();
             }
         ).catch((error: ErrorInterface) => {
             console.log("Error message while trying to load the Workspace", error.error_msg);
@@ -56,7 +57,8 @@ const WorkspaceComp: React.FC = () => {
         sfetch("POST", "/open_new_workspace", JSON.stringify(params), "json").then(
             (workspace_path: string) => {
                 console.log("Create a Workspace in the path ", workspace_path);
-                showToast(`Create a Workspace in the path "${path}"`, toastTime);
+                showToast(`Create a Workspace in the path \"${path}\"`, toastTime);
+                cleanUp();
             }
         ).catch((errorMsg: ErrorInterface) => {
             console.log("Error message while trying to open a new Workspace", errorMsg.error_msg);
@@ -82,7 +84,7 @@ const WorkspaceComp: React.FC = () => {
                 onDidDismiss={() => cleanUp()}
                 className={"file-popover"}>
                 <IonList>
-                    {/* Header Path Text Input*/}
+                    {/* Header Path Text Input */}
                     <IonItem>
                         <IonLabel position="stacked">{"Workspace Path"}</IonLabel>
                         <IonInput
@@ -100,12 +102,12 @@ const WorkspaceComp: React.FC = () => {
                     Load Workspace!
                 </IonButton>
             </IonPopover>
-            {/* Function effect to close the popup */}
+            {/* Button that opens Workspace pop-up */}
             <IonItem button
                 onClick={e => setShowPopover({open: true, event: e.nativeEvent }) }>
                 Workspace
             </IonItem>
-            {/*Error window*/}
+            {/* Error window */}
             <ErrorWindowComp
                 errorMsg={errorMsg}
                 headerMsg={"Error while loading the file"}
