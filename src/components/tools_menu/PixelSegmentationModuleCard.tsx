@@ -300,8 +300,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
 
     return (
         <ModuleCard name="Pixel Segmentation" disabled={disabled}
-            onApply={onApply} onPreview={onPreview} onPreprocess={onPreprocess}
-            disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed} disabledPreprocess={hasPreprocessed}>
+            onApply={onApply} onPreview={onPreview} onOther={onPreprocess}
+            disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed} disabledOther={hasPreprocessed} OtherName="Preprocess">
 
             <ModuleCardItem name="Pixel Segmentation Parameters">
                 <ModuleCardItem name="Feature Extraction Parameters">

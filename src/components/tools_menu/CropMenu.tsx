@@ -91,6 +91,10 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         setImageInfo(imgInfo);
     })
 
+    function onPreview() {
+        console.log("bruno: yay! Preview!");
+    };
+
     function onApply() {
 
         const params = {
@@ -123,21 +127,18 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             // setShowErrorWindow(true);
             // setErrorMsg(error["error_msg"]);
         })
-    }    
+    }
+    
+    function onMerge() {
+        console.log("bruno: yay! Merge!");
+    };
 
     return (
         <Fragment>
             <ModuleCard disabled={props.disabled} name=""
-            onApply={onApply}>
-                {/* <ModuleCardItem name="Where is this?" ></ModuleCardItem> */}
+            onPreview={onPreview} onApply={onApply} onOther={onMerge} OtherName="Merge">
                 <IonItem>
-                    <IonLabel>Crop</IonLabel>
-                    <IonToggle checked={toggleCrop}
-                        onIonChange={(e) => {
-                            dispatch('toggleCropChanged', imageCrop);
-                            setToggleCrop(e.detail.checked);
-                        }}>
-                    </IonToggle>
+                    <IonLabel>Crop Image</IonLabel>
                 </IonItem>
                 <IonItem>
                     <IonRange dualKnobs={true} min={0} max={props.imageShape.x} step={1} snaps={false} onIonChange={handleCropX}>
