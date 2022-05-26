@@ -120,42 +120,38 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             use_image_raw_parse: (imgShapeRaw[0] == null && imgShapeRaw[1] == null && imgShapeRaw[2] == null),
         }
 
-        sfetch("POST", "/open_image/"+loadImgOp, JSON.stringify(params), "json")
-        .then((image) => {
+        sfetch("POST", "/open_image/" + loadImgOp, JSON.stringify(params), "json")
+            .then((image) => {
 
-            const info: ImageInfoInterface = {
-                imageShape: image["image_shape"],
-                imageDtype: image["image_dtype"],
-                imageName: image["image_name"],
-                imageExt: image["image_ext"],
-            }
+                const info: ImageInfoInterface = {
+                    imageShape: image["image_shape"],
+                    imageDtype: image["image_dtype"],
+                    imageName: image["image_name"],
+                    imageExt: image["image_ext"],
+                }
 
-            if(loadImgOp === "superpixel")
-            {
-                dispatch("superpixelChanged", {});
-            }
+                if (loadImgOp === "superpixel") {
+                    dispatch("superpixelChanged", {});
+                } else if (loadImgOp === "label") {
+                    sfetch("POST", "/load_label_from_file_load_dialog/", "", "json").then(
+                        (labelList) => {
+                            console.log("printing the loaded label : ", labelList);
+                            dispatch("LabelLoaded", labelList);
+                        }
+                    ).catch((error: ErrorInterface) => {
+                        //TODO : need to implement an error component here
+                        console.log("error to load the label\n");
+                        console.log(error);
+                    })
+                }
 
-            else if(loadImgOp === "label")
-            {
-                sfetch("POST", "/load_label_from_file_load_dialog/", "", "json").then(
-                    (labelList) => {
-                        console.log("printing the loaded label : ", labelList);
-                        dispatch("LabelLoaded", labelList);
-                    }
-                ).catch((error: ErrorInterface) => {
-                    //TODO : need to implement an error component here
-                    console.log("error to load the label\n");
-                    console.log(error);
-                })
-            }
+                setShowErrorWindow(false);
+                dispatch("ImageLoaded", info);
+                dispatch("ActivateComponents", false);
+                setShowPopover({...showPopover, open: false});
+                showToast(`Loaded ${image["image_name"]}${image["image_ext"]}`, toastTime);
 
-            setShowErrorWindow(false);
-            dispatch("ImageLoaded", info);
-            dispatch("ActivateComponents", false);
-            setShowPopover({...showPopover, open: false});
-            showToast(`Loaded ${image["image_name"]}${image["image_ext"]}`, toastTime);
-
-        }).catch((error: ErrorInterface) => {
+            }).catch((error: ErrorInterface) => {
             setShowErrorWindow(true);
             setErrorMsg(error["error_msg"]);
         })
@@ -184,82 +180,96 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 event={showPopover.event}
                 onDidDismiss={() => cleanUp()}
                 className={"file-popover"}>
-                <IonList>
-                    <IonItem>
-                        {/* Select Image/Label/Superpixel */}
-                        <IonSegment value={loadImgOp} onIonChange={handleLoadImgOP}
-                            color="tertiary">
-                            <IonSegmentButton value="image">
-                                <IonLabel>Image</IonLabel>
-                            </IonSegmentButton>
-                            <IonSegmentButton value="label">
-                                <IonLabel>Label</IonLabel>
-                            </IonSegmentButton>
-                            <IonSegmentButton value="superpixel">
-                                <IonLabel>Superpixel</IonLabel>
-                            </IonSegmentButton>
-                        </IonSegment>
-                    </IonItem>
-                    {/* Image Path Text Input*/}
-                    <IonItem>
-                        <IonLabel position="stacked">Image Path</IonLabel>
-                        <IonInput
-                            placeholder={"/path/to/file"}
-                            value={path}
-                            onIonChange={e => setPath(e.detail.value!)} />
-                    </IonItem>
-                    {/* Image Size Grid*/}
-                    <IonItem>
-                        <IonRow>
-                            <IonCol>
-                                <IonLabel position="stacked">Image Size</IonLabel>
-                                <div style={ {display: 'flex', justifyContent: 'flex-start'} }>
-                                    <IonInput
-                                        type="number"
-                                        min={"0"}
-                                        value={imgShapeRaw[0]}
-                                        placeholder="X"
-                                        onIonChange={e => setImageShapeRaw([parseInt(e.detail.value!, 10), imgShapeRaw[1], imgShapeRaw[2]])}
-                                    />
-                                    <IonInput
-                                        type="number"
-                                        min={"0"}
-                                        value={imgShapeRaw[1]}
-                                        placeholder="Y"
-                                        onIonChange={e => setImageShapeRaw([imgShapeRaw[0], parseInt(e.detail.value!, 10), imgShapeRaw[2]])}
-                                    />
-                                    <IonInput
-                                        type="number"
-                                        min={"0"}
-                                        value={imgShapeRaw[2]}
-                                        placeholder="Z"
-                                        onIonChange={e => setImageShapeRaw([imgShapeRaw[0], imgShapeRaw[1], parseInt(e.detail.value!, 10)])}
-                                    />
-                                </div>
-                            </IonCol>
-                            <IonCol>
-                                {/* Select dtype */}
-                                <IonLabel position="stacked">Image Type</IonLabel>
-                                <IonSelect
-                                    style={ {maxWidth: '100%'} }
-                                    interface={"popover"}
-                                    value={dtype}
-                                    placeholder={"Select One"}
-                                    onIonChange={e => setDtype(e.detail.value)}
-                                >
-                                    {dtypeList.map((type) => {
-                                        return (
-                                            <IonSelectOption value={type.value}>{type.label}</IonSelectOption>
-                                        );
-                                    })}
-                                </IonSelect>
-                            </IonCol>
-                        </IonRow>
-                    </IonItem>
-                </IonList>
+                {/* Header Path Text Input */}
+
+                <IonRow>
+                    <IonCol>
+                        <IonItem>
+                            <IonLabel>bla</IonLabel>
+                        </IonItem>
+                    </IonCol>
+                </IonRow>
+
+                <IonItem>
+                    <IonLabel position="stacked">{"Workspace Path"}</IonLabel>
+                    <IonInput
+                        placeholder={"/path/to/Workspace"}
+                        value={path}
+                        onIonChange={(e: CustomEvent) => setPath(e.detail.value!)}/>
+                </IonItem>
                 {/* Advanced Options Accordion */}
                 <small>
-                    <IonAccordionGroup>
+                    <IonAccordionGroup multiple={true}>
+                        <IonAccordion>
+                            <IonItem slot={"header"}>
+                                <IonIcon slot={"start"} icon={options}/>
+                                <IonLabel><small>Advanced Options</small></IonLabel>
+                            </IonItem>
+                            <IonGrid slot={"content"}>
+                                {/* Axis Range Grid*/}
+                                <IonItemDivider> Axis Ranges</IonItemDivider>
+                                <IonRow>
+                                    <IonCol>
+                                        <IonInput
+                                            type="number"
+                                            min={"0"}
+                                            value={xRange[0]}
+                                            placeholder="X0"
+                                            onIonChange={e => setXRange([parseInt(e.detail.value!, 10), xRange[1]])}
+                                        />
+                                    </IonCol>
+                                    <IonCol>
+                                        <IonInput
+                                            type="number"
+                                            min={"-1"}
+                                            value={xRange[1]}
+                                            placeholder="X1"
+                                            onIonChange={e => setXRange([xRange[0], parseInt(e.detail.value!, 10)])}
+                                        />
+                                    </IonCol>
+                                </IonRow>
+                                <IonRow>
+                                    <IonCol>
+                                        <IonInput
+                                            type="number"
+                                            min={"0"}
+                                            value={yRange[0]}
+                                            placeholder="Y0"
+                                            onIonChange={e => setYRange([parseInt(e.detail.value!, 10), yRange[1]])}
+                                        />
+                                    </IonCol>
+                                    <IonCol>
+                                        <IonInput
+                                            type="number"
+                                            min={"-1"}
+                                            value={yRange[1]}
+                                            placeholder="Y1"
+                                            onIonChange={e => setYRange([yRange[0], parseInt(e.detail.value!, 10)])}
+                                        />
+                                    </IonCol>
+                                </IonRow>
+                                <IonRow>
+                                    <IonCol>
+                                        <IonInput
+                                            type="number"
+                                            min={"0"}
+                                            value={zRange[0]}
+                                            placeholder="Z0"
+                                            onIonChange={e => setZRange([parseInt(e.detail.value!, 10), zRange[1]])}
+                                        />
+                                    </IonCol>
+                                    <IonCol>
+                                        <IonInput
+                                            type="number"
+                                            min={"-1"}
+                                            value={zRange[1]}
+                                            placeholder="Z1"
+                                            onIonChange={e => setZRange([zRange[0], parseInt(e.detail.value!, 10)])}
+                                        />
+                                    </IonCol>
+                                </IonRow>
+                            </IonGrid>
+                        </IonAccordion>
                         <IonAccordion>
                             <IonItem slot={"header"}>
                                 <IonIcon slot={"start"} icon={options}/>
@@ -338,7 +348,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             </IonPopover>
             {/* Load Button */}
             <IonItem button
-                onClick={ (e) => setShowPopover({open: true, event: e.nativeEvent }) }>
+                     onClick={(e) => setShowPopover({open: true, event: e.nativeEvent})}>
                 {name}
             </IonItem>
             {/*Error window*/}
