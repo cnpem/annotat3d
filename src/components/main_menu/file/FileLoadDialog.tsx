@@ -10,13 +10,11 @@ import {
     IonList,
     IonPopover,
     IonRow,
-    IonSegment,
-    IonSegmentButton,
     IonSelect,
     IonSelectOption,
     IonAccordion,
     IonAccordionGroup,
-    useIonToast
+    useIonToast, IonContent
 } from "@ionic/react";
 import "./FileDialog.css"
 import dataType from "./Dtypes";
@@ -174,7 +172,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setErrorMsg("");
     };
     return (
-        <>
+        <div className={"file-load"}>
             <IonPopover
                 isOpen={showPopover.open}
                 event={showPopover.event}
@@ -182,7 +180,11 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 className={"file-popover"}>
                 {/* Load file accordion */}
                 <small>
-                    <IonAccordionGroup multiple={true}>
+                    <IonContent scrollEvents={true}
+                                onIonScrollStart={() => {}}
+                                onIonScroll={() => {}}
+                                onIonScrollEnd={() => {}}>
+                        <IonAccordionGroup multiple={true}>
                         {/* Load workspace option */}
                         <IonAccordion>
                             <IonItem slot={"header"}>
@@ -389,6 +391,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                             </IonList>
                         </IonAccordion>
                     </IonAccordionGroup>
+                    </IonContent>
                 </small>
                 <IonButton color={"tertiary"} slot={"end"} onClick={handleLoadImageAction}>
                     Load!
@@ -406,7 +409,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
-        </>
+        </div>
     );
 };
 
