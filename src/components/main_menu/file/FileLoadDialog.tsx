@@ -18,12 +18,13 @@ import {
 } from "@ionic/react";
 import "./FileDialog.css"
 import dataType from "./Dtypes";
-import {construct, create, extensionPuzzle, hammer, image, images, options} from "ionicons/icons";
+import {construct, create, extensionPuzzle, image, images} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import ErrorWindowComp from "./ErrorWindowComp";
 import ImageInfoInterface from "./ImageInfoInterface";
 import ErrorInterface from "./ErrorInterface";
+import {LabelInterface} from "../../tools_menu/label_table/LabelInterface";
 
 /**
  * dtypes array
@@ -71,6 +72,28 @@ const dtypeList: dataType[] = [
     }
 ];
 
+type dtype_type =
+    "uint8"
+    | "int16"
+    | "uint16"
+    | "int32"
+    | "uint32"
+    | "int64"
+    | "uint64"
+    | "float32"
+    | "float64"
+    | "complex64";
+
+type img_operation = "image" | "superpixel" | "label";
+
+interface multiplesPath {
+    workspacePath: string,
+    imagePath: string,
+    superpixelPath: string,
+    labelPath: string,
+    annotPath: string,
+}
+
 /**
  * Load Image dialog
  * @param {string} name - Name of the submenu to open this window
@@ -85,21 +108,22 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const [showToast,] = useIonToast();
     const toastTime = 2000;
 
-    const [path, setPath] = useState<string>("");
+    const [pathFiles, setPathFiles] = useState<multiplesPath>({
+        workspacePath: "",
+        imagePath: "",
+        superpixelPath: "",
+        labelPath: "",
+        annotPath: ""
+    })
+
+    const [imgInfo, setImgInfo] = useState<ImageInfoInterface>();
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
-    const [dtype, setDtype] = useState<"uint8" | "int16" | "uint16" | "int32" | "uint32" | "int64" |
-        "uint64" | "float32" | "float64" | "complex64">("uint16");
+    const [dtype, setDtype] = useState<dtype_type>("uint16");
     const [xRange, setXRange] = useState([0, -1]);
     const [yRange, setYRange] = useState([0, -1]);
     const [zRange, setZRange] = useState([0, -1]);
-    const [loadImgOp, setLoadImagOp] = useState<"image" | "label" | "superpixel">("image");
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
-
-    const handleLoadImgOP = (e: CustomEvent) => {
-        const buttonSegName = e.detail!.value!
-        setLoadImagOp(buttonSegName);
-    }
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -109,45 +133,37 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setShowErrorWindow(flag);
     }
 
-    const handleLoadImageAction = () => {
-
+    /**
+     * Function that does the dispatch
+     * @param imgPath
+     * @param loadImgOp
+     */
+    const dispatchOpenImage = (imgPath: string, loadImgOp: img_operation) => {
         const params = {
-            image_path: path,
+            image_path: imgPath,
             image_dtype: dtype,
             image_raw_shape: [imgShapeRaw[0] || 0, imgShapeRaw[1] || 0, imgShapeRaw[2] || 0],
             use_image_raw_parse: (imgShapeRaw[0] == null && imgShapeRaw[1] == null && imgShapeRaw[2] == null),
         }
 
         sfetch("POST", "/open_image/" + loadImgOp, JSON.stringify(params), "json")
-            .then((image) => {
-
+            .then((image: ImageInfoInterface) => {
                 const info: ImageInfoInterface = {
-                    imageShape: image["image_shape"],
-                    imageDtype: image["image_dtype"],
-                    imageName: image["image_name"],
-                    imageExt: image["image_ext"],
+                    imageShape: image.imageShape,
+                    imageDtype: image.imageDtype,
+                    imageName: image.imageName,
+                    imageExt: image.imageExt,
                 }
 
-                if (loadImgOp === "superpixel") {
+                if (loadImgOp === "image") {
+                    setImgInfo(info);
+                } else if (loadImgOp === "superpixel") {
                     dispatch("superpixelChanged", {});
-                } else if (loadImgOp === "label") {
-                    sfetch("POST", "/load_label_from_file_load_dialog/", "", "json").then(
-                        (labelList) => {
-                            console.log("printing the loaded label : ", labelList);
-                            dispatch("LabelLoaded", labelList);
-                        }
-                    ).catch((error: ErrorInterface) => {
-                        //TODO : need to implement an error component here
-                        console.log("error to load the label\n");
-                        console.log(error);
-                    })
                 }
 
                 setShowErrorWindow(false);
                 dispatch("ImageLoaded", info);
                 dispatch("ActivateComponents", false);
-                setShowPopover({...showPopover, open: false});
-                showToast(`Loaded ${image["image_name"]}${image["image_ext"]}`, toastTime);
 
             }).catch((error: ErrorInterface) => {
             setShowErrorWindow(true);
@@ -156,18 +172,75 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
     }
 
+    const handleLoadImageAction = () => {
+        /**
+         * Workspace load operation
+         */
+        if (pathFiles.workspacePath !== "") {
+            const workspaceLoad = {
+                workspace_path: pathFiles.workspacePath,
+            }
+
+            sfetch("POST", "/load_workspace", JSON.stringify(workspaceLoad), "json").then(
+                (workspace_path: string) => {
+                    console.log("Loaded a Workspace in the path ", workspace_path);
+                }
+            ).catch((error: ErrorInterface) => {
+                console.log("Error message while trying to load the Workspace", error.error_msg);
+                setErrorMsg(error.error_msg);
+                setShowErrorWindow(true);
+            })
+        }
+
+        /**
+         *
+         */
+        if (pathFiles.imagePath !== "") {
+            dispatchOpenImage(pathFiles.imagePath, "image");
+        }
+
+        if (pathFiles.superpixelPath !== "") {
+            dispatchOpenImage(pathFiles.superpixelPath, "superpixel");
+        }
+
+        if (pathFiles.labelPath !== "") {
+            dispatchOpenImage(pathFiles.labelPath, "label");
+        }
+
+        setShowPopover({...showPopover, open: false});
+
+        if (pathFiles.annotPath !== "") {
+            const annotPath = {
+                annot_path: pathFiles.annotPath
+            }
+
+            sfetch("POST", "/open_annot", JSON.stringify(annotPath), "json")
+                .then((labelList: LabelInterface[]) => {
+                    console.log("Printing the loaded .pkl label list\n");
+                    console.log(labelList);
+                    setShowPopover({...showPopover, open: false});
+                    dispatch("LabelLoaded", labelList);
+                    dispatch("annotationChanged", null);
+
+                }).catch((error: ErrorInterface) => {
+                //TODO : Need to implement an error and loading component to load an operation
+                console.log("Error trying to load the .pkl label\n");
+                console.log(error);
+            })
+        }
+    }
+
     /**
      * Clean up popover dialog
      */
     const cleanUp = () => {
         setShowPopover({open: false, event: undefined});
-        setPath("");
+        setPathFiles({workspacePath: "", imagePath: "", superpixelPath: "", labelPath: "", annotPath: ""})
         setDtype("uint16");
         setImageShapeRaw([null, null, null]);
         setXRange([0, -1]);
         setYRange([0, -1]);
         setZRange([0, -1]);
-        setLoadImagOp("image");
         setShowErrorWindow(false);
         setErrorMsg("");
     };
@@ -200,8 +273,11 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                         <IonLabel position="stacked">{"Workspace Path"}</IonLabel>
                                         <IonInput
                                             placeholder={"/path/to/Workspace"}
-                                            value={path}
-                                            onIonChange={(e: CustomEvent) => setPath(e.detail.value!)}/>
+                                            value={pathFiles.workspacePath}
+                                            onIonChange={(e: CustomEvent) => setPathFiles({
+                                                ...pathFiles,
+                                                workspacePath: e.detail.value!
+                                            })}/>
                                     </IonItem>
                                 </IonList>
                             </IonAccordion>
@@ -216,9 +292,12 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">Image Path</IonLabel>
                                         <IonInput
-                                            placeholder={"/path/to/file"}
-                                            value={path}
-                                            onIonChange={e => setPath(e.detail.value!)}/>
+                                            placeholder={"/path/to/file.tif, .tiff, .raw or .b"}
+                                            value={pathFiles.imagePath}
+                                            onIonChange={(e: CustomEvent) => setPathFiles({
+                                                ...pathFiles,
+                                                imagePath: e.detail.value!
+                                            })}/>
                                     </IonItem>
                                     {/* Image Size Grid*/}
                                     <IonItem>
@@ -274,8 +353,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                         <IonAccordionGroup>
                                             <IonAccordion>
                                                 <IonItem slot={"header"}>
-                                                    <IonIcon slot={"start"} icon={options}/>
-                                                    <IonLabel><small>Advanced Options</small></IonLabel>
+                                                    <IonLabel slot={"end"}><small>Advanced Options</small></IonLabel>
                                                 </IonItem>
                                                 <IonGrid slot={"content"}>
                                                     {/* Axis Range Grid*/}
@@ -356,9 +434,12 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">{"Superpixel Path"}</IonLabel>
                                         <IonInput
-                                            placeholder={"/path/to/Superpixel"}
-                                            value={path}
-                                            onIonChange={(e: CustomEvent) => setPath(e.detail.value!)}/>
+                                            placeholder={"/path/to/Superpixel.tif, .tiff, .raw or .b"}
+                                            value={pathFiles.superpixelPath}
+                                            onIonChange={(e: CustomEvent) => setPathFiles({
+                                                ...pathFiles,
+                                                superpixelPath: e.detail.value!
+                                            })}/>
                                     </IonItem>
                                 </IonList>
                             </IonAccordion>
@@ -372,9 +453,12 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">{"Label image"}</IonLabel>
                                         <IonInput
-                                            placeholder={"/path/to/Label image"}
-                                            value={path}
-                                            onIonChange={(e: CustomEvent) => setPath(e.detail.value!)}/>
+                                            placeholder={"/path/to/Label.tif, .tiff, .raw or .b"}
+                                            value={pathFiles.labelPath}
+                                            onIonChange={(e: CustomEvent) => setPathFiles({
+                                                ...pathFiles,
+                                                labelPath: e.detail.value!
+                                            })}/>
                                     </IonItem>
                                 </IonList>
                             </IonAccordion>
@@ -388,9 +472,12 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">{"Annotation file"}</IonLabel>
                                         <IonInput
-                                            placeholder={"/path/to/Annotation file"}
-                                            value={path}
-                                            onIonChange={(e: CustomEvent) => setPath(e.detail.value!)}/>
+                                            placeholder={"/path/to/Annotation.pkl"}
+                                            value={pathFiles.annotPath}
+                                            onIonChange={(e: CustomEvent) => setPathFiles({
+                                                ...pathFiles,
+                                                annotPath: e.detail.value!
+                                            })}/>
                                     </IonItem>
                                 </IonList>
                             </IonAccordion>
