@@ -6,7 +6,6 @@ import { dispatch } from '../../utils/eventbus';
 import { sfetch } from '../../utils/simplerequest';
 import ErrorInterface from '../main_menu/file/ErrorInterface';
 import ImageInfoInterface from '../main_menu/file/ImageInfoInterface';
-import { CropInterface } from './CropInterface';
 import { ImageShapeInterface } from './ImageShapeInterface';
 import { ModuleCard } from './ModuleCard';
 
@@ -15,6 +14,11 @@ import { ModuleCard } from './ModuleCard';
 interface SlicesMenuProps {
     imageShape: ImageShapeInterface;
     disabled: boolean
+}
+
+interface CropInterface{
+    lower: number;
+    upper: number;
 }
 
 /**
@@ -26,33 +30,20 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     const [cropX, setCropX] = useStorageState<CropInterface>(sessionStorage, 'cropX', {
         lower: 0,
         upper: props.imageShape.x
-    })
+    });
 
     const [cropY, setCropY] = useStorageState<CropInterface>(sessionStorage, 'cropY', {
         lower: 0,
         upper: props.imageShape.y
-    })
+    });
 
     const [cropZ, setCropZ] = useStorageState<CropInterface>(sessionStorage, 'cropZ', {
         lower: 0,
         upper: props.imageShape.z
-    })
-
-
-    const handleCropX = (e: CustomEvent) => {
-        setCropX(e.detail.value as any);
-    }
-
-    const handleCropY = (e: CustomEvent) => {
-        setCropY(e.detail.value as any);
-    }
-
-    const handleCropZ = (e: CustomEvent) => {
-        setCropZ(e.detail.value as any);
-    }
+    });
 
     function onPreview() {
-        console.log("bruno: yay! Preview!");
+        console.log("bruno: yay! Preview!", cropX, cropY, cropZ);
     };
 
     function onApply() {
@@ -84,7 +75,7 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             // setShowErrorWindow(true);
             // setErrorMsg(error["error_msg"]);
         })
-    }
+    };
     
     function onMerge() {
         console.log("bruno: yay! Merge!");
@@ -98,20 +89,23 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                     <IonLabel>Crop Image</IonLabel>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} value={cropX} min={0} max={props.imageShape.x} step={1} snaps={true} pin={true} debounce={200} onIonChange={handleCropX}>
-                        <IonLabel slot="start">X</IonLabel>
+                    <IonRange dualKnobs={true} value={cropX} min={0} max={props.imageShape.x} step={1} snaps={true} pin={true}
+                        onIonChange={(ex) => { setCropX(ex.detail.value as any) }}>
+                        <IonLabel slot="start"><h2>X</h2></IonLabel>
                     </IonRange>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} value={cropY} min={0} max={props.imageShape.y} step={1} snaps={false} pin={false} debounce={200} onIonChange={handleCropY}>
-                    <IonLabel slot="start">Y</IonLabel>
+                    <IonRange dualKnobs={true} value={cropY} min={0} max={props.imageShape.y} step={1} snaps={true} pin={true}
+                        onIonChange={(ey) => { setCropY(ey.detail.value as any) }}>
+                        <IonLabel slot="start"><h2>Y</h2></IonLabel>
                     </IonRange>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} value={cropZ} min={0} max={props.imageShape.z} step={1} snaps={true} pin={true} debounce={200} onIonChange={handleCropZ}>
-                    <IonLabel slot="start">Z</IonLabel>
+                    <IonRange dualKnobs={true} value={cropZ} min={0} max={props.imageShape.z} step={1} snaps={true} pin={true}
+                        onIonChange={(ez) => { setCropZ(ez.detail.value as any) }}>
+                        <IonLabel slot="start"><h2>Z</h2></IonLabel>
                     </IonRange>
-                </IonItem>
+                </IonItem>                
                 <IonItem>
                     <IonLabel className='ion-text-wrap'>
                         Selected Range:
