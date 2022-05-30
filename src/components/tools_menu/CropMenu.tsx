@@ -23,62 +23,39 @@ interface SlicesMenuProps {
  */
 const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     
-    const [imageCrop, setImageCrop] = useStorageState<CropInterface>(sessionStorage, 'cropIndexes',{
-        xLower: 0, 
-        yLower: 0, 
-        zLower: 0,
-        xUpper: props.imageShape.x, 
-        yUpper: props.imageShape.y, 
-        zUpper: props.imageShape.z
+    const [cropX, setCropX] = useStorageState<CropInterface>(sessionStorage, 'cropX', {
+        lower: 0,
+        upper: props.imageShape.x
     })
 
-    const [cropValX, setCropValX] = useState<{
-        lower: number;
-        upper: number;
-      }>({ lower: 0, upper: 0 });
+    const [cropY, setCropY] = useStorageState<CropInterface>(sessionStorage, 'cropY', {
+        lower: 0,
+        upper: props.imageShape.y
+    })
 
-    const [cropValY, setCropValY] = useState<{
-        lower: number;
-        upper: number;
-    }>({ lower: 0, upper: 0 });
+    const [cropZ, setCropZ] = useStorageState<CropInterface>(sessionStorage, 'cropZ', {
+        lower: 0,
+        upper: props.imageShape.z
+    })
 
-    const [cropValZ, setCropValZ] = useState<{
-        lower: number;
-        upper: number;
-    }>({ lower: 0, upper: 0 });
-
-    const updateCrop = () => {
-        const newCrop: CropInterface = {
-            xLower: cropValX.lower, 
-            yLower: cropValY.lower, 
-            zLower: cropValZ.lower,
-            xUpper: cropValX.upper, 
-            yUpper: cropValY.upper, 
-            zUpper: cropValZ.upper
-        }
-        setImageCrop(newCrop);
-    };
 
     const handleCropX = (e: CustomEvent) => {
-        setCropValX(e.detail.value as any);
-        updateCrop();
+        setCropX(e.detail.value as any);
     }
 
     const handleCropY = (e: CustomEvent) => {
-        setCropValY(e.detail.value as any);
-        updateCrop();
+        setCropY(e.detail.value as any);
     }
 
     const handleCropZ = (e: CustomEvent) => {
-        setCropValZ(e.detail.value as any);
-        updateCrop();
+        setCropZ(e.detail.value as any);
     }
 
-    useEffect(() => {
-        dispatch('toggleCropChanged', {
-            crop: imageCrop
-        });
-    })
+    // useEffect(() => {
+    //     dispatch('toggleCropChanged', {
+    //         crop: imageCrop
+    //     });
+    // })
 
     // const [imageInfo, setImageInfo] = useStorageState<ImageInfoInterface>(sessionStorage, 'imageInfo');
     // useEventBus('ImageLoaded', (imgInfo) => {
@@ -92,7 +69,9 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     function onApply() {
 
         const params = {
-            cropIndexes: imageCrop,
+            cropX: cropX,
+            cropY: cropY,
+            cropZ: cropZ
         };
 
 
@@ -135,22 +114,27 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                     <IonLabel>Crop Image</IonLabel>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} min={0} max={props.imageShape.x} step={1} snaps={false} onIonChange={handleCropX}>
+                    <IonRange dualKnobs={true} value={cropX} min={0} max={props.imageShape.x} step={1} snaps={true} pin={true} debounce={100} onIonChange={handleCropX}>
                         <IonLabel slot="start">X</IonLabel>
                     </IonRange>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} min={0} max={props.imageShape.y} step={1} snaps={false} onIonChange={handleCropY}>
+                    <IonRange dualKnobs={true} value={cropY} min={0} max={props.imageShape.y} step={1} snaps={true} pin={true} debounce={100} onIonChange={handleCropY}>
                     <IonLabel slot="start">Y</IonLabel>
                     </IonRange>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} min={0} max={props.imageShape.z} step={1} snaps={false} onIonChange={handleCropZ}>
+                    <IonRange dualKnobs={true} value={cropZ} min={0} max={props.imageShape.z} step={1} snaps={true} pin={true} debounce={100} onIonChange={handleCropZ}>
                     <IonLabel slot="start">Z</IonLabel>
                     </IonRange>
                 </IonItem>
                 <IonItem>
-                    <IonLabel>Selected Range: ({imageCrop.xLower}:{imageCrop.xUpper}, {imageCrop.yLower}:{imageCrop.yUpper}, {imageCrop.zLower}:{imageCrop.zUpper}) </IonLabel>
+                    <IonLabel className='ion-text-wrap'>
+                        Selected Range:
+                        <p>
+                            ({cropX.lower}:{cropX.upper}, {cropY.lower}:{cropY.upper}, {cropZ.lower}:{cropZ.upper})
+                        </p>
+                    </IonLabel>
                 </IonItem>
             </ModuleCard>
         </Fragment>

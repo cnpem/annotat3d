@@ -3,10 +3,6 @@
  */
 
 export interface CropInterface{
-    xLower: number;
-    xUpper: number;
-    yLower: number;
-    yUpper: number;
-    zLower: number;
-    zUpper: number;
+    lower: number;
+    upper: number;
 }
