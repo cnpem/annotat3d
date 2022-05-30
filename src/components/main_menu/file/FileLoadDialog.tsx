@@ -13,12 +13,11 @@ import {
     IonSelect,
     IonSelectOption,
     IonAccordion,
-    IonAccordionGroup,
-    useIonToast, IonContent
+    IonAccordionGroup, IonContent
 } from "@ionic/react";
 import "./FileDialog.css"
 import dataType from "./Dtypes";
-import {construct, create, extensionPuzzle, image, images} from "ionicons/icons";
+import {create, extensionPuzzle, image, images} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import ErrorWindowComp from "./ErrorWindowComp";
@@ -105,8 +104,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         event: undefined,
     });
 
-    const [showToast,] = useIonToast();
-    const toastTime = 2000;
     const [pathFiles, setPathFiles] = useState<multiplesPath>({
         workspacePath: "",
         imagePath: "",
@@ -115,7 +112,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         annotPath: ""
     })
 
-    const [imgInfo, setImgInfo] = useState<ImageInfoInterface>();
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
     const [dtype, setDtype] = useState<dtype_type>("uint16");
     const [xRange, setXRange] = useState([0, -1]);
@@ -136,7 +132,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
      * Function that does the dispatch
      * @param imgPath
      * @param loadImgOp
-     * @return {string}
      */
     const dispatchOpenImage = (imgPath: string, loadImgOp: img_operation) => {
         const params = {
@@ -155,9 +150,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                     imageExt: image.imageExt,
                 }
 
-                if (loadImgOp === "image") {
-                    setImgInfo(info);
-                } else if (loadImgOp === "superpixel") {
+                if (loadImgOp === "superpixel") {
                     dispatch("superpixelChanged", {});
                 }
 
@@ -172,21 +165,15 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             setErrorMsg(error.error_msg);
         });
 
-        return `image loaded as ${loadImgOp}`;
-
     }
 
     const dispatchOpenAnnot = () => {
-
-        let test = false;
-
         const annotPath = {
             annot_path: pathFiles.annotPath
         }
 
         sfetch("POST", "/open_annot", JSON.stringify(annotPath), "json")
             .then((labelList: LabelInterface[]) => {
-                test = true;
                 console.log("Printing the loaded .pkl label list\n");
                 console.log(labelList);
                 dispatch("LabelLoaded", labelList);
@@ -198,9 +185,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             setShowErrorWindow(true);
         })
 
-        console.log("test ; ", test);
-        return "loaded";
-
     }
 
     const handleLoadImageAction = () => {
@@ -208,25 +192,21 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
          * Dispatch for images, label and superpixel
          */
 
-        let stringTest = ["", "", "", ""];
-
         if (pathFiles.imagePath !== "") {
-            stringTest[0] = dispatchOpenImage(pathFiles.imagePath, "image");
+            dispatchOpenImage(pathFiles.imagePath, "image");
         }
 
         if (pathFiles.superpixelPath !== "") {
-            stringTest[1] = dispatchOpenImage(pathFiles.superpixelPath, "superpixel");
+            dispatchOpenImage(pathFiles.superpixelPath, "superpixel");
         }
 
         if (pathFiles.labelPath !== "") {
-            stringTest[2] = dispatchOpenImage(pathFiles.labelPath, "label");
+            dispatchOpenImage(pathFiles.labelPath, "label");
         }
 
         if (pathFiles.annotPath !== "") {
-            stringTest[3] = dispatchOpenAnnot();
+            dispatchOpenAnnot();
         }
-
-        console.log("test : ", stringTest);
 
     }
 
@@ -339,27 +319,26 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                 <IonGrid slot={"content"}>
                                                     {/* Axis Range Grid*/}
                                                     <IonItemDivider> Axis Ranges</IonItemDivider>
-
-                                                    /** <IonRow>
-                                                    <IonCol>
-                                                        <IonInput
-                                                            type="number"
-                                                            min={"0"}
-                                                            value={xRange[0]}
-                                                            placeholder="X0"
-                                                            onIonChange={e => setXRange([parseInt(e.detail.value!, 10), xRange[1]])}
-                                                        />
-                                                    </IonCol>
-                                                    <IonCol>
-                                                        <IonInput
-                                                            type="number"
-                                                            min={"-1"}
-                                                            value={xRange[1]}
-                                                            placeholder="X1"
-                                                            onIonChange={e => setXRange([xRange[0], parseInt(e.detail.value!, 10)])}
-                                                        />
-                                                    </IonCol>
-                                                </IonRow>
+                                                    <IonRow>
+                                                        <IonCol>
+                                                            <IonInput
+                                                                type="number"
+                                                                min={"0"}
+                                                                value={xRange[0]}
+                                                                placeholder="X0"
+                                                                onIonChange={e => setXRange([parseInt(e.detail.value!, 10), xRange[1]])}
+                                                            />
+                                                        </IonCol>
+                                                        <IonCol>
+                                                            <IonInput
+                                                                type="number"
+                                                                min={"-1"}
+                                                                value={xRange[1]}
+                                                                placeholder="X1"
+                                                                onIonChange={e => setXRange([xRange[0], parseInt(e.detail.value!, 10)])}
+                                                            />
+                                                        </IonCol>
+                                                    </IonRow>
                                                     <IonRow>
                                                         <IonCol>
                                                             <IonInput
