@@ -1,5 +1,5 @@
 import { IonItem, IonLabel, IonRange } from '@ionic/react';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 
 import { dispatch } from '../../utils/eventbus';

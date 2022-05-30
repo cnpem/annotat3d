@@ -868,9 +868,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             };
 
             this.onImageLoaded = () => {
-                console.log('onImageLoaded');
                 const promise = this.fetchAll(true);
-                console.log("bruno: promise: ",promise);
                 promise?.then(() => {
                     this.newAnnotation();
                 });

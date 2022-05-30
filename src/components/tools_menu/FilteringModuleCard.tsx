@@ -7,7 +7,7 @@ import LoadingComponent from "./LoadingComponent";
 import {ModuleCard, ModuleCardItem} from "./ModuleCard";
 
 function onApplyThen(info : {slice: number, axis: string}) {
-    console.log("bruno: dispatch slice changed Gaussian then: ", info);
+    // bruno: what else do I need to dispatch here? #new issue created for this
     dispatch('futureChanged', info);    
 };
 
