@@ -1,21 +1,17 @@
-import {
-    IonItem, IonLabel,
-    IonRange, IonToggle
-} from "@ionic/react";
+import { IonItem, IonLabel, IonRange } from '@ionic/react';
+import { Fragment, useEffect, useState } from 'react';
+import { useStorageState } from 'react-storage-hooks';
 
+import { dispatch } from '../../utils/eventbus';
+import { sfetch } from '../../utils/simplerequest';
+import ErrorInterface from '../main_menu/file/ErrorInterface';
+import ImageInfoInterface from '../main_menu/file/ImageInfoInterface';
+import { CropInterface } from './CropInterface';
 import { ImageShapeInterface } from './ImageShapeInterface';
+import { ModuleCard } from './ModuleCard';
 
-import { dispatch, useEventBus } from '../../utils/eventbus';
 // import { dispatch, useEventBus } from '../../utils/eventbus';
 // import { SliceInfoInterface } from "./SliceInfoInterface";
-import { useStorageState } from "react-storage-hooks";
-import { Fragment, useEffect, useState } from "react";
-import { CropInterface } from "./CropInterface";
-import { ModuleCard } from "./ModuleCard";
-import { sfetch } from "../../utils/simplerequest";
-import ImageInfoInterface from "../main_menu/file/ImageInfoInterface";
-import ErrorInterface from "../main_menu/file/ErrorInterface";
-
 interface SlicesMenuProps {
     imageShape: ImageShapeInterface;
     disabled: boolean
@@ -26,8 +22,6 @@ interface SlicesMenuProps {
  * @constructor
  */
 const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
-
-    const [toggleCrop, setToggleCrop] = useStorageState<boolean>(sessionStorage, 'toggleCrop', false);
     
     const [imageCrop, setImageCrop] = useStorageState<CropInterface>(sessionStorage, 'cropIndexes',{
         xLower: 0, 
@@ -86,10 +80,10 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         });
     })
 
-    const [imageInfo, setImageInfo] = useStorageState<ImageInfoInterface>(sessionStorage, 'imageInfo');
-    useEventBus('ImageLoaded', (imgInfo) => {
-        setImageInfo(imgInfo);
-    })
+    // const [imageInfo, setImageInfo] = useStorageState<ImageInfoInterface>(sessionStorage, 'imageInfo');
+    // useEventBus('ImageLoaded', (imgInfo) => {
+    //     setImageInfo(imgInfo);
+    // })
 
     function onPreview() {
         console.log("bruno: yay! Preview!");
