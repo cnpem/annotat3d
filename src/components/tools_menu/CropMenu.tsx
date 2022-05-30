@@ -51,17 +51,6 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         setCropZ(e.detail.value as any);
     }
 
-    // useEffect(() => {
-    //     dispatch('toggleCropChanged', {
-    //         crop: imageCrop
-    //     });
-    // })
-
-    // const [imageInfo, setImageInfo] = useStorageState<ImageInfoInterface>(sessionStorage, 'imageInfo');
-    // useEventBus('ImageLoaded', (imgInfo) => {
-    //     setImageInfo(imgInfo);
-    // })
-
     function onPreview() {
         console.log("bruno: yay! Preview!");
     };
@@ -74,11 +63,6 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             cropZ: cropZ
         };
 
-
-
-        // setDisabled(true);
-        // setShowLoadingComp(true);
-        // setLoadingMsg("Applying");
 
         sfetch("POST", "/crop_image/image", JSON.stringify(params), "json")
         .then((img_info) => {
@@ -114,17 +98,17 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                     <IonLabel>Crop Image</IonLabel>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} value={cropX} min={0} max={props.imageShape.x} step={1} snaps={true} pin={true} debounce={100} onIonChange={handleCropX}>
+                    <IonRange dualKnobs={true} value={cropX} min={0} max={props.imageShape.x} step={1} snaps={true} pin={true} debounce={200} onIonChange={handleCropX}>
                         <IonLabel slot="start">X</IonLabel>
                     </IonRange>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} value={cropY} min={0} max={props.imageShape.y} step={1} snaps={true} pin={true} debounce={100} onIonChange={handleCropY}>
+                    <IonRange dualKnobs={true} value={cropY} min={0} max={props.imageShape.y} step={1} snaps={false} pin={false} debounce={200} onIonChange={handleCropY}>
                     <IonLabel slot="start">Y</IonLabel>
                     </IonRange>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} value={cropZ} min={0} max={props.imageShape.z} step={1} snaps={true} pin={true} debounce={100} onIonChange={handleCropZ}>
+                    <IonRange dualKnobs={true} value={cropZ} min={0} max={props.imageShape.z} step={1} snaps={true} pin={true} debounce={200} onIonChange={handleCropZ}>
                     <IonLabel slot="start">Z</IonLabel>
                     </IonRange>
                 </IonItem>
