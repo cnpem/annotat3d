@@ -107,7 +107,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
     const [showToast,] = useIonToast();
     const toastTime = 2000;
-
     const [pathFiles, setPathFiles] = useState<multiplesPath>({
         workspacePath: "",
         imagePath: "",
@@ -137,6 +136,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
      * Function that does the dispatch
      * @param imgPath
      * @param loadImgOp
+     * @return {string}
      */
     const dispatchOpenImage = (imgPath: string, loadImgOp: img_operation) => {
         const params = {
@@ -166,68 +166,68 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 dispatch("ActivateComponents", false);
 
             }).catch((error: ErrorInterface) => {
+            console.log("error while loading the ", loadImgOp);
+            console.log(error.error_msg);
             setShowErrorWindow(true);
-            setErrorMsg(error["error_msg"]);
+            setErrorMsg(error.error_msg);
+        });
+
+        return `image loaded as ${loadImgOp}`;
+
+    }
+
+    const dispatchOpenAnnot = () => {
+
+        let test = false;
+
+        const annotPath = {
+            annot_path: pathFiles.annotPath
+        }
+
+        sfetch("POST", "/open_annot", JSON.stringify(annotPath), "json")
+            .then((labelList: LabelInterface[]) => {
+                test = true;
+                console.log("Printing the loaded .pkl label list\n");
+                console.log(labelList);
+                dispatch("LabelLoaded", labelList);
+                dispatch("annotationChanged", null);
+
+            }).catch((error: ErrorInterface) => {
+            console.log("Error message while trying to open the Annotation", error.error_msg);
+            setErrorMsg(error.error_msg);
+            setShowErrorWindow(true);
         })
+
+        console.log("test ; ", test);
+        return "loaded";
 
     }
 
     const handleLoadImageAction = () => {
         /**
-         * Workspace load operation
+         * Dispatch for images, label and superpixel
          */
-        if (pathFiles.workspacePath !== "") {
-            const workspaceLoad = {
-                workspace_path: pathFiles.workspacePath,
-            }
 
-            sfetch("POST", "/load_workspace", JSON.stringify(workspaceLoad), "json").then(
-                (workspace_path: string) => {
-                    console.log("Loaded a Workspace in the path ", workspace_path);
-                }
-            ).catch((error: ErrorInterface) => {
-                console.log("Error message while trying to load the Workspace", error.error_msg);
-                setErrorMsg(error.error_msg);
-                setShowErrorWindow(true);
-            })
-        }
+        let stringTest = ["", "", "", ""];
 
-        /**
-         *
-         */
         if (pathFiles.imagePath !== "") {
-            dispatchOpenImage(pathFiles.imagePath, "image");
+            stringTest[0] = dispatchOpenImage(pathFiles.imagePath, "image");
         }
 
         if (pathFiles.superpixelPath !== "") {
-            dispatchOpenImage(pathFiles.superpixelPath, "superpixel");
+            stringTest[1] = dispatchOpenImage(pathFiles.superpixelPath, "superpixel");
         }
 
         if (pathFiles.labelPath !== "") {
-            dispatchOpenImage(pathFiles.labelPath, "label");
+            stringTest[2] = dispatchOpenImage(pathFiles.labelPath, "label");
         }
-
-        setShowPopover({...showPopover, open: false});
 
         if (pathFiles.annotPath !== "") {
-            const annotPath = {
-                annot_path: pathFiles.annotPath
-            }
-
-            sfetch("POST", "/open_annot", JSON.stringify(annotPath), "json")
-                .then((labelList: LabelInterface[]) => {
-                    console.log("Printing the loaded .pkl label list\n");
-                    console.log(labelList);
-                    setShowPopover({...showPopover, open: false});
-                    dispatch("LabelLoaded", labelList);
-                    dispatch("annotationChanged", null);
-
-                }).catch((error: ErrorInterface) => {
-                //TODO : Need to implement an error and loading component to load an operation
-                console.log("Error trying to load the .pkl label\n");
-                console.log(error);
-            })
+            stringTest[3] = dispatchOpenAnnot();
         }
+
+        console.log("test : ", stringTest);
+
     }
 
     /**
@@ -262,25 +262,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                         onIonScrollEnd={() => {
                         }}>
                         <IonAccordionGroup multiple={true}>
-                            {/* Load workspace option */}
-                            <IonAccordion>
-                                <IonItem slot={"header"}>
-                                    <IonIcon slot={"start"} icon={construct}/>
-                                    <IonLabel><small>Load Workspace</small></IonLabel>
-                                </IonItem>
-                                <IonList slot="content">
-                                    <IonItem>
-                                        <IonLabel position="stacked">{"Workspace Path"}</IonLabel>
-                                        <IonInput
-                                            placeholder={"/path/to/Workspace"}
-                                            value={pathFiles.workspacePath}
-                                            onIonChange={(e: CustomEvent) => setPathFiles({
-                                                ...pathFiles,
-                                                workspacePath: e.detail.value!
-                                            })}/>
-                                    </IonItem>
-                                </IonList>
-                            </IonAccordion>
                             {/* Load image option */}
                             <IonAccordion>
                                 <IonItem slot={"header"}>
@@ -358,26 +339,27 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                 <IonGrid slot={"content"}>
                                                     {/* Axis Range Grid*/}
                                                     <IonItemDivider> Axis Ranges</IonItemDivider>
-                                                    <IonRow>
-                                                        <IonCol>
-                                                            <IonInput
-                                                                type="number"
-                                                                min={"0"}
-                                                                value={xRange[0]}
-                                                                placeholder="X0"
-                                                                onIonChange={e => setXRange([parseInt(e.detail.value!, 10), xRange[1]])}
-                                                            />
-                                                        </IonCol>
-                                                        <IonCol>
-                                                            <IonInput
-                                                                type="number"
-                                                                min={"-1"}
-                                                                value={xRange[1]}
-                                                                placeholder="X1"
-                                                                onIonChange={e => setXRange([xRange[0], parseInt(e.detail.value!, 10)])}
-                                                            />
-                                                        </IonCol>
-                                                    </IonRow>
+
+                                                    /** <IonRow>
+                                                    <IonCol>
+                                                        <IonInput
+                                                            type="number"
+                                                            min={"0"}
+                                                            value={xRange[0]}
+                                                            placeholder="X0"
+                                                            onIonChange={e => setXRange([parseInt(e.detail.value!, 10), xRange[1]])}
+                                                        />
+                                                    </IonCol>
+                                                    <IonCol>
+                                                        <IonInput
+                                                            type="number"
+                                                            min={"-1"}
+                                                            value={xRange[1]}
+                                                            placeholder="X1"
+                                                            onIonChange={e => setXRange([xRange[0], parseInt(e.detail.value!, 10)])}
+                                                        />
+                                                    </IonCol>
+                                                </IonRow>
                                                     <IonRow>
                                                         <IonCol>
                                                             <IonInput
