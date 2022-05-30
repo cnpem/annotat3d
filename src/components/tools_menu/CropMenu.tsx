@@ -89,20 +89,20 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                     <IonLabel>Crop Image</IonLabel>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} value={cropX} min={0} max={props.imageShape.x} step={1} snaps={true} pin={true}
-                        onIonChange={(ex) => { setCropX(ex.detail.value as any) }}>
+                    <IonRange name={'cropRangeX'} dualKnobs={true} value={cropX} min={0} max={props.imageShape.x} step={1} snaps={true} pin={true} ticks={false}
+                        onIonKnobMoveEnd={(ex) => { setCropX(ex.detail.value as any) }}>
                         <IonLabel slot="start"><h2>X</h2></IonLabel>
                     </IonRange>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} value={cropY} min={0} max={props.imageShape.y} step={1} snaps={true} pin={true}
-                        onIonChange={(ey) => { setCropY(ey.detail.value as any) }}>
+                    <IonRange name={'cropRangeY'} dualKnobs={true} value={cropY} min={0} max={props.imageShape.y} step={1} snaps={true} pin={true} ticks={false}
+                        onIonKnobMoveEnd={(ey) => { setCropY(ey.detail.value as any) }}>
                         <IonLabel slot="start"><h2>Y</h2></IonLabel>
                     </IonRange>
                 </IonItem>
                 <IonItem>
-                    <IonRange dualKnobs={true} value={cropZ} min={0} max={props.imageShape.z} step={1} snaps={true} pin={true}
-                        onIonChange={(ez) => { setCropZ(ez.detail.value as any) }}>
+                    <IonRange name={'cropRangeZ'} dualKnobs={true} value={cropZ} min={0} max={props.imageShape.z} step={1} snaps={true} pin={true} ticks={false}
+                        onIonKnobMoveEnd={(ez) => { setCropZ(ez.detail.value as any) }}>
                         <IonLabel slot="start"><h2>Z</h2></IonLabel>
                     </IonRange>
                 </IonItem>                
