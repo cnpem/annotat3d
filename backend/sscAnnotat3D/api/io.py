@@ -6,6 +6,7 @@ import sscIO.io
 import numpy as np
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D.modules import annotation_module
+from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 
 from flask_cors import cross_origin
 
@@ -100,7 +101,6 @@ def close_image(image_id: str):
     return "success on deleting the image !", 200
 
 
-#TODO: need to implement a better error message
 @app.route("/save_image/<image_id>", methods=["POST"])
 @cross_origin()
 def save_image(image_id: str):
@@ -130,3 +130,61 @@ def save_image(image_id: str):
                   "image_name": save_status["file_name"], "image_dtype": image_dtype}
 
     return jsonify(image_info)
+
+@app.route("/open_new_workspace", methods=["POST"])
+@cross_origin()
+def open_new_workspace():
+    """
+    Function that opens a new workspace
+
+    Notes:
+        the request.json["workspace_path"] receives only the parameter "selected_labels"(str)
+
+    Returns:
+        (str): returns a string that contains the new workspace path
+
+    """
+    try:
+        workspace_path = request.json["workspace_path"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    if (workspace_path == ""):
+        return handle_exception("Empty path isn't valid !")
+
+    deep_model = DeepLearningWorkspaceDialog()
+    save_status, error_desc = deep_model.open_new_workspace(workspace_path)
+
+    if (save_status):
+        data_repo.set_deep_model(data={"deep_model_path": workspace_path})
+        return jsonify(workspace_path)
+
+    return handle_exception("unable to create the Workspace ! : {}".format(error_desc))
+
+@app.route("/load_workspace", methods=["POST"])
+@cross_origin()
+def load_workspace():
+    """
+    Function that loads a created workspace
+
+    Notes:
+        the request.json["workspace_path"] receives only the parameter "selected_labels"(str)
+
+    Returns:
+        (str): returns a string that contains the loaded workspace path
+
+    """
+    try:
+        workspace_path = request.json["workspace_path"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    deep_model = DeepLearningWorkspaceDialog()
+    check_valid_workspace = deep_model.check_workspace(workspace_path)
+
+    if(check_valid_workspace):
+        data_repo.set_deep_model(data={"deep_model_path": workspace_path})
+        return jsonify(check_valid_workspace)
+
+    return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
+

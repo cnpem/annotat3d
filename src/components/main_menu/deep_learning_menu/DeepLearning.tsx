@@ -1,16 +1,16 @@
 import React from "react";
-import {MenuItem} from "./MenuItems";
+import {MenuItem} from "../MenuItems";
 import {layersOutline, layersSharp} from "ionicons/icons";
 import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
+import WorkspaceComp from "./WorkspaceComp";
+import DatasetDialog from "./DatasetDialog";
 
 /**
- * Deep Learning component
- * @constructor
+ * Deep Learning component menu
  */
 const DeepLearning: React.FC = () => {
     /**
      * component items
-     * TODO: maybe rethink this whole item's design
      */
     const items: MenuItem = {
         title: 'Deep Learning',
@@ -30,11 +30,14 @@ const DeepLearning: React.FC = () => {
                 <IonLabel>{items.title}</IonLabel>
             </IonItem>
             <IonList slot={"content"}>
-                {items.subItems.map((subItem) => {
-                    return (
-                        <IonItem button>{subItem}</IonItem>
-                    );
-                })}
+                {/*Workspace menu*/}
+                <WorkspaceComp/>
+
+                {/*Dataset menu*/}
+                <DatasetDialog/>
+
+                {/*Network menu*/}
+                {/*Batch Inference menu*/}
             </IonList>
         </IonAccordion>
     );
