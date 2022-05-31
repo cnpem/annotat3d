@@ -13,11 +13,11 @@ import {
     IonSelect,
     IonSelectOption,
     IonAccordion,
-    IonAccordionGroup, IonContent
+    IonAccordionGroup, IonContent, IonToast
 } from "@ionic/react";
 import "./FileDialog.css"
 import dataType from "./Dtypes";
-import {create, extensionPuzzle, image, images} from "ionicons/icons";
+import {create, extensionPuzzle, image, images, information} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import ErrorWindowComp from "./ErrorWindowComp";
@@ -93,6 +93,11 @@ interface multiplesPath {
     annotPath: string,
 }
 
+interface QueueToast {
+    message: string,
+    isError: boolean,
+}
+
 /**
  * Load Image dialog
  * @param {string} name - Name of the submenu to open this window
@@ -112,6 +117,9 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         annotPath: ""
     })
 
+    const [showToast, setShowToast] = useState<boolean>(false);
+    const [toastMsg, setToastMsg] = useState<string>("");
+    const toastTime = 2000;
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
     const [dtype, setDtype] = useState<dtype_type>("uint16");
     const [xRange, setXRange] = useState([0, -1]);
@@ -133,7 +141,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
      * @param imgPath
      * @param loadImgOp
      */
-    const dispatchOpenImage = (imgPath: string, loadImgOp: img_operation) => {
+    const dispatchOpenImage = async (imgPath: string, loadImgOp: img_operation) => {
         const params = {
             image_path: imgPath,
             image_dtype: dtype,
@@ -141,8 +149,13 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             use_image_raw_parse: (imgShapeRaw[0] == null && imgShapeRaw[1] == null && imgShapeRaw[2] == null),
         }
 
-        sfetch("POST", "/open_image/" + loadImgOp, JSON.stringify(params), "json")
+        let msgReturned = "";
+        let isError = false;
+        await sfetch("POST", "/open_image/" + loadImgOp, JSON.stringify(params), "json")
             .then((image: ImageInfoInterface) => {
+                const imgName = imgPath.split("/");
+                msgReturned = `${imgName[imgName.length - 1]} loaded as ${loadImgOp}`;
+
                 const info: ImageInfoInterface = {
                     imageShape: image.imageShape,
                     imageDtype: image.imageDtype,
@@ -159,54 +172,104 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 dispatch("ActivateComponents", false);
 
             }).catch((error: ErrorInterface) => {
-            console.log("error while loading the ", loadImgOp);
-            console.log(error.error_msg);
-            setShowErrorWindow(true);
-            setErrorMsg(error.error_msg);
-        });
+                msgReturned = error.error_msg;
+                isError = true;
+                console.log("error while loading the ", loadImgOp);
+                console.log(error.error_msg);
+                setShowErrorWindow(true);
+                setErrorMsg(error.error_msg);
+            });
+
+        const returnedObj: QueueToast = {message: msgReturned, isError: isError};
+        return returnedObj;
 
     }
 
-    const dispatchOpenAnnot = () => {
+    const dispatchOpenAnnot = async () => {
         const annotPath = {
             annot_path: pathFiles.annotPath
         }
-
-        sfetch("POST", "/open_annot", JSON.stringify(annotPath), "json")
+        let msgReturned = "";
+        let isError = false;
+        await sfetch("POST", "/open_annot", JSON.stringify(annotPath), "json")
             .then((labelList: LabelInterface[]) => {
+                const imgName = pathFiles.annotPath.split("/");
+                msgReturned = `${imgName[imgName.length - 1]} loaded as annotation`;
                 console.log("Printing the loaded .pkl label list\n");
                 console.log(labelList);
                 dispatch("LabelLoaded", labelList);
                 dispatch("annotationChanged", null);
 
             }).catch((error: ErrorInterface) => {
-            console.log("Error message while trying to open the Annotation", error.error_msg);
-            setErrorMsg(error.error_msg);
-            setShowErrorWindow(true);
-        })
+                msgReturned = error.error_msg;
+                isError = true;
+                console.log("Error message while trying to open the Annotation", error.error_msg);
+                setErrorMsg(error.error_msg);
+                setShowErrorWindow(true);
+            });
+        const returnedObj: QueueToast = {message: msgReturned, isError: isError};
+        return returnedObj;
 
     }
 
-    const handleLoadImageAction = () => {
+    const handleLoadImageAction = async () => {
         /**
          * Dispatch for images, label and superpixel
          */
 
+        let queueToast: QueueToast[] = [{
+            message: "",
+            isError: false
+        }, {
+            message: "",
+            isError: false
+        }, {
+            message: "",
+            isError: false
+        }, {
+            message: "",
+            isError: false
+        }];
+
         if (pathFiles.imagePath !== "") {
-            dispatchOpenImage(pathFiles.imagePath, "image");
+            const promise = dispatchOpenImage(pathFiles.imagePath, "image");
+            await promise.then((item: QueueToast) => {
+                queueToast[0] = item;
+            })
         }
 
         if (pathFiles.superpixelPath !== "") {
-            dispatchOpenImage(pathFiles.superpixelPath, "superpixel");
+            const promise = dispatchOpenImage(pathFiles.superpixelPath, "superpixel");
+            await promise.then((item: QueueToast) => {
+                queueToast[1] = item;
+            })
         }
 
         if (pathFiles.labelPath !== "") {
-            dispatchOpenImage(pathFiles.labelPath, "label");
+            const promise = dispatchOpenImage(pathFiles.labelPath, "label");
+            await promise.then((item: QueueToast) => {
+                queueToast[2] = item;
+            })
         }
 
         if (pathFiles.annotPath !== "") {
-            dispatchOpenAnnot();
+            const promise = dispatchOpenAnnot();
+            await promise.then((item: QueueToast) => {
+                queueToast[3] = item;
+            })
         }
+
+        let finalMsg = "";
+        const flagShowToast = (!queueToast[0].isError || !queueToast[1].isError || !queueToast[2].isError);
+
+        for (let i = 0; i < queueToast.length; i++) {
+            if (queueToast[i].message !== "" && !queueToast[i].isError) {
+                finalMsg += `${queueToast[i].message}\n || `;
+            }
+        }
+
+        setToastMsg(finalMsg);
+        setShowToast(flagShowToast);
 
     }
 
@@ -223,6 +286,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setZRange([0, -1]);
         setShowErrorWindow(false);
         setErrorMsg("");
+        setToastMsg("");
+        setShowToast(false);
     };
     return (
         <>
@@ -461,6 +526,13 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <IonToast
+                isOpen={showToast}
+                onDidDismiss={() => setShowToast(false)}
+                message={toastMsg}
+                icon={information}
+                duration={toastTime}
+            />
         </>
     );
 };
