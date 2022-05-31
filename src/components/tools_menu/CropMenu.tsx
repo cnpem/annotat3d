@@ -6,6 +6,7 @@ import { dispatch } from '../../utils/eventbus';
 import { sfetch } from '../../utils/simplerequest';
 import ErrorInterface from '../main_menu/file/ErrorInterface';
 import ImageInfoInterface from '../main_menu/file/ImageInfoInterface';
+import CropShapeInterface from './CropShapeInterface';
 import { ImageShapeInterface } from './ImageShapeInterface';
 import { ModuleCard } from './ModuleCard';
 
@@ -16,34 +17,39 @@ interface SlicesMenuProps {
     disabled: boolean
 }
 
-interface CropInterface{
-    lower: number;
-    upper: number;
-}
-
 /**
  * @param props
  * @constructor
  */
 const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     
-    const [cropX, setCropX] = useStorageState<CropInterface>(sessionStorage, 'cropX', {
+    const [cropX, setCropX] = useStorageState<CropShapeInterface>(sessionStorage, 'cropX', {
         lower: 0,
         upper: props.imageShape.x
     });
 
-    const [cropY, setCropY] = useStorageState<CropInterface>(sessionStorage, 'cropY', {
+    const [cropY, setCropY] = useStorageState<CropShapeInterface>(sessionStorage, 'cropY', {
         lower: 0,
         upper: props.imageShape.y
     });
 
-    const [cropZ, setCropZ] = useStorageState<CropInterface>(sessionStorage, 'cropZ', {
+    const [cropZ, setCropZ] = useStorageState<CropShapeInterface>(sessionStorage, 'cropZ', {
         lower: 0,
         upper: props.imageShape.z
     });
 
     function onPreview() {
         console.log("bruno: yay! Preview!", cropX, cropY, cropZ);
+        const params = {
+            cropX: cropX,
+            cropY: cropY,
+            // cropZ: cropZ, // testing
+            /* o que mais? 
+            axis: 
+            slice: 
+            */
+        };
+        dispatch('cropPreviewMode', params); 
     };
 
     function onApply() {

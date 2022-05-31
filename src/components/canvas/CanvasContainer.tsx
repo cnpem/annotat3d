@@ -17,6 +17,7 @@ import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
 import {dispatch, subscribe, unsubscribe} from '../../utils/eventbus';
 import {defaultColormap} from '../../utils/colormap';
+import CropShapeInterface from '../tools_menu/CropShapeInterface';
 
 class Brush {
 
@@ -200,6 +201,7 @@ class Annotation {
 
 
 class Canvas {
+    /* ... */
 
     app: PIXI.Application;
     viewport: pixi_viewport.Viewport;
@@ -432,6 +434,13 @@ class Canvas {
         }
     }
 
+    cropPreview(cropX: CropShapeInterface, cropY: CropShapeInterface) {
+        console.log('bruno: did I made it to here? cropPreview on Canvas');
+        if (this.imgData) {
+            this.setRegionOfInterestImage(this.imgData, cropX, cropY);
+        }
+    }    
+
     draw(currPosition: PIXI.Point) : [number, number][] {
 
         const context = this.annotation.context;
@@ -599,6 +608,66 @@ class Canvas {
         return uint8data;
     }
 
+    private setContrastInRegion(img: NdArray<TypedArray>, cropX: CropShapeInterface, cropY: CropShapeInterface, dropMax: number): Uint8Array {
+        // bruno
+
+        let uint8data: Uint8Array;
+        let val, encodedVal: number;
+
+        const x = img.shape[1];
+        const y = img.shape[0];
+        const len = x*y;
+        
+        let rowMajIdx = (xi: number, yi: number) => {
+            return yi + x*xi;
+        };
+
+        console.log('bruno: im here CanvasContainer.setContrastInRegion ');
+
+        //TODO: implement for another dtypes
+        if (img.dtype === 'uint8') {
+            uint8data = img.data as Uint8Array;
+            // bruno: why he does nothing here?
+        } else if (img.dtype === 'uint16'){
+            const max = 65535.0 * this.imgMax * dropMax;
+            const min = 65535.0 * this.imgMin;
+            const range = max - min;
+            uint8data = new Uint8Array(len);
+            for (let xi = cropX.lower; xi < cropX.upper; ++xi) {
+                for (let yj = cropY.lower; yj < cropY.upper; ++yj) {
+                    val = clamp(min, img.data[rowMajIdx(xi, yj)], max);
+                    encodedVal = 255 * (1.0 - (max - val) / range);
+                    uint8data[rowMajIdx(xi, yj)] = encodedVal;
+                }
+            }
+        } else {
+            uint8data = new Uint8Array(len);
+            for (let xi = cropX.lower; xi < cropX.upper; ++xi) {
+                for (let yj = cropY.lower; yj < cropY.upper; ++yj) {
+                    val = clamp(0.0, img.data[rowMajIdx(xi, yj)], 1.0*dropMax);
+                    encodedVal = 255 * val;
+                    uint8data[rowMajIdx(xi, yj)] = encodedVal;
+                }
+            }
+        }
+        return uint8data;
+    }
+
+    setRegionOfInterestImage(imgSlice: NdArray<TypedArray>, cropX: CropShapeInterface, cropY: CropShapeInterface) {
+        // bruno
+        this.imgData = imgSlice;
+        console.log('bruno: did I made it to here? setRegionOfInterestImage');
+
+        const x = imgSlice.shape[1];
+        const y = imgSlice.shape[0];
+        const makeRegionDarker = 0.9;
+
+        const uint8data = this.setContrastInRegion(imgSlice, cropX, cropY, makeRegionDarker);
+        const texture = this.textureFromSlice(uint8data, x, y);
+
+        this.slice.texture = texture;
+    }
+
     setFutureImage(futureSlice: NdArray<TypedArray>) {
         this.futureData = futureSlice;
 
@@ -732,6 +801,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onFutureChanged!: (hasPreview: boolean) => void;
     onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
     onExtendLabel: (flag: boolean) => void = () => {};
+    onCropPreview: (payload: any) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -950,6 +1020,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas!!.extendLabel = flag;
             }
 
+            this.onCropPreview = (params) => {
+                console.log('bruno: did I made it to here? onCropPreview on CanvasContainer');
+                this.callCropPreview(params.cropX, params.cropY);
+            }
+
             subscribe('futureChanged', this.onFutureChanged);
             subscribe('labelColorsChanged', this.onLabelColorsChanged);
             subscribe('labelContourChanged', this.onLabelContourChanged);
@@ -967,6 +1042,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('ImageLoaded', this.onImageLoaded);
             subscribe("ChangeStateBrush", this.onChangeStateBrush);
             subscribe("ExtendLabel", this.onExtendLabel);
+            subscribe('cropPreviewMode', this.onCropPreview);
         }
     }
 
@@ -989,6 +1065,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('labelChanged', this.onLabelChanged);
         unsubscribe("ChangeStateBrush", this.onChangeStateBrush);
         unsubscribe("ExtendLabel", this.onExtendLabel);
+        unsubscribe('cropPreviewMode', this.onCropPreview);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
@@ -1017,6 +1094,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     adjustContrast(minimum: number, maximum: number) {
         //this.setState({...this.state, contrastMin: minimum});
         this.canvas?.adjustContrast(minimum, maximum);
+    }
+
+    callCropPreview(cropX: CropShapeInterface, cropY: CropShapeInterface) {
+        //this.setState({...this.state, contrastMin: minimum});
+        console.log('bruno: did I made it to here? callCropPreview on CanvasContainer');
+        this.canvas?.cropPreview(cropX, cropY);
     }
 
     render() {
