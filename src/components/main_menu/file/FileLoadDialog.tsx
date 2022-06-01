@@ -121,7 +121,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const [openLoadingMenu, setOpenLoadingMenu] = useState<boolean>(false);
     const [showToast, setShowToast] = useState<boolean>(false);
     const [toastMsg, setToastMsg] = useState<string>("");
-    const toastTime = 2000;
+    const toastTime = 10000;
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
     const [dtype, setDtype] = useState<dtype_type>("uint16");
     const [xRange, setXRange] = useState([0, -1]);
@@ -270,26 +270,18 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             })
         }
 
-        let finalMsg = "||";
+        let finalMsg = "";
         const flagShowToast = ((!queueToast[0].isError && queueToast[0].message !== "") ||
             (!queueToast[1].isError && queueToast[1].message !== "") ||
             (!queueToast[2].isError && queueToast[2].message !== ""));
 
         for (let i = 0; i < queueToast.length; i++) {
             if (queueToast[i].message !== "" && !queueToast[i].isError) {
-                finalMsg += `${queueToast[i].message}|| `;
+                finalMsg += `|| ${queueToast[i].message} `;
             }
         }
 
-        /**
-         * This part is just to deal with the
-         */
-        if (finalMsg === "||") {
-            setToastMsg("");
-        } else {
-            setToastMsg(finalMsg);
-        }
-
+        setToastMsg(finalMsg);
         setOpenLoadingMenu(false);
         setShowToast(flagShowToast);
 
