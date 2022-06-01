@@ -508,7 +508,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                             <IonAccordion>
                                 <IonItem slot={"header"}>
                                     <IonIcon slot={"start"} icon={images}/>
-                                    <IonLabel><small>Label Image</small></IonLabel>
+                                    <IonLabel><small>Load Label Image</small></IonLabel>
                                 </IonItem>
                                 <IonList slot="content">
                                     <IonItem>
@@ -527,7 +527,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                             <IonAccordion>
                                 <IonItem slot={"header"}>
                                     <IonIcon slot={"start"} icon={create}/>
-                                    <IonLabel><small>Annotation File</small></IonLabel>
+                                    <IonLabel><small>Load Annotation File</small></IonLabel>
                                 </IonItem>
                                 <IonList slot="content">
                                     <IonItem>
