@@ -24,6 +24,7 @@ import ErrorWindowComp from "./ErrorWindowComp";
 import ImageInfoInterface from "./ImageInfoInterface";
 import ErrorInterface from "./ErrorInterface";
 import {LabelInterface} from "../../tools_menu/label_table/LabelInterface";
+import LoadingComponent from "../../tools_menu/LoadingComponent";
 
 /**
  * dtypes array
@@ -117,6 +118,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         annotPath: ""
     })
 
+    const [openLoadingMenu, setOpenLoadingMenu] = useState<boolean>(false);
     const [showToast, setShowToast] = useState<boolean>(false);
     const [toastMsg, setToastMsg] = useState<string>("");
     const toastTime = 2000;
@@ -127,6 +129,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     const [zRange, setZRange] = useState([0, -1]);
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
+    const [headerErrorMsg, setHeaderErrorMsg] = useState<string>("");
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -177,6 +180,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 console.log("error while loading the ", loadImgOp);
                 console.log(error.error_msg);
                 setShowErrorWindow(true);
+                setHeaderErrorMsg(`error while loading the ${loadImgOp}`);
                 setErrorMsg(error.error_msg);
             });
 
@@ -204,9 +208,11 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 msgReturned = error.error_msg;
                 isError = true;
                 console.log("Error message while trying to open the Annotation", error.error_msg);
+                setHeaderErrorMsg(`error while loading the annotation`);
                 setErrorMsg(error.error_msg);
                 setShowErrorWindow(true);
             });
+
         const returnedObj: QueueToast = {message: msgReturned, isError: isError};
         return returnedObj;
 
@@ -216,6 +222,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         /**
          * Dispatch for images, label and superpixel
          */
+
+        setOpenLoadingMenu(true);
 
         let queueToast: QueueToast[] = [{
             message: "",
@@ -259,16 +267,27 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             })
         }
 
-        let finalMsg = "";
-        const flagShowToast = (!queueToast[0].isError || !queueToast[1].isError || !queueToast[2].isError);
+        let finalMsg = "||";
+        const flagShowToast = ((!queueToast[0].isError && queueToast[0].message !== "") ||
+            (!queueToast[1].isError && queueToast[1].message !== "") ||
+            (!queueToast[2].isError && queueToast[2].message !== ""));
 
         for (let i = 0; i < queueToast.length; i++) {
             if (queueToast[i].message !== "" && !queueToast[i].isError) {
-                finalMsg += `${queueToast[i].message}\n || `;
+                finalMsg += `${queueToast[i].message}|| `;
             }
         }
 
-        setToastMsg(finalMsg);
+        /**
+         * This part is just to deal with the
+         */
+        if (finalMsg === "||") {
+            setToastMsg("");
+        } else {
+            setToastMsg(finalMsg);
+        }
+
+        setOpenLoadingMenu(false);
         setShowToast(flagShowToast);
 
     }
@@ -287,7 +306,9 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setShowErrorWindow(false);
         setErrorMsg("");
         setToastMsg("");
+        setOpenLoadingMenu(false);
         setShowToast(false);
+        setHeaderErrorMsg("");
     };
     return (
         <>
@@ -376,7 +397,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     </IonItem>
                                     {/* Advanced Options Accordion */}
                                     <small>
-                                        <IonAccordionGroup>
+                                        <IonAccordionGroup>:boolean
                                             <IonAccordion>
                                                 <IonItem slot={"header"}>
                                                     <IonLabel slot={"end"}><small>Advanced Options</small></IonLabel>
@@ -402,7 +423,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                                 placeholder="X1"
                                                                 onIonChange={e => setXRange([xRange[0], parseInt(e.detail.value!, 10)])}
                                                             />
-                                                        </IonCol>
+                                                            :boolean </IonCol>
                                                     </IonRow>
                                                     <IonRow>
                                                         <IonCol>
@@ -522,10 +543,11 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             {/*Error window*/}
             <ErrorWindowComp
                 errorMsg={errorMsg}
-                headerMsg={"Error while loading the file"}
+                headerMsg={headerErrorMsg}
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            {/*Toast component*/}
             <IonToast
                 isOpen={showToast}
                 onDidDismiss={() => setShowToast(false)}
@@ -533,6 +555,10 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 icon={information}
                 duration={toastTime}
             />
+            {/*Loading component*/}
+            <LoadingComponent
+                openLoadingWindow={openLoadingMenu}
+                loadingText={"bla"}/>
         </>
     );
 };
