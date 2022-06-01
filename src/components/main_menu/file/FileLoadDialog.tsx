@@ -580,7 +580,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             {/*Loading component*/}
             <LoadingComponent
                 openLoadingWindow={openLoadingMenu}
-                loadingText={"bla"}/>
+                loadingText={"loading the files"}/>
         </>
     );
 };
