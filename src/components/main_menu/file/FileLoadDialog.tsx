@@ -17,7 +17,7 @@ import {
 } from "@ionic/react";
 import "./FileDialog.css"
 import dataType from "./Dtypes";
-import {create, extensionPuzzle, image, images, information} from "ionicons/icons";
+import {construct, create, extensionPuzzle, image, images, information} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import ErrorWindowComp from "./ErrorWindowComp";
@@ -191,7 +191,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
     const dispatchOpenAnnot = async () => {
         const annotPath = {
-            annot_path: pathFiles.annotPath
+            annot_path: (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.annotPath : pathFiles.annotPath,
         }
         let msgReturned = "";
         let isError = false;
@@ -240,21 +240,24 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         }];
 
         if (pathFiles.imagePath !== "") {
-            const promise = dispatchOpenImage(pathFiles.imagePath, "image");
+            const imgPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.imagePath : pathFiles.imagePath
+            const promise = dispatchOpenImage(imgPath, "image");
             await promise.then((item: QueueToast) => {
                 queueToast[0] = item;
             })
         }
 
         if (pathFiles.superpixelPath !== "") {
-            const promise = dispatchOpenImage(pathFiles.superpixelPath, "superpixel");
+            const superpixelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.superpixelPath : pathFiles.superpixelPath
+            const promise = dispatchOpenImage(superpixelPath, "superpixel");
             await promise.then((item: QueueToast) => {
                 queueToast[1] = item;
             })
         }
 
         if (pathFiles.labelPath !== "") {
-            const promise = dispatchOpenImage(pathFiles.labelPath, "label");
+            const labelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.labelPath : pathFiles.labelPath
+            const promise = dispatchOpenImage(labelPath, "label");
             await promise.then((item: QueueToast) => {
                 queueToast[2] = item;
             })
@@ -328,11 +331,30 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                         onIonScrollEnd={() => {
                         }}>
                         <IonAccordionGroup multiple={true}>
+                            {/* Load Workspace option */}
+                            <IonAccordion>
+                                <IonItem slot={"header"}>
+                                    <IonIcon slot={"start"} icon={construct}/>
+                                    <IonLabel><small>Load Workspace</small></IonLabel>
+                                </IonItem>
+                                <IonList slot="content">
+                                    <IonItem>
+                                        <IonLabel position="stacked">{"Superpixel Path"}</IonLabel>
+                                        <IonInput
+                                            placeholder={"/path/to/workspace"}
+                                            value={pathFiles.workspacePath}
+                                            onIonChange={(e: CustomEvent) => setPathFiles({
+                                                ...pathFiles,
+                                                workspacePath: e.detail.value!
+                                            })}/>
+                                    </IonItem>
+                                </IonList>
+                            </IonAccordion>
                             {/* Load image option */}
                             <IonAccordion>
                                 <IonItem slot={"header"}>
                                     <IonIcon slot={"start"} icon={image}/>
-                                    <IonLabel><small>Load image *</small></IonLabel>
+                                    <IonLabel><small>Load Image *</small></IonLabel>
                                 </IonItem>
                                 <IonList slot="content">
                                     {/* Image Path Text Input*/}
@@ -397,7 +419,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     </IonItem>
                                     {/* Advanced Options Accordion */}
                                     <small>
-                                        <IonAccordionGroup>:boolean
+                                        <IonAccordionGroup>
                                             <IonAccordion>
                                                 <IonItem slot={"header"}>
                                                     <IonLabel slot={"end"}><small>Advanced Options</small></IonLabel>
@@ -494,7 +516,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                             <IonAccordion>
                                 <IonItem slot={"header"}>
                                     <IonIcon slot={"start"} icon={images}/>
-                                    <IonLabel><small>Label image</small></IonLabel>
+                                    <IonLabel><small>Label Image</small></IonLabel>
                                 </IonItem>
                                 <IonList slot="content">
                                     <IonItem>
@@ -513,7 +535,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                             <IonAccordion>
                                 <IonItem slot={"header"}>
                                     <IonIcon slot={"start"} icon={create}/>
-                                    <IonLabel><small>Annotation file</small></IonLabel>
+                                    <IonLabel><small>Annotation File</small></IonLabel>
                                 </IonItem>
                                 <IonList slot="content">
                                     <IonItem>
