@@ -374,7 +374,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                             <IonAccordion>
                                 <IonItem slot={"header"}>
                                     <IonIcon slot={"start"} icon={image}/>
-                                    <IonLabel><small>Save Image *</small></IonLabel>
+                                    <IonLabel><small>Save Image</small></IonLabel>
                                 </IonItem>
                                 <IonList slot="content">
                                     {/* Image Path Text Input*/}
@@ -391,32 +391,6 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                     {/* Image Size Grid*/}
                                     <IonItem>
                                         <IonRow>
-                                            <IonCol>
-                                                <IonLabel position="stacked">Image Size</IonLabel>
-                                                <div style={{display: 'flex', justifyContent: 'flex-start'}}>
-                                                    <IonInput
-                                                        type="number"
-                                                        min={"0"}
-                                                        value={imgShapeRaw[0]}
-                                                        placeholder="X"
-                                                        onIonChange={e => setImageShapeRaw([parseInt(e.detail.value!, 10), imgShapeRaw[1], imgShapeRaw[2]])}
-                                                    />
-                                                    <IonInput
-                                                        type="number"
-                                                        min={"0"}
-                                                        value={imgShapeRaw[1]}
-                                                        placeholder="Y"
-                                                        onIonChange={e => setImageShapeRaw([imgShapeRaw[0], parseInt(e.detail.value!, 10), imgShapeRaw[2]])}
-                                                    />
-                                                    <IonInput
-                                                        type="number"
-                                                        min={"0"}
-                                                        value={imgShapeRaw[2]}
-                                                        placeholder="Z"
-                                                        onIonChange={e => setImageShapeRaw([imgShapeRaw[0], imgShapeRaw[1], parseInt(e.detail.value!, 10)])}
-                                                    />
-                                                </div>
-                                            </IonCol>
                                             <IonCol>
                                                 {/* Select dtype */}
                                                 <IonLabel position="stacked">Image Type</IonLabel>
