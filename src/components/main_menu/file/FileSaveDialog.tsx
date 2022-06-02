@@ -391,26 +391,22 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                     </IonItem>
                                     {/* Image Size Grid*/}
                                     <IonItem>
-                                        <IonRow>
-                                            <IonCol>
-                                                {/* Select dtype */}
-                                                <IonLabel position="stacked">Image Type</IonLabel>
-                                                <IonSelect
-                                                    style={{maxWidth: '100%'}}
-                                                    interface={"popover"}
-                                                    value={dtype}
-                                                    placeholder={"Select One"}
-                                                    onIonChange={e => setDtype(e.detail.value)}
-                                                >
-                                                    {dtypeList.map((type) => {
-                                                        return (
-                                                            <IonSelectOption
-                                                                value={type.value}>{type.label}</IonSelectOption>
-                                                        );
-                                                    })}
-                                                </IonSelect>
-                                            </IonCol>
-                                        </IonRow>
+                                        {/* Select dtype */}
+                                        <IonLabel position="stacked">Image Type</IonLabel>
+                                        <IonSelect
+                                            style={{maxWidth: '100%'}}
+                                            interface={"popover"}
+                                            value={dtype}
+                                            placeholder={"Select One"}
+                                            onIonChange={e => setDtype(e.detail.value)}
+                                        >
+                                            {dtypeList.map((type) => {
+                                                return (
+                                                    <IonSelectOption
+                                                        value={type.value}>{type.label}</IonSelectOption>
+                                                );
+                                            })}
+                                        </IonSelect>
                                     </IonItem>
                                     <IonItemDivider/>
                                 </IonList>
