@@ -1,15 +1,13 @@
 import React, {useState} from "react";
 import {
     IonButton,
-    IonCol,
-    IonGrid, IonIcon,
+    IonIcon,
     IonInput,
     IonItem,
     IonItemDivider,
     IonLabel,
     IonList,
     IonPopover,
-    IonRow,
     IonSelect,
     IonSelectOption,
     IonAccordion,
@@ -23,7 +21,6 @@ import {dispatch} from "../../../utils/eventbus";
 import ErrorWindowComp from "./ErrorWindowComp";
 import ImageInfoInterface from "./ImageInfoInterface";
 import ErrorInterface from "./ErrorInterface";
-import {LabelInterface} from "../../tools_menu/label_table/LabelInterface";
 import LoadingComponent from "../../tools_menu/LoadingComponent";
 
 /**
@@ -121,11 +118,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     const [showToast, setShowToast] = useState<boolean>(false);
     const [toastMsg, setToastMsg] = useState<string>("");
     const toastTime = 10000;
-    const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3))
     const [dtype, setDtype] = useState<dtype_type>("uint16");
-    const [xRange, setXRange] = useState([0, -1]);
-    const [yRange, setYRange] = useState([0, -1]);
-    const [zRange, setZRange] = useState([0, -1]);
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
     const [headerErrorMsg, setHeaderErrorMsg] = useState<string>("");
@@ -138,54 +131,24 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         setShowErrorWindow(flag);
     }
 
-    const handleSaveImageAction = async (path: string, saveImgOp: img_operation) => {
-
-        const params = {
-            image_path: path,
-            image_dtype: dtype,
-        }
-        let msgReturned = "";
-        let isError = false;
-
-        await sfetch("POST", "/save_image/" + saveImgOp, JSON.stringify(params), "json").then(
-            (image) => {
-
-                const info: ImageInfoInterface = {
-                    imageShape: image["image_shape"],
-                    imageDtype: image["image_dtype"],
-                    imageName: image["image_name"],
-                    imageExt: image["image_ext"],
-                }
-
-                setShowErrorWindow(false);
-                dispatch("SaveImage", info);
-                setShowPopover({...showPopover, open: false});
-
-            }).catch((error: ErrorInterface) => {
-            setShowErrorWindow(true);
-            setErrorMsg(error["error_msg"]);
-        })
-    }
-
     /**
-     * Function that does the dispatch
-     * @param imgPath
-     * @param loadImgOp
+     * Function that save the image and dispatch to the backend
+     * @param {string} imgPath - string that contains the file path
+     * @param {img_operation} saveImgOp - image operation to read. It can be "image", "superpixel" or "label"
      */
-    const dispatchOpenImage = async (imgPath: string, loadImgOp: img_operation) => {
+    const handleSaveImageAction = async (imgPath: string, saveImgOp: img_operation) => {
+
         const params = {
             image_path: imgPath,
             image_dtype: dtype,
-            image_raw_shape: [imgShapeRaw[0] || 0, imgShapeRaw[1] || 0, imgShapeRaw[2] || 0],
-            use_image_raw_parse: (imgShapeRaw[0] == null && imgShapeRaw[1] == null && imgShapeRaw[2] == null),
         }
 
         let msgReturned = "";
         let isError = false;
-        await sfetch("POST", "/open_image/" + loadImgOp, JSON.stringify(params), "json")
-            .then((image: ImageInfoInterface) => {
+        await sfetch("POST", "/save_image/" + saveImgOp, JSON.stringify(params), "json").then(
+            (image: ImageInfoInterface) => {
                 const imgName = imgPath.split("/");
-                msgReturned = `${imgName[imgName.length - 1]} loaded as ${loadImgOp}`;
+                msgReturned = `${imgName[imgName.length - 1]} loaded as ${saveImgOp}`;
 
                 const info: ImageInfoInterface = {
                     imageShape: image.imageShape,
@@ -194,49 +157,44 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                     imageExt: image.imageExt,
                 }
 
-                if (loadImgOp === "superpixel") {
-                    dispatch("superpixelChanged", {});
-                }
-
                 setShowErrorWindow(false);
-                dispatch("ImageLoaded", info);
-                dispatch("ActivateComponents", false);
+                dispatch("SaveImage", info);
 
             }).catch((error: ErrorInterface) => {
-                msgReturned = error.error_msg;
-                isError = true;
-                console.log("error while loading the ", loadImgOp);
-                console.log(error.error_msg);
-                setShowErrorWindow(true);
-                setHeaderErrorMsg(`error while loading the ${loadImgOp}`);
-                setErrorMsg(error.error_msg);
-            });
+            msgReturned = error.error_msg;
+            isError = true;
+            console.log("error while loading the ", saveImgOp);
+            console.log(error.error_msg);
+            setShowErrorWindow(true);
+            setHeaderErrorMsg(`error while loading the ${saveImgOp}`);
+            setErrorMsg(error.error_msg);
+        });
 
         const returnedObj: QueueToast = {message: msgReturned, isError: isError};
         return returnedObj;
 
     }
 
-    const dispatchOpenAnnot = async () => {
+    /**
+     * Function that Saves the annotation .pkl file and send to the backend
+     */
+    const dispatchSaveAnnot = async () => {
         const annotPath = {
             annot_path: (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.annotPath : pathFiles.annotPath,
         }
         let msgReturned = "";
         let isError = false;
-        await sfetch("POST", "/open_annot", JSON.stringify(annotPath), "json")
-            .then((labelList: LabelInterface[]) => {
+        await sfetch("POST", "/save_annot", JSON.stringify(annotPath), "")
+            .then((success: string) => {
                 const imgName = pathFiles.annotPath.split("/");
-                msgReturned = `${imgName[imgName.length - 1]} loaded as annotation`;
-                console.log("Printing the loaded .pkl label list\n");
-                console.log(labelList);
-                dispatch("LabelLoaded", labelList);
-                dispatch("annotationChanged", null);
+                msgReturned = `${imgName[imgName.length - 1]} saved as annotation`;
+                console.log(success);
 
             }).catch((error: ErrorInterface) => {
                 msgReturned = error.error_msg;
                 isError = true;
-                console.log("Error message while trying to open the Annotation", error.error_msg);
-                setHeaderErrorMsg(`error while loading the annotation`);
+                console.log("Error message while trying to save the Annotation", error.error_msg);
+                setHeaderErrorMsg(`error while saving the annotation`);
                 setErrorMsg(error.error_msg);
                 setShowErrorWindow(true);
             });
@@ -269,7 +227,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
 
         if (pathFiles.imagePath !== "") {
             const imgPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.imagePath : pathFiles.imagePath
-            const promise = dispatchOpenImage(imgPath, "image");
+            const promise = handleSaveImageAction(imgPath, "image");
             await promise.then((item: QueueToast) => {
                 queueToast[0] = item;
             })
@@ -277,7 +235,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
 
         if (pathFiles.superpixelPath !== "") {
             const superpixelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.superpixelPath : pathFiles.superpixelPath
-            const promise = dispatchOpenImage(superpixelPath, "superpixel");
+            const promise = handleSaveImageAction(superpixelPath, "superpixel");
             await promise.then((item: QueueToast) => {
                 queueToast[1] = item;
             })
@@ -285,14 +243,14 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
 
         if (pathFiles.labelPath !== "") {
             const labelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.labelPath : pathFiles.labelPath
-            const promise = dispatchOpenImage(labelPath, "label");
+            const promise = handleSaveImageAction(labelPath, "label");
             await promise.then((item: QueueToast) => {
                 queueToast[2] = item;
             })
         }
 
         if (pathFiles.annotPath !== "") {
-            const promise = dispatchOpenAnnot();
+            const promise = dispatchSaveAnnot();
             await promise.then((item: QueueToast) => {
                 queueToast[3] = item;
             })
@@ -322,10 +280,6 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         setShowPopover({open: false, event: undefined});
         setPathFiles({workspacePath: "", imagePath: "", superpixelPath: "", labelPath: "", annotPath: ""})
         setDtype("uint16");
-        setImageShapeRaw([null, null, null]);
-        setXRange([0, -1]);
-        setYRange([0, -1]);
-        setZRange([0, -1]);
         setShowErrorWindow(false);
         setErrorMsg("");
         setToastMsg("");
@@ -501,7 +455,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             {/*Loading component*/}
             <LoadingComponent
                 openLoadingWindow={openLoadingMenu}
-                loadingText={"loading the files"}/>
+                loadingText={"Saving the files"}/>
         </>
     );
 };

@@ -441,7 +441,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                                 placeholder="X1"
                                                                 onIonChange={e => setXRange([xRange[0], parseInt(e.detail.value!, 10)])}
                                                             />
-                                                            :boolean </IonCol>
+                                                        </IonCol>
                                                     </IonRow>
                                                     <IonRow>
                                                         <IonCol>

@@ -44,7 +44,7 @@ const AnnotationSaveDialog : React.FC = () => {
         }
 
         sfetch("POST", "/save_annot", JSON.stringify(params), "")
-            .then((success) => {
+            .then((success: string) => {
                 console.log(success);
                 setShowPopover({...showPopover, open: false});
                 showToast("Annotation saved", timeToast);
