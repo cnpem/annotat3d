@@ -339,7 +339,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                 isOpen={showPopover.open}
                 event={showPopover.event}
                 onDidDismiss={() => cleanUp()}
-                className={"file-popover"}>
+                className={"file-popover-save"}>
                 {/* Save file accordion */}
                 <small>
                     <IonContent
@@ -368,6 +368,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                                 workspacePath: e.detail.value!
                                             })}/>
                                     </IonItem>
+                                    <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
                             {/* Save image option */}
@@ -411,6 +412,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                             </IonCol>
                                         </IonRow>
                                     </IonItem>
+                                    <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
                             {/* Save superpixel option */}
@@ -430,6 +432,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                                 superpixelPath: e.detail.value!
                                             })}/>
                                     </IonItem>
+                                    <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
                             {/* Save label image option */}
@@ -449,6 +452,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                                 labelPath: e.detail.value!
                                             })}/>
                                     </IonItem>
+                                    <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
                             {/* Save annotation file option */}
@@ -468,6 +472,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                                 annotPath: e.detail.value!
                                             })}/>
                                     </IonItem>
+                                    <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
                         </IonAccordionGroup>

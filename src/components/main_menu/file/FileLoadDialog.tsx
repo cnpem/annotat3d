@@ -141,8 +141,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
     /**
      * Function that does the dispatch
-     * @param imgPath
-     * @param loadImgOp
+     * @param {string} imgPath - string that contains the file path
+     * @param {img_operation} loadImgOp - image operation to read. It can be "image", "superpixel" or "label"
      */
     const dispatchOpenImage = async (imgPath: string, loadImgOp: img_operation) => {
         const params = {
@@ -189,6 +189,9 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
     }
 
+    /**
+     * Function that reads the annotation .pkl file and send to the backend
+     */
     const dispatchOpenAnnot = async () => {
         const annotPath = {
             annot_path: (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.annotPath : pathFiles.annotPath,
@@ -311,7 +314,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 isOpen={showPopover.open}
                 event={showPopover.event}
                 onDidDismiss={() => cleanUp()}
-                className={"file-popover"}>
+                className={"file-popover-load"}>
                 {/* Load file accordion */}
                 <small>
                     <IonContent
@@ -340,6 +343,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                 workspacePath: e.detail.value!
                                             })}/>
                                     </IonItem>
+                                    <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
                             {/* Load image option */}
@@ -483,6 +487,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                             </IonAccordion>
                                         </IonAccordionGroup>
                                     </small>
+                                    <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
                             {/* Load superpixel option */}
@@ -502,6 +507,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                 superpixelPath: e.detail.value!
                                             })}/>
                                     </IonItem>
+                                    <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
                             {/* Load label image option */}
@@ -521,6 +527,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                 labelPath: e.detail.value!
                                             })}/>
                                     </IonItem>
+                                    <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
                             {/* Load annotation file option */}
@@ -540,6 +547,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                 annotPath: e.detail.value!
                                             })}/>
                                     </IonItem>
+                                    <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
                         </IonAccordionGroup>
