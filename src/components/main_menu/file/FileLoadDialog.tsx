@@ -284,6 +284,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             }
         }
 
+        dispatch("setDefaultValuesLoad", pathFiles);
         setToastMsg(finalMsg);
         setOpenLoadingMenu(false);
         setShowToast(flagShowToast);

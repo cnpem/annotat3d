@@ -17,11 +17,12 @@ import "./FileDialog.css"
 import dataType from "./Dtypes";
 import {construct, create, extensionPuzzle, image, images, information} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
-import {dispatch} from "../../../utils/eventbus";
+import {dispatch, useEventBus} from "../../../utils/eventbus";
 import ErrorWindowComp from "./ErrorWindowComp";
 import ImageInfoInterface from "./ImageInfoInterface";
 import ErrorInterface from "./ErrorInterface";
 import LoadingComponent from "../../tools_menu/LoadingComponent";
+import {useStorageState} from "react-storage-hooks";
 
 /**
  * dtypes array
@@ -106,13 +107,13 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         event: undefined,
     });
 
-    const [pathFiles, setPathFiles] = useState<multiplesPath>({
+    const [pathFiles, setPathFiles] = useStorageState<multiplesPath>(sessionStorage, "loadedPathFiles", {
         workspacePath: "",
         imagePath: "",
         superpixelPath: "",
         labelPath: "",
         annotPath: ""
-    })
+    });
 
     const [openLoadingMenu, setOpenLoadingMenu] = useState<boolean>(false);
     const [showToast, setShowToast] = useState<boolean>(false);
@@ -122,6 +123,26 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
     const [headerErrorMsg, setHeaderErrorMsg] = useState<string>("");
+
+    useEventBus("setDefaultValuesLoad", (loadedPaths: multiplesPath) => {
+        console.log("Olha o dispatch fofo : ", loadedPaths);
+
+        const setDefaultStringPath = (pathStr: string) => {
+            if (pathStr !== "") {
+                const splintedPath = pathStr.split(".", 2);
+                return `${splintedPath[0]}_saved.${splintedPath[1]}`;
+            }
+            return pathStr;
+        }
+
+        setPathFiles({
+            workspacePath: loadedPaths.workspacePath,
+            imagePath: setDefaultStringPath(loadedPaths.imagePath),
+            superpixelPath: setDefaultStringPath(loadedPaths.superpixelPath),
+            labelPath: setDefaultStringPath(loadedPaths.labelPath),
+            annotPath: setDefaultStringPath(loadedPaths.annotPath),
+        });
+    })
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -186,7 +207,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         let isError = false;
         await sfetch("POST", "/save_annot", JSON.stringify(annotPath), "")
             .then((success: string) => {
-                const imgName = pathFiles.annotPath.split("/");
+                const imgName = pathFiles.annotPath!.split("/");
                 msgReturned = `${imgName[imgName.length - 1]} saved as annotation`;
                 console.log(success);
 
@@ -278,7 +299,6 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
      */
     const cleanUp = () => {
         setShowPopover({open: false, event: undefined});
-        setPathFiles({workspacePath: "", imagePath: "", superpixelPath: "", labelPath: "", annotPath: ""})
         setDtype("uint16");
         setShowErrorWindow(false);
         setErrorMsg("");
