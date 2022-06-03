@@ -826,10 +826,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
         console.log('get annot slice');
         sfetch('POST', '/get_annot_slice', JSON.stringify(params), 'gzip/numpyndarray')
-        .then((slice) => {
-            console.log('annot slice');
-            this.canvas!!.annotation.draw(slice);
-        });
+            .then((slice) => {
+                console.log('annot slice');
+                this.canvas!!.annotation.draw(slice);
+            });
     }
 
     getLabelSlice() {
@@ -841,9 +841,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
-        .then(labelSlice => {
-            this.canvas!!.setLabelImage(labelSlice);
-        });
+            .then(labelSlice => {
+                this.canvas!!.setLabelImage(labelSlice);
+            });
 
     }
 
@@ -878,9 +878,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             this.onImageLoaded = () => {
                 console.log('onImageLoaded');
                 const promise = this.fetchAll(true);
-                console.log(promise);
                 promise?.then(() => {
-                    this.newAnnotation();
+                    sfetch("POST", "/is_annotation_empty", "", "json")
+                        .then((createNewAnnot: boolean) => {
+                            if (createNewAnnot) {
+                                this.newAnnotation();
+                            }
+                        });
                 });
             };
 
@@ -1031,7 +1035,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     render() {
         return (
-            <div id="root" className="canvas" style={ {"backgroundColor": "transparent"}  } ref={elem => this.pixi_container = elem} >
+            <div id="root" className="canvas" style={{"backgroundColor": "transparent"}}
+                 ref={elem => this.pixi_container = elem}>
 
                 <IonFab vertical="bottom" horizontal="start">
                     <IonFabButton color="medium" onClick={() => this.canvas?.recenter()}>
@@ -1041,25 +1046,27 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
                 <IonFab hidden={this.props.canvasMode !== 'imaging'} vertical="bottom" horizontal="end">
                     <IonFabButton color="dark"
-                        onClick={() => {
-                            const futureSightVisibility = !this.state.future_sight_on;
-                            this.setState({...this.state, future_sight_on: futureSightVisibility});
-                            this.canvas?.setPreviewVisibility(futureSightVisibility);
-                        }}>
+                                  onClick={() => {
+                                      const futureSightVisibility = !this.state.future_sight_on;
+                                      this.setState({...this.state, future_sight_on: futureSightVisibility});
+                                      this.canvas?.setPreviewVisibility(futureSightVisibility);
+                                  }}>
                         <IonIcon icon={this.state.future_sight_on ? eye : eyeOff}/>
                     </IonFabButton>
                 </IonFab>
 
                 <IonFab hidden={this.props.canvasMode !== 'drawing'} vertical="bottom" horizontal="end">
-                    <MenuFabButton value={this.state.brush_mode} openSide="start" buttonsList={brushList} onChange={ (b) => {
-                        console.log("change icon : ", b.id);
-                        this.setBrushMode(b.id as brush_mode_type) } } />
+                    <MenuFabButton value={this.state.brush_mode} openSide="start" buttonsList={brushList}
+                                   onChange={(b) => {
+                                       console.log("change icon : ", b.id);
+                                       this.setBrushMode(b.id as brush_mode_type)
+                                   }}/>
                 </IonFab>
-                <IonFab vertical="bottom" horizontal="end" style={ {marginBottom: '4em'} }>
+                <IonFab vertical="bottom" horizontal="end" style={{marginBottom: '4em'}}>
                     <IonFabButton size="small" onClick={() => {
                         this.canvas?.increaseBrushSize();
                     }}>
-                        <IonIcon icon={add} />
+                        <IonIcon icon={add}/>
                     </IonFabButton>
                     <IonFabButton size="small" onClick={() => {
                         this.canvas?.decreaseBrushSize();

@@ -19,7 +19,6 @@ __default_selected_features = (spin_feat_extraction.SPINFilters.NONE,
                                spin_feat_extraction.SPINFilters.MEMBRANE_PROJECTIONS)
 __default_selected_supervoxel_feat_pooling = (spin_feat_extraction.SPINSupervoxelPooling.MEAN,)
 
-
 __default_feature_extraction_params = {
     'sigmas': (1, 2, 4, 8),
     'selected_features': __default_selected_features,
@@ -112,9 +111,6 @@ def create():
     available = spin_feat_extraction.SPINFilters.available_filters()
 
     print(available)
-
-    # feature_extraction_params['selected_features'] = [spin_feat_extraction.SPINFilters. for feat in feature_extraction_params['selected_features']]
-
     print(feature_extraction_params)
     print(classifier_params)
 
