@@ -32,10 +32,6 @@ const WorkspaceComp: React.FC = () => {
         mdIcon: layersSharp
     };
 
-    /*const [showToast,] = useIonToast();
-    const toastTime = 2000;*/
-
-    //const [path, setPath] = useState<string>("");
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
 
@@ -52,7 +48,6 @@ const WorkspaceComp: React.FC = () => {
      */
     const cleanUp = () => {
         setShowPopover({open: false, event: undefined});
-        //setPath("");
         setShowErrorWindow(false);
         setErrorMsg("");
     };

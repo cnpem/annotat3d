@@ -1,8 +1,9 @@
 import React, {useState} from "react";
-import {IonButton, IonInput, IonItem, IonLabel, IonList, IonPopover, useIonToast} from "@ionic/react";
+import {IonButton, IonIcon, IonInput, IonItem, IonLabel, IonList, IonPopover, useIonToast} from "@ionic/react";
 import ErrorWindowComp from "../file/ErrorWindowComp";
 import {sfetch} from "../../../utils/simplerequest";
 import ErrorInterface from "../file/ErrorInterface";
+import {construct} from "ionicons/icons";
 
 /**
  * Component that load or save a Workspace
@@ -82,10 +83,11 @@ const WorkspaceComp: React.FC = () => {
                 isOpen={showPopover.open}
                 event={showPopover.event}
                 onDidDismiss={() => cleanUp()}
-                className={"file-popover"}>
+                className={"file-popover-workspace"}>
                 <IonList>
                     {/* Header Path Text Input */}
-                    <IonItem>
+                    <IonItem slot={"header"}>
+                        <IonIcon slot={"start"} icon={construct}/>
                         <IonLabel position="stacked">{"Workspace Path"}</IonLabel>
                         <IonInput
                             placeholder={"/path/to/Workspace"}
