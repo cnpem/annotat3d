@@ -339,7 +339,7 @@ def merge_labels():
 
     return jsonify(selected_labels[1:])
 
-@app.route("/is_label_empty", methods=["POST"])
+@app.route("/is_annotation_empty", methods=["POST"])
 @cross_origin()
 def is_annotation_empty():
     """
