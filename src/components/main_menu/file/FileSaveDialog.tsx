@@ -107,7 +107,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         event: undefined,
     });
 
-    const [pathFiles, setPathFiles] = useStorageState<multiplesPath>(sessionStorage, "loadedPathFiles", {
+    const [pathFiles, setPathFiles] = useStorageState<multiplesPath>(sessionStorage, "savedPathFiles", {
         workspacePath: "",
         imagePath: "",
         superpixelPath: "",
@@ -125,8 +125,6 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     const [headerErrorMsg, setHeaderErrorMsg] = useState<string>("");
 
     useEventBus("setDefaultValuesLoad", (loadedPaths: multiplesPath) => {
-        console.log("Olha o dispatch fofo : ", loadedPaths);
-
         const setDefaultStringPath = (pathStr: string) => {
             if (pathStr !== "") {
                 const splintedPath = pathStr.split(".", 2);

@@ -1,7 +1,7 @@
 import {Component} from 'react';
 import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
-import { expand, brush, browsers, add, remove, eye, eyeOff } from 'ionicons/icons';
-import { debounce, isEqual } from "lodash";
+import {expand, brush, browsers, add, remove, eye, eyeOff} from 'ionicons/icons';
+import {debounce, isEqual} from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 // https://stackoverflow.com/questions/42789896/webgl-error-arraybuffer-not-big-enough-for-request-in-case-of-gl-luminance
@@ -9,9 +9,9 @@ import * as PIXI from 'pixi.js';
 import '../../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
 
-import { NdArray, TypedArray } from 'ndarray';
+import {NdArray, TypedArray} from 'ndarray';
 import {clamp} from '../../utils/math';
-import { sfetch } from '../../utils/simplerequest';
+import {sfetch} from '../../utils/simplerequest';
 
 import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
@@ -317,7 +317,7 @@ class Canvas {
         this.setLabelVisibility(true);
     }
 
-    setColor(colors: {id: number, color: [number, number, number]}[]) {
+    setColor(colors: { id: number, color: [number, number, number] }[]) {
 
         colors.forEach((color) => {
             this.colors[color.id] = color.color;
@@ -402,13 +402,13 @@ class Canvas {
             'mode': this.brush_mode,
         };
         sfetch('POST', '/draw', JSON.stringify(data))
-        .then((success)=>{
-            console.log(success);
-            dispatch("annotationChanged", null);
-        })
-        .catch((error)=>{
-            console.log(error);
-        });
+            .then((success) => {
+                console.log(success);
+                dispatch("annotationChanged", null);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
 
         this.pointsBuffer = [];
 
@@ -432,7 +432,7 @@ class Canvas {
         }
     }
 
-    draw(currPosition: PIXI.Point) : [number, number][] {
+    draw(currPosition: PIXI.Point): [number, number][] {
 
         const context = this.annotation.context;
         const mode = this.brush_mode;
@@ -444,8 +444,8 @@ class Canvas {
             this.brush.cursor.visible = false;
 
             const data = {
-                "x_coord" : Math.round(this.prevPosition.x),
-                "y_coord" : Math.round(this.prevPosition.y),
+                "x_coord": Math.round(this.prevPosition.x),
+                "y_coord": Math.round(this.prevPosition.y),
                 "slice": this.sliceNum,
                 "axis": this.axis,
             }
@@ -568,12 +568,12 @@ class Canvas {
         const x = img.shape[1];
         const y = img.shape[0];
 
-        const len = x*y;
+        const len = x * y;
 
         //TODO: implement for another dtypes
         if (img.dtype === 'uint8') {
             uint8data = img.data as Uint8Array;
-        } else if (img.dtype === 'uint16'){
+        } else if (img.dtype === 'uint16') {
             const max = 65535.0 * this.imgMax;
             const min = 65535.0 * this.imgMin;
             const range = max - min;
@@ -639,7 +639,7 @@ class Canvas {
     }
 
     decreaseBrushSize() {
-        if (this.brush.size <= 2) 
+        if (this.brush.size <= 2)
             return;
         this.brush.setSize(this.brush.size - 1);
     }
@@ -712,23 +712,34 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     pixi_container: HTMLDivElement | null;
     canvas: Canvas | null;
 
-    onLabelSelected: (payload: any) => void = () => {};
-    onImageLoaded: (payload: any) => void = () => {};
-    onContrastChanged: (payload: number[]) => void = () => {};
-    onSuperpixelChanged: () => void = () => {};
-    onLabelChanged: () => void = () => {};
-    onSuperpixelColorChanged: (color: any) => void = () => {};
-    onSuperpixelVisibilityChanged: (visible: boolean) => void = () => {};
-    onLabelVisibilityChanged: (visible: boolean) => void = () => {};
-    onLabelAlphaChanged: (alpha: number) => void = () => {};
+    onLabelSelected: (payload: any) => void = () => {
+    };
+    onImageLoaded: (payload: any) => void = () => {
+    };
+    onContrastChanged: (payload: number[]) => void = () => {
+    };
+    onSuperpixelChanged: () => void = () => {
+    };
+    onLabelChanged: () => void = () => {
+    };
+    onSuperpixelColorChanged: (color: any) => void = () => {
+    };
+    onSuperpixelVisibilityChanged: (visible: boolean) => void = () => {
+    };
+    onLabelVisibilityChanged: (visible: boolean) => void = () => {
+    };
+    onLabelAlphaChanged: (alpha: number) => void = () => {
+    };
     onAnnotanionAlphaChanged!: (alpha: number) => void;
     onAnnotanionVisibilityChanged!: (visible: boolean) => void;
-    onLabelColorsChanged!: (colors: {id: number, color: [number, number, number]}[]) => void;
+    onLabelColorsChanged!: (colors: { id: number, color: [number, number, number] }[]) => void;
     onAnnotationChanged!: () => void;
     onLabelContourChanged!: (contour: boolean) => void;
     onFutureChanged!: (hasPreview: boolean) => void;
-    onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
-    onExtendLabel: (flag: boolean) => void = () => {};
+    onChangeStateBrush: (mode: brush_mode_type) => void = () => {
+    };
+    onExtendLabel: (flag: boolean) => void = () => {
+    };
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -741,18 +752,18 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
     }
 
-    fetchAll =  (recenter: boolean = false) => {
+    fetchAll = (recenter: boolean = false) => {
         console.log("update ...", this.props.slice);
         return this.getImageSlice()
-        .then(() => {
-            if (recenter) {
-                this.canvas!.recenter();
-            }
-            this.getSuperpixelSlice();
-            this.getAnnotSlice();
-            this.getLabelSlice();
-            this.getFutureSlice();
-        });
+            .then(() => {
+                if (recenter) {
+                    this.canvas!.recenter();
+                }
+                this.getSuperpixelSlice();
+                this.getAnnotSlice();
+                this.getLabelSlice();
+                this.getFutureSlice();
+            });
     }
 
 
@@ -771,9 +782,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray')
-        .then((superpixelSlice) => {
-            this.canvas!!.setSuperpixelImage(superpixelSlice);
-        });
+            .then((superpixelSlice) => {
+                this.canvas!!.setSuperpixelImage(superpixelSlice);
+            });
     }
 
     getImageSlice() {
@@ -784,9 +795,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
-        .then(imgSlice => {
-            this.canvas!!.setImage(imgSlice);
-        });
+            .then(imgSlice => {
+                this.canvas!!.setImage(imgSlice);
+            });
     }
 
     getFutureSlice() {
@@ -799,11 +810,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         sfetch('POST', '/get_image_slice/future', JSON.stringify(params), 'gzip/numpyndarray')
-        .then(previewSlice => {
-            this.canvas?.setFutureImage(previewSlice);
-            this.canvas?.setPreviewVisibility(true);
-            this.setState({...this.state, future_sight_on: true});
-        });
+            .then(previewSlice => {
+                this.canvas?.setFutureImage(previewSlice);
+                this.canvas?.setPreviewVisibility(true);
+                this.setState({...this.state, future_sight_on: true});
+            });
     }
 
     getAnnotSlice() {

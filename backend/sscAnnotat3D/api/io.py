@@ -5,7 +5,6 @@ import os.path
 import sscIO.io
 import numpy as np
 from sscAnnotat3D.repository import data_repo
-from sscAnnotat3D.modules import annotation_module
 from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 
 from flask_cors import cross_origin
@@ -20,9 +19,9 @@ def handle_exception(error_msg: str):
 
 app.register_error_handler(400, handle_exception)
 
-def _convert_dtype_to_str(dtype: np.dtype):
+def _convert_dtype_to_str(img_dtype: np.dtype):
 
-    return np.dtype(dtype).name
+    return np.dtype(img_dtype).name
 
 
 @app.route("/open_image/<image_id>", methods=["POST"])
@@ -60,7 +59,7 @@ def open_image(image_id: str):
             image, info = sscIO.io.read_volume(image_path, 'numpy')
             error_msg = "No such file or directory {}".format(image_path)
 
-            if (_convert_dtype_to_str(image.dtype) != image_dtype):
+            if (_convert_dtype_to_str(image.dtype) != image_dtype and (image_id == "image" or image_id == "label")):
                 image = image.astype(image_dtype)
 
         else:
@@ -74,7 +73,7 @@ def open_image(image_id: str):
                 "image_raw_shape"],
                                                                                             image_dtype)
         image_shape = image.shape
-        image_dtype = _convert_dtype_to_str(dtype=image.dtype)
+        image_dtype = _convert_dtype_to_str(image.dtype)
     except:
         return handle_exception(error_msg)
 

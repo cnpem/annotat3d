@@ -25,6 +25,7 @@ import ImageInfoInterface from "./ImageInfoInterface";
 import ErrorInterface from "./ErrorInterface";
 import {LabelInterface} from "../../tools_menu/label_table/LabelInterface";
 import LoadingComponent from "../../tools_menu/LoadingComponent";
+import {useStorageState} from "react-storage-hooks";
 
 /**
  * dtypes array
@@ -110,7 +111,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         event: undefined,
     });
 
-    const [pathFiles, setPathFiles] = useState<multiplesPath>({
+    const [pathFiles, setPathFiles] = useStorageState<multiplesPath>(sessionStorage, "loadedPathFiles", {
         workspacePath: "",
         imagePath: "",
         superpixelPath: "",
@@ -200,7 +201,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         let isError = false;
         await sfetch("POST", "/open_annot", JSON.stringify(annotPath), "json")
             .then((labelList: LabelInterface[]) => {
-                const imgName = pathFiles.annotPath.split("/");
+                const imgName = pathFiles.annotPath!.split("/");
                 msgReturned = `${imgName[imgName.length - 1]} loaded as annotation`;
                 console.log("Printing the loaded .pkl label list\n");
                 console.log(labelList);
@@ -296,7 +297,13 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
      */
     const cleanUp = () => {
         setShowPopover({open: false, event: undefined});
-        setPathFiles({workspacePath: "", imagePath: "", superpixelPath: "", labelPath: "", annotPath: ""})
+        setPathFiles({
+            workspacePath: pathFiles.workspacePath,
+            imagePath: "",
+            superpixelPath: "",
+            labelPath: "",
+            annotPath: ""
+        })
         setDtype("uint16");
         setImageShapeRaw([null, null, null]);
         setXRange([0, -1]);
