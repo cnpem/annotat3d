@@ -69,8 +69,9 @@ const WorkspaceComp: React.FC = () => {
                         <IonLabel>argumentation</IonLabel>
                     </IonSegmentButton>
                 </IonSegment>
+                {/*Deep learning options*/}
                 <IonAccordionGroup multiple={true}>
-                    {/*Deep learning option*/}
+                    {/*Data menu option*/}
                     <IonAccordion>
                         <IonItem slot={"header"}>
                             <IonIcon slot={"start"} icon={construct}/>
