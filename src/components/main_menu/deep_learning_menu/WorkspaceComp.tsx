@@ -1,9 +1,21 @@
 import React, {useState} from "react";
-import {IonButton, IonIcon, IonInput, IonItem, IonLabel, IonList, IonPopover, useIonToast} from "@ionic/react";
+import {
+    IonButton,
+    IonContent,
+    IonIcon,
+    IonInput,
+    IonItem,
+    IonLabel,
+    IonList,
+    IonPopover,
+    useIonToast
+} from "@ionic/react";
 import ErrorWindowComp from "../file/ErrorWindowComp";
 import {sfetch} from "../../../utils/simplerequest";
 import ErrorInterface from "../file/ErrorInterface";
 import {construct} from "ionicons/icons";
+
+//TODO : Need to verify why the css is not working on pop-over
 
 /**
  * Component that load or save a Workspace
@@ -33,8 +45,8 @@ const WorkspaceComp: React.FC = () => {
     }
 
     const handleLoadWorkspace = () => {
-         const params = {
-             workspace_path: path,
+        const params = {
+            workspace_path: path,
         }
 
         sfetch("POST", "/load_workspace", JSON.stringify(params), "json").then(
@@ -52,7 +64,7 @@ const WorkspaceComp: React.FC = () => {
 
     const handleNewWorkspace = () => {
         const params = {
-             workspace_path: path,
+            workspace_path: path,
         }
 
         sfetch("POST", "/open_new_workspace", JSON.stringify(params), "json").then(
@@ -92,7 +104,7 @@ const WorkspaceComp: React.FC = () => {
                         <IonInput
                             placeholder={"/path/to/Workspace"}
                             value={path}
-                            onIonChange={(e:CustomEvent) => setPath(e.detail.value!)} />
+                            onIonChange={(e: CustomEvent) => setPath(e.detail.value!)}/>
                     </IonItem>
                 </IonList>
                 {/* Create option */}
@@ -106,13 +118,13 @@ const WorkspaceComp: React.FC = () => {
             </IonPopover>
             {/* Button that opens Workspace pop-up */}
             <IonItem button
-                onClick={e => setShowPopover({open: true, event: e.nativeEvent }) }>
+                     onClick={e => setShowPopover({open: true, event: e.nativeEvent})}>
                 Workspace
             </IonItem>
             {/* Error window */}
             <ErrorWindowComp
                 errorMsg={errorMsg}
-                headerMsg={"Error while loading the file"}
+                headerMsg={"Error while loading the workspace"}
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>

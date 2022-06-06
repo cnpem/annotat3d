@@ -1,16 +1,17 @@
 import React, {useState} from "react";
 import {
-    IonAccordion, IonContent, IonIcon, IonItem, IonLabel, IonList,
-    IonPopover, IonSegment, IonSegmentButton} from "@ionic/react";
+    IonAccordion, IonAccordionGroup, IonContent, IonIcon, IonItem, IonLabel, IonList,
+    IonPopover, IonSegment, IonSegmentButton
+} from "@ionic/react";
 import ErrorWindowComp from "../file/ErrorWindowComp";
 import {MenuItem} from "../MenuItems";
-import {layersOutline, layersSharp} from "ionicons/icons";
+import {construct, layersOutline, layersSharp} from "ionicons/icons";
 
-//type segmentOption = 'sampling' | 'argumentation';
+//TODO : Need to verify why the css is not working on pop-over
 
 /**
  * Component that load or save a Workspace, Network or Batch Inference
- * @example <WorkspaceComp header={"Workspace"}/>
+ * @example <WorkspaceComp/>
  */
 const WorkspaceComp: React.FC = () => {
 
@@ -57,34 +58,31 @@ const WorkspaceComp: React.FC = () => {
                 isOpen={showPopover.open}
                 event={showPopover.event}
                 onDidDismiss={() => cleanUp()}
-                className={"file-popover"}>
-                <IonSegment onIonChange={(e:CustomEvent) => {console.log("Segment selected : ", e.detail.value)}}>
+                className={"file-popover-workspace"}>
+                <IonSegment onIonChange={(e: CustomEvent) => {
+                    console.log("Segment selected : ", e.detail.value)
+                }}>
                     <IonSegmentButton value={"sampling"}>
                         <IonLabel>sampling</IonLabel>
                     </IonSegmentButton>
-                     <IonSegmentButton value={"argumentation"}>
+                    <IonSegmentButton value={"argumentation"}>
                         <IonLabel>argumentation</IonLabel>
                     </IonSegmentButton>
                 </IonSegment>
-                <IonContent>
+                <IonAccordionGroup multiple={true}>
+                    {/*Deep learning option*/}
                     <IonAccordion>
-                    <IonItem slot={"header"}>
-                        <IonIcon slot={"start"} ios={items.iosIcon} md={items.mdIcon}/>
-                        <IonLabel>{items.title}</IonLabel>
-                    </IonItem>
-                    <IonList slot={"content"}>
-                        {/*Workspace menu*/}
-                        <WorkspaceComp/>
-                        {/*Network menu*/}
-                        {/*Batch Inference menu*/}
-                    </IonList>
-                </IonAccordion>
-                </IonContent>
+                        <IonItem slot={"header"}>
+                            <IonIcon slot={"start"} icon={construct}/>
+                            <IonLabel><small>Deep learning</small></IonLabel>
+                        </IonItem>
+                    </IonAccordion>
+                </IonAccordionGroup>
                 {/* Function effect to close the popup */}
             </IonPopover>
             {/* Function effect to close the popup */}
             <IonItem button
-                onClick={e => setShowPopover({open: true, event: e.nativeEvent }) }>
+                     onClick={e => setShowPopover({open: true, event: e.nativeEvent})}>
                 Dataset
             </IonItem>
             {/*Error window*/}
