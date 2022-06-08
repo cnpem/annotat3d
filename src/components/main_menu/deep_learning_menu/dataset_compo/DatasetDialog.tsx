@@ -73,18 +73,11 @@ const WorkspaceComp: React.FC = () => {
                 event={showPopover.event}
                 onDidDismiss={() => cleanUp()}
                 className={"file-popover-dataset"}>
-                <IonSegment onIonChange={(e: CustomEvent) => {
-                    console.log("Segment selected : ", e.detail.value)
-                }}>
-                    <IonSegmentButton value={"sampling"}>
-                        <IonLabel>sampling</IonLabel>
-                    </IonSegmentButton>
-                    <IonSegmentButton value={"argumentation"}>
-                        <IonLabel>argumentation</IonLabel>
-                    </IonSegmentButton>
+                <IonSegment value={menuOp} onIonChange={selectMenuOp}>
+                    {menuChoices.map(renderSegmentButton)}
                 </IonSegment>
                 {menuChoices.map(renderMenu)}
-                <IonButton onClick={e => setShowPopover({open: false, event: e.nativeEvent})}>
+                <IonButton color={"tertiary"} slot={"end"} onClick={e => setShowPopover({open: false, event: e.nativeEvent})}>
                     OK
                 </IonButton>
             </IonPopover>
