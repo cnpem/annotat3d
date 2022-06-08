@@ -1,7 +1,6 @@
 import React, {useState} from "react";
 import {
     IonButton,
-    IonContent,
     IonIcon,
     IonInput,
     IonItem,
@@ -95,7 +94,7 @@ const WorkspaceComp: React.FC = () => {
                 isOpen={showPopover.open}
                 event={showPopover.event}
                 onDidDismiss={() => cleanUp()}
-                className={"file-popover-workspace"}>
+                className={"file-popover-load"}>
                 <IonList>
                     {/* Header Path Text Input */}
                     <IonItem slot={"header"}>

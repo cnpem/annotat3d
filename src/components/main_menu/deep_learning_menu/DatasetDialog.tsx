@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {
-    IonAccordion, IonAccordionGroup, IonContent, IonIcon, IonItem, IonLabel, IonList,
+    IonAccordion, IonAccordionGroup, IonIcon, IonItem, IonLabel,
     IonPopover, IonSegment, IonSegmentButton
 } from "@ionic/react";
 import ErrorWindowComp from "../file/ErrorWindowComp";
@@ -58,7 +58,7 @@ const WorkspaceComp: React.FC = () => {
                 isOpen={showPopover.open}
                 event={showPopover.event}
                 onDidDismiss={() => cleanUp()}
-                className={"file-popover-workspace"}>
+                className={"file-popover-load"}>
                 <IonSegment onIonChange={(e: CustomEvent) => {
                     console.log("Segment selected : ", e.detail.value)
                 }}>
