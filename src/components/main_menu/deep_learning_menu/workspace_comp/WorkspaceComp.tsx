@@ -9,12 +9,15 @@ import {
     IonPopover,
     useIonToast
 } from "@ionic/react";
-import ErrorWindowComp from "../file/ErrorWindowComp";
-import {sfetch} from "../../../utils/simplerequest";
-import ErrorInterface from "../file/ErrorInterface";
+import ErrorWindowComp from "../../file/ErrorWindowComp";
+import {sfetch} from "../../../../utils/simplerequest";
+import ErrorInterface from "../../file/ErrorInterface";
 import {construct} from "ionicons/icons";
 
 //TODO : Need to verify why the css is not working on pop-over
+
+const menuChoices = ["sampling", "argumentation"]
+//const menus = []
 
 /**
  * Component that load or save a Workspace
@@ -94,6 +97,7 @@ const WorkspaceComp: React.FC = () => {
                 isOpen={showPopover.open}
                 event={showPopover.event}
                 onDidDismiss={() => cleanUp()}
+                alignment={"center"}
                 className={"file-popover-load"}>
                 <IonList>
                     {/* Header Path Text Input */}

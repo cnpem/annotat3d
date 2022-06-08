@@ -2,8 +2,8 @@ import React from "react";
 import {MenuItem} from "../MenuItems";
 import {layersOutline, layersSharp} from "ionicons/icons";
 import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
-import WorkspaceComp from "./WorkspaceComp";
-import DatasetDialog from "./DatasetDialog";
+import WorkspaceComp from "./workspace_comp/WorkspaceComp";
+import DatasetDialog from "./dataset_compo/DatasetDialog";
 
 /**
  * Deep Learning component menu
