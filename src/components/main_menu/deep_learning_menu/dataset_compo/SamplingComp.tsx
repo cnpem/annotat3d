@@ -2,10 +2,13 @@ import React from "react";
 import {IonAccordion, IonAccordionGroup, IonIcon, IonItem, IonLabel} from "@ionic/react";
 import {construct} from "ionicons/icons";
 
+/**
+ * Component that hold all the Sampling options
+ */
 const SamplingComp: React.FC = () => {
     return (
         <IonAccordionGroup multiple={true}>
-            {/*Data menu option*/}
+            {/*Sampling menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
                     <IonIcon slot={"start"} icon={construct}/>
@@ -34,5 +37,7 @@ const SamplingComp: React.FC = () => {
                 </IonItem>
             </IonAccordion>
         </IonAccordionGroup>
-    )
+    );
 }
+
+export default SamplingComp;

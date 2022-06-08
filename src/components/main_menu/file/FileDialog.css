@@ -21,10 +21,10 @@ Component used for "Dataset" in "deep learning"
 TODO : Need to move this component to another place. IDW, but the css only work here
  */
 .file-popover-dataset::part(content) {
-    top: 0 !important;
+    top: 1% !important;
     left: 30% !important;
     --width: 600px;
     --height: 970px;
-    --max-height: 300px;
+    --max-height: 610px;
 
 }

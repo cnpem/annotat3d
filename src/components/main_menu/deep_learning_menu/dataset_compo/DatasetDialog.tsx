@@ -1,18 +1,27 @@
 import React, {useState} from "react";
 import {
-    IonAccordion, IonAccordionGroup, IonButton, IonIcon, IonItem, IonLabel,
-    IonPopover, IonSegment, IonSegmentButton
+    IonButton, IonItem, IonLabel,
+    IonPopover, IonSegment, IonSegmentButton, SegmentChangeEventDetail
 } from "@ionic/react";
-import {construct} from "ionicons/icons";
 import ErrorWindowComp from "../../file/ErrorWindowComp";
+import SamplingComp from "./SamplingComp";
+import {useStorageState} from "react-storage-hooks";
+import ArgumentationComp from "./ArgumentationComp";
 
 //TODO : Need to verify why the css is not working on pop-over
+
+const menuChoices = ["sampling", "argumentation"] as const;
+const menus = [<SamplingComp/>, <ArgumentationComp/>]
+
+type InputMenuChoicesType = typeof menuChoices[number];
 
 /**
  * Component that load or save a Workspace, Network or Batch Inference
  * @example <WorkspaceComp/>
  */
 const WorkspaceComp: React.FC = () => {
+
+    const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, "DatasetMenu", "sampling");
 
     // Init States
     const [showPopover, setShowPopover] = useState<{ open: boolean, event: Event | undefined }>({
@@ -29,6 +38,24 @@ const WorkspaceComp: React.FC = () => {
 
     const handleErrorWindow = (flag: boolean) => {
         setShowErrorWindow(flag);
+    }
+
+    const selectMenuOp = (e: CustomEvent<SegmentChangeEventDetail>) => {
+        setMenuOp(e.detail.value as InputMenuChoicesType);
+    };
+
+    const renderSegmentButton = (choice: InputMenuChoicesType) => {
+        return (
+            <IonSegmentButton value={choice}>
+                <IonLabel>{choice}</IonLabel>
+            </IonSegmentButton>
+        );
+    }
+
+    const renderMenu = (choice: InputMenuChoicesType, idx: number) => {
+        return (
+            <div hidden={menuOp !== choice}>{menus[idx]}</div>
+        );
     }
 
     /**
@@ -56,38 +83,7 @@ const WorkspaceComp: React.FC = () => {
                         <IonLabel>argumentation</IonLabel>
                     </IonSegmentButton>
                 </IonSegment>
-                {/*Dataset Sampling options*/}
-                <IonAccordionGroup multiple={true}>
-                    {/*Data menu option*/}
-                    <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonIcon slot={"start"} icon={construct}/>
-                            <IonLabel><small>Data</small></IonLabel>
-                        </IonItem>
-                    </IonAccordion>
-                    {/*Label menu option*/}
-                    <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonIcon slot={"start"} icon={construct}/>
-                            <IonLabel><small>Label</small></IonLabel>
-                        </IonItem>
-                    </IonAccordion>
-                    {/*Weight menu option*/}
-                    <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonIcon slot={"start"} icon={construct}/>
-                            <IonLabel><small>Weight</small></IonLabel>
-                        </IonItem>
-                    </IonAccordion>
-                    {/*Sampling menu option*/}
-                    <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonIcon slot={"start"} icon={construct}/>
-                            <IonLabel><small>Sampling</small></IonLabel>
-                        </IonItem>
-                    </IonAccordion>
-                </IonAccordionGroup>
-                {/* Function effect to close the popup */}
+                {menuChoices.map(renderMenu)}
                 <IonButton onClick={e => setShowPopover({open: false, event: e.nativeEvent})}>
                     OK
                 </IonButton>

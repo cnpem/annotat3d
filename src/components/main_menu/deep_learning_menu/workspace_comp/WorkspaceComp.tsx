@@ -16,9 +16,6 @@ import {construct} from "ionicons/icons";
 
 //TODO : Need to verify why the css is not working on pop-over
 
-const menuChoices = ["sampling", "argumentation"]
-//const menus = []
-
 /**
  * Component that load or save a Workspace
  * @example <WorkspaceComp/>
