@@ -128,7 +128,7 @@ const SamplingComp: React.FC = () => {
                             <IonItem>
                                 <IonRow>
                                     <IonCol>
-                                        <IonLabel>Patch Size</IonLabel>
+                                        <IonLabel>Patch Size (X, Y, Z)</IonLabel>
                                         <div style={{display: 'flex', justifyContent: 'flex-start'}}>
                                             <IonInput
                                                 type="number"

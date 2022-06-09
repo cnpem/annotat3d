@@ -1,11 +1,27 @@
 import React from "react";
-import {IonAccordion, IonAccordionGroup, IonIcon, IonItem, IonItemDivider, IonLabel, IonList} from "@ionic/react";
+import {
+    IonAccordion,
+    IonAccordionGroup,
+    IonCheckbox,
+    IonIcon,
+    IonItem,
+    IonItemDivider,
+    IonLabel,
+    IonList
+} from "@ionic/react";
 import {construct} from "ionicons/icons";
+import {AugmentationInterface} from "./DatasetInterfaces";
+
+interface CheckedElements {
+    checkedVector: AugmentationInterface[];
+    onCheckedVector: (index: number) => void;
+}
 
 /**
  * Component that hold all the Argumentation options
  */
-const ArgumentationComp: React.FC = () => {
+const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector}) => {
+
     return (
         <IonAccordionGroup multiple={true}>
             {/*Argumentation menu option*/}
@@ -17,7 +33,26 @@ const ArgumentationComp: React.FC = () => {
                 </IonItem>
                 <IonList slot={"content"}>
                     <IonItem>
-                        <IonLabel>bla ?</IonLabel>
+                        <IonLabel>Augment with Vertical Flip</IonLabel>
+                        <IonCheckbox
+                            checked={checkedVector[0].isChecked}
+                            onIonChange={() => onCheckedVector(0)}/>
+                    </IonItem>
+                    <IonItemDivider/>
+                </IonList>
+            </IonAccordion>
+            {/*Horizontal Flip menu option*/}
+            <IonAccordion>
+                <IonItem slot={"header"}>
+                    <IonIcon slot={"start"} icon={construct}/>
+                    <IonLabel><small>Horizontal Flip</small></IonLabel>
+                </IonItem>
+                <IonList slot={"content"}>
+                    <IonItem>
+                        <IonLabel>Augment with Horizontal Flip</IonLabel>
+                        <IonCheckbox
+                            checked={checkedVector[1].isChecked}
+                            onIonChange={() => onCheckedVector(1)}/>
                     </IonItem>
                     <IonItemDivider/>
                 </IonList>

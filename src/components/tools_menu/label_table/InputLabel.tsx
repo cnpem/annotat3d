@@ -23,7 +23,7 @@ interface InputLabelProps {
 }
 
 interface WarningWindowInterface {
-    openWarningWindow: boolean
+    openWarningWindow: boolean;
     onOpenWarningWindow: (flag: boolean) => void;
 
     labelList: LabelInterface[];

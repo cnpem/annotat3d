@@ -6,13 +6,11 @@ import {
 import ErrorWindowComp from "../../file/ErrorWindowComp";
 import SamplingComp from "./SamplingComp";
 import {useStorageState} from "react-storage-hooks";
-import ArgumentationComp from "./ArgumentationComp";
+import ArgumentationComp from "./AugmentationComp";
+import {AugmentationInterface, InitAugmentationOptions} from "./DatasetInterfaces";
 
 //TODO : Need to verify why the css is not working on pop-over
-
 const menuChoices = ["sampling", "argumentation"] as const;
-const menus = [<SamplingComp/>, <ArgumentationComp/>]
-
 type InputMenuChoicesType = typeof menuChoices[number];
 
 /**
