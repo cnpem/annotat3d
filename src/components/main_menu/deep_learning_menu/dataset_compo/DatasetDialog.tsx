@@ -29,6 +29,17 @@ const WorkspaceComp: React.FC = () => {
 
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
+    const [augmentationOpSelected, setAugmentationOpSelected] = useState<AugmentationInterface[]>(InitAugmentationOptions)
+
+    const changeCheckedStatus = (index: number) => {
+        const newCheckedVector = augmentationOpSelected.map(
+            element => element.checkedId === index
+                ? {...element, isChecked: !element.isChecked} : element
+        );
+
+        setAugmentationOpSelected(newCheckedVector);
+
+    }
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -50,6 +61,10 @@ const WorkspaceComp: React.FC = () => {
         );
     }
 
+    const menus = [<SamplingComp/>, <ArgumentationComp
+        checkedVector={augmentationOpSelected}
+        onCheckedVector={changeCheckedStatus}/>];
+
     const renderMenu = (choice: InputMenuChoicesType, idx: number) => {
         return (
             <div hidden={menuOp !== choice}>{menus[idx]}</div>
@@ -63,6 +78,7 @@ const WorkspaceComp: React.FC = () => {
         setShowPopover({open: false, event: undefined});
         setShowErrorWindow(false);
         setErrorMsg("");
+        setAugmentationOpSelected(InitAugmentationOptions);
     };
     return (
         <>
@@ -75,7 +91,8 @@ const WorkspaceComp: React.FC = () => {
                     {menuChoices.map(renderSegmentButton)}
                 </IonSegment>
                 {menuChoices.map(renderMenu)}
-                <IonButton color={"tertiary"} slot={"end"} onClick={e => setShowPopover({open: false, event: e.nativeEvent})}>
+                <IonButton color={"tertiary"} slot={"end"}
+                           onClick={e => setShowPopover({open: false, event: e.nativeEvent})}>
                     OK
                 </IonButton>
             </IonPopover>

@@ -61,11 +61,14 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
             <IonAccordion>
                 <IonItem slot={"header"}>
                     <IonIcon slot={"start"} icon={construct}/>
-                    <IonLabel><small>Rotate -90 Degrees</small></IonLabel>
+                    <IonLabel><small>Rotate 90 Degrees</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
                     <IonItem>
-                        <IonLabel>bla ?</IonLabel>
+                        <IonLabel>Augment with Vertical Flip</IonLabel>
+                        <IonCheckbox
+                            checked={checkedVector[2].isChecked}
+                            onIonChange={() => onCheckedVector(2)}/>
                     </IonItem>
                     <IonItemDivider/>
                 </IonList>
@@ -74,11 +77,14 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
             <IonAccordion>
                 <IonItem slot={"header"}>
                     <IonIcon slot={"start"} icon={construct}/>
-                    <IonLabel><small>Rotate 90 Degrees</small></IonLabel>
+                    <IonLabel><small>Rotate -90 Degrees</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
                     <IonItem>
-                        <IonLabel>bla ?</IonLabel>
+                        <IonLabel>Augment with Rotate -90 Degrees</IonLabel>
+                        <IonCheckbox
+                            checked={checkedVector[3].isChecked}
+                            onIonChange={() => onCheckedVector(3)}/>
                     </IonItem>
                     <IonItemDivider/>
                 </IonList>
@@ -91,7 +97,10 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                 </IonItem>
                 <IonList slot={"content"}>
                     <IonItem>
-                        <IonLabel>bla ?</IonLabel>
+                        <IonLabel>Augment with Contrast</IonLabel>
+                        <IonCheckbox
+                            checked={checkedVector[4].isChecked}
+                            onIonChange={() => onCheckedVector(4)}/>
                     </IonItem>
                     <IonItemDivider/>
                 </IonList>
@@ -104,7 +113,10 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                 </IonItem>
                 <IonList slot={"content"}>
                     <IonItem>
-                        <IonLabel>bla ?</IonLabel>
+                        <IonLabel>Augment with Linear Contrast</IonLabel>
+                        <IonCheckbox
+                            checked={checkedVector[5].isChecked}
+                            onIonChange={() => onCheckedVector(5)}/>
                     </IonItem>
                     <IonItemDivider/>
                 </IonList>
@@ -117,7 +129,10 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                 </IonItem>
                 <IonList slot={"content"}>
                     <IonItem>
-                        <IonLabel>bla ?</IonLabel>
+                        <IonLabel>Augment with Dropout</IonLabel>
+                        <IonCheckbox
+                            checked={checkedVector[6].isChecked}
+                            onIonChange={() => onCheckedVector(6)}/>
                     </IonItem>
                     <IonItemDivider/>
                 </IonList>
@@ -130,7 +145,10 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                 </IonItem>
                 <IonList slot={"content"}>
                     <IonItem>
-                        <IonLabel>bla ?</IonLabel>
+                        <IonLabel>Augment with Gaussian Blur</IonLabel>
+                        <IonCheckbox
+                            checked={checkedVector[7].isChecked}
+                            onIonChange={() => onCheckedVector(7)}/>
                     </IonItem>
                     <IonItemDivider/>
                 </IonList>
@@ -143,7 +161,10 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                 </IonItem>
                 <IonList slot={"content"}>
                     <IonItem>
-                        <IonLabel>bla ?</IonLabel>
+                        <IonLabel>Augment with Average Blur</IonLabel>
+                        <IonCheckbox
+                            checked={checkedVector[8].isChecked}
+                            onIonChange={() => onCheckedVector(8)}/>
                     </IonItem>
                     <IonItemDivider/>
                 </IonList>
@@ -156,7 +177,10 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                 </IonItem>
                 <IonList slot={"content"}>
                     <IonItem>
-                        <IonLabel>bla ?</IonLabel>
+                        <IonLabel>Augment with Additive Poisson</IonLabel>
+                        <IonCheckbox
+                            checked={checkedVector[9].isChecked}
+                            onIonChange={() => onCheckedVector(9)}/>
                     </IonItem>
                     <IonItemDivider/>
                 </IonList>
@@ -169,7 +193,10 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                 </IonItem>
                 <IonList slot={"content"}>
                     <IonItem>
-                        <IonLabel>bla ?</IonLabel>
+                        <IonLabel>Augment with Elastic Deformation</IonLabel>
+                        <IonCheckbox
+                            checked={checkedVector[10].isChecked}
+                            onIonChange={() => onCheckedVector(10)}/>
                     </IonItem>
                     <IonItemDivider/>
                 </IonList>
@@ -178,4 +205,4 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
     );
 }
 
-export default ArgumentationComp;
+export default Augmentation;
