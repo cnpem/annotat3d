@@ -1,4 +1,4 @@
-import { IonItem, IonLabel, IonRange } from '@ionic/react';
+import { IonItem, IonLabel, IonRange, IonToggle } from '@ionic/react';
 import { Fragment } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 
@@ -37,6 +37,8 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         lower: 0,
         upper: props.imageShape.z
     });
+
+    const [onCropPreviewMode, setOnCropPreviewMode] = useStorageState<boolean>(sessionStorage, 'onCropPreviewMode', false);
 
     function onPreview() {
         
@@ -89,6 +91,20 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             onPreview={onPreview} onApply={onApply} onOther={onMerge} OtherName="Merge">
                 <IonItem>
                     <IonLabel>Crop Image</IonLabel>
+                    <IonToggle checked={onCropPreviewMode}
+                        onIonChange={(e) => {
+                            dispatch('onCropPreviewMode', e.detail.checked);
+                            setOnCropPreviewMode(e.detail.checked);
+                            // copied from preview
+                            const cropShape:CropShapeInterface = {
+                                cropX: cropX,
+                                cropY: cropY,
+                                cropZ: cropZ
+                            }
+                            console.log("bruno: yay! preview toggle!", "shape:", cropShape);
+                            dispatch('cropShape', cropShape); 
+                        }}>
+                    </IonToggle>
                 </IonItem>
                 <IonItem>
                     <IonRange name={'cropRangeX'} dualKnobs={true} value={cropX} min={0} max={props.imageShape.x} step={1} snaps={true} pin={true} ticks={false}

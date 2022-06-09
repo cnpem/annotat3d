@@ -15,7 +15,7 @@ import { sfetch } from '../../utils/simplerequest';
 
 import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
-import {dispatch, subscribe, unsubscribe} from '../../utils/eventbus';
+import {currentEventValue, dispatch, subscribe, unsubscribe} from '../../utils/eventbus';
 import {defaultColormap} from '../../utils/colormap';
 import { CropAxisInterface, CropShapeInterface } from '../tools_menu/CropInterface';
 
@@ -679,7 +679,6 @@ class Canvas {
     setRegionOfInterestImage(imgSlice: NdArray<TypedArray>, cropShape: CropShapeInterface) {
         // bruno
         this.imgData = imgSlice;
-        console.log('bruno: did I made it to here? setRegionOfInterestImage');
 
         const x = imgSlice.shape[1];
         const y = imgSlice.shape[0];
@@ -1025,11 +1024,21 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
             this.onFutureChanged = (hasSlice: boolean) => {
                 if (hasSlice) {
+                    console.log('bruno hi1');
                     this.getFutureSlice();
                 } else {
+                    console.log('bruno hi2');
                     this.canvas?.deleteFutureImage();
                     this.setState({...this.state, future_sight_on: false});
                 }
+                // bruno: lets see this sent from here
+                const onCropPreviewMode: boolean = currentEventValue('onCropPreviewMode');
+                console.log('bruno: is it onFutureChanged?', onCropPreviewMode);
+                console.log('bruno: shape', currentEventValue('cropShape'));
+                if (onCropPreviewMode) {
+                    const cropShape: CropShapeInterface = currentEventValue('cropShape');
+                    this.canvas?.cropPreview(cropShape);
+                };
             }
 
             this.onChangeStateBrush = (mode: brush_mode_type) => {
@@ -1063,7 +1072,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('ImageLoaded', this.onImageLoaded);
             subscribe("ChangeStateBrush", this.onChangeStateBrush);
             subscribe("ExtendLabel", this.onExtendLabel);
-            subscribe('cropPreview', this.onCropPreview);
+            subscribe('cropShape', this.onCropPreview);
         }
     }
 
@@ -1086,7 +1095,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('labelChanged', this.onLabelChanged);
         unsubscribe("ChangeStateBrush", this.onChangeStateBrush);
         unsubscribe("ExtendLabel", this.onExtendLabel);
-        unsubscribe('cropPreview', this.onCropPreview);
+        unsubscribe('cropShape', this.onCropPreview);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {

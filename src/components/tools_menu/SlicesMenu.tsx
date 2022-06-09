@@ -6,10 +6,11 @@ import {albumsOutline} from "ionicons/icons";
 
 import {ImageShapeInterface} from './ImageShapeInterface';
 
-import {dispatch, useEventBus} from '../../utils/eventbus';
+import {currentEventValue, dispatch, useEventBus} from '../../utils/eventbus';
 import {SliceInfoInterface} from "./SliceInfoInterface";
 import {useStorageState} from "react-storage-hooks";
 import {Fragment, useEffect} from "react";
+import { CropShapeInterface } from "./CropInterface";
 
 interface SlicesMenuProps{
     imageShape: ImageShapeInterface;
@@ -43,7 +44,6 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             axis: sliceName,
             slice: +e.detail.value
         };
-
         dispatch('sliceChanged', payload);
     }
 
