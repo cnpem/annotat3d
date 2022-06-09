@@ -435,7 +435,6 @@ class Canvas {
     }
 
     cropPreview(cropShape: CropShapeInterface) {
-        console.log('bruno: did I made it to here? cropPreview on Canvas');
         if (this.imgData) {
             this.setRegionOfInterestImage(this.imgData, cropShape);
         }
@@ -609,12 +608,13 @@ class Canvas {
     }
 
     private setContrastInRegion(img: NdArray<TypedArray>, cropShape: CropShapeInterface): Uint8Array {
-        // bruno
 
         console.log("bruno: yay! on canvas preview!", "shape:", cropShape);
 
         let uint8data: Uint8Array;
         let newVal, encodedVal: number;
+
+        const reduceOutsideBrightnessTo: number = 0.2;
 
         const lenX: number = img.shape[1];
         const lenY: number = img.shape[0];
@@ -626,26 +626,17 @@ class Canvas {
 
         const insideBox = (y: number, x: number) => {
             const cropX: CropAxisInterface = cropShape.cropX;
-            // y axis is upside down
-            const cropYinv: CropAxisInterface = {
-                lower: cropShape.cropY.upper,
-                upper: cropShape.cropY.lower,
-            }; 
+            const cropY: CropAxisInterface = cropShape.cropY;
             const cropZ: CropAxisInterface = cropShape.cropZ;
   
             const uIn = ( u: number, cropU: CropAxisInterface ) => { 
                 return ( cropU.lower <= u && u <= cropU.upper ); 
-            }; 
-
-            console.log('bruno crops zin:', uIn(this.sliceNum, cropZ), ' yin: ', uIn(y, cropYinv), ' xin: ',uIn(x, cropX));
+            };
+            // converting i to cartesian y (vertical axis is upside down)
+            const yinv : number = lenY - y - 1
             
-            return uIn(this.sliceNum, cropZ) && uIn(y, cropYinv) && uIn(x, cropX);
+            return uIn(this.sliceNum, cropZ) && uIn(yinv, cropY) && uIn(x, cropX);
         };
-
-        console.log('bruno crops zin:',)
-        insideBox(1,1);
-        insideBox(100,100);
-        insideBox(lenY-1,1);
 
         //TODO: implement for another dtypes
         if (img.dtype === 'uint8') {
@@ -660,10 +651,10 @@ class Canvas {
                 for (let xj = 0; xj < lenX; ++xj) {
                     newVal = clamp(min, img.data[rowMajIdx(yi, xj)], max);
                     encodedVal = 255 * (1.0 - (max - newVal) / range);
-                    if (true) {//( insideBox(yi, xj) ) {
+                    if ( insideBox(yi, xj) ) {
                         uint8data[rowMajIdx(yi, xj)] = encodedVal;
                     } else {
-                        uint8data[rowMajIdx(yi, xj)] = encodedVal*0.5;   
+                        uint8data[rowMajIdx(yi, xj)] = encodedVal*reduceOutsideBrightnessTo;   
                     }
                 }
             }
@@ -671,9 +662,14 @@ class Canvas {
             uint8data = new Uint8Array(lenFlat);
             for (let yi = 0; yi < lenY; ++yi) {
                 for (let xj = 0; xj < lenX; ++xj) {
-                    newVal = clamp(0.0, img.data[rowMajIdx(yi, xj)], 1.0);
+                    // on peixonho's code he sets this with 0 and 1 but then it woudn't change the contrast
+                    newVal = clamp(this.imgMax, img.data[rowMajIdx(yi, xj)], this.imgMax);
                     encodedVal = 255 * newVal;
-                    uint8data[rowMajIdx(yi, xj)] = encodedVal;
+                    if ( insideBox(yi, xj) ) {
+                        uint8data[rowMajIdx(yi, xj)] = encodedVal;
+                    } else {
+                        uint8data[rowMajIdx(yi, xj)] = encodedVal*reduceOutsideBrightnessTo;   
+                    }
                 }
             }
         }
@@ -1047,7 +1043,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             }
 
             this.onCropPreview = (cropShape: CropShapeInterface) => {
-                console.log('bruno: did I made it to here? onCropPreview on CanvasContainer');
                 this.callCropPreview(cropShape);
             }
 
@@ -1068,7 +1063,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('ImageLoaded', this.onImageLoaded);
             subscribe("ChangeStateBrush", this.onChangeStateBrush);
             subscribe("ExtendLabel", this.onExtendLabel);
-            subscribe('cropPreviewMode', this.onCropPreview);
+            subscribe('cropPreview', this.onCropPreview);
         }
     }
 
@@ -1091,7 +1086,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('labelChanged', this.onLabelChanged);
         unsubscribe("ChangeStateBrush", this.onChangeStateBrush);
         unsubscribe("ExtendLabel", this.onExtendLabel);
-        unsubscribe('cropPreviewMode', this.onCropPreview);
+        unsubscribe('cropPreview', this.onCropPreview);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
@@ -1123,8 +1118,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     callCropPreview(cropShape: CropShapeInterface) {
-        //this.setState({...this.state, contrastMin: minimum});
-        console.log('bruno: did I made it to here? callCropPreview on CanvasContainer');
         this.canvas?.cropPreview(cropShape);
     }
 

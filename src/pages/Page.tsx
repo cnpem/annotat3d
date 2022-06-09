@@ -11,9 +11,10 @@ import './Page.css';
 import CanvasContainer from '../components/canvas/CanvasContainer';
 import {build} from "ionicons/icons";
 
-import {dispatch, useEventBus} from '../utils/eventbus';
+import {currentEventValue, dispatch, useEventBus} from '../utils/eventbus';
 import {SliceInfoInterface} from "../components/tools_menu/SliceInfoInterface";
 import {sfetch} from "../utils/simplerequest";
+import { CropShapeInterface } from "../components/tools_menu/CropInterface";
 
 /**
  * Module that contains the initial page of Annotat3D web
@@ -29,6 +30,15 @@ const Page: React.FC = () => {
     const [canvasMode, setCanvasMode] = useState<'drawing' | 'imaging'>('drawing');
 
     useEventBus('sliceChanged', (payload: SliceInfoInterface) => {
+        // // bruno: feels cheating << not here maybe?
+        // const cropShape:CropShapeInterface = {
+        //     cropX: currentEventValue('cropX'),
+        //     cropY: currentEventValue('cropY'),
+        //     cropZ: currentEventValue('cropZ')
+        // }
+        // dispatch('cropPreviewMode', cropShape); 
+
+
         setSliceInfo(payload);
         sfetch('POST', '/close_image/future')
         .then(() => {

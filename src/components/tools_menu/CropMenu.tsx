@@ -1,5 +1,5 @@
 import { IonItem, IonLabel, IonRange } from '@ionic/react';
-import { Fragment, useState } from 'react';
+import { Fragment } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 
 import { dispatch } from '../../utils/eventbus';
@@ -46,7 +46,7 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             cropZ: cropZ
         }
         console.log("bruno: yay! Preview!", "shape:", cropShape);
-        dispatch('cropPreviewMode', cropShape); 
+        dispatch('cropShape', cropShape); 
     };
 
     function onApply() {

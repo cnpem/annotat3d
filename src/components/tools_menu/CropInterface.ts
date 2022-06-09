@@ -1,5 +1,3 @@
-import { type } from "os";
-
 /**
  * Interface component for CropShapeInterface
  * 
