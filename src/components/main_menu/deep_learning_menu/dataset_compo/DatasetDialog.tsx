@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {
-    IonButton, IonItem, IonLabel,
+    IonButton, IonIcon, IonItem, IonLabel,
     IonPopover, IonSegment, IonSegmentButton, SegmentChangeEventDetail
 } from "@ionic/react";
 import ErrorWindowComp from "../../file/ErrorWindowComp";
@@ -8,6 +8,7 @@ import SamplingComp from "./SamplingComp";
 import {useStorageState} from "react-storage-hooks";
 import {AugmentationInterface, InitAugmentationOptions, InitIonRangeVec, IonRangeElement} from "./DatasetInterfaces";
 import AugmentationComp from "./AugmentationComp";
+import {checkbox, closeOutline} from "ionicons/icons";
 
 //TODO : Need to verify why the css is not working on pop-over
 const menuChoices = ["sampling", "augmentation"] as const;
@@ -40,7 +41,7 @@ const WorkspaceComp: React.FC = () => {
         setAugmentationOpSelected(newCheckedVector);
     }
 
-    const changeIonRangeVal = (newSliderNumber: {lower: number, upper: number}, index: number) => {
+    const changeIonRangeVal = (newSliderNumber: { lower: number, upper: number }, index: number) => {
         const newIonRangeVec = ionRangeVec.map(
             element => element.ionRangeId === index
                 ? {...element, actualRangeVal: newSliderNumber} : element
@@ -101,12 +102,26 @@ const WorkspaceComp: React.FC = () => {
                     {menuChoices.map(renderSegmentButton)}
                 </IonSegment>
                 {menuChoices.map(renderMenu)}
-                <IonButton color={"tertiary"} slot={"end"}
-                           onClick={e => setShowPopover({open: false, event: e.nativeEvent})}>
+                <IonButton
+                    color={"tertiary"}
+                    slot={"end"}
+                    onClick={e => setShowPopover({open: false, event: e.nativeEvent})}>
                     OK
+                    <IonIcon
+                        icon={checkbox}
+                        slot={"end"}/>
+                </IonButton>
+                <IonButton
+                    color={"tertiary"}
+                    slot={"end"}
+                    onClick={e => setShowPopover({open: false, event: e.nativeEvent})}>
+                    Cancel
+                    <IonIcon
+                        icon={closeOutline}
+                        slot={"end"}/>
                 </IonButton>
             </IonPopover>
-            {/* Function effect to close the popup */}
+            {/* Function effect to open the popup */}
             <IonItem button
                      onClick={e => setShowPopover({open: true, event: e.nativeEvent})}>
                 Dataset
