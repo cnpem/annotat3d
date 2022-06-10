@@ -1,4 +1,4 @@
-import React from "react";
+import React, {Fragment} from "react";
 import {
     IonAccordion,
     IonAccordionGroup,
@@ -20,11 +20,66 @@ interface CheckedElements {
     onIonRangeVec: (newRangeVal: number, index: number) => void;
 }
 
+interface MenuContentRangeInterface {
+    indexMin: number
+    indexMax: number
+    ionRangeVec: IonRangeElement[];
+    onIonRangeVec: (newRangeVal: number, index: number) => void;
+}
+
+/**
+ * Internal component that create the range content for each menu in Argumentation menu
+ * @param {IonRangeElement[]} ionRangeVec - vector that contains the ion-range objects
+ * @param {(newRangeVal: number, index: number) => void} onIonRangeVec - setter for ionRangeVec
+ * @param {number} indexMin - number that represents the first index of ion-range
+ * @param {number} indexMax - number that represents the second index of ion-range
+ */
+const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onIonRangeVec, indexMin, indexMax}) => {
+
+    return (
+        <Fragment>
+            <IonItem>
+                <IonLabel>Min</IonLabel>
+                <IonRange
+                    min={ionRangeVec[indexMin].ionRangeLimit.minRange}
+                    max={ionRangeVec[indexMin].ionRangeLimit.maxRange}
+                    value={ionRangeVec[indexMin].actualRangeVal}
+                    step={0.01}
+                    onIonChange={(e: CustomEvent) => {
+                        onIonRangeVec(e.detail.value, indexMin)
+                    }}/>
+                <IonLabel>Max</IonLabel>
+                <IonRange
+                    min={ionRangeVec[indexMax].ionRangeLimit.minRange}
+                    max={ionRangeVec[indexMax].ionRangeLimit.maxRange}
+                    value={ionRangeVec[indexMax].actualRangeVal}
+                    step={0.01}
+                    onIonChange={(e: CustomEvent) => {
+                        onIonRangeVec(e.detail.value, indexMax)
+                    }}/>
+            </IonItem>
+            <IonItem>
+                <IonInput
+                    type={"number"}
+                    min={ionRangeVec[indexMin].ionRangeLimit.minRange}
+                    max={ionRangeVec[indexMin].ionRangeLimit.maxRange}
+                    clearInput value={Math.round(ionRangeVec[indexMin].actualRangeVal * 100) / 100}
+                    onIonChange={(e: CustomEvent) => onIonRangeVec(e.detail.value, indexMin)}/>
+                <IonInput
+                    type={"number"}
+                    min={ionRangeVec[indexMax].ionRangeLimit.minRange}
+                    max={ionRangeVec[indexMax].ionRangeLimit.maxRange}
+                    clearInput value={Math.round(ionRangeVec[indexMax].actualRangeVal * 100) / 100}
+                    onIonChange={(e: CustomEvent) => onIonRangeVec(e.detail.value, indexMax)}/>
+            </IonItem>
+        </Fragment>
+    );
+}
+
 /**
  * Component that hold all the Argumentation options
  */
 const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector, ionRangeVec, onIonRangeVec}) => {
-
     return (
         <IonAccordionGroup multiple={true}>
             {/*Argumentation menu option*/}
@@ -108,38 +163,10 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                     <IonItem>
                         <IonLabel>{ionRangeVec[0].ionRangeName}</IonLabel>
                     </IonItem>
-                    {/*Ion Ranges*/}
-                    <IonItem>
-                        <IonLabel>Min</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[0].ionRangeLimit.minRange}
-                            max={ionRangeVec[0].ionRangeLimit.maxRange}
-                            value={ionRangeVec[0].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 0)}}/>
-                        <IonLabel>Max</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[1].ionRangeLimit.minRange}
-                            max={ionRangeVec[1].ionRangeLimit.maxRange}
-                            value={ionRangeVec[1].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 1)}}/>
-                    </IonItem>
-                    {/*Ion Inputs*/}
-                    <IonItem>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[0].ionRangeLimit.minRange}
-                            max={ionRangeVec[0].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[0].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 0)}/>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[1].ionRangeLimit.minRange}
-                            max={ionRangeVec[1].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[1].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 1)}/>
-                    </IonItem>
+                    <MenuContentRange
+                        ionRangeVec={ionRangeVec}
+                        onIonRangeVec={onIonRangeVec}
+                        indexMin={0} indexMax={1}/>
                     <IonItemDivider/>
                 </IonList>
             </IonAccordion>
@@ -159,38 +186,11 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                     <IonItem>
                         <IonLabel>{ionRangeVec[2].ionRangeName}</IonLabel>
                     </IonItem>
-                    {/*Ion Ranges*/}
-                    <IonItem>
-                        <IonLabel>Min</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[2].ionRangeLimit.minRange}
-                            max={ionRangeVec[2].ionRangeLimit.maxRange}
-                            value={ionRangeVec[2].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 2)}}/>
-                        <IonLabel>Max</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[1].ionRangeLimit.minRange}
-                            max={ionRangeVec[1].ionRangeLimit.maxRange}
-                            value={ionRangeVec[1].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 1)}}/>
-                    </IonItem>
-                    {/*Ion Inputs*/}
-                    <IonItem>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[2].ionRangeLimit.minRange}
-                            max={ionRangeVec[2].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[0].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 2)}/>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[1].ionRangeLimit.minRange}
-                            max={ionRangeVec[1].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[1].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 1)}/>
-                    </IonItem>
+                    <MenuContentRange
+                        ionRangeVec={ionRangeVec}
+                        onIonRangeVec={onIonRangeVec}
+                        indexMin={2} indexMax={3}/>
+                    <IonItemDivider/>
                     <IonItemDivider/>
                 </IonList>
             </IonAccordion>
@@ -210,38 +210,11 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                     <IonItem>
                         <IonLabel>{ionRangeVec[4].ionRangeName}</IonLabel>
                     </IonItem>
-                    {/*Ion Ranges*/}
-                    <IonItem>
-                        <IonLabel>Min</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[4].ionRangeLimit.minRange}
-                            max={ionRangeVec[4].ionRangeLimit.maxRange}
-                            value={ionRangeVec[4].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 4)}}/>
-                        <IonLabel>Max</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[5].ionRangeLimit.minRange}
-                            max={ionRangeVec[5].ionRangeLimit.maxRange}
-                            value={ionRangeVec[5].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 5)}}/>
-                    </IonItem>
-                    {/*Ion Inputs*/}
-                    <IonItem>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[4].ionRangeLimit.minRange}
-                            max={ionRangeVec[4].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[2].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 4)}/>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[5].ionRangeLimit.minRange}
-                            max={ionRangeVec[5].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[5].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 5)}/>
-                    </IonItem>
+                    <MenuContentRange
+                        ionRangeVec={ionRangeVec}
+                        onIonRangeVec={onIonRangeVec}
+                        indexMin={4} indexMax={5}/>
+                    <IonItemDivider/>
                     <IonItemDivider/>
                 </IonList>
             </IonAccordion>
@@ -261,38 +234,11 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                     <IonItem>
                         <IonLabel>{ionRangeVec[6].ionRangeName}</IonLabel>
                     </IonItem>
-                    {/*Ion Ranges*/}
-                    <IonItem>
-                        <IonLabel>Min</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[6].ionRangeLimit.minRange}
-                            max={ionRangeVec[6].ionRangeLimit.maxRange}
-                            value={ionRangeVec[6].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 6)}}/>
-                        <IonLabel>Max</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[7].ionRangeLimit.minRange}
-                            max={ionRangeVec[7].ionRangeLimit.maxRange}
-                            value={ionRangeVec[7].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 7)}}/>
-                    </IonItem>
-                    {/*Ion Inputs*/}
-                    <IonItem>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[6].ionRangeLimit.minRange}
-                            max={ionRangeVec[6].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[2].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 6)}/>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[7].ionRangeLimit.minRange}
-                            max={ionRangeVec[7].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[3].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 7)}/>
-                    </IonItem>
+                    <MenuContentRange
+                        ionRangeVec={ionRangeVec}
+                        onIonRangeVec={onIonRangeVec}
+                        indexMin={6} indexMax={7}/>
+                    <IonItemDivider/>
                     <IonItemDivider/>
                 </IonList>
             </IonAccordion>
@@ -312,38 +258,11 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                     <IonItem>
                         <IonLabel>{ionRangeVec[8].ionRangeName}</IonLabel>
                     </IonItem>
-                    {/*Ion Ranges*/}
-                    <IonItem>
-                        <IonLabel>Min</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[8].ionRangeLimit.minRange}
-                            max={ionRangeVec[8].ionRangeLimit.maxRange}
-                            value={ionRangeVec[8].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 8)}}/>
-                        <IonLabel>Max</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[9].ionRangeLimit.minRange}
-                            max={ionRangeVec[9].ionRangeLimit.maxRange}
-                            value={ionRangeVec[9].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 9)}}/>
-                    </IonItem>
-                    {/*Ion Inputs*/}
-                    <IonItem>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[8].ionRangeLimit.minRange}
-                            max={ionRangeVec[8].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[2].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 8)}/>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[9].ionRangeLimit.minRange}
-                            max={ionRangeVec[9].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[3].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 9)}/>
-                    </IonItem>
+                    <MenuContentRange
+                        ionRangeVec={ionRangeVec}
+                        onIonRangeVec={onIonRangeVec}
+                        indexMin={8} indexMax={9}/>
+                    <IonItemDivider/>
                     <IonItemDivider/>
                 </IonList>
             </IonAccordion>
@@ -363,38 +282,11 @@ const Augmentation: React.FC<CheckedElements> = ({checkedVector, onCheckedVector
                     <IonItem>
                         <IonLabel>{ionRangeVec[10].ionRangeName}</IonLabel>
                     </IonItem>
-                    {/*Ion Ranges*/}
-                    <IonItem>
-                        <IonLabel>Min</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[10].ionRangeLimit.minRange}
-                            max={ionRangeVec[10].ionRangeLimit.maxRange}
-                            value={ionRangeVec[10].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 10)}}/>
-                        <IonLabel>Max</IonLabel>
-                        <IonRange
-                            min={ionRangeVec[11].ionRangeLimit.minRange}
-                            max={ionRangeVec[11].ionRangeLimit.maxRange}
-                            value={ionRangeVec[11].actualRangeVal}
-                            step={0.01}
-                            onIonChange={(e: CustomEvent) => {onIonRangeVec(+e.detail.value, 11)}}/>
-                    </IonItem>
-                    {/*Ion Inputs*/}
-                    <IonItem>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[10].ionRangeLimit.minRange}
-                            max={ionRangeVec[10].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[2].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 10)}/>
-                        <IonInput
-                            type={"number"}
-                            min={ionRangeVec[11].ionRangeLimit.minRange}
-                            max={ionRangeVec[11].ionRangeLimit.maxRange}
-                            clearInput value={Math.round(ionRangeVec[3].actualRangeVal * 100)/100}
-                            onIonChange={(e) => onIonRangeVec(+e.detail.value!, 11)}/>
-                    </IonItem>
+                    <MenuContentRange
+                        ionRangeVec={ionRangeVec}
+                        onIonRangeVec={onIonRangeVec}
+                        indexMin={10} indexMax={11}/>
+                    <IonItemDivider/>
                     <IonItemDivider/>
                 </IonList>
             </IonAccordion>
