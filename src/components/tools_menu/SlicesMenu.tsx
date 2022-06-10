@@ -6,11 +6,10 @@ import {albumsOutline} from "ionicons/icons";
 
 import {ImageShapeInterface} from './ImageShapeInterface';
 
-import {currentEventValue, dispatch, useEventBus} from '../../utils/eventbus';
+import { currentEventValue, dispatch, useEventBus} from '../../utils/eventbus';
 import {SliceInfoInterface} from "./SliceInfoInterface";
 import {useStorageState} from "react-storage-hooks";
 import {Fragment, useEffect} from "react";
-import { CropShapeInterface } from "./CropInterface";
 
 interface SlicesMenuProps{
     imageShape: ImageShapeInterface;
@@ -45,6 +44,8 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             slice: +e.detail.value
         };
         dispatch('sliceChanged', payload);
+        // const cropShape = currentEventValue('cropShape'); 
+        // dispatch('cropShape', cropShape);
     }
 
     const handleSliceName = (e: CustomEvent) => {
@@ -61,6 +62,8 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         };
 
         dispatch('sliceChanged', payload);
+        // const cropShape = currentEventValue('cropShape'); 
+        // dispatch('cropShape', cropShape);
     }
 
     useEffect(() => {
@@ -68,6 +71,8 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             axis: sliceName,
             slice: sliceValue
         });
+        // const cropShape = currentEventValue('cropShape'); 
+        // dispatch('cropShape', cropShape);
     })
 
     useEventBus('LockComponents', (changeLockMenu) => {

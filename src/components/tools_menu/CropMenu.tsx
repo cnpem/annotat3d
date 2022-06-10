@@ -43,6 +43,7 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     function onPreview() {
         
         const cropShape:CropShapeInterface = {
+            isActive: true,
             cropX: cropX,
             cropY: cropY,
             cropZ: cropZ
@@ -54,6 +55,7 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     function onApply() {
 
         const cropShape:CropShapeInterface = {
+            isActive: false,
             cropX: cropX,
             cropY: cropY,
             cropZ: cropZ
@@ -97,6 +99,7 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                             setOnCropPreviewMode(e.detail.checked);
                             // copied from preview
                             const cropShape:CropShapeInterface = {
+                                isActive: e.detail.checked,
                                 cropX: cropX,
                                 cropY: cropY,
                                 cropZ: cropZ

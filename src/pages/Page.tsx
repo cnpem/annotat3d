@@ -11,10 +11,9 @@ import './Page.css';
 import CanvasContainer from '../components/canvas/CanvasContainer';
 import {build} from "ionicons/icons";
 
-import {currentEventValue, dispatch, useEventBus} from '../utils/eventbus';
-import {SliceInfoInterface} from "../components/tools_menu/SliceInfoInterface";
-import {sfetch} from "../utils/simplerequest";
-import { CropShapeInterface } from "../components/tools_menu/CropInterface";
+import { dispatch, useEventBus } from '../utils/eventbus';
+import { SliceInfoInterface } from "../components/tools_menu/SliceInfoInterface";
+import { sfetch } from "../utils/simplerequest";
 
 /**
  * Module that contains the initial page of Annotat3D web
@@ -35,6 +34,8 @@ const Page: React.FC = () => {
         .then(() => {
             dispatch('futureChanged', null)
         });
+        const cropShape = currentEventValue('cropShape'); 
+        dispatch('cropShape', cropShape);
     });
 
 

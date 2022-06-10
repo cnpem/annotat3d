@@ -226,6 +226,7 @@ class Canvas {
     labelSlice: PIXI.Sprite;
     superpixelSlice: PIXI.Sprite;
     futureSlice: PIXI.Sprite;
+    cropSlice: PIXI.Sprite; // bruno
 
     superpixelColor: number = 0xff0000;
 
@@ -237,6 +238,7 @@ class Canvas {
     imgData?: NdArray<TypedArray>;
     labelData?: NdArray<TypedArray>;
     futureData?: NdArray<TypedArray>;
+    cropData?: NdArray<TypedArray>; // bruno
 
     imgMin: number = 0.0;
     imgMax: number = 1.0;
@@ -270,6 +272,11 @@ class Canvas {
 
         this.labelSlice = new PIXI.Sprite();
 
+        this.cropSlice = new PIXI.Sprite(); // bruno
+        this.cropSlice.alpha = 0.3; // bruno
+        this.cropSlice.blendMode = PIXI.BLEND_MODES.ADD; // bruno
+        this.cropSlice.visible = false; // bruno
+
         this.futureSlice = new PIXI.Sprite();
         this.futureSlice.visible = false;
 
@@ -298,6 +305,7 @@ class Canvas {
         this.viewport.addChild(this.futureSlice);
         this.viewport.addChild(this.superpixelSlice);
         this.viewport.addChild(this.labelSlice);
+        this.viewport.addChild(this.cropSlice);
         this.viewport.addChild(this.annotation.sprite);
         this.viewport.addChild(this.brush.cursor);
 
@@ -432,13 +440,7 @@ class Canvas {
         if (this.imgData) {
             this.setImage(this.imgData);
         }
-    }
-
-    cropPreview(cropShape: CropShapeInterface) {
-        if (this.imgData) {
-            this.setRegionOfInterestImage(this.imgData, cropShape);
-        }
-    }    
+    }  
 
     draw(currPosition: PIXI.Point) : [number, number][] {
 
@@ -524,12 +526,20 @@ class Canvas {
         this.labelSlice.alpha = alpha;
     }
 
+    setCropAlpha(alpha: number) { // bruno
+        this.cropSlice.alpha = alpha;
+    }
+
     setPreviewVisibility(visible: boolean = true) {
         this.futureSlice.visible = visible;
     }
 
     setLabelVisibility(visible: boolean = true) {
         this.labelSlice.visible = visible;
+    }
+
+    setCropVisibility(visible: boolean = false) { // bruno
+        this.cropSlice.visible = visible;
     }
 
     private textureFromSlice(slice: Uint8Array, x: number, y: number, pformat = PIXI.FORMATS.LUMINANCE) {
@@ -555,7 +565,7 @@ class Canvas {
         for (let i = 0; i < len; ++i) {
             const idx = i * 4;
             const label = labelSlice.data[i];
-            if (label <= 0)
+            if (label <= 0)  
                 continue;
 
             const color = colors[label];
@@ -567,6 +577,54 @@ class Canvas {
 
         const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
         this.labelSlice.texture = texture;
+    }
+
+    setCropPreviewMaskImage(cropShape: CropShapeInterface) { //bruno
+
+        const width = this.imgData!!.shape[1];
+        const height = this.imgData!!.shape[0];
+
+        const len = width*height;
+        let rgbaData = new Uint8Array(len * 4);
+
+        console.log('bruno: height x width', height, width);
+
+        const colors = this.colors;
+
+        const rowMajIdx = (yi: number, xj: number) => {
+            return xj + yi*width;
+        };
+
+        const insideBox = (y: number, x: number) => {
+            const cropX: CropAxisInterface = cropShape.cropX;
+            const cropY: CropAxisInterface = cropShape.cropY;
+            const cropZ: CropAxisInterface = cropShape.cropZ;
+    
+            const uIn = ( u: number, cropU: CropAxisInterface ) => { 
+                return ( cropU.lower <= u && u <= cropU.upper ); 
+            };
+            // converting i to cartesian y (vertical axis is upside down)
+            const yinv : number = height - y - 1
+
+            return uIn(this.sliceNum, cropZ) && uIn(yinv, cropY) && uIn(x, cropX);
+        };
+
+        const color = colors[0];
+        for (let yi = 0; yi < height; ++yi) {
+            for (let xj = 0; xj < width; ++xj) {
+                if ( !insideBox(yi, xj) ) {
+                    const idx = rowMajIdx(yi, xj) * 4;
+                    rgbaData[idx] = color[0];
+                    rgbaData[idx + 1] = color[1];
+                    rgbaData[idx + 2] = color[2];
+                    rgbaData[idx + 3] = 128;
+                } 
+            }
+        }        
+
+        const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
+        this.cropSlice.texture = texture;
+        this.setCropVisibility(cropShape.isActive);
     }
 
     private toUint8Array(img: NdArray<TypedArray>): Uint8Array {
@@ -605,88 +663,6 @@ class Canvas {
         }
 
         return uint8data;
-    }
-
-    private setContrastInRegion(img: NdArray<TypedArray>, cropShape: CropShapeInterface): Uint8Array {
-
-        console.log("bruno: yay! on canvas preview!", "shape:", cropShape);
-
-        let uint8data: Uint8Array;
-        let newVal, encodedVal: number;
-
-        const reduceOutsideBrightnessTo: number = 0.2;
-
-        const lenX: number = img.shape[1];
-        const lenY: number = img.shape[0];
-        const lenFlat: number = lenX*lenY;
-        
-        const rowMajIdx = (yi: number, xj: number) => {
-            return xj + yi*lenX;
-        };
-
-        const insideBox = (y: number, x: number) => {
-            const cropX: CropAxisInterface = cropShape.cropX;
-            const cropY: CropAxisInterface = cropShape.cropY;
-            const cropZ: CropAxisInterface = cropShape.cropZ;
-  
-            const uIn = ( u: number, cropU: CropAxisInterface ) => { 
-                return ( cropU.lower <= u && u <= cropU.upper ); 
-            };
-            // converting i to cartesian y (vertical axis is upside down)
-            const yinv : number = lenY - y - 1
-            
-            return uIn(this.sliceNum, cropZ) && uIn(yinv, cropY) && uIn(x, cropX);
-        };
-
-        //TODO: implement for another dtypes
-        if (img.dtype === 'uint8') {
-            uint8data = img.data as Uint8Array;
-            // bruno: why he does nothing here?
-        } else if (img.dtype === 'uint16'){
-            const max = 65535.0 * this.imgMax;
-            const min = 65535.0 * this.imgMin;
-            const range = max - min;
-            uint8data = new Uint8Array(lenFlat);
-            for (let yi = 0; yi < lenY; ++yi) {
-                for (let xj = 0; xj < lenX; ++xj) {
-                    newVal = clamp(min, img.data[rowMajIdx(yi, xj)], max);
-                    encodedVal = 255 * (1.0 - (max - newVal) / range);
-                    if ( insideBox(yi, xj) ) {
-                        uint8data[rowMajIdx(yi, xj)] = encodedVal;
-                    } else {
-                        uint8data[rowMajIdx(yi, xj)] = encodedVal*reduceOutsideBrightnessTo;   
-                    }
-                }
-            }
-        } else {
-            uint8data = new Uint8Array(lenFlat);
-            for (let yi = 0; yi < lenY; ++yi) {
-                for (let xj = 0; xj < lenX; ++xj) {
-                    // on peixonho's code he sets this with 0 and 1 but then it woudn't change the contrast
-                    newVal = clamp(this.imgMax, img.data[rowMajIdx(yi, xj)], this.imgMax);
-                    encodedVal = 255 * newVal;
-                    if ( insideBox(yi, xj) ) {
-                        uint8data[rowMajIdx(yi, xj)] = encodedVal;
-                    } else {
-                        uint8data[rowMajIdx(yi, xj)] = encodedVal*reduceOutsideBrightnessTo;   
-                    }
-                }
-            }
-        }
-        return uint8data;
-    }
-
-    setRegionOfInterestImage(imgSlice: NdArray<TypedArray>, cropShape: CropShapeInterface) {
-        // bruno
-        this.imgData = imgSlice;
-
-        const x = imgSlice.shape[1];
-        const y = imgSlice.shape[0];
-
-        const uint8data = this.setContrastInRegion(imgSlice, cropShape);
-        const texture = this.textureFromSlice(uint8data, x, y);
-
-        this.slice.texture = texture;
     }
 
     setFutureImage(futureSlice: NdArray<TypedArray>) {
@@ -846,6 +822,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             this.getAnnotSlice();
             this.getLabelSlice();
             this.getFutureSlice();
+            // this.getCropPreviewMaskSlice(); // bruno: fetchAll getCropPreviewMaskSlice
         });
     }
 
@@ -929,6 +906,18 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         });
 
     }
+
+    // getCropPreviewMaskSlice() { // bruno: getCropPreviewMaskSlice
+    //     // bruno: change-this
+    //     const thisCropShape: CropShapeInterface = currentEventValue('cropShape');
+
+    //     // const this.onCropPreviewMode;
+    //     const thisOnCropPreviewMode: boolean = currentEventValue('onCropPreviewMode');
+
+    //     if (thisOnCropPreviewMode) {            
+    //         this.canvas!!.setCropPreviewMaskImage(this.canvas!!.imgData, thisCropShape);
+    //     };
+    // }
 
     setBrushMode(brush_mode: brush_mode_type) {
         this.setState({brush_mode: brush_mode});
@@ -1024,21 +1013,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
             this.onFutureChanged = (hasSlice: boolean) => {
                 if (hasSlice) {
-                    console.log('bruno hi1');
                     this.getFutureSlice();
                 } else {
-                    console.log('bruno hi2');
                     this.canvas?.deleteFutureImage();
                     this.setState({...this.state, future_sight_on: false});
                 }
-                // bruno: lets see this sent from here
-                const onCropPreviewMode: boolean = currentEventValue('onCropPreviewMode');
-                console.log('bruno: is it onFutureChanged?', onCropPreviewMode);
-                console.log('bruno: shape', currentEventValue('cropShape'));
-                if (onCropPreviewMode) {
-                    const cropShape: CropShapeInterface = currentEventValue('cropShape');
-                    this.canvas?.cropPreview(cropShape);
-                };
             }
 
             this.onChangeStateBrush = (mode: brush_mode_type) => {
@@ -1127,7 +1106,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     callCropPreview(cropShape: CropShapeInterface) {
-        this.canvas?.cropPreview(cropShape);
+        
+        this.canvas?.setCropPreviewMaskImage(cropShape);
+        // this.canvas?.setCropVisibility(cropShape.isActive); bruno chamar dentro da função que desenha
     }
 
     render() {
