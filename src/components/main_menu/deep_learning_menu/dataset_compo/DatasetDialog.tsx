@@ -6,11 +6,11 @@ import {
 import ErrorWindowComp from "../../file/ErrorWindowComp";
 import SamplingComp from "./SamplingComp";
 import {useStorageState} from "react-storage-hooks";
-import ArgumentationComp from "./AugmentationComp";
 import {AugmentationInterface, InitAugmentationOptions, InitIonRangeVec, IonRangeElement} from "./DatasetInterfaces";
+import AugmentationComp from "./AugmentationComp";
 
 //TODO : Need to verify why the css is not working on pop-over
-const menuChoices = ["sampling", "argumentation"] as const;
+const menuChoices = ["sampling", "augmentation"] as const;
 type InputMenuChoicesType = typeof menuChoices[number];
 
 /**
@@ -40,8 +40,7 @@ const WorkspaceComp: React.FC = () => {
         setAugmentationOpSelected(newCheckedVector);
     }
 
-    const changeIonRangeVal = (newSliderNumber: number, index: number) => {
-        console.log("index val : ", index);
+    const changeIonRangeVal = (newSliderNumber: {lower: number, upper: number}, index: number) => {
         const newIonRangeVec = ionRangeVec.map(
             element => element.ionRangeId === index
                 ? {...element, actualRangeVal: newSliderNumber} : element
@@ -69,7 +68,7 @@ const WorkspaceComp: React.FC = () => {
         );
     }
 
-    const menus = [<SamplingComp/>, <ArgumentationComp
+    const menus = [<SamplingComp/>, <AugmentationComp
         checkedVector={augmentationOpSelected}
         onCheckedVector={changeCheckedStatus}
         ionRangeVec={ionRangeVec}

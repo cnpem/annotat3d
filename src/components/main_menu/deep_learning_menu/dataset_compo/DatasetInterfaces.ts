@@ -6,8 +6,12 @@
  */
 export interface IonRangeElement {
     ionRangeId: number,
+    ionNameMenu: string,
     ionRangeName: string,
-    actualRangeVal: number,
+    actualRangeVal: {
+        lower: number,
+        upper: number,
+    }
     ionRangeLimit: {
         minRange: number,
         maxRange: number,
@@ -85,17 +89,12 @@ export const InitIonRangeVec: IonRangeElement[] = [
     /*Contrast Menu*/
     {
         ionRangeId: 0,
+        ionNameMenu: "Contrast",
         ionRangeName: "Gamma",
-        actualRangeVal: 0.95,
-        ionRangeLimit: {
-            minRange: 0.50,
-            maxRange: 2.00,
+        actualRangeVal: {
+            lower: 0.95,
+            upper: 1.55,
         },
-    },
-    {
-        ionRangeId: 1,
-        ionRangeName: "Gamma",
-        actualRangeVal: 1.55,
         ionRangeLimit: {
             minRange: 0.50,
             maxRange: 2.00,
@@ -104,18 +103,13 @@ export const InitIonRangeVec: IonRangeElement[] = [
     /*********************/
     /*Linear Contrast menu*/
     {
-        ionRangeId: 2,
+        ionRangeId: 1,
+        ionNameMenu: "Linear Contrast",
         ionRangeName: "Gamma",
-        actualRangeVal: 0.76,
-        ionRangeLimit: {
-            minRange: 0.40,
-            maxRange: 1.60,
+        actualRangeVal: {
+            lower: 0.76,
+            upper: 1.24,
         },
-    },
-    {
-        ionRangeId: 3,
-        ionRangeName: "Gamma",
-        actualRangeVal: 1.24,
         ionRangeLimit: {
             minRange: 0.40,
             maxRange: 1.60,
@@ -124,18 +118,13 @@ export const InitIonRangeVec: IonRangeElement[] = [
     /*********************/
     /*Dropout menu*/
     {
-        ionRangeId: 4,
-        ionRangeName: "Dropout",
-        actualRangeVal: 0.06,
-        ionRangeLimit: {
-            minRange: 0.00,
-            maxRange: 0.20,
+        ionRangeId: 2,
+        ionNameMenu: "Dropout",
+        ionRangeName: "Gamma",
+        actualRangeVal: {
+            lower: 0.06,
+            upper: 0.14,
         },
-    },
-    {
-        ionRangeId: 5,
-        ionRangeName: "Dropout",
-        actualRangeVal: 0.14,
         ionRangeLimit: {
             minRange: 0.00,
             maxRange: 0.20,
@@ -144,18 +133,13 @@ export const InitIonRangeVec: IonRangeElement[] = [
     /*********************/
     /*Gaussian Blur*/
     {
-        ionRangeId: 6,
+        ionRangeId: 3,
+        ionNameMenu: "Gaussian Blur",
         ionRangeName: "Sigma",
-        actualRangeVal: 0.97,
-        ionRangeLimit: {
-            minRange: 0.01,
-            maxRange: 3.00,
+        actualRangeVal: {
+            lower: 0.97,
+            upper: 2.13,
         },
-    },
-    {
-        ionRangeId: 7,
-        ionRangeName: "Sigma",
-        actualRangeVal: 2.13,
         ionRangeLimit: {
             minRange: 0.01,
             maxRange: 3.00,
@@ -164,18 +148,13 @@ export const InitIonRangeVec: IonRangeElement[] = [
     /*********************/
     /*Average Blur*/
     {
-        ionRangeId: 8,
+        ionRangeId: 4,
+        ionNameMenu: "Average Blur",
         ionRangeName: "K",
-        actualRangeVal: 4.30,
-        ionRangeLimit: {
-            minRange: 1.00,
-            maxRange: 12.00,
+        actualRangeVal: {
+            lower: 4.30,
+            upper: 8.70,
         },
-    },
-    {
-        ionRangeId: 9,
-        ionRangeName: "K",
-        actualRangeVal: 8.70,
         ionRangeLimit: {
             minRange: 1.00,
             maxRange: 12.00,
@@ -184,18 +163,13 @@ export const InitIonRangeVec: IonRangeElement[] = [
     /*********************/
     /*Additive Poisson Noise*/
     {
-        ionRangeId: 10,
+        ionRangeId: 5,
+        ionNameMenu: "Additive Poisson Noise",
         ionRangeName: "Scale",
-        actualRangeVal: 6.00,
-        ionRangeLimit: {
-            minRange: 0.00,
-            maxRange: 20.00,
+        actualRangeVal: {
+            lower: 6.00,
+            upper: 14.00,
         },
-    },
-    {
-        ionRangeId: 11,
-        ionRangeName: "Scale",
-        actualRangeVal: 14.00,
         ionRangeLimit: {
             minRange: 0.00,
             maxRange: 20.00,
@@ -204,27 +178,26 @@ export const InitIonRangeVec: IonRangeElement[] = [
     /*********************/
     /*Elastic Deformation*/
     {
-        ionRangeId: 12,
+        ionRangeId: 6,
+        ionNameMenu: "Elastic Deformation",
         ionRangeName: "Alpha",
-        actualRangeVal: 15.07,
+        actualRangeVal: {
+            lower: 15.07,
+            upper: 35.03,
+        },
         ionRangeLimit: {
             minRange: 0.10,
             maxRange: 50.00,
         },
     },
     {
-        ionRangeId: 13,
-        ionRangeName: "Alpha",
-        actualRangeVal: 35.03,
-        ionRangeLimit: {
-            minRange: 0.10,
-            maxRange: 50.00,
-        },
-    },
-    {
-        ionRangeId: 14,
+        ionRangeId: 7,
+        ionNameMenu: "Elastic Deformation",
         ionRangeName: "Sigma",
-        actualRangeVal: 1.57,
+        actualRangeVal: {
+            lower: 1.57,
+            upper: 3.53,
+        },
         ionRangeLimit: {
             minRange: 0.10,
             maxRange: 4.95,
