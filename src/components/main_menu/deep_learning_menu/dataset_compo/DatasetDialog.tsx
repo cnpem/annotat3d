@@ -7,7 +7,7 @@ import ErrorWindowComp from "../../file/ErrorWindowComp";
 import SamplingComp from "./SamplingComp";
 import {useStorageState} from "react-storage-hooks";
 import ArgumentationComp from "./AugmentationComp";
-import {AugmentationInterface, InitAugmentationOptions} from "./DatasetInterfaces";
+import {AugmentationInterface, InitAugmentationOptions, InitIonRangeVec, IonRangeElement} from "./DatasetInterfaces";
 
 //TODO : Need to verify why the css is not working on pop-over
 const menuChoices = ["sampling", "argumentation"] as const;
@@ -29,16 +29,24 @@ const WorkspaceComp: React.FC = () => {
 
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
-    const [augmentationOpSelected, setAugmentationOpSelected] = useState<AugmentationInterface[]>(InitAugmentationOptions)
+    const [augmentationOpSelected, setAugmentationOpSelected] = useState<AugmentationInterface[]>(InitAugmentationOptions);
+    const [ionRangeVec, setIonRangeVec] = useState<IonRangeElement[]>(InitIonRangeVec);
 
     const changeCheckedStatus = (index: number) => {
         const newCheckedVector = augmentationOpSelected.map(
             element => element.checkedId === index
                 ? {...element, isChecked: !element.isChecked} : element
         );
-
         setAugmentationOpSelected(newCheckedVector);
+    }
 
+    const changeIonRangeVal = (newSliderNumber: number, index: number) => {
+        console.log("index val : ", index);
+        const newIonRangeVec = ionRangeVec.map(
+            element => element.ionRangeId === index
+                ? {...element, actualRangeVal: newSliderNumber} : element
+        );
+        setIonRangeVec(newIonRangeVec);
     }
 
     const handleErrorMsg = (msg: string) => {
@@ -63,7 +71,9 @@ const WorkspaceComp: React.FC = () => {
 
     const menus = [<SamplingComp/>, <ArgumentationComp
         checkedVector={augmentationOpSelected}
-        onCheckedVector={changeCheckedStatus}/>];
+        onCheckedVector={changeCheckedStatus}
+        ionRangeVec={ionRangeVec}
+        onIonRangeVec={changeIonRangeVal}/>];
 
     const renderMenu = (choice: InputMenuChoicesType, idx: number) => {
         return (
@@ -79,6 +89,7 @@ const WorkspaceComp: React.FC = () => {
         setShowErrorWindow(false);
         setErrorMsg("");
         setAugmentationOpSelected(InitAugmentationOptions);
+        setIonRangeVec(InitIonRangeVec);
     };
     return (
         <>

@@ -25,6 +25,6 @@ TODO : Need to move this component to another place. IDW, but the css only work 
 .file-popover-dataset::part(content) {
     top: 1% !important;
     left: 30% !important;
-    --width: 600px;
-    --max-height: 970px;
+    --width: 700px;
+    --max-height: 920px;
 }
