@@ -204,3 +204,42 @@ export const InitIonRangeVec: IonRangeElement[] = [
         }
     }
 ];
+
+/**
+ * Interfaces used on SamplingComp.tsx
+ */
+
+/**
+ * Build-in interface for Element of data and weight table
+ */
+interface ElementDataAndWei {
+    file: string,
+    shape: string,
+    type: string,
+    scan: string,
+    time: number,
+    size: number,
+    fullPath: string
+}
+
+/**
+ * Element of the vector DataAndWeiTable[]
+ */
+export interface DataAndWeiTable {
+    id: number,
+    element: ElementDataAndWei,
+}
+
+export const InitDataAndWeiTable: DataAndWeiTable [] = [{
+    id: 0,
+    element: {
+        file: "",
+        shape: "0 x 0 x 0",
+        type: "",
+        scan: "",
+        time: 0,
+        size: 0,
+        fullPath: ""
+    }
+}]
+

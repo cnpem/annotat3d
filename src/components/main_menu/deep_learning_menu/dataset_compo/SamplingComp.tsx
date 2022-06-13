@@ -11,11 +11,9 @@ import {
 } from "@ionic/react";
 import {addOutline, construct, image, trashOutline} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
-import {LabelInterface} from "../../../tools_menu/label_table/LabelInterface";
-import {isEqual} from "lodash";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
-import OptionsIcons from "../../../tools_menu/label_table/OptionsIcons";
 import * as ReactBootStrap from "react-bootstrap";
+import {DataAndWeiTable, InitDataAndWeiTable} from "./DatasetInterfaces";
 
 interface AddNewFileInterface {
     showPopover: { open: boolean, event: Event | undefined },
@@ -28,7 +26,7 @@ interface multiplesPath {
 }
 
 /**
- *
+ * React component that creates the add menu interface
  * @param showPopover
  * @param closePopover
  * @constructor
@@ -95,8 +93,8 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({showPopover, closePopover}) 
 
 interface TableSamplingInterface {
     darkMode: boolean,
-    labelList: LabelInterface[],
-    renderLabel: (labelElement: LabelInterface) => void,
+    labelList: DataAndWeiTable[],
+    renderLabel: (labelElement: DataAndWeiTable) => void,
     NAME_WIDTH: string,
 
 }
@@ -105,9 +103,9 @@ interface TableSamplingInterface {
  * TODO : need to make just one popover closes when i close one popover
  * Build-in Component that creates the table for Data, Label and Weight menu
  * @param {boolean} darkMode boolean variable that gets the forces the table to dark mode
- * @param {LabelInterface} labelList - Object of LabelInterface that contains the props of label table
+ * @param {DataAndWeiTable[]} labelList - Object of DataAndWeiTable that contains the props of label table
  * @param {string} NAME_WIDTH - string that contains the width of each header in this table
- * @param {(labelElement: LabelInterface) => void} renderLabel - function that renders the label content
+ * @param {(labelElement: DataAndWeiTable) => void} renderLabel - function that renders the label content
  */
 const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, labelList, NAME_WIDTH, renderLabel}) => {
 
@@ -180,11 +178,7 @@ const SamplingComp: React.FC = () => {
 
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
     const [newLabelId, setNewLabelId] = useStorageState<number>(sessionStorage, 'newLabelId', 1);
-    const [labelList, setLabelList] = useStorageState<LabelInterface[]>(sessionStorage, 'labelList', [{
-        labelName: "Background",
-        color: [246, 10, 246],
-        id: 0
-    }]);
+    const [labelList, setLabelList] = useStorageState<DataAndWeiTable[]>(sessionStorage, 'newLabelListTable', InitDataAndWeiTable);
 
     useEventBus('toggleMode', (darkMode: boolean) => {
         setDarkMode(darkMode);
@@ -198,10 +192,10 @@ const SamplingComp: React.FC = () => {
         patchSize: [256, 256, 1],
     });
 
-    const removeLabelElement = (label: LabelInterface) => {
-        setLabelList(labelList!.filter(l => l.id !== label.id));
+    const removeLabelElement = (labelElement: DataAndWeiTable) => {
+        setLabelList(labelList!.filter(l => l.id !== labelElement.id));
 
-        if (labelList.length === 2) {
+        if (labelList?.length === 2) {
             setNewLabelId(1);
         }
 
@@ -210,16 +204,12 @@ const SamplingComp: React.FC = () => {
     const selectIdGenerator = (id: number) => {
         setNewLabelId(id + 1);
     }
-    const changeLabelList = (newLabelName: string, labelId: number, color: [number, number, number]) => {
+    const changeLabelList = (newLabelName: string, labelId: number) => {
 
         const newList = labelList!
             .map(l => l.id === labelId
-                ? {...l, labelName: newLabelName, color: color}
+                ? {...l, file: newLabelName}
                 : l);
-
-        if (!isEqual(labelList!.filter(l => l.id === labelId)[0].color, color)) {
-            dispatch('labelColorsChanged', [{id: labelId, color: color}]);
-        }
 
         setLabelList(newList);
     }
@@ -231,55 +221,56 @@ const SamplingComp: React.FC = () => {
         });
     }
 
-    const renderLabel = (labelElement: LabelInterface) => {
+    const renderLabel = (labelElement: DataAndWeiTable) => {
 
+        console.log("bla : ", labelElement);
         const isActive = labelElement.id === selectedLabel;
 
         return (
             <tr key={labelElement.id} className={isActive ? "label-table-active" : ""}
                 onClick={() => selectLabel(labelElement.id)}>
-                <td>
-                    <div style={{display: "flex"}}>
-                        <div className="round-bar" style={{background: `rgb(${labelElement.color.join(',')})`}}></div>
-                        <IonLabel>{labelElement.labelName}</IonLabel>
-                    </div>
-                </td>
                 {/*Table Content*/}
                 <td>
-                    <OptionsIcons
+                    {/*<OptionsIcons
                         label={labelElement}
                         onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>
+                        onChangeLabel={changeLabelList}/>*/}
                 </td>
                 <td>
-                    <OptionsIcons
+                    {/*<OptionsIcons
                         label={labelElement}
                         onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>
+                        onChangeLabel={changeLabelList}/>*/}
                 </td>
                 <td>
-                    <OptionsIcons
+                    {/*<OptionsIcons
                         label={labelElement}
                         onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>
+                        onChangeLabel={changeLabelList}/>*/}
                 </td>
                 <td>
-                    <OptionsIcons
+                    {/*<OptionsIcons
                         label={labelElement}
                         onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>
+                        onChangeLabel={changeLabelList}/>*/}
                 </td>
                 <td>
-                    <OptionsIcons
+                    {/*<OptionsIcons
                         label={labelElement}
                         onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>
+                        onChangeLabel={changeLabelList}/>*/}
                 </td>
                 <td>
-                    <OptionsIcons
+                    {/*<OptionsIcons
                         label={labelElement}
                         onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>
+                        onChangeLabel={changeLabelList}/>*/}
+                </td>
+                <td>
+                    {/*<OptionsIcons
+                        label={labelElement}
+                        onChangeLabelList={removeLabelElement}
+                        onChangeLabel={changeLabelList}/>*/}
                 </td>
             </tr>
         );
