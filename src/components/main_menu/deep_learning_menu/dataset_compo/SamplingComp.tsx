@@ -9,7 +9,7 @@ import {
     IonLabel,
     IonList, IonPopover, IonRow
 } from "@ionic/react";
-import {addOutline, construct, trashOutline} from "ionicons/icons";
+import {addOutline, construct, image, trashOutline} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
 import {LabelInterface} from "../../../tools_menu/label_table/LabelInterface";
 import {isEqual} from "lodash";
@@ -18,41 +18,77 @@ import OptionsIcons from "../../../tools_menu/label_table/OptionsIcons";
 import * as ReactBootStrap from "react-bootstrap";
 
 interface AddNewFileInterface {
-    isOpen: boolean,
-    handleIsOpen: (flag: boolean) => void,
+    showPopover: { open: boolean, event: Event | undefined },
+    closePopover: (element: { open: boolean, event: Event | undefined }) => void,
+}
+
+interface multiplesPath {
+    workspacePath: string,
+    imagePath: string,
 }
 
 /**
  *
- * @param isOpen
- * @param handleIsOpen
+ * @param showPopover
+ * @param closePopover
  * @constructor
  */
-const AddNewFile: React.FC<AddNewFileInterface> = ({isOpen, handleIsOpen}) => {
+const AddNewFile: React.FC<AddNewFileInterface> = ({showPopover, closePopover}) => {
 
-    // Init States
-    const [showPopover, setShowPopover] = useState<{ open: boolean, event: Event | undefined }>({
-        open: false,
-        event: undefined,
-    });
+    const [pathFiles, setPathFiles] = useStorageState<multiplesPath>(sessionStorage, "loaded", {
+        workspacePath: "",
+        imagePath: ""
+    })
 
     return (
         <IonPopover
             isOpen={showPopover.open}
             event={showPopover.event}
             trigger={"add-op"}
-            onDidDismiss={() => handleIsOpen(false)}>
+            className={"add-menu"}
+            onDidDismiss={() => closePopover({open: false, event: undefined})}>
             <IonAccordionGroup multiple={true}>
+                {/*Load workspace menu*/}
                 <IonAccordion>
                     <IonItem slot={"header"}>
                         <IonIcon slot={"start"} icon={construct}/>
-                        <IonLabel><small>Data</small></IonLabel>
+                        <IonLabel><small>Load workspace</small></IonLabel>
                     </IonItem>
                     <IonList slot={"content"}>
+                        <IonItem>
+                            <IonLabel position="stacked">Workspace Path</IonLabel>
+                            <IonInput
+                                placeholder={"/path/to/workspace"}
+                                value={pathFiles.workspacePath}
+                                onIonChange={(e: CustomEvent) => setPathFiles({
+                                    ...pathFiles,
+                                    workspacePath: e.detail.value!
+                                })}/>
+                        </IonItem>
+                    </IonList>
+                </IonAccordion>
+                {/*Load image menu*/}
+                <IonAccordion>
+                    <IonItem slot={"header"}>
+                        <IonIcon slot={"start"} icon={image}/>
+                        <IonLabel><small>Load workspace</small></IonLabel>
+                    </IonItem>
+                    <IonList slot={"content"}>
+                        <IonItem>
+                            <IonLabel position="stacked">Image Path</IonLabel>
+                            <IonInput
+                                placeholder={"/path/to/file.tif, .tiff, .raw or .b"}
+                                value={pathFiles.workspacePath}
+                                onIonChange={(e: CustomEvent) => setPathFiles({
+                                    ...pathFiles,
+                                    imagePath: e.detail.value!
+                                })}/>
+                        </IonItem>
                     </IonList>
                 </IonAccordion>
             </IonAccordionGroup>
-            <IonButton onClick={() => handleIsOpen(false)}>Close</IonButton>
+            <IonButton
+                onClick={(e) => closePopover({open: false, event: e.nativeEvent})}>Close</IonButton>
         </IonPopover>
     );
 }
@@ -66,6 +102,7 @@ interface TableSamplingInterface {
 }
 
 /**
+ * TODO : need to make just one popover closes when i close one popover
  * Build-in Component that creates the table for Data, Label and Weight menu
  * @param {boolean} darkMode boolean variable that gets the forces the table to dark mode
  * @param {LabelInterface} labelList - Object of LabelInterface that contains the props of label table
@@ -74,10 +111,14 @@ interface TableSamplingInterface {
  */
 const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, labelList, NAME_WIDTH, renderLabel}) => {
 
-    const [isOpen, setIsOpen] = useState<boolean>(false);
+    // Init States
+    const [showPopover, setShowPopover] = useState<{ open: boolean, event: Event | undefined }>({
+        open: false,
+        event: undefined,
+    });
 
-    const handleIsOpen = (flag: boolean) => {
-        setIsOpen(flag);
+    const handleIsOpen = (element: { open: boolean, event: Event | undefined }) => {
+        setShowPopover(element);
     }
 
     return (
@@ -85,7 +126,7 @@ const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, labelList, N
             <div style={{display: "flex", justifyContent: "flex-end"}}>
                 <IonButton
                     size={"default"}
-                    onClick={() => setIsOpen(true)}>
+                    onClick={(e) => setShowPopover({open: true, event: e.nativeEvent})}>
                     <IonIcon
                         icon={addOutline}
                         slot={"end"}
@@ -120,8 +161,8 @@ const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, labelList, N
                 </ReactBootStrap.Table>
             </div>
             <AddNewFile
-                isOpen={isOpen}
-                handleIsOpen={handleIsOpen}/>
+                showPopover={showPopover}
+                closePopover={handleIsOpen}/>
         </Fragment>
     );
 }

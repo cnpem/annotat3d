@@ -2,10 +2,19 @@
 Component used for "Dataset" in "deep learning"
 This is the link i used as reference to change this component
 https://www.damirscorner.com/blog/posts/20220204-PositioningIonicPopovers.html
+Also, this video can help in any case too
+https://www.youtube.com/watch?v=ZCrQjk6PdK0
  */
 .file-popover-dataset::part(content) {
     top: 1% !important;
     left: 30% !important;
     --width: 700px;
     --max-height: 920px;
+}
+
+/**
+Component used in ion-popover in SamplingComp.tsx
+ */
+.add-menu {
+    --width: 380px;
 }
