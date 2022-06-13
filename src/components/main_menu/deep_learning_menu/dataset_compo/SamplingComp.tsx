@@ -7,7 +7,7 @@ import {
     IonItem,
     IonItemDivider,
     IonLabel,
-    IonList, IonRow
+    IonList, IonPopover, IonRow
 } from "@ionic/react";
 import {addOutline, construct, trashOutline} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
@@ -17,10 +17,44 @@ import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventb
 import OptionsIcons from "../../../tools_menu/label_table/OptionsIcons";
 import * as ReactBootStrap from "react-bootstrap";
 
-interface SamplingInterface {
-    nClasses: number,
-    sampleSize: number,
-    patchSize: Array<number>;
+interface AddNewFileInterface {
+    isOpen: boolean,
+    handleIsOpen: (flag: boolean) => void,
+}
+
+/**
+ *
+ * @param isOpen
+ * @param handleIsOpen
+ * @constructor
+ */
+const AddNewFile: React.FC<AddNewFileInterface> = ({isOpen, handleIsOpen}) => {
+
+    // Init States
+    const [showPopover, setShowPopover] = useState<{ open: boolean, event: Event | undefined }>({
+        open: false,
+        event: undefined,
+    });
+
+    return (
+        <IonPopover
+            isOpen={showPopover.open}
+            event={showPopover.event}
+            trigger={"add-op"}
+            onDidDismiss={() => handleIsOpen(false)}>
+            <IonAccordionGroup multiple={true}>
+                <IonAccordion>
+                    <IonItem slot={"header"}>
+                        <IonIcon slot={"start"} icon={construct}/>
+                        <IonLabel><small>Data</small></IonLabel>
+                    </IonItem>
+                    <IonList slot={"content"}>
+                    </IonList>
+                </IonAccordion>
+            </IonAccordionGroup>
+            <IonButton onClick={() => handleIsOpen(false)}>Close</IonButton>
+        </IonPopover>
+    );
 }
 
 interface TableSamplingInterface {
@@ -31,13 +65,31 @@ interface TableSamplingInterface {
 
 }
 
+/**
+ * Build-in Component that creates the table for Data, Label and Weight menu
+ * @param {boolean} darkMode boolean variable that gets the forces the table to dark mode
+ * @param {LabelInterface} labelList - Object of LabelInterface that contains the props of label table
+ * @param {string} NAME_WIDTH - string that contains the width of each header in this table
+ * @param {(labelElement: LabelInterface) => void} renderLabel - function that renders the label content
+ */
 const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, labelList, NAME_WIDTH, renderLabel}) => {
+
+    const [isOpen, setIsOpen] = useState<boolean>(false);
+
+    const handleIsOpen = (flag: boolean) => {
+        setIsOpen(flag);
+    }
 
     return (
         <Fragment>
             <div style={{display: "flex", justifyContent: "flex-end"}}>
-                <IonButton size={"default"}>
-                    <IonIcon icon={addOutline} slot={"end"}/>
+                <IonButton
+                    size={"default"}
+                    onClick={() => setIsOpen(true)}>
+                    <IonIcon
+                        icon={addOutline}
+                        slot={"end"}
+                        id={"add-op"}/>
                     Add
                 </IonButton>
                 <IonButton
@@ -67,8 +119,17 @@ const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, labelList, N
                     </tbody>
                 </ReactBootStrap.Table>
             </div>
+            <AddNewFile
+                isOpen={isOpen}
+                handleIsOpen={handleIsOpen}/>
         </Fragment>
     );
+}
+
+interface SamplingInterface {
+    nClasses: number,
+    sampleSize: number,
+    patchSize: Array<number>;
 }
 
 /**
@@ -141,6 +202,37 @@ const SamplingComp: React.FC = () => {
                         <div className="round-bar" style={{background: `rgb(${labelElement.color.join(',')})`}}></div>
                         <IonLabel>{labelElement.labelName}</IonLabel>
                     </div>
+                </td>
+                {/*Table Content*/}
+                <td>
+                    <OptionsIcons
+                        label={labelElement}
+                        onChangeLabelList={removeLabelElement}
+                        onChangeLabel={changeLabelList}/>
+                </td>
+                <td>
+                    <OptionsIcons
+                        label={labelElement}
+                        onChangeLabelList={removeLabelElement}
+                        onChangeLabel={changeLabelList}/>
+                </td>
+                <td>
+                    <OptionsIcons
+                        label={labelElement}
+                        onChangeLabelList={removeLabelElement}
+                        onChangeLabel={changeLabelList}/>
+                </td>
+                <td>
+                    <OptionsIcons
+                        label={labelElement}
+                        onChangeLabelList={removeLabelElement}
+                        onChangeLabel={changeLabelList}/>
+                </td>
+                <td>
+                    <OptionsIcons
+                        label={labelElement}
+                        onChangeLabelList={removeLabelElement}
+                        onChangeLabel={changeLabelList}/>
                 </td>
                 <td>
                     <OptionsIcons
