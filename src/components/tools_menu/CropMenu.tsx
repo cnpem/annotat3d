@@ -43,7 +43,7 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     function onPreview() {
         
         const cropShape:CropShapeInterface = {
-            isActive: true,
+            isActive: true, // remover
             cropX: cropX,
             cropY: cropY,
             cropZ: cropZ

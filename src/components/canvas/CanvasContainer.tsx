@@ -238,7 +238,9 @@ class Canvas {
     imgData?: NdArray<TypedArray>;
     labelData?: NdArray<TypedArray>;
     futureData?: NdArray<TypedArray>;
-    cropData?: NdArray<TypedArray>; // bruno
+    // cropData?: NdArray<TypedArray>; // bruno
+    cropShape?: CropShapeInterface // bruno
+    
 
     imgMin: number = 0.0;
     imgMax: number = 1.0;
@@ -276,6 +278,9 @@ class Canvas {
         this.cropSlice.alpha = 0.3; // bruno
         this.cropSlice.blendMode = PIXI.BLEND_MODES.ADD; // bruno
         this.cropSlice.visible = false; // bruno
+        this.cropShape = {
+            
+        }
 
         this.futureSlice = new PIXI.Sprite();
         this.futureSlice.visible = false;
@@ -579,7 +584,11 @@ class Canvas {
         this.labelSlice.texture = texture;
     }
 
-    setCropPreviewMaskImage(cropShape: CropShapeInterface) { //bruno
+    setCropShape(cropShape: CropAxisInterface ) {
+        this.cropShape = cropShape;
+    }
+
+    setCropPreviewMaskImage() { //bruno
 
         const width = this.imgData!!.shape[1];
         const height = this.imgData!!.shape[0];
@@ -596,9 +605,9 @@ class Canvas {
         };
 
         const insideBox = (y: number, x: number) => {
-            const cropX: CropAxisInterface = cropShape.cropX;
-            const cropY: CropAxisInterface = cropShape.cropY;
-            const cropZ: CropAxisInterface = cropShape.cropZ;
+            const cropX: CropAxisInterface = this.cropShape.cropX;
+            const cropY: CropAxisInterface = this.cropShape.cropY;
+            const cropZ: CropAxisInterface = this.cropShape.cropZ;
     
             const uIn = ( u: number, cropU: CropAxisInterface ) => { 
                 return ( cropU.lower <= u && u <= cropU.upper ); 
@@ -1018,6 +1027,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                     this.canvas?.deleteFutureImage();
                     this.setState({...this.state, future_sight_on: false});
                 }
+                this.canvas?.setCropPreviewMaskImage(); // bruno 
             }
 
             this.onChangeStateBrush = (mode: brush_mode_type) => {
