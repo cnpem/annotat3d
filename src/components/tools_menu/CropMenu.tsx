@@ -38,24 +38,26 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         upper: props.imageShape.z
     });
 
-    const [onCropPreviewMode, setOnCropPreviewMode] = useStorageState<boolean>(sessionStorage, 'onCropPreviewMode', false);
+    const [toggleCropPreviewButton, setToggleCropPreviewButton] = useStorageState<boolean>(sessionStorage, 'toggleCropPreviewButton', false);
 
-    function onPreview() {
-        
+    const handlerToggleCropPreviewMode = (e:CustomEvent) => {
         const cropShape:CropShapeInterface = {
-            isActive: true, // remover
             cropX: cropX,
             cropY: cropY,
             cropZ: cropZ
         }
-        console.log("bruno: yay! Preview!", "shape:", cropShape);
+        console.log("bruno: preview toggle!", "shape: ", cropShape);
+        // send shape to event listener (canvas)
         dispatch('cropShape', cropShape); 
+        // changes toggle button state
+        setToggleCropPreviewButton(e.detail.checked);
+        // send change to outside event listeners 
+        dispatch('cropPreviewMode', e.detail.checked); 
     };
 
     function onApply() {
 
         const cropShape:CropShapeInterface = {
-            isActive: false,
             cropX: cropX,
             cropY: cropY,
             cropZ: cropZ
@@ -90,23 +92,10 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     return (
         <Fragment>
             <ModuleCard disabled={props.disabled} name=""
-            onPreview={onPreview} onApply={onApply} onOther={onMerge} OtherName="Merge">
+                 onApply={onApply} onOther={onMerge} OtherName="Merge">
                 <IonItem>
                     <IonLabel>Crop Image</IonLabel>
-                    <IonToggle checked={onCropPreviewMode}
-                        onIonChange={(e) => {
-                            dispatch('onCropPreviewMode', e.detail.checked);
-                            setOnCropPreviewMode(e.detail.checked);
-                            // copied from preview
-                            const cropShape:CropShapeInterface = {
-                                isActive: e.detail.checked,
-                                cropX: cropX,
-                                cropY: cropY,
-                                cropZ: cropZ
-                            }
-                            console.log("bruno: yay! preview toggle!", "shape:", cropShape);
-                            dispatch('cropShape', cropShape); 
-                        }}>
+                    <IonToggle checked={toggleCropPreviewButton} onIonChange={handlerToggleCropPreviewMode}>
                     </IonToggle>
                 </IonItem>
                 <IonItem>

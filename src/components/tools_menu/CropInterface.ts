@@ -9,7 +9,6 @@ interface CropAxisInterface{
 }
 
 interface CropShapeInterface{
-    isActive: boolean;
     cropX: CropAxisInterface;
     cropY: CropAxisInterface;
     cropZ: CropAxisInterface;

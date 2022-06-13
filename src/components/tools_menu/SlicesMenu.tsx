@@ -44,8 +44,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             slice: +e.detail.value
         };
         dispatch('sliceChanged', payload);
-        // const cropShape = currentEventValue('cropShape'); 
-        // dispatch('cropShape', cropShape);
+        dispatch('cropPreviewMode', currentEventValue('cropPreviewMode')); // bruno
     }
 
     const handleSliceName = (e: CustomEvent) => {
@@ -62,8 +61,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         };
 
         dispatch('sliceChanged', payload);
-        // const cropShape = currentEventValue('cropShape'); 
-        // dispatch('cropShape', cropShape);
+        dispatch('cropPreviewMode', currentEventValue('cropPreviewMode')); // bruno
     }
 
     useEffect(() => {
@@ -71,8 +69,6 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             axis: sliceName,
             slice: sliceValue
         });
-        // const cropShape = currentEventValue('cropShape'); 
-        // dispatch('cropShape', cropShape);
     })
 
     useEventBus('LockComponents', (changeLockMenu) => {

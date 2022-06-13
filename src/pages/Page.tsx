@@ -34,8 +34,6 @@ const Page: React.FC = () => {
         .then(() => {
             dispatch('futureChanged', null)
         });
-        // const cropShape = currentEventValue('cropShape'); 
-        // dispatch('cropShape', cropShape);
     });
 
 

@@ -1,6 +1,6 @@
 import {Component} from 'react';
 import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
-import { expand, brush, browsers, add, remove, eye, eyeOff } from 'ionicons/icons';
+import { expand, brush, browsers, add, remove, eye, eyeOff, crop } from 'ionicons/icons';
 import { debounce, isEqual } from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -18,6 +18,7 @@ import MenuFabButton from './MenuFabButton';
 import {currentEventValue, dispatch, subscribe, unsubscribe} from '../../utils/eventbus';
 import {defaultColormap} from '../../utils/colormap';
 import { CropAxisInterface, CropShapeInterface } from '../tools_menu/CropInterface';
+import { ImageShapeInterface } from '../tools_menu/ImageShapeInterface';
 
 class Brush {
 
@@ -238,10 +239,10 @@ class Canvas {
     imgData?: NdArray<TypedArray>;
     labelData?: NdArray<TypedArray>;
     futureData?: NdArray<TypedArray>;
-    // cropData?: NdArray<TypedArray>; // bruno
-    cropShape?: CropShapeInterface // bruno
-    
 
+    imageShape?: ImageShapeInterface; // bruno
+    cropShape?: CropShapeInterface; // bruno
+    
     imgMin: number = 0.0;
     imgMax: number = 1.0;
 
@@ -275,12 +276,9 @@ class Canvas {
         this.labelSlice = new PIXI.Sprite();
 
         this.cropSlice = new PIXI.Sprite(); // bruno
-        this.cropSlice.alpha = 0.3; // bruno
+        this.cropSlice.alpha = 0.8; // bruno
         this.cropSlice.blendMode = PIXI.BLEND_MODES.ADD; // bruno
         this.cropSlice.visible = false; // bruno
-        this.cropShape = {
-            
-        }
 
         this.futureSlice = new PIXI.Sprite();
         this.futureSlice.visible = false;
@@ -344,6 +342,12 @@ class Canvas {
 
         this.annotation.update();
         this.brush.update();
+    }
+
+
+    setImageShape(imageShape: ImageShapeInterface) {
+        console.log('bruno: did you get any of that on canvas?', imageShape ); // bruno
+        this.imageShape = imageShape;
     }
 
     setSliceNum(sliceNum: number) {
@@ -544,6 +548,9 @@ class Canvas {
     }
 
     setCropVisibility(visible: boolean = false) { // bruno
+        if (visible) {
+            this.setCropPreviewMaskImage();
+        }
         this.cropSlice.visible = visible;
     }
 
@@ -584,14 +591,18 @@ class Canvas {
         this.labelSlice.texture = texture;
     }
 
-    setCropShape(cropShape: CropAxisInterface ) {
+    setCropShape(cropShape: CropShapeInterface ) {
         this.cropShape = cropShape;
     }
 
-    setCropPreviewMaskImage() { //bruno
+    private setCropPreviewMaskImage() { // bruno
+
+        const alpha = this.cropSlice.alpha;
+        console.log('bruno ', this.axis);
 
         const width = this.imgData!!.shape[1];
         const height = this.imgData!!.shape[0];
+        
 
         const len = width*height;
         let rgbaData = new Uint8Array(len * 4);
@@ -605,9 +616,9 @@ class Canvas {
         };
 
         const insideBox = (y: number, x: number) => {
-            const cropX: CropAxisInterface = this.cropShape.cropX;
-            const cropY: CropAxisInterface = this.cropShape.cropY;
-            const cropZ: CropAxisInterface = this.cropShape.cropZ;
+            const cropX: CropAxisInterface = this.cropShape!!.cropX;
+            const cropY: CropAxisInterface = this.cropShape!!.cropY;
+            const cropZ: CropAxisInterface = this.cropShape!!.cropZ;
     
             const uIn = ( u: number, cropU: CropAxisInterface ) => { 
                 return ( cropU.lower <= u && u <= cropU.upper ); 
@@ -626,14 +637,13 @@ class Canvas {
                     rgbaData[idx] = color[0];
                     rgbaData[idx + 1] = color[1];
                     rgbaData[idx + 2] = color[2];
-                    rgbaData[idx + 3] = 128;
+                    rgbaData[idx + 3] = 128 * alpha; // bruno: pq 128 no alpha channel?
                 } 
             }
         }        
 
         const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
         this.cropSlice.texture = texture;
-        this.setCropVisibility(cropShape.isActive);
     }
 
     private toUint8Array(img: NdArray<TypedArray>): Uint8Array {
@@ -807,7 +817,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onFutureChanged!: (hasPreview: boolean) => void;
     onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
     onExtendLabel: (flag: boolean) => void = () => {};
-    onCropPreview: (cropShape: CropShapeInterface) => void = () => {};
+    onCropPreviewMode: (activateCropPreview: boolean) => void = () => {};
+    onCropShape: (cropShape: CropShapeInterface) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -831,7 +842,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             this.getAnnotSlice();
             this.getLabelSlice();
             this.getFutureSlice();
-            // this.getCropPreviewMaskSlice(); // bruno: fetchAll getCropPreviewMaskSlice
         });
     }
 
@@ -916,18 +926,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     }
 
-    // getCropPreviewMaskSlice() { // bruno: getCropPreviewMaskSlice
-    //     // bruno: change-this
-    //     const thisCropShape: CropShapeInterface = currentEventValue('cropShape');
-
-    //     // const this.onCropPreviewMode;
-    //     const thisOnCropPreviewMode: boolean = currentEventValue('onCropPreviewMode');
-
-    //     if (thisOnCropPreviewMode) {            
-    //         this.canvas!!.setCropPreviewMaskImage(this.canvas!!.imgData, thisCropShape);
-    //     };
-    // }
-
     setBrushMode(brush_mode: brush_mode_type) {
         this.setState({brush_mode: brush_mode});
         this.canvas!!.setBrushMode(brush_mode);
@@ -956,7 +954,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas?.brush.setLabel(payload.id);
             };
 
-            this.onImageLoaded = () => {
+            this.onImageLoaded = ( payload ) => {
+                console.log('bruno cmon!');
+                this.setImageShape( payload.imageShape );
+                console.log('bruno: did you get any of that?', payload.imageShape ); // bruno
                 const promise = this.fetchAll(true);
                 promise?.then(() => {
                     this.newAnnotation();
@@ -1027,7 +1028,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                     this.canvas?.deleteFutureImage();
                     this.setState({...this.state, future_sight_on: false});
                 }
-                this.canvas?.setCropPreviewMaskImage(); // bruno 
             }
 
             this.onChangeStateBrush = (mode: brush_mode_type) => {
@@ -1040,8 +1040,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas!!.extendLabel = flag;
             }
 
-            this.onCropPreview = (cropShape: CropShapeInterface) => {
-                this.callCropPreview(cropShape);
+            this.onCropPreviewMode = (activateCropPreview: boolean ) => {
+                this.cropPreviewMode(activateCropPreview);
+            }
+
+            this.onCropShape = (cropShape: CropShapeInterface ) => {
+                this.setCropShape(cropShape);
             }
 
             subscribe('futureChanged', this.onFutureChanged);
@@ -1061,7 +1065,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('ImageLoaded', this.onImageLoaded);
             subscribe("ChangeStateBrush", this.onChangeStateBrush);
             subscribe("ExtendLabel", this.onExtendLabel);
-            subscribe('cropShape', this.onCropPreview);
+            subscribe('cropShape', this.onCropShape);
+            subscribe('cropPreviewMode', this.onCropPreviewMode);
         }
     }
 
@@ -1084,7 +1089,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('labelChanged', this.onLabelChanged);
         unsubscribe("ChangeStateBrush", this.onChangeStateBrush);
         unsubscribe("ExtendLabel", this.onExtendLabel);
-        unsubscribe('cropShape', this.onCropPreview);
+        unsubscribe('cropShape', this.onCropShape);
+        unsubscribe('cropPreviewMode', this.onCropPreviewMode);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
@@ -1115,10 +1121,20 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.canvas?.adjustContrast(minimum, maximum);
     }
 
-    callCropPreview(cropShape: CropShapeInterface) {
-        
-        this.canvas?.setCropPreviewMaskImage(cropShape);
-        // this.canvas?.setCropVisibility(cropShape.isActive); bruno chamar dentro da função que desenha
+    setImageShape( imageShape: ImageShapeInterface ) {
+        this.canvas?.setImageShape( imageShape );
+    }
+
+    cropPreviewMode(activateCropPreview: boolean) {
+        // bruno
+        console.log('bruno cropPreviewMode', activateCropPreview);
+        this.canvas?.setCropVisibility(activateCropPreview);
+    }
+
+    setCropShape(cropShape: CropShapeInterface) {
+        // bruno
+        console.log('bruno setCropShape', cropShape);
+        this.canvas?.setCropShape(cropShape);
     }
 
     render() {
