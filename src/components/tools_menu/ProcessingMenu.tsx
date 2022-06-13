@@ -11,7 +11,6 @@ import SuperpixelSegmentationModuleCard from "./SuperpixelSegmentationModuleCard
 const moduleOptions = [
     {id: "superpixel", label: 'Superpixel Segmentation' },
     {id: "pixel", label: "Pixel Segmentation"},
-    {id: "edit", label: 'Label Edit'},
     {
         id: "filter", label: "Smoothing", options: [
             {id: "bm3d_filter", label: 'BM3D Smoothing Filter'},
