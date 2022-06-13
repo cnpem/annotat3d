@@ -1,3 +1,4 @@
+import "./Dataset.css"
 import React, {useState} from "react";
 import {
     IonButton, IonIcon, IonItem, IonLabel,
@@ -10,7 +11,6 @@ import {AugmentationInterface, InitAugmentationOptions, InitIonRangeVec, IonRang
 import AugmentationComp from "./AugmentationComp";
 import {checkbox, closeOutline} from "ionicons/icons";
 
-//TODO : Need to verify why the css is not working on pop-over
 const menuChoices = ["sampling", "augmentation"] as const;
 type InputMenuChoicesType = typeof menuChoices[number];
 

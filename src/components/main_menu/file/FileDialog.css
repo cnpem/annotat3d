@@ -15,16 +15,3 @@ Component used for "Save Files" menu
     --min-width: 300px;
     --max-height: 600px;
 }
-
-/**
-Component used for "Dataset" in "deep learning"
-This is the link i used as reference to change this component
-https://www.damirscorner.com/blog/posts/20220204-PositioningIonicPopovers.html
-TODO : Need to move this component to another place. IDW, but the css only work here
- */
-.file-popover-dataset::part(content) {
-    top: 1% !important;
-    left: 30% !important;
-    --width: 700px;
-    --max-height: 920px;
-}
