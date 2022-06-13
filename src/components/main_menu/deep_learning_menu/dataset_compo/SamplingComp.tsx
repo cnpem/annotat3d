@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {Fragment, useState} from "react";
 import {
     IonAccordion,
     IonAccordionGroup, IonButton, IonCol,
@@ -21,6 +21,54 @@ interface SamplingInterface {
     nClasses: number,
     sampleSize: number,
     patchSize: Array<number>;
+}
+
+interface TableSamplingInterface {
+    darkMode: boolean,
+    labelList: LabelInterface[],
+    renderLabel: (labelElement: LabelInterface) => void,
+    NAME_WIDTH: string,
+
+}
+
+const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, labelList, NAME_WIDTH, renderLabel}) => {
+
+    return (
+        <Fragment>
+            <div style={{display: "flex", justifyContent: "flex-end"}}>
+                <IonButton size={"default"}>
+                    <IonIcon icon={addOutline} slot={"end"}/>
+                    Add
+                </IonButton>
+                <IonButton
+                    color={"danger"}
+                    size={"default"}
+                    slot={"end"}>
+                    <IonIcon icon={trashOutline} slot={"end"}/>
+                    Delete
+                </IonButton>
+            </div>
+            <div className={"label-table"}>
+                <ReactBootStrap.Table striped bordered hover
+                                      className={darkMode ? 'table-dark' : ''}>
+                    <thead>
+                    <tr>
+                        <th className={NAME_WIDTH}><IonLabel>File Name</IonLabel></th>
+                        <th className={NAME_WIDTH}>Shape</th>
+                        <th className={NAME_WIDTH}>Type</th>
+                        <th className={NAME_WIDTH}>Scan</th>
+                        <th className={NAME_WIDTH}>Time</th>
+                        <th className={NAME_WIDTH}>Size</th>
+                        <th className={NAME_WIDTH}>Full Path</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {labelList!.map(renderLabel)}
+                    </tbody>
+                </ReactBootStrap.Table>
+            </div>
+        </Fragment>
+    );
 }
 
 /**
@@ -107,9 +155,7 @@ const SamplingComp: React.FC = () => {
 
     const NAME_WIDTH = "col-3";
     const OPTIONS_WIDTH = "col-1";
-
     //TODO : Need to create a new component just to resize the table
-
 
     return (
         <small>
@@ -130,38 +176,11 @@ const SamplingComp: React.FC = () => {
                             <IonLabel><small>Data</small></IonLabel>
                         </IonItem>
                         <IonList slot={"content"}>
-                            <div style={{display: "flex", justifyContent: "flex-end"}}>
-                                <IonButton size={"default"}>
-                                    <IonIcon icon={addOutline} slot={"end"}/>
-                                    Add
-                                </IonButton>
-                                <IonButton
-                                    color={"danger"}
-                                    size={"default"}
-                                    slot={"end"}>
-                                    <IonIcon icon={trashOutline} slot={"end"}/>
-                                    Delete
-                                </IonButton>
-                            </div>
-                            <div className={"label-table"}>
-                                <ReactBootStrap.Table striped bordered hover
-                                                      className={darkMode ? 'table-dark' : ''}>
-                                    <thead>
-                                    <tr>
-                                        <th className={NAME_WIDTH}><IonLabel>File Name</IonLabel></th>
-                                        <th className={NAME_WIDTH}>Shape</th>
-                                        <th className={NAME_WIDTH}>Type</th>
-                                        <th className={NAME_WIDTH}>Scan</th>
-                                        <th className={NAME_WIDTH}>Time</th>
-                                        <th className={NAME_WIDTH}>Size</th>
-                                        <th className={NAME_WIDTH}>Full Path</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {labelList!.map(renderLabel)}
-                                    </tbody>
-                                </ReactBootStrap.Table>
-                            </div>
+                            <TableSampling
+                                labelList={labelList}
+                                darkMode={darkMode}
+                                renderLabel={renderLabel}
+                                NAME_WIDTH={NAME_WIDTH}></TableSampling>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -172,9 +191,11 @@ const SamplingComp: React.FC = () => {
                             <IonLabel><small>Label</small></IonLabel>
                         </IonItem>
                         <IonList slot={"content"}>
-                            <IonItem>
-                                <IonLabel>bla ?</IonLabel>
-                            </IonItem>
+                            <TableSampling
+                                labelList={labelList}
+                                darkMode={darkMode}
+                                renderLabel={renderLabel}
+                                NAME_WIDTH={NAME_WIDTH}></TableSampling>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -185,9 +206,11 @@ const SamplingComp: React.FC = () => {
                             <IonLabel><small>Weight</small></IonLabel>
                         </IonItem>
                         <IonList slot={"content"}>
-                            <IonItem>
-                                <IonLabel>bla ?</IonLabel>
-                            </IonItem>
+                            <TableSampling
+                                labelList={labelList}
+                                darkMode={darkMode}
+                                renderLabel={renderLabel}
+                                NAME_WIDTH={NAME_WIDTH}></TableSampling>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
