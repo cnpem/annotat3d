@@ -1,7 +1,7 @@
 import {Component} from 'react';
 import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
-import { expand, brush, browsers, add, remove, eye, eyeOff, crop } from 'ionicons/icons';
-import { debounce, isEqual } from "lodash";
+import {expand, brush, browsers, add, remove, eye, eyeOff} from 'ionicons/icons';
+import {debounce, isEqual} from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 // https://stackoverflow.com/questions/42789896/webgl-error-arraybuffer-not-big-enough-for-request-in-case-of-gl-luminance
@@ -9,9 +9,9 @@ import * as PIXI from 'pixi.js';
 import '../../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
 
-import { NdArray, TypedArray } from 'ndarray';
+import {NdArray, TypedArray} from 'ndarray';
 import {clamp} from '../../utils/math';
-import { sfetch } from '../../utils/simplerequest';
+import {sfetch} from '../../utils/simplerequest';
 
 import './CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
@@ -330,7 +330,7 @@ class Canvas {
         this.setLabelVisibility(true);
     }
 
-    setColor(colors: {id: number, color: [number, number, number]}[]) {
+    setColor(colors: { id: number, color: [number, number, number] }[]) {
 
         colors.forEach((color) => {
             this.colors[color.id] = color.color;
@@ -421,13 +421,13 @@ class Canvas {
             'mode': this.brush_mode,
         };
         sfetch('POST', '/draw', JSON.stringify(data))
-        .then((success)=>{
-            console.log(success);
-            dispatch("annotationChanged", null);
-        })
-        .catch((error)=>{
-            console.log(error);
-        });
+            .then((success) => {
+                console.log(success);
+                dispatch("annotationChanged", null);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
 
         this.pointsBuffer = [];
 
@@ -451,7 +451,7 @@ class Canvas {
         }
     }  
 
-    draw(currPosition: PIXI.Point) : [number, number][] {
+    draw(currPosition: PIXI.Point): [number, number][] {
 
         const context = this.annotation.context;
         const mode = this.brush_mode;
@@ -463,8 +463,8 @@ class Canvas {
             this.brush.cursor.visible = false;
 
             const data = {
-                "x_coord" : Math.round(this.prevPosition.x),
-                "y_coord" : Math.round(this.prevPosition.y),
+                "x_coord": Math.round(this.prevPosition.x),
+                "y_coord": Math.round(this.prevPosition.y),
                 "slice": this.sliceNum,
                 "axis": this.axis,
             }
@@ -653,12 +653,12 @@ class Canvas {
         const x = img.shape[1];
         const y = img.shape[0];
 
-        const len = x*y;
+        const len = x * y;
 
         //TODO: implement for another dtypes
         if (img.dtype === 'uint8') {
             uint8data = img.data as Uint8Array;
-        } else if (img.dtype === 'uint16'){
+        } else if (img.dtype === 'uint16') {
             const max = 65535.0 * this.imgMax;
             const min = 65535.0 * this.imgMin;
             const range = max - min;
@@ -727,7 +727,7 @@ class Canvas {
     }
 
     decreaseBrushSize() {
-        if (this.brush.size <= 2) 
+        if (this.brush.size <= 2)
             return;
         this.brush.setSize(this.brush.size - 1);
     }
@@ -800,18 +800,27 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     pixi_container: HTMLDivElement | null;
     canvas: Canvas | null;
 
-    onLabelSelected: (payload: any) => void = () => {};
-    onImageLoaded: (payload: any) => void = () => {};
-    onContrastChanged: (payload: number[]) => void = () => {};
-    onSuperpixelChanged: () => void = () => {};
-    onLabelChanged: () => void = () => {};
-    onSuperpixelColorChanged: (color: any) => void = () => {};
-    onSuperpixelVisibilityChanged: (visible: boolean) => void = () => {};
-    onLabelVisibilityChanged: (visible: boolean) => void = () => {};
-    onLabelAlphaChanged: (alpha: number) => void = () => {};
+    onLabelSelected: (payload: any) => void = () => {
+    };
+    onImageLoaded: (payload: any) => void = () => {
+    };
+    onContrastChanged: (payload: number[]) => void = () => {
+    };
+    onSuperpixelChanged: () => void = () => {
+    };
+    onLabelChanged: () => void = () => {
+    };
+    onSuperpixelColorChanged: (color: any) => void = () => {
+    };
+    onSuperpixelVisibilityChanged: (visible: boolean) => void = () => {
+    };
+    onLabelVisibilityChanged: (visible: boolean) => void = () => {
+    };
+    onLabelAlphaChanged: (alpha: number) => void = () => {
+    };
     onAnnotanionAlphaChanged!: (alpha: number) => void;
     onAnnotanionVisibilityChanged!: (visible: boolean) => void;
-    onLabelColorsChanged!: (colors: {id: number, color: [number, number, number]}[]) => void;
+    onLabelColorsChanged!: (colors: { id: number, color: [number, number, number] }[]) => void;
     onAnnotationChanged!: () => void;
     onLabelContourChanged!: (contour: boolean) => void;
     onFutureChanged!: (hasPreview: boolean) => void;
@@ -831,18 +840,18 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
     }
 
-    fetchAll =  (recenter: boolean = false) => {
+    fetchAll = (recenter: boolean = false) => {
         console.log("update ...", this.props.slice);
         return this.getImageSlice()
-        .then(() => {
-            if (recenter) {
-                this.canvas!.recenter();
-            }
-            this.getSuperpixelSlice();
-            this.getAnnotSlice();
-            this.getLabelSlice();
-            this.getFutureSlice();
-        });
+            .then(() => {
+                if (recenter) {
+                    this.canvas!.recenter();
+                }
+                this.getSuperpixelSlice();
+                this.getAnnotSlice();
+                this.getLabelSlice();
+                this.getFutureSlice();
+            });
     }
 
 
@@ -861,9 +870,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray')
-        .then((superpixelSlice) => {
-            this.canvas!!.setSuperpixelImage(superpixelSlice);
-        });
+            .then((superpixelSlice) => {
+                this.canvas!!.setSuperpixelImage(superpixelSlice);
+            });
     }
 
     getImageSlice() {
@@ -874,9 +883,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
-        .then(imgSlice => {
-            this.canvas!!.setImage(imgSlice);
-        });
+            .then(imgSlice => {
+                this.canvas!!.setImage(imgSlice);
+            });
     }
 
     getFutureSlice() {
@@ -889,11 +898,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         sfetch('POST', '/get_image_slice/future', JSON.stringify(params), 'gzip/numpyndarray')
-        .then(previewSlice => {
-            this.canvas?.setFutureImage(previewSlice);
-            this.canvas?.setPreviewVisibility(true);
-            this.setState({...this.state, future_sight_on: true});
-        });
+            .then(previewSlice => {
+                this.canvas?.setFutureImage(previewSlice);
+                this.canvas?.setPreviewVisibility(true);
+                this.setState({...this.state, future_sight_on: true});
+            });
     }
 
     getAnnotSlice() {
@@ -905,10 +914,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
         console.log('get annot slice');
         sfetch('POST', '/get_annot_slice', JSON.stringify(params), 'gzip/numpyndarray')
-        .then((slice) => {
-            console.log('annot slice');
-            this.canvas!!.annotation.draw(slice);
-        });
+            .then((slice) => {
+                console.log('annot slice');
+                this.canvas!!.annotation.draw(slice);
+            });
     }
 
     getLabelSlice() {
@@ -920,9 +929,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
-        .then(labelSlice => {
-            this.canvas!!.setLabelImage(labelSlice);
-        });
+            .then(labelSlice => {
+                this.canvas!!.setLabelImage(labelSlice);
+            });
 
     }
 
@@ -960,7 +969,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 console.log('bruno: did you get any of that?', payload.imageShape ); // bruno
                 const promise = this.fetchAll(true);
                 promise?.then(() => {
-                    this.newAnnotation();
+                    sfetch("POST", "/is_annotation_empty", "", "json")
+                        .then((createNewAnnot: boolean) => {
+                            if (createNewAnnot) {
+                                this.newAnnotation();
+                            }
+                        });
                 });
             };
 
@@ -1139,15 +1153,22 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     render() {
         return (
-            <div id="root" className="canvas" style={ {"backgroundColor": "transparent"}  } ref={elem => this.pixi_container = elem} >
+            <div id="root" className="canvas" style={{"backgroundColor": "transparent"}}
+                 ref={elem => this.pixi_container = elem}>
 
                 <IonFab vertical="bottom" horizontal="start">
-                    <IonFabButton color="dark" title="toggle preview filter" hidden={this.props.canvasMode !== 'imaging'} 
-                        onClick={() => {
-                            const futureSightVisibility = !this.state.future_sight_on;
-                            this.setState({...this.state, future_sight_on: futureSightVisibility});
-                            this.canvas?.setPreviewVisibility(futureSightVisibility);
-                        }}>
+                    <IonFabButton color="medium" onClick={() => this.canvas?.recenter()}>
+                        <IonIcon icon={expand}/>
+                    </IonFabButton>
+                </IonFab>
+
+                <IonFab hidden={this.props.canvasMode !== 'imaging'} vertical="bottom" horizontal="end">
+                    <IonFabButton color="dark"
+                                  onClick={() => {
+                                      const futureSightVisibility = !this.state.future_sight_on;
+                                      this.setState({...this.state, future_sight_on: futureSightVisibility});
+                                      this.canvas?.setPreviewVisibility(futureSightVisibility);
+                                  }}>
                         <IonIcon icon={this.state.future_sight_on ? eye : eyeOff}/>
                     </IonFabButton>
                     <IonFabButton color="medium" title="resize: fit to window" onClick={() => this.canvas?.recenter()}>
@@ -1155,14 +1176,15 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                     </IonFabButton>
                 </IonFab>
 
-                <IonFab vertical="bottom" horizontal="end">
-                    {/* <MenuFabButton disabled={this.props.canvasMode !== 'drawing'} value={this.state.brush_mode} openSide="start" buttonsList={brushList} onChange={ (b) => { */}
-                    <MenuFabButton value={this.state.brush_mode} openSide="start" buttonsList={brushList} onChange={ (b) => {
-                        console.log("change icon : ", b.id);
-                        this.setBrushMode(b.id as brush_mode_type) } } />
+                <IonFab hidden={this.props.canvasMode !== 'drawing'} vertical="bottom" horizontal="end">
+                    <MenuFabButton value={this.state.brush_mode} openSide="start" buttonsList={brushList}
+                                   onChange={(b) => {
+                                       console.log("change icon : ", b.id);
+                                       this.setBrushMode(b.id as brush_mode_type)
+                                   }}/>
                 </IonFab>
-                <IonFab vertical="bottom" horizontal="end" style={ {marginBottom: '4em'} }>
-                    <IonFabButton size="small" title="Increase brush/eraser size" onClick={() => {
+                <IonFab vertical="bottom" horizontal="end" style={{marginBottom: '4em'}}>
+                    <IonFabButton size="small" onClick={() => {
                         this.canvas?.increaseBrushSize();
                     }}>
                         <IonIcon icon={add}/>

@@ -5,7 +5,6 @@ import os.path
 import sscIO.io
 import numpy as np
 from sscAnnotat3D.repository import data_repo
-from sscAnnotat3D.modules import annotation_module
 from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 
 from flask_cors import cross_origin
@@ -20,9 +19,9 @@ def handle_exception(error_msg: str):
 
 app.register_error_handler(400, handle_exception)
 
-def _convert_dtype_to_str(dtype: np.dtype):
+def _convert_dtype_to_str(img_dtype: np.dtype):
 
-    return np.dtype(dtype).name
+    return np.dtype(img_dtype).name
 
 
 @app.route("/open_image/<image_id>", methods=["POST"])
@@ -60,6 +59,9 @@ def open_image(image_id: str):
             image, info = sscIO.io.read_volume(image_path, 'numpy')
             error_msg = "No such file or directory {}".format(image_path)
 
+            if (_convert_dtype_to_str(image.dtype) != image_dtype and (image_id == "image" or image_id == "label")):
+                image = image.astype(image_dtype)
+
         else:
             image_raw_shape = request.json["image_raw_shape"]
             image, info = sscIO.io.read_volume(image_path, 'numpy',
@@ -71,24 +73,14 @@ def open_image(image_id: str):
                 "image_raw_shape"],
                                                                                             image_dtype)
         image_shape = image.shape
-        image_dtype = _convert_dtype_to_str(dtype=image.dtype)
+        image_dtype = _convert_dtype_to_str(image.dtype)
     except:
         return handle_exception(error_msg)
 
-    image_info = {"image_shape": image_shape, "image_ext": extension,
-                  "image_name": file_name, "image_dtype": image_dtype}
+    image_info = {"imageShape": image_shape, "imageExt": extension,
+                  "imageName": file_name, "imageDtype": image_dtype}
     data_repo.set_image(key=image_id, data=image)
     return jsonify(image_info)
-
-
-@app.route("/load_label_from_file_load_dialog/", methods=["POST"])
-@cross_origin()
-def load_label_from_file_load_dialog():
-    image = data_repo.get_image("label")
-    kwargs = {"image": image}
-    annot_module = annotation_module.AnnotationModule(image.shape, **kwargs)
-    label_list = annot_module.load_label_from_file_load_dialog(image)
-    return jsonify(label_list)
 
 @app.route("/close_image/<image_id>", methods=["POST"])
 @cross_origin()
@@ -126,8 +118,8 @@ def save_image(image_id: str):
         return handle_exception(save_status["error_msg"])
 
     image_shape = image.shape
-    image_info = {"image_shape": image_shape, "image_ext": save_status["extension"],
-                  "image_name": save_status["file_name"], "image_dtype": image_dtype}
+    image_info = {"imageShape": image_shape, "imageExt": save_status["extension"],
+                  "imageName": save_status["file_name"], "imageDtype": image_dtype}
 
     return jsonify(image_info)
 

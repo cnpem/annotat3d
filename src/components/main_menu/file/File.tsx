@@ -15,10 +15,10 @@ const File: React.FC = () => {
      * file items
      */
     const items: MenuItem = {
-        title: 'File',
+        title: 'Files',
         subItems: [
-            'Load Image',
-            'Save Image'
+            'Load Files',
+            'Save Files'
         ],
         iosIcon: documentOutline,
         mdIcon: documentSharp

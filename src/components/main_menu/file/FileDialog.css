@@ -1,4 +1,17 @@
-.file-popover {
+/**
+Component used for "Load Files" menu
+ */
+.file-popover-load {
     --width: 400px;
     --min-width: 300px;
+    --max-height: 650px;
+}
+
+/**
+Component used for "Save Files" menu
+ */
+.file-popover-save {
+    --width: 400px;
+    --min-width: 300px;
+    --max-height: 600px;
 }

@@ -338,3 +338,23 @@ def merge_labels():
     data_repo.set_annotation(data=annotations)
 
     return jsonify(selected_labels[1:])
+
+@app.route("/is_annotation_empty", methods=["POST"])
+@cross_origin()
+def is_annotation_empty():
+    """
+    Function that verify if exist any previous annotation
+
+    Notes:
+        This function is only used in CanvasContainer.tsx just to verify if is needed to create a new annotaiton
+
+    Returns:
+        (bool): return True to create a new annotation and False otherwise
+
+    """
+    annot_module = module_repo.get_module('annotation')
+
+    if (annot_module == None):
+        return jsonify(True)
+
+    return jsonify(False)

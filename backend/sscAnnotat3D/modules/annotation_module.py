@@ -553,26 +553,6 @@ class AnnotationModule():
         self.annotation = label_annotation
         return self.annotation
 
-    #TODO : Need to make possible for the user to choose a colormap
-    def load_label_from_file_load_dialog(self, label):
-        new_labels = np.unique(label)
-        # if we have more labels than our colormap supports, load a bigger colormap
-        self.include_labels(new_labels)
-        label_list = []
-        i = 0
-        for _ in self.added_labels:
-            label_list.append({
-                "labelName": "Label {}".format(i) if i > 0 else "Background",
-                "id": i,
-                "color": []})
-            i += 1
-
-        aux_functions.log_usage(op_type='load_label',
-                                label_shape=label.shape,
-                                label_dtype=str(label.dtype))
-
-        return label_list
-
     def update_annotation(self, annotations):
         # Drawing markers on top of the marker label/id images
         labels = aux_functions.get_label_ids(annotations)
