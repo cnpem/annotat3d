@@ -3,7 +3,7 @@ flask
 flask-cors
 jinja2
 sscIO
-sscPySpin
+sscPySpin==0.6.0
 sscDeepsirius
 ssc-remotevis
 sentry-sdk
