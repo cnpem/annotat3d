@@ -1,8 +1,10 @@
+from tkinter.messagebox import NO
 import numpy as np
 
 __images = dict()
 __annotations = dict()
 __deep_model = dict()
+__info = dict()
 
 def set_deep_model(key='deep_learning', data: dict = None):
     if data is not None:
@@ -30,3 +32,11 @@ def get_annotation(key='annotation'):
 
 def delete_annotation(key='annotation'):
     del __annotations[key]
+
+def set_info(key='session_info', data: dict = None):
+    if data is not None:
+        __info[key] = data
+
+def get_info(key='session_info'):
+    return __info.get(key)
+

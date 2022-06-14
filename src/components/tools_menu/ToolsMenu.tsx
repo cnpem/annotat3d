@@ -10,6 +10,7 @@ import SideMenuVis from "./SideMenuVis";
 import SlicesMenu from "./SlicesMenu";
 
 import {eyeOutline, brushOutline, colorWandOutline} from "ionicons/icons";
+import ImageInfoInterface from "../main_menu/file/ImageInfoInterface";
 
 interface SideMenuProps {
     hideMenu: boolean
@@ -76,21 +77,21 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
 
     useEffect(() => {
         sfetch('POST', '/get_image_info/image', '', 'json')
-        .then((imgInfo) => {
+        .then((imgInfo:ImageInfoInterface) => {
             console.log('image info: ', imgInfo);
             setImageShape({
-                x: imgInfo.shape[2],
-                y: imgInfo.shape[1],
-                z: imgInfo.shape[0]
+                x: imgInfo.imageShape.x,
+                y: imgInfo.imageShape.y,
+                z: imgInfo.imageShape.z
             });
         });
     }, [setImageShape]);
 
-    useEventBus('ImageLoaded', (imgInfo) => {
+    useEventBus('ImageLoaded', (imgInfo:ImageInfoInterface) => {
         setImageShape({
-            x: imgInfo.imageShape[2],
-            y: imgInfo.imageShape[1],
-            z: imgInfo.imageShape[0]
+            x: imgInfo.imageShape.x,
+            y: imgInfo.imageShape.y,
+            z: imgInfo.imageShape.z
         });
     })
 

@@ -345,8 +345,7 @@ class Canvas {
     }
 
 
-    setImageShape(imageShape: ImageShapeInterface) {
-        console.log('bruno: did you get any of that on canvas?', imageShape ); // bruno
+    setImageShape(imageShape: ImageShapeInterface) { // bruno
         this.imageShape = imageShape;
     }
 
@@ -548,6 +547,7 @@ class Canvas {
     }
 
     setCropVisibility(visible: boolean = false) { // bruno
+        console.log('bruno: am i making another view of the crop rn?');
         if (visible) {
             this.setCropPreviewMaskImage();
         }
@@ -598,27 +598,31 @@ class Canvas {
     private setCropPreviewMaskImage() { // bruno
 
         const alpha = this.cropSlice.alpha;
-        console.log('bruno ', this.axis);
+        console.log('bruno making another mask axis and shape:', this.axis, this.imageShape);
 
         const width = this.imgData!!.shape[1];
         const height = this.imgData!!.shape[0];
-        
+        const depth = this.sliceNum;
 
-        const len = width*height;
-        let rgbaData = new Uint8Array(len * 4);
+        let cropW: CropAxisInterface;
+        let cropH: CropAxisInterface;
+        let cropD: CropAxisInterface;
 
-        console.log('bruno: height x width', height, width);
-
-        const colors = this.colors;
-
-        const rowMajIdx = (yi: number, xj: number) => {
-            return xj + yi*width;
-        };
+        if (this.axis == 'XY') {
+            cropW = this.cropShape!!.cropX;
+            cropH = this.cropShape!!.cropY;
+            cropD = this.cropShape!!.cropZ;
+        } else if (this.axis == 'XZ') {
+            cropW = this.cropShape!!.cropX;
+            cropH = this.cropShape!!.cropZ;
+            cropD = this.cropShape!!.cropY;
+        } else if (this.axis == 'YZ') {
+            cropW = this.cropShape!!.cropY;
+            cropH = this.cropShape!!.cropZ;
+            cropD = this.cropShape!!.cropX;
+        }
 
         const insideBox = (y: number, x: number) => {
-            const cropX: CropAxisInterface = this.cropShape!!.cropX;
-            const cropY: CropAxisInterface = this.cropShape!!.cropY;
-            const cropZ: CropAxisInterface = this.cropShape!!.cropZ;
     
             const uIn = ( u: number, cropU: CropAxisInterface ) => { 
                 return ( cropU.lower <= u && u <= cropU.upper ); 
@@ -626,13 +630,23 @@ class Canvas {
             // converting i to cartesian y (vertical axis is upside down)
             const yinv : number = height - y - 1
 
-            return uIn(this.sliceNum, cropZ) && uIn(yinv, cropY) && uIn(x, cropX);
+            return uIn(depth, cropD) && uIn(yinv, cropH) && uIn(x, cropW);
+        };
+
+        const len = width*height;
+        let rgbaData = new Uint8Array(len * 4);
+
+        const colors = this.colors;
+
+        const rowMajIdx = (yi: number, xj: number) => {
+            return xj + yi*width;
         };
 
         const color = colors[0];
+
         for (let yi = 0; yi < height; ++yi) {
             for (let xj = 0; xj < width; ++xj) {
-                if ( !insideBox(yi, xj) ) {
+                if ( !insideBox(yi, xj, ) ) {
                     const idx = rowMajIdx(yi, xj) * 4;
                     rgbaData[idx] = color[0];
                     rgbaData[idx + 1] = color[1];
@@ -964,9 +978,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             };
 
             this.onImageLoaded = ( payload ) => {
-                console.log('bruno cmon!');
                 this.setImageShape( payload.imageShape );
-                console.log('bruno: did you get any of that?', payload.imageShape ); // bruno
                 const promise = this.fetchAll(true);
                 promise?.then(() => {
                     sfetch("POST", "/is_annotation_empty", "", "json")
@@ -1135,7 +1147,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.canvas?.adjustContrast(minimum, maximum);
     }
 
-    setImageShape( imageShape: ImageShapeInterface ) {
+    setImageShape( imageShape: ImageShapeInterface ) { // bruno
         this.canvas?.setImageShape( imageShape );
     }
 
@@ -1145,9 +1157,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.canvas?.setCropVisibility(activateCropPreview);
     }
 
-    setCropShape(cropShape: CropShapeInterface) {
-        // bruno
-        console.log('bruno setCropShape', cropShape);
+    setCropShape( cropShape: CropShapeInterface ) { // bruno
         this.canvas?.setCropShape(cropShape);
     }
 

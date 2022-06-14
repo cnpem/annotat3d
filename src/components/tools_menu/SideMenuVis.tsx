@@ -12,6 +12,7 @@ import { AlphaPicker, SliderPicker } from 'react-color';
 import CropMenu from "./CropMenu";
 import { ImageShapeInterface } from "./ImageShapeInterface";
 import { sfetch } from "../../utils/simplerequest";
+import ImageInfoInterface from "../main_menu/file/ImageInfoInterface";
 
 function rgbToHex(r: number, g: number, b: number) {
     const bin = (r << 16) | (g << 8) | b;
@@ -73,21 +74,23 @@ const SideMenuVis: React.FC = () => {
 
     useEffect(() => {
         sfetch('POST', '/get_image_info/image', '', 'json')
-        .then((imgInfo) => {
-            console.log('image info: ', imgInfo);
+        .then((imgInfo:ImageInfoInterface) => {
+            console.log('am i causing any trouble?: ', imgInfo);
+            console.log('bruno use effect image info: ', imgInfo.imageShape);
             setImageShape({
-                x: imgInfo.shape[2],
-                y: imgInfo.shape[1],
-                z: imgInfo.shape[0]
+                x: imgInfo.imageShape.x,
+                y: imgInfo.imageShape.y,
+                z: imgInfo.imageShape.z
             });
         });
     }, [setImageShape]);
     
-    useEventBus('ImageLoaded', (imgInfo) => {
+    useEventBus('ImageLoaded', (imgInfo:ImageInfoInterface) => {
+        console.log('bruno use event bus image info: ', imgInfo.imageShape);
         setImageShape({
-            x: imgInfo.imageShape[2],
-            y: imgInfo.imageShape[1],
-            z: imgInfo.imageShape[0]
+            x: imgInfo.imageShape.x,
+            y: imgInfo.imageShape.y,
+            z: imgInfo.imageShape.z
         });
     })
 

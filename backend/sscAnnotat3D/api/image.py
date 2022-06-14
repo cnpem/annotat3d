@@ -1,4 +1,5 @@
 from flask import Blueprint, request, send_file, jsonify
+from werkzeug.exceptions import BadRequest
 import zlib
 import io
 
@@ -8,6 +9,13 @@ from sscAnnotat3D import utils, label
 from flask_cors import cross_origin
 
 app = Blueprint('image', __name__)
+
+@app.errorhandler(BadRequest)
+def handle_exception(error_msg: str):
+    return jsonify({"error_msg": error_msg}), 400
+
+app.register_error_handler(400, handle_exception)
+
 
 @app.route('/is_available_image/<image_id>', methods=["POST"])
 @cross_origin()
@@ -22,7 +30,7 @@ def get_image_slice(image_id: str):
     image = data_repo.get_image(key=image_id)
 
     if image is None:
-        return "failure", 400
+        return handle_exception(f"Image {image_id} not found.")
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
@@ -57,9 +65,14 @@ def get_image_info(image_id: str):
     img = data_repo.get_image(image_id)
 
     if img is None:
-        return f"Image {image_id} not found.", 400
+        return handle_exception(f"Image {image_id} not found.")
 
-    return jsonify({
-        'shape': img.shape,
-        'dtype': str(img.dtype)
-    })
+    image_info = data_repo.get_info()
+    print('bruno, something here?', image_info)
+
+    return jsonify(image_info)
+    # return jsonify({
+    #     'shape': {'x':img.shape[2], 'y':img.shape[1], 'z':img.shape[0]},
+    #     'dtype': str(img.dtype)
+    # })
+

@@ -77,9 +77,17 @@ def open_image(image_id: str):
     except:
         return handle_exception(error_msg)
 
-    image_info = {"imageShape": image_shape, "imageExt": extension,
-                  "imageName": file_name, "imageDtype": image_dtype}
+    
     data_repo.set_image(key=image_id, data=image)
+
+    image_info = {"imageShape": {'x':image_shape[2], 'y':image_shape[1], 'z':image_shape[0]}, "imageExt": extension,
+                    "imageName": file_name, "imageDtype": image_dtype}
+
+    if image_id == 'image':
+        print('bruno saving image_info', image_info)
+        data_repo.set_info(data=image_info)
+        print('bruno saved? ', data_repo.get_info())
+
     return jsonify(image_info)
 
 @app.route("/close_image/<image_id>", methods=["POST"])
