@@ -28,7 +28,7 @@ const ThemeToggle: React.FC = () => {
     return (
         <IonToolbar style={{"--padding-start": "25px"}}>
             <IonIcon slot="start" ios={moonOutline} md={moonSharp}/>
-            <IonLabel>&nbsp;&nbsp;Come to the Dark Side</IonLabel>
+            <IonLabel>&nbsp;&nbsp;Dark Theme</IonLabel>
             <IonToggle checked={darkMode} id="darkMode" slot="end" onIonChange={(e) => setDarkMode(e.detail.checked)}/>
         </IonToolbar>
     );
