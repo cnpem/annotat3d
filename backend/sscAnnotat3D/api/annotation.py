@@ -250,8 +250,7 @@ def delete_label_annot():
 
     try:
         label_id = request.json["label_id"]
-    except Exception as e:
-        return handle_exception(str(e))
+    ./
 
     try:
         annot_module = module_repo.get_module('annotation')
