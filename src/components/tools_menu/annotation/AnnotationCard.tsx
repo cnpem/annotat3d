@@ -3,8 +3,6 @@ import {IonButton, IonCard, IonCardContent, IonIcon} from "@ionic/react";
 import {arrowUndoOutline} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch, useEventBus} from "../../../utils/eventbus";
-import AnnotationLoadDialog from "./AnnotationLoadDialog";
-import AnnotationSaveDialog from "./AnnotationSaveDialog";
 import {useStorageState} from "react-storage-hooks";
 
 const AnnotationCard : React.FC = () => {
@@ -26,10 +24,6 @@ const AnnotationCard : React.FC = () => {
         <IonCard>
                 <IonCardContent>
                     <div style={ {display: 'flex', justifyContent: 'flex-end'} }>
-                        <AnnotationLoadDialog/>
-
-                        <AnnotationSaveDialog/>
-
                         <IonButton color="danger" size="small" disabled={activateMenu}
                             onClick={ () => {
                                 undoAnnotation();
