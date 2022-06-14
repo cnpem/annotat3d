@@ -1,3 +1,15 @@
-ion-popover {
-    --width: 'max-content';
+/*
+Delete label component in OptionsIcons.tsx
+*/
+.ion-popover-delete::part(content) {
+    --width: "max-contet";
+    transform: translate(-90%) !important;
+}
+
+/*
+Edit label component in OptionsIcons.tsx
+*/
+.ion-popover-edit::part(content) {
+    --width: "max-contet";
+    transform: translate(-90%) !important;
 }

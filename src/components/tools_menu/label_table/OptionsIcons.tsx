@@ -4,6 +4,8 @@ import {
     IonInput, IonItem, IonPopover
 } from "@ionic/react";
 
+import "./OptionsIcons.css"
+
 /*Icons import*/
 import {closeOutline, colorPalette, pencilOutline} from "ionicons/icons";
 
@@ -59,6 +61,7 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
                 isOpen={props.showPopover}
                 onDidDismiss={exitPopup}
                 alignment={"end"}
+                className={"ion-popover-edit"}
                 side={"left"}>
 
                 <IonContent>
@@ -133,6 +136,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
             <IonPopover
                 trigger={"delete-label-button-" + props.label.id}
                 isOpen={showDeletePopUp}
+                className={"ion-popover-delete"}
                 onDidDismiss={() => setShowDeletePopUp(false)}>
 
                 <IonContent>
@@ -157,9 +161,10 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                                     console.log("printing info ", info)
                                 }
                             ).catch((error) => {
-                                    console.log(error);
-                                }
-                            );
+                                //TODO: Need to implement a error window here
+                                console.log(error);
+
+                            });
 
                             setShowDeletePopUp(false);
                             setUserDeleteOp(true);}}>Confirm</IonButton>
