@@ -94,7 +94,7 @@ def is_available_annot(annot_id: str):
 @app.route("/open_annot", methods=["POST"])
 @cross_origin()
 def open_annot():
-    f"""
+    """
     Function that opens an annotation
 
     Notes:
@@ -120,7 +120,9 @@ def open_annot():
     except:
         return handle_exception("Error while trying to get the annotation path")
 
-    annot_module.load_annotation(annot_path)
+    if (annot_path == ""):
+        return handle_exception("Empty path isn't valid !")
+
     module_repo.set_module('annotation', module=annot_module)
     label_list = []
     annotation = set()

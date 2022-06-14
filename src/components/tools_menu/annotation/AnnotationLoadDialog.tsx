@@ -18,6 +18,7 @@ import {LabelInterface} from "../label_table/LabelInterface";
 import ErrorInterface from "../../main_menu/file/ErrorInterface";
 import "./Annotation.css";
 import ErrorWindowComp from "../../main_menu/file/ErrorWindowComp";
+import LoadingComponent from "../LoadingComponent";
 
 const AnnotationLoadDialog : React.FC = () => {
     // Init States
@@ -25,6 +26,8 @@ const AnnotationLoadDialog : React.FC = () => {
         open: false,
         event: undefined,
     });
+
+    const [openLoadingMenu, setOpenLoadingMenu] = useState<boolean>(false);
     const [showToast,] = useIonToast();
     const timeToast = 2000;
     const [path, setPath] = useState<string>("");
@@ -46,7 +49,7 @@ const AnnotationLoadDialog : React.FC = () => {
     })
 
     const handleAnnotationLoad = () => {
-
+        setOpenLoadingMenu(true)
         const params = {
             annot_path: path
         }
@@ -61,12 +64,14 @@ const AnnotationLoadDialog : React.FC = () => {
                 showToast("Annotation loaded", timeToast);
 
             }).catch((error: ErrorInterface) => {
+                console.log(error);
                 setErrorMsg(error.error_msg);
                 setHeaderErrorMsg(`error while loading the annotation`);
                 setShowErrorWindow(true);
                 console.log("Error trying to load the .pkl label\n");
-                console.log(error);
             });
+
+        setOpenLoadingMenu(false);
 
     }
     /**
@@ -116,6 +121,10 @@ const AnnotationLoadDialog : React.FC = () => {
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            {/*Loading component*/}
+            <LoadingComponent
+                openLoadingWindow={openLoadingMenu}
+                loadingText={"loading the files"}/>
         </>
     );
 };
