@@ -16,6 +16,8 @@ import {dispatch, useEventBus} from "../../../utils/eventbus";
 import {useStorageState} from "react-storage-hooks";
 import {LabelInterface} from "../label_table/LabelInterface";
 import ErrorInterface from "../../main_menu/file/ErrorInterface";
+import "./Annotation.css";
+import ErrorWindowComp from "../../main_menu/file/ErrorWindowComp";
 
 const AnnotationLoadDialog : React.FC = () => {
     // Init States
@@ -27,6 +29,17 @@ const AnnotationLoadDialog : React.FC = () => {
     const timeToast = 2000;
     const [path, setPath] = useState<string>("");
     const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
+    const [headerErrorMsg, setHeaderErrorMsg] = useState<string>("");
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
 
     useEventBus("ActivateComponents", (activateAnnotationMenu) => {
         setActivateMenu(activateAnnotationMenu);
@@ -45,14 +58,15 @@ const AnnotationLoadDialog : React.FC = () => {
                 setShowPopover({...showPopover, open: false});
                 dispatch("LabelLoaded", labelList);
                 dispatch("annotationChanged",null);
+                showToast("Annotation loaded", timeToast);
 
             }).catch((error: ErrorInterface) => {
-                //TODO : Need to implement an error and loading component to load an operation
+                setErrorMsg(error.error_msg);
+                setHeaderErrorMsg(`error while loading the annotation`);
+                setShowErrorWindow(true);
                 console.log("Error trying to load the .pkl label\n");
                 console.log(error);
-            }).finally(() => {
-                showToast("Annotation loaded", timeToast);
-        })
+            });
 
     }
     /**
@@ -61,6 +75,10 @@ const AnnotationLoadDialog : React.FC = () => {
     const cleanUp = () => {
         setShowPopover({open: false, event: undefined});
         setPath("");
+        setShowErrorWindow(false);
+        setErrorMsg("");
+        setErrorMsg("");
+        setHeaderErrorMsg("");
     };
     return (
         <>
@@ -91,6 +109,13 @@ const AnnotationLoadDialog : React.FC = () => {
                 <IonIcon slot="end" icon={folderOpenOutline}/>
                 Load
             </IonButton>
+            {/*Error window*/}
+            <ErrorWindowComp
+                errorMsg={errorMsg}
+                headerMsg={headerErrorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
         </>
     );
 };

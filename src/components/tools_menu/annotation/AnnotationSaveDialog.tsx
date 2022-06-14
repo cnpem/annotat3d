@@ -15,6 +15,7 @@ import {sfetch} from "../../../utils/simplerequest";
 import {useEventBus} from "../../../utils/eventbus";
 import {useStorageState} from "react-storage-hooks";
 import ErrorInterface from "../../main_menu/file/ErrorInterface";
+import "./Annotation.css";
 
 const extList : string[] = [
     ".pkl"
