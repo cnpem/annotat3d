@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
     IonAccordion,
     IonAccordionGroup, IonButton, IonCol,
@@ -54,7 +54,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     const [loadFile, setLoadFile] = useState<boolean>(false);
 
     useEffect(() => {
-        if(loadFile) {
+        if (loadFile) {
             onPathFilesVec(pathFiles, idMenu);
             setLoadFile(false)
         }
@@ -117,37 +117,20 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     );
 }
 
-interface TableSamplingInterface {
-    idMenu: number
-    darkMode: boolean,
-    typeOperation: type_operation,
-    trigger: string,
-    labelList: DataAndWeiTable[],
-    renderLabel: (labelElement: DataAndWeiTable) => void,
-    NAME_WIDTH: string,
-
+interface SamplingInterface {
+    nClasses: number,
+    sampleSize: number,
+    patchSize: Array<number>;
 }
 
 /**
- * Build-in Component that creates the table for Data, Label and Weight menu
- * @param idMenu {number} -
- * @param darkMode {boolean} - boolean variable that gets the forces the table to dark mode
- * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
- * @param trigger {string} - string that contains the trigger to open the popup
- * @param labelList {DataAndWeiTable[]} - Object of DataAndWeiTable that contains the props of label table
- * @param NAME_WIDTH {string} - string that contains the width of each header in this table
- * @param renderLabel {(labelElement: DataAndWeiTable) => void} - function that renders the label content
+ * Component that hold all the Sampling options
  */
-const TableSampling: React.FC<TableSamplingInterface> = ({
-                                                             idMenu,
-                                                             trigger,
-                                                             darkMode,
-                                                             typeOperation,
-                                                             labelList,
-                                                             NAME_WIDTH,
-                                                             renderLabel
-                                                         }) => {
+const SamplingComp: React.FC = () => {
 
+    const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
+    const [newLabelId, setNewLabelId] = useStorageState<number>(sessionStorage, 'newLabelId', 1);
+    const [labelList, setLabelList] = useStorageState<DataAndWeiTable[]>(sessionStorage, 'newLabelListTable', InitDataAndWeiTable);
     const [pathFilesVec, setPathFilesVec] = useStorageState<multiplesPath[]>(sessionStorage, "pathFilesVec", [
         {
             id: 0,
@@ -176,62 +159,6 @@ const TableSampling: React.FC<TableSamplingInterface> = ({
         console.log("newVec : ", newVec);
         setPathFilesVec(newVec);
     }
-
-    return (
-        <Fragment>
-            <div style={{display: "flex", justifyContent: "flex-end"}}>
-                <IonButton
-                    id={trigger}
-                    size={"default"}>
-                    <IonIcon
-                        icon={addOutline}
-                        slot={"end"}/>
-                    Add
-                </IonButton>
-            </div>
-            <div className={"label-table"}>
-                <ReactBootStrap.Table striped bordered hover
-                                      className={darkMode ? 'table-dark' : ''}>
-                    <thead>
-                    <tr>
-                        <th className={NAME_WIDTH}><IonLabel>File Name</IonLabel></th>
-                        <th className={NAME_WIDTH}>Shape</th>
-                        <th className={NAME_WIDTH}>Type</th>
-                        <th className={NAME_WIDTH}>Scan</th>
-                        <th className={NAME_WIDTH}>Time</th>
-                        <th className={NAME_WIDTH}>Size</th>
-                        <th className={NAME_WIDTH}>Full Path</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {labelList!.map(renderLabel)}
-                    </tbody>
-                </ReactBootStrap.Table>
-            </div>
-            <AddNewFile
-                idMenu={idMenu}
-                pathFilesVec={pathFilesVec}
-                onPathFilesVec={handlePathVec}
-                trigger={trigger}
-                typeOperation={typeOperation}/>
-        </Fragment>
-    );
-}
-
-interface SamplingInterface {
-    nClasses: number,
-    sampleSize: number,
-    patchSize: Array<number>;
-}
-
-/**
- * Component that hold all the Sampling options
- */
-const SamplingComp: React.FC = () => {
-
-    const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
-    const [newLabelId, setNewLabelId] = useStorageState<number>(sessionStorage, 'newLabelId', 1);
-    const [labelList, setLabelList] = useStorageState<DataAndWeiTable[]>(sessionStorage, 'newLabelListTable', InitDataAndWeiTable);
 
     useEventBus('toggleMode', (darkMode: boolean) => {
         setDarkMode(darkMode);
@@ -351,14 +278,41 @@ const SamplingComp: React.FC = () => {
                             <IonLabel><small>Data</small></IonLabel>
                         </IonItem>
                         <IonList slot={"content"}>
-                            <TableSampling
+                            <div style={{display: "flex", justifyContent: "flex-end"}}>
+                                <IonButton
+                                    id={"data-menu"}
+                                    size={"default"}>
+                                    <IonIcon
+                                        icon={addOutline}
+                                        slot={"end"}/>
+                                    Add
+                                </IonButton>
+                            </div>
+                            <div className={"label-table"}>
+                                <ReactBootStrap.Table striped bordered hover
+                                                      className={darkMode ? 'table-dark' : ''}>
+                                    <thead>
+                                    <tr>
+                                        <th className={NAME_WIDTH}><IonLabel>File Name</IonLabel></th>
+                                        <th className={NAME_WIDTH}>Shape</th>
+                                        <th className={NAME_WIDTH}>Type</th>
+                                        <th className={NAME_WIDTH}>Scan</th>
+                                        <th className={NAME_WIDTH}>Time</th>
+                                        <th className={NAME_WIDTH}>Size</th>
+                                        <th className={NAME_WIDTH}>Full Path</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {labelList!.map(renderLabel)}
+                                    </tbody>
+                                </ReactBootStrap.Table>
+                            </div>
+                            <AddNewFile
                                 idMenu={0}
-                                trigger={"data-trigger"}
-                                labelList={labelList}
-                                darkMode={darkMode}
-                                typeOperation={"Data"}
-                                renderLabel={renderLabel}
-                                NAME_WIDTH={NAME_WIDTH}></TableSampling>
+                                pathFilesVec={pathFilesVec}
+                                onPathFilesVec={handlePathVec}
+                                trigger={"data-menu"}
+                                typeOperation={"Data"}/>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -369,14 +323,41 @@ const SamplingComp: React.FC = () => {
                             <IonLabel><small>Label</small></IonLabel>
                         </IonItem>
                         <IonList slot={"content"}>
-                            <TableSampling
+                            <div style={{display: "flex", justifyContent: "flex-end"}}>
+                                <IonButton
+                                    id={"label-menu"}
+                                    size={"default"}>
+                                    <IonIcon
+                                        icon={addOutline}
+                                        slot={"end"}/>
+                                    Add
+                                </IonButton>
+                            </div>
+                            <div className={"label-table"}>
+                                <ReactBootStrap.Table striped bordered hover
+                                                      className={darkMode ? 'table-dark' : ''}>
+                                    <thead>
+                                    <tr>
+                                        <th className={NAME_WIDTH}><IonLabel>File Name</IonLabel></th>
+                                        <th className={NAME_WIDTH}>Shape</th>
+                                        <th className={NAME_WIDTH}>Type</th>
+                                        <th className={NAME_WIDTH}>Scan</th>
+                                        <th className={NAME_WIDTH}>Time</th>
+                                        <th className={NAME_WIDTH}>Size</th>
+                                        <th className={NAME_WIDTH}>Full Path</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {labelList!.map(renderLabel)}
+                                    </tbody>
+                                </ReactBootStrap.Table>
+                            </div>
+                            <AddNewFile
                                 idMenu={1}
-                                trigger={"label-trigger"}
-                                labelList={labelList}
-                                darkMode={darkMode}
-                                typeOperation={"Label"}
-                                renderLabel={renderLabel}
-                                NAME_WIDTH={NAME_WIDTH}></TableSampling>
+                                pathFilesVec={pathFilesVec}
+                                onPathFilesVec={handlePathVec}
+                                trigger={"label-menu"}
+                                typeOperation={"Label"}/>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -387,14 +368,41 @@ const SamplingComp: React.FC = () => {
                             <IonLabel><small>Weight</small></IonLabel>
                         </IonItem>
                         <IonList slot={"content"}>
-                            <TableSampling
+                            <div style={{display: "flex", justifyContent: "flex-end"}}>
+                                <IonButton
+                                    id={"weight-menu"}
+                                    size={"default"}>
+                                    <IonIcon
+                                        icon={addOutline}
+                                        slot={"end"}/>
+                                    Add
+                                </IonButton>
+                            </div>
+                            <div className={"label-table"}>
+                                <ReactBootStrap.Table striped bordered hover
+                                                      className={darkMode ? 'table-dark' : ''}>
+                                    <thead>
+                                    <tr>
+                                        <th className={NAME_WIDTH}><IonLabel>File Name</IonLabel></th>
+                                        <th className={NAME_WIDTH}>Shape</th>
+                                        <th className={NAME_WIDTH}>Type</th>
+                                        <th className={NAME_WIDTH}>Scan</th>
+                                        <th className={NAME_WIDTH}>Time</th>
+                                        <th className={NAME_WIDTH}>Size</th>
+                                        <th className={NAME_WIDTH}>Full Path</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {labelList!.map(renderLabel)}
+                                    </tbody>
+                                </ReactBootStrap.Table>
+                            </div>
+                            <AddNewFile
                                 idMenu={2}
-                                trigger={"weight-trigger"}
-                                labelList={labelList}
-                                darkMode={darkMode}
-                                typeOperation={"Weight"}
-                                renderLabel={renderLabel}
-                                NAME_WIDTH={NAME_WIDTH}></TableSampling>
+                                pathFilesVec={pathFilesVec}
+                                onPathFilesVec={handlePathVec}
+                                trigger={"weight-menu"}
+                                typeOperation={"Weight"}/>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
