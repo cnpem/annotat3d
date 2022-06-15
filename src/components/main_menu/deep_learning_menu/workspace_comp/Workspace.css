@@ -1,0 +1,16 @@
+/**
+Ion workspace used in WorkspaceComp.tsx
+used this site as reference to move the css
+https://css-tricks.com/quick-css-trick-how-to-center-an-object-exactly-in-the-center/
+ */
+.ion-workspace::part(content) {
+    --width: 400px;
+    --min-width: 300px;
+    --max-height: 650px;
+    position: fixed !important;
+    /*Used for centralize this menu like the DatasetMenu menu*/
+    /*top: 50%;
+    left: 50%;
+    /* bring your own prefixes
+    transform: translate(-50%, -293%) !important;*/
+}

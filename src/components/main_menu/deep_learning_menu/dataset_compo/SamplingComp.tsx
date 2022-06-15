@@ -15,9 +15,10 @@ import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventb
 import * as ReactBootStrap from "react-bootstrap";
 import {DataAndWeiTable, InitDataAndWeiTable} from "./DatasetInterfaces";
 
+type type_operation = "Data" | "Label" | "Weight";
+
 interface AddNewFileInterface {
-    showPopover: { open: boolean, event: Event | undefined },
-    closePopover: (element: { open: boolean, event: Event | undefined }) => void,
+    typeOperation: type_operation,
 }
 
 interface multiplesPath {
@@ -27,11 +28,10 @@ interface multiplesPath {
 
 /**
  * React component that creates the add menu interface
- * @param showPopover
- * @param closePopover
+ * @param typeOperation {type_operation} - blablabla
  * @constructor
  */
-const AddNewFile: React.FC<AddNewFileInterface> = ({showPopover, closePopover}) => {
+const AddNewFile: React.FC<AddNewFileInterface> = ({typeOperation}) => {
 
     const [pathFiles, setPathFiles] = useStorageState<multiplesPath>(sessionStorage, "loaded", {
         workspacePath: "",
@@ -40,11 +40,8 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({showPopover, closePopover}) 
 
     return (
         <IonPopover
-            isOpen={showPopover.open}
-            event={showPopover.event}
-            trigger={"add-op"}
-            className={"add-menu"}
-            onDidDismiss={() => closePopover({open: false, event: undefined})}>
+            trigger={"add-menu"}
+            className={"add-menu"}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
                 <IonAccordion>
@@ -85,14 +82,14 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({showPopover, closePopover}) 
                     </IonList>
                 </IonAccordion>
             </IonAccordionGroup>
-            <IonButton
-                onClick={(e) => closePopover({open: false, event: e.nativeEvent})}>Close</IonButton>
+            <IonButton>Load {typeOperation}</IonButton>
         </IonPopover>
     );
 }
 
 interface TableSamplingInterface {
     darkMode: boolean,
+    typeOperation: type_operation,
     labelList: DataAndWeiTable[],
     renderLabel: (labelElement: DataAndWeiTable) => void,
     NAME_WIDTH: string,
@@ -102,33 +99,22 @@ interface TableSamplingInterface {
 /**
  * TODO : need to make just one popover closes when i close one popover
  * Build-in Component that creates the table for Data, Label and Weight menu
- * @param {boolean} darkMode boolean variable that gets the forces the table to dark mode
+ * @param {boolean} darkMode - boolean variable that gets the forces the table to dark mode
+ * @param {type_operation} typeOperation -
  * @param {DataAndWeiTable[]} labelList - Object of DataAndWeiTable that contains the props of label table
  * @param {string} NAME_WIDTH - string that contains the width of each header in this table
  * @param {(labelElement: DataAndWeiTable) => void} renderLabel - function that renders the label content
  */
-const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, labelList, NAME_WIDTH, renderLabel}) => {
-
-    // Init States
-    const [showPopover, setShowPopover] = useState<{ open: boolean, event: Event | undefined }>({
-        open: false,
-        event: undefined,
-    });
-
-    const handleIsOpen = (element: { open: boolean, event: Event | undefined }) => {
-        setShowPopover(element);
-    }
-
+const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, typeOperation, labelList, NAME_WIDTH, renderLabel}) => {
     return (
         <Fragment>
             <div style={{display: "flex", justifyContent: "flex-end"}}>
                 <IonButton
-                    size={"default"}
-                    onClick={(e) => setShowPopover({open: true, event: e.nativeEvent})}>
+                    id={"add-menu"}
+                    size={"default"}>
                     <IonIcon
                         icon={addOutline}
-                        slot={"end"}
-                        id={"add-op"}/>
+                        slot={"end"}/>
                     Add
                 </IonButton>
                 <IonButton
@@ -159,8 +145,7 @@ const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, labelList, N
                 </ReactBootStrap.Table>
             </div>
             <AddNewFile
-                showPopover={showPopover}
-                closePopover={handleIsOpen}/>
+                typeOperation={typeOperation}/>
         </Fragment>
     );
 }
@@ -222,8 +207,6 @@ const SamplingComp: React.FC = () => {
     }
 
     const renderLabel = (labelElement: DataAndWeiTable) => {
-
-        console.log("bla : ", labelElement);
         const isActive = labelElement.id === selectedLabel;
 
         return (
@@ -291,8 +274,8 @@ const SamplingComp: React.FC = () => {
                 }}
                 onIonScrollEnd={() => {
                 }}>
+                {/*Sampling menu option*/}
                 <IonAccordionGroup multiple={true}>
-                    {/*Sampling menu option*/}
                     {/*Data menu option*/}
                     <IonAccordion>
                         <IonItem slot={"header"}>
@@ -303,6 +286,7 @@ const SamplingComp: React.FC = () => {
                             <TableSampling
                                 labelList={labelList}
                                 darkMode={darkMode}
+                                typeOperation={"Data"}
                                 renderLabel={renderLabel}
                                 NAME_WIDTH={NAME_WIDTH}></TableSampling>
                             <IonItemDivider/>
@@ -318,6 +302,7 @@ const SamplingComp: React.FC = () => {
                             <TableSampling
                                 labelList={labelList}
                                 darkMode={darkMode}
+                                typeOperation={"Label"}
                                 renderLabel={renderLabel}
                                 NAME_WIDTH={NAME_WIDTH}></TableSampling>
                             <IonItemDivider/>
@@ -333,6 +318,7 @@ const SamplingComp: React.FC = () => {
                             <TableSampling
                                 labelList={labelList}
                                 darkMode={darkMode}
+                                typeOperation={"Weight"}
                                 renderLabel={renderLabel}
                                 NAME_WIDTH={NAME_WIDTH}></TableSampling>
                             <IonItemDivider/>

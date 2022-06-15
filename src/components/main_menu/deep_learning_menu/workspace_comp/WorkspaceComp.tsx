@@ -13,8 +13,7 @@ import ErrorWindowComp from "../../file/ErrorWindowComp";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
 import {construct} from "ionicons/icons";
-
-//TODO : Need to verify why the css is not working on pop-over
+import "./Workspace.css";
 
 /**
  * Component that load or save a Workspace
@@ -95,7 +94,7 @@ const WorkspaceComp: React.FC = () => {
                 event={showPopover.event}
                 onDidDismiss={() => cleanUp()}
                 alignment={"center"}
-                className={"file-popover-load"}>
+                className={"ion-workspace"}>
                 <IonList>
                     {/* Header Path Text Input */}
                     <IonItem slot={"header"}>
