@@ -1,6 +1,6 @@
 import {Component} from 'react';
 import {IonFab, IonFabButton, IonIcon} from '@ionic/react';
-import {expand, brush, browsers, add, remove, eye, eyeOff} from 'ionicons/icons';
+import {expand, brush, browsers, add, remove, eye, eyeOff, image, images} from 'ionicons/icons';
 import {debounce, isEqual} from "lodash";
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -547,11 +547,19 @@ class Canvas {
     }
 
     setCropVisibility(visible: boolean = false) { // bruno
-        console.log('bruno: am i making another view of the crop rn?');
+        console.log('bruno: changing visibility', visible);
         if (visible) {
             this.setCropPreviewMaskImage();
         }
         this.cropSlice.visible = visible;
+    }
+
+    checkUpdateCropPreview() { // bruno
+        console.log('bruno: checking crop preview |o/');
+        if ( this.cropSlice.visible ) {
+            console.log('bruno: updating crop preview |o/');
+            this.setCropPreviewMaskImage();
+        }
     }
 
     private textureFromSlice(slice: Uint8Array, x: number, y: number, pformat = PIXI.FORMATS.LUMINANCE) {
@@ -598,7 +606,7 @@ class Canvas {
     private setCropPreviewMaskImage() { // bruno
 
         const alpha = this.cropSlice.alpha;
-        console.log('bruno making another mask axis and shape:', this.axis, this.imageShape);
+        console.log('bruno: making another mask axis and shape:', this.axis, this.imageShape); // bruno urgent
 
         const width = this.imgData!!.shape[1];
         const height = this.imgData!!.shape[0];
@@ -837,7 +845,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onLabelColorsChanged!: (colors: { id: number, color: [number, number, number] }[]) => void;
     onAnnotationChanged!: () => void;
     onLabelContourChanged!: (contour: boolean) => void;
-    onFutureChanged!: (hasPreview: boolean) => void;
+    onFutureChanged!: (hasPreview: boolean) => void; // bruno
     onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
     onExtendLabel: (flag: boolean) => void = () => {};
     onCropPreviewMode: (activateCropPreview: boolean) => void = () => {};
@@ -978,7 +986,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             };
 
             this.onImageLoaded = ( payload ) => {
-                this.setImageShape( payload.imageShape );
+                this.registerImageShape( payload.imageShape );
+                console.log('bruno: onImageLoaded: payload:', payload);
                 const promise = this.fetchAll(true);
                 promise?.then(() => {
                     sfetch("POST", "/is_annotation_empty", "", "json")
@@ -1054,6 +1063,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                     this.canvas?.deleteFutureImage();
                     this.setState({...this.state, future_sight_on: false});
                 }
+                this.updateCropPreview();
             }
 
             this.onChangeStateBrush = (mode: brush_mode_type) => {
@@ -1119,7 +1129,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('cropPreviewMode', this.onCropPreviewMode);
     }
 
-    componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
+    componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) { // bruno ver isso aqui
+
+        console.log("bruno: On Did Update : ", this.props.canvasMode);
 
         if (isEqual(prevProps, this.props)) //if all properties are the same (deep comparison)
             return;
@@ -1133,8 +1145,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             }
         }
 
-        console.log("On Did Update : ", this.props.canvasMode);
-
         this.setState({...this.state, future_sight_on: false});
         this.canvas?.setSliceNum(this.props.slice);
         this.canvas?.setAxis(this.props.axis);
@@ -1147,13 +1157,16 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.canvas?.adjustContrast(minimum, maximum);
     }
 
-    setImageShape( imageShape: ImageShapeInterface ) { // bruno
+    registerImageShape( imageShape: ImageShapeInterface ) { // bruno
+        console.log('bruno: am i changing imageShape?', imageShape);
         this.canvas?.setImageShape( imageShape );
     }
 
-    cropPreviewMode(activateCropPreview: boolean) {
-        // bruno
-        console.log('bruno cropPreviewMode', activateCropPreview);
+    updateCropPreview = () => { // bruno 
+        this.canvas?.checkUpdateCropPreview();
+    }
+
+    cropPreviewMode(activateCropPreview: boolean) { // bruno
         this.canvas?.setCropVisibility(activateCropPreview);
     }
 

@@ -30,6 +30,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     const [sliceName, setSliceName] = useStorageState<'XY' | 'XZ' | 'YZ'>(sessionStorage, 'sliceName', "XY");
     const [sliceValue, setSliceValue] = useStorageState<number>(sessionStorage, 'sliceValue', 0);
     const [LockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
+    const [cropPreviewMode, setCropPreviewMode] = useStorageState<boolean>(sessionStorage, 'cropPreviewMode', false);
 
     const maxValSlider: Record<'XY'|'XZ'|'YZ', number> = {
         'XY': props.imageShape.z - 1,
@@ -37,14 +38,24 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         'YZ': props.imageShape.x - 1
     }
 
+    useEventBus('cropPreviewMode', (cropMode) => {
+        setCropPreviewMode(cropMode);
+    })
+
     const handleSliceValue = (e: CustomEvent) => {
         setSliceValue(+e.detail.value);
+        console.log('bruno test', +e.detail.value);
         const payload: SliceInfoInterface =  {
             axis: sliceName,
             slice: +e.detail.value
         };
         dispatch('sliceChanged', payload);
-        dispatch('cropPreviewMode', currentEventValue('cropPreviewMode')); // bruno
+        dispatch('cropPreviewMode', cropPreviewMode); // bruno
+    }
+
+    const handleIonInputSliceValue = (e: CustomEvent) => {
+        setSliceValue(+e.detail.value);
+        // console.log('bruno test', +e.detail.value);
     }
 
     const handleSliceName = (e: CustomEvent) => {
@@ -61,7 +72,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         };
 
         dispatch('sliceChanged', payload);
-        dispatch('cropPreviewMode', currentEventValue('cropPreviewMode')); // bruno
+        dispatch('cropPreviewMode', cropPreviewMode); // bruno
     }
 
     useEffect(() => {
@@ -104,7 +115,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                     type={"number"}
                     min={0} max={maxValSlider[sliceName]}
                     clearInput value={sliceValue}
-                    onIonChange={handleSliceValue}
+                    onIonChange={handleIonInputSliceValue}
                     disabled={LockMenu}/>
             </IonItem>
         </Fragment>
