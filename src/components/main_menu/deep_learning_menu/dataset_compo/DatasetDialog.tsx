@@ -111,15 +111,6 @@ const WorkspaceComp: React.FC = () => {
                         icon={checkbox}
                         slot={"end"}/>
                 </IonButton>
-                <IonButton
-                    color={"tertiary"}
-                    slot={"end"}
-                    onClick={e => setShowPopover({open: false, event: e.nativeEvent})}>
-                    Cancel
-                    <IonIcon
-                        icon={closeOutline}
-                        slot={"end"}/>
-                </IonButton>
             </IonPopover>
             {/* Function effect to open the popup */}
             <IonItem button

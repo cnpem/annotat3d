@@ -1,4 +1,4 @@
-import React, {Fragment, useState} from "react";
+import React, {Fragment, useEffect, useState} from "react";
 import {
     IonAccordion,
     IonAccordionGroup, IonButton, IonCol,
@@ -9,7 +9,7 @@ import {
     IonLabel,
     IonList, IonPopover, IonRow
 } from "@ionic/react";
-import {addOutline, construct, image, trashOutline} from "ionicons/icons";
+import {addOutline, construct, image} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import * as ReactBootStrap from "react-bootstrap";
@@ -17,14 +17,18 @@ import {DataAndWeiTable, InitDataAndWeiTable} from "./DatasetInterfaces";
 
 type type_operation = "Data" | "Label" | "Weight";
 
-interface AddNewFileInterface {
-    typeOperation: type_operation,
-    trigger: string,
+interface multiplesPath {
+    id: number,
+    workspacePath: string,
+    filePath: string,
 }
 
-interface multiplesPath {
-    workspacePath: string,
-    imagePath: string,
+interface AddNewFileInterface {
+    idMenu: number
+    pathFilesVec: multiplesPath[],
+    onPathFilesVec: (vecFiles: multiplesPath, index: number) => void,
+    typeOperation: type_operation,
+    trigger: string,
 }
 
 /**
@@ -33,23 +37,44 @@ interface multiplesPath {
  * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
  * @constructor
  */
-const AddNewFile: React.FC<AddNewFileInterface> = ({typeOperation, trigger}) => {
+const AddNewFile: React.FC<AddNewFileInterface> = ({
+                                                       idMenu,
+                                                       typeOperation,
+                                                       trigger,
+                                                       pathFilesVec,
+                                                       onPathFilesVec
+                                                   }) => {
 
-    const [pathFiles, setPathFiles] = useStorageState<multiplesPath>(sessionStorage, "loaded", {
+    const [pathFiles, setPathFiles] = useState<multiplesPath>({
+        id: idMenu,
         workspacePath: "",
-        imagePath: ""
-    })
+        filePath: ""
+    });
+
+    const [loadFile, setLoadFile] = useState<boolean>(false);
+
+    useEffect(() => {
+        if(loadFile) {
+            onPathFilesVec(pathFiles, idMenu);
+            setLoadFile(false)
+        }
+    }, [loadFile, onPathFilesVec]);
 
     return (
         <IonPopover
             trigger={trigger}
+            onDidDismiss={() => setPathFiles({
+                id: idMenu,
+                workspacePath: "",
+                filePath: ""
+            })}
             className={"add-menu"}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
                 <IonAccordion>
                     <IonItem slot={"header"}>
                         <IonIcon slot={"start"} icon={construct}/>
-                        <IonLabel><small>Load workspace</small></IonLabel>
+                        <IonLabel><small>Load {typeOperation} workspace</small></IonLabel>
                     </IonItem>
                     <IonList slot={"content"}>
                         <IonItem>
@@ -75,21 +100,25 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({typeOperation, trigger}) => 
                             <IonLabel position="stacked">{typeOperation} Path</IonLabel>
                             <IonInput
                                 placeholder={`/path/to/${typeOperation}`}
-                                value={pathFiles.workspacePath}
+                                value={pathFiles.filePath}
                                 onIonChange={(e: CustomEvent) => setPathFiles({
                                     ...pathFiles,
-                                    imagePath: e.detail.value!
+                                    filePath: e.detail.value!
                                 })}/>
                         </IonItem>
                     </IonList>
                 </IonAccordion>
             </IonAccordionGroup>
-            <IonButton>Load {typeOperation}</IonButton>
+            <IonButton
+                size={"default"}
+                color={"tertiary"}
+                onClick={() => setLoadFile(true)}>Load {typeOperation}</IonButton>
         </IonPopover>
     );
 }
 
 interface TableSamplingInterface {
+    idMenu: number
     darkMode: boolean,
     typeOperation: type_operation,
     trigger: string,
@@ -101,6 +130,7 @@ interface TableSamplingInterface {
 
 /**
  * Build-in Component that creates the table for Data, Label and Weight menu
+ * @param idMenu {number} -
  * @param darkMode {boolean} - boolean variable that gets the forces the table to dark mode
  * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
  * @param trigger {string} - string that contains the trigger to open the popup
@@ -108,7 +138,45 @@ interface TableSamplingInterface {
  * @param NAME_WIDTH {string} - string that contains the width of each header in this table
  * @param renderLabel {(labelElement: DataAndWeiTable) => void} - function that renders the label content
  */
-const TableSampling: React.FC<TableSamplingInterface> = ({trigger, darkMode, typeOperation, labelList, NAME_WIDTH, renderLabel}) => {
+const TableSampling: React.FC<TableSamplingInterface> = ({
+                                                             idMenu,
+                                                             trigger,
+                                                             darkMode,
+                                                             typeOperation,
+                                                             labelList,
+                                                             NAME_WIDTH,
+                                                             renderLabel
+                                                         }) => {
+
+    const [pathFilesVec, setPathFilesVec] = useStorageState<multiplesPath[]>(sessionStorage, "pathFilesVec", [
+        {
+            id: 0,
+            workspacePath: "",
+            filePath: ""
+        },
+        {
+            id: 1,
+            workspacePath: "",
+            filePath: ""
+        },
+        {
+            id: 2,
+            workspacePath: "",
+            filePath: ""
+        }
+    ]);
+
+    const handlePathVec = (newPathFileElement: multiplesPath, index: number) => {
+        console.log("bla : ", newPathFileElement);
+        const newVec = pathFilesVec
+            .map(l => l.id === index
+                ? {...l, workspacePath: newPathFileElement.workspacePath, filePath: newPathFileElement.filePath}
+                : l);
+
+        console.log("newVec : ", newVec);
+        setPathFilesVec(newVec);
+    }
+
     return (
         <Fragment>
             <div style={{display: "flex", justifyContent: "flex-end"}}>
@@ -119,13 +187,6 @@ const TableSampling: React.FC<TableSamplingInterface> = ({trigger, darkMode, typ
                         icon={addOutline}
                         slot={"end"}/>
                     Add
-                </IonButton>
-                <IonButton
-                    color={"danger"}
-                    size={"default"}
-                    slot={"end"}>
-                    <IonIcon icon={trashOutline} slot={"end"}/>
-                    Delete
                 </IonButton>
             </div>
             <div className={"label-table"}>
@@ -148,6 +209,9 @@ const TableSampling: React.FC<TableSamplingInterface> = ({trigger, darkMode, typ
                 </ReactBootStrap.Table>
             </div>
             <AddNewFile
+                idMenu={idMenu}
+                pathFilesVec={pathFilesVec}
+                onPathFilesVec={handlePathVec}
                 trigger={trigger}
                 typeOperation={typeOperation}/>
         </Fragment>
@@ -288,6 +352,7 @@ const SamplingComp: React.FC = () => {
                         </IonItem>
                         <IonList slot={"content"}>
                             <TableSampling
+                                idMenu={0}
                                 trigger={"data-trigger"}
                                 labelList={labelList}
                                 darkMode={darkMode}
@@ -305,6 +370,7 @@ const SamplingComp: React.FC = () => {
                         </IonItem>
                         <IonList slot={"content"}>
                             <TableSampling
+                                idMenu={1}
                                 trigger={"label-trigger"}
                                 labelList={labelList}
                                 darkMode={darkMode}
@@ -322,6 +388,7 @@ const SamplingComp: React.FC = () => {
                         </IonItem>
                         <IonList slot={"content"}>
                             <TableSampling
+                                idMenu={2}
                                 trigger={"weight-trigger"}
                                 labelList={labelList}
                                 darkMode={darkMode}

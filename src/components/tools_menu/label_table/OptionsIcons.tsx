@@ -15,13 +15,13 @@ import {defaultColormap} from "../../../utils/colormap";
 import {dispatch} from "../../../utils/eventbus";
 import {sfetch} from "../../../utils/simplerequest";
 
-interface OptionsProps{
+interface OptionsProps {
     label: LabelInterface;
     onChangeLabelList: (label: LabelInterface) => void;
     onChangeLabel: (newLabelName: string, labelId: number, color: [number, number, number]) => void;
 }
 
-interface LabelEditProps{
+interface LabelEditProps {
     label: LabelInterface;
     labelNameTrigger: string;
 
@@ -36,7 +36,7 @@ interface LabelEditProps{
  * @param {LabelEditProps} props - Object that contains the
  * @interface {LabelEditProps} - LabelEditProps interface for props
  */
-const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
+const EditLabelNameComp: React.FC<LabelEditProps> = (props: LabelEditProps) => {
 
     const [newLabelName, setNewLabelName] = useState<string>(props.label.labelName);
 
@@ -53,25 +53,22 @@ const EditLabelNameComp:React.FC<LabelEditProps> = (props: LabelEditProps) => {
         props.onShowPopover(false);
     }
 
-    return(
+    return (
         <IonPopover
-                trigger={props.labelNameTrigger}
-                isOpen={props.showPopover}
-                onDidDismiss={exitPopup}
-                alignment={"end"}
-                side={"left"}>
-
-                <IonContent>
-                    <IonItem>
-                        <IonInput value={newLabelName} onIonChange={changeLabelName}/>
-                    </IonItem>
-
-                    <IonItem>
-                        <IonButton onClick={exitPopup}>Cancel</IonButton>
-                        <IonButton onClick={handleChangeNewLabelName}>Confirm</IonButton>
-                    </IonItem>
-                </IonContent>
-
+            trigger={props.labelNameTrigger}
+            isOpen={props.showPopover}
+            onDidDismiss={exitPopup}
+            alignment={"end"}
+            side={"left"}>
+            <IonContent>
+                <IonItem>
+                    <IonInput value={newLabelName} onIonChange={changeLabelName}/>
+                </IonItem>
+            </IonContent>
+            <IonButton
+                size={"default"}
+                color={"tertiary"}
+                onClick={handleChangeNewLabelName}>Confirm</IonButton>
         </IonPopover>
     );
 
@@ -88,13 +85,13 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
     const [showColorPopover, setShowColorPopover] = useState<boolean>(false);
 
     useEffect(() => {
-        if (userDeleteOp && props.label.id !== 0){
+        if (userDeleteOp && props.label.id !== 0) {
             props.onChangeLabelList(props.label);
         }
     }, [userDeleteOp, props]);
 
     const [color, setColor] = useStorageState<[number, number, number]>(
-        sessionStorage, 'labelColor.'+props.label.id, defaultColormap[props.label.id]
+        sessionStorage, 'labelColor.' + props.label.id, defaultColormap[props.label.id]
     );
 
     const handleNameEditClickButton = () => {
@@ -105,9 +102,10 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
         setShowNamePopover(showPop);
     }
 
-    return(
+    return (
         <IonButtons>
-            <IonButton id={"delete-label-button-" + props.label.id} size="small" onClick={() => setShowDeletePopUp(true)}>
+            <IonButton id={"delete-label-button-" + props.label.id} size="small"
+                       onClick={() => setShowDeletePopUp(true)}>
                 <IonIcon icon={closeOutline}/>
             </IonButton>
             <IonButton id={"edit-label-button-" + props.label.id} onClick={handleNameEditClickButton}>
@@ -122,11 +120,11 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
             <IonPopover
                 trigger={"edit-color-button-" + props.label.id} isOpen={showColorPopover}>
                 <ChromePicker color={`rgb(${color[0]},${color[1]},${color[2]})`}
-                    onChange={ (color: any) => {
-                        const colorTuple: [number, number, number] = [color.rgb.r, color.rgb.g, color.rgb.b];
-                        props.onChangeLabel(props.label.labelName, props.label.id, colorTuple);
-                        setColor(colorTuple);
-                    }} disableAlpha/>
+                              onChange={(color: any) => {
+                                  const colorTuple: [number, number, number] = [color.rgb.r, color.rgb.g, color.rgb.b];
+                                  props.onChangeLabel(props.label.labelName, props.label.id, colorTuple);
+                                  setColor(colorTuple);
+                              }} disableAlpha/>
             </IonPopover>
 
             {/*Delete popUp*/}
@@ -139,32 +137,30 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                     <IonItem>
                         Do you wish to delete {props.label.labelName} ?
                     </IonItem>
-
-                    <IonItem>
-                        <IonButton onClick={() => {
-                            setShowDeletePopUp(false);
-                            setUserDeleteOp(false);}}>Cancel</IonButton>
-
-                        <IonButton onClick={() => {
-
-                            const params = {
-                                label_id: props.label.id,
-                            };
-
-                            sfetch("POST", "/delete_label_annot", JSON.stringify(params), "").then(
-                                (info) => {
-                                    dispatch("annotationChanged", null);
-                                    console.log("printing info ", info)
-                                }
-                            ).catch((error) => {
-                                    console.log(error);
-                                }
-                            );
-
-                            setShowDeletePopUp(false);
-                            setUserDeleteOp(true);}}>Confirm</IonButton>
-                    </IonItem>
                 </IonContent>
+
+                <IonButton
+                    size={"default"}
+                    color={"tertiary"}
+                    onClick={() => {
+
+                        const params = {
+                            label_id: props.label.id,
+                        };
+
+                        sfetch("POST", "/delete_label_annot", JSON.stringify(params), "").then(
+                            (info) => {
+                                dispatch("annotationChanged", null);
+                                console.log("printing info ", info)
+                            }
+                        ).catch((error) => {
+                                console.log(error);
+                            }
+                        );
+
+                        setShowDeletePopUp(false);
+                        setUserDeleteOp(true);
+                    }}>Confirm</IonButton>
             </IonPopover>
 
             {/*Edit Label component*/}
