@@ -19,6 +19,7 @@ type type_operation = "Data" | "Label" | "Weight";
 
 interface AddNewFileInterface {
     typeOperation: type_operation,
+    trigger: string,
 }
 
 interface multiplesPath {
@@ -28,10 +29,11 @@ interface multiplesPath {
 
 /**
  * React component that creates the add menu interface
- * @param typeOperation {type_operation} - blablabla
+ * @param trigger {string} - string that contains the trigger to open the popup
+ * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
  * @constructor
  */
-const AddNewFile: React.FC<AddNewFileInterface> = ({typeOperation}) => {
+const AddNewFile: React.FC<AddNewFileInterface> = ({typeOperation, trigger}) => {
 
     const [pathFiles, setPathFiles] = useStorageState<multiplesPath>(sessionStorage, "loaded", {
         workspacePath: "",
@@ -40,7 +42,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({typeOperation}) => {
 
     return (
         <IonPopover
-            trigger={"add-menu"}
+            trigger={trigger}
             className={"add-menu"}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
@@ -62,17 +64,17 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({typeOperation}) => {
                         </IonItem>
                     </IonList>
                 </IonAccordion>
-                {/*Load image menu*/}
+                {/*Load type menu*/}
                 <IonAccordion>
                     <IonItem slot={"header"}>
                         <IonIcon slot={"start"} icon={image}/>
-                        <IonLabel><small>Load workspace</small></IonLabel>
+                        <IonLabel><small>Load {typeOperation}</small></IonLabel>
                     </IonItem>
                     <IonList slot={"content"}>
                         <IonItem>
-                            <IonLabel position="stacked">Image Path</IonLabel>
+                            <IonLabel position="stacked">{typeOperation} Path</IonLabel>
                             <IonInput
-                                placeholder={"/path/to/file.tif, .tiff, .raw or .b"}
+                                placeholder={`/path/to/${typeOperation}`}
                                 value={pathFiles.workspacePath}
                                 onIonChange={(e: CustomEvent) => setPathFiles({
                                     ...pathFiles,
@@ -90,6 +92,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({typeOperation}) => {
 interface TableSamplingInterface {
     darkMode: boolean,
     typeOperation: type_operation,
+    trigger: string,
     labelList: DataAndWeiTable[],
     renderLabel: (labelElement: DataAndWeiTable) => void,
     NAME_WIDTH: string,
@@ -97,20 +100,20 @@ interface TableSamplingInterface {
 }
 
 /**
- * TODO : need to make just one popover closes when i close one popover
  * Build-in Component that creates the table for Data, Label and Weight menu
- * @param {boolean} darkMode - boolean variable that gets the forces the table to dark mode
- * @param {type_operation} typeOperation -
- * @param {DataAndWeiTable[]} labelList - Object of DataAndWeiTable that contains the props of label table
- * @param {string} NAME_WIDTH - string that contains the width of each header in this table
- * @param {(labelElement: DataAndWeiTable) => void} renderLabel - function that renders the label content
+ * @param darkMode {boolean} - boolean variable that gets the forces the table to dark mode
+ * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
+ * @param trigger {string} - string that contains the trigger to open the popup
+ * @param labelList {DataAndWeiTable[]} - Object of DataAndWeiTable that contains the props of label table
+ * @param NAME_WIDTH {string} - string that contains the width of each header in this table
+ * @param renderLabel {(labelElement: DataAndWeiTable) => void} - function that renders the label content
  */
-const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, typeOperation, labelList, NAME_WIDTH, renderLabel}) => {
+const TableSampling: React.FC<TableSamplingInterface> = ({trigger, darkMode, typeOperation, labelList, NAME_WIDTH, renderLabel}) => {
     return (
         <Fragment>
             <div style={{display: "flex", justifyContent: "flex-end"}}>
                 <IonButton
-                    id={"add-menu"}
+                    id={trigger}
                     size={"default"}>
                     <IonIcon
                         icon={addOutline}
@@ -145,6 +148,7 @@ const TableSampling: React.FC<TableSamplingInterface> = ({darkMode, typeOperatio
                 </ReactBootStrap.Table>
             </div>
             <AddNewFile
+                trigger={trigger}
                 typeOperation={typeOperation}/>
         </Fragment>
     );
@@ -284,6 +288,7 @@ const SamplingComp: React.FC = () => {
                         </IonItem>
                         <IonList slot={"content"}>
                             <TableSampling
+                                trigger={"data-trigger"}
                                 labelList={labelList}
                                 darkMode={darkMode}
                                 typeOperation={"Data"}
@@ -300,6 +305,7 @@ const SamplingComp: React.FC = () => {
                         </IonItem>
                         <IonList slot={"content"}>
                             <TableSampling
+                                trigger={"label-trigger"}
                                 labelList={labelList}
                                 darkMode={darkMode}
                                 typeOperation={"Label"}
@@ -316,6 +322,7 @@ const SamplingComp: React.FC = () => {
                         </IonItem>
                         <IonList slot={"content"}>
                             <TableSampling
+                                trigger={"weight-trigger"}
                                 labelList={labelList}
                                 darkMode={darkMode}
                                 typeOperation={"Weight"}
