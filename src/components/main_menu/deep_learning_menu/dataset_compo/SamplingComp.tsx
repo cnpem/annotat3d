@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {
     IonAccordion,
-    IonAccordionGroup, IonButton, IonCol,
+    IonAccordionGroup, IonButton, IonButtons, IonCol,
     IonContent,
     IonIcon, IonInput,
     IonItem,
@@ -9,11 +9,12 @@ import {
     IonLabel,
     IonList, IonPopover, IonRow
 } from "@ionic/react";
-import {addOutline, construct, image} from "ionicons/icons";
+import {addOutline, closeOutline, construct, image} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import * as ReactBootStrap from "react-bootstrap";
 import {InitTables, TableInterface} from "./DatasetInterfaces";
+import "./LabelTable.css";
 
 type type_operation = "Data" | "Label" | "Weight";
 
@@ -273,43 +274,49 @@ const SamplingComp: React.FC = () => {
                 onClick={() => selectLabel(labelElement.id)}>
                 {/*Table Content*/}
                 <td>
-                    {labelElement.element.file}
+                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                        <IonButtons>
+                            <IonButton id={"delete-label-button-" + labelElement.id} size="small"
+                                       onClick={() => {
+                                           console.table(labelElement)
+                                       }}>
+                                <IonIcon icon={closeOutline}/>
+                            </IonButton>
+                        </IonButtons>
+                        {labelElement.element.file}
+                    </div>
                 </td>
                 <td>
-                    {/*<OptionsIcons
-                        label={labelElement}
-                        onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>*/}
+                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                        {`${labelElement.element.shape[0]} x 
+                        ${labelElement.element.shape[1]} x 
+                        ${labelElement.element.shape[2]}`}
+                    </div>
                 </td>
                 <td>
-                    {/*<OptionsIcons
-                        label={labelElement}
-                        onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>*/}
+                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                        {labelElement.element.type}
+                    </div>
                 </td>
                 <td>
-                    {/*<OptionsIcons
-                        label={labelElement}
-                        onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>*/}
+                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                        {labelElement.element.scan}
+                    </div>
                 </td>
                 <td>
-                    {/*<OptionsIcons
-                        label={labelElement}
-                        onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>*/}
+                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                        {labelElement.element.time}
+                    </div>
                 </td>
                 <td>
-                    {/*<OptionsIcons
-                        label={labelElement}
-                        onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>*/}
+                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                        {labelElement.element.size}
+                    </div>
                 </td>
                 <td>
-                    {/*<OptionsIcons
-                        label={labelElement}
-                        onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>*/}
+                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                        {labelElement.element.fullPath}
+                    </div>
                 </td>
             </tr>
         );

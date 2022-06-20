@@ -9,7 +9,7 @@ import SamplingComp from "./SamplingComp";
 import {useStorageState} from "react-storage-hooks";
 import {AugmentationInterface, InitAugmentationOptions, InitIonRangeVec, IonRangeElement} from "./DatasetInterfaces";
 import AugmentationComp from "./AugmentationComp";
-import {checkbox, closeOutline} from "ionicons/icons";
+import {checkbox} from "ionicons/icons";
 
 const menuChoices = ["sampling", "augmentation"] as const;
 type InputMenuChoicesType = typeof menuChoices[number];
