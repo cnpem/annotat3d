@@ -32,21 +32,21 @@ interface AddNewFileInterface {
 
 /**
  * React component that creates the add menu interface
+ * @param idMenu {number} - id used to create a new element in the table
+ * @param onTableVec {(newFile: MultiplesPath) => void} - setter used to create a new element
  * @param trigger {string} - string that contains the trigger to open the popup
  * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
  * @constructor
  */
 const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        idMenu,
+                                                       onTableVec,
                                                        typeOperation,
                                                        trigger,
-                                                       onTableVec
                                                    }) => {
 
-    let id = idMenu;
-    console.log("id menu : ",idMenu);
     const [pathFiles, setPathFiles] = useState<MultiplesPath>({
-        id: id,
+        id: idMenu,
         workspacePath: "",
         filePath: ""
     });
@@ -54,7 +54,13 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     return (
         <IonPopover
             trigger={trigger}
-            className={"add-menu"}>
+            className={"add-menu"}
+            onDidDismiss={() => {
+                setPathFiles({
+                    ...pathFiles,
+                    filePath: "",
+                });
+            }}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
                 <IonAccordion>
@@ -102,7 +108,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                     console.log("path");
                     console.table(pathFiles);
                     onTableVec(pathFiles);
-                    setPathFiles({...pathFiles, id: id + 1});
+                    setPathFiles({...pathFiles, id: pathFiles.id + 1});
                 }}>Load {typeOperation}</IonButton>
         </IonPopover>
     );
@@ -311,7 +317,6 @@ const SamplingComp: React.FC = () => {
     };
 
     const NAME_WIDTH = "col-3";
-    const OPTIONS_WIDTH = "col-1";
     //TODO : Need to create a new component just to resize the table
 
     return (
