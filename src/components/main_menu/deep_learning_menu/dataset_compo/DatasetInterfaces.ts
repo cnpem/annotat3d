@@ -212,9 +212,9 @@ export const InitIonRangeVec: IonRangeElement[] = [
 /**
  * Build-in interface for Element of data and weight table
  */
-interface ElementDataAndWei {
+interface TableElement {
     file: string,
-    shape: string,
+    shape: Array<number>,
     type: string,
     scan: string,
     time: number,
@@ -225,16 +225,16 @@ interface ElementDataAndWei {
 /**
  * Element of the vector DataAndWeiTable[]
  */
-export interface DataAndWeiTable {
+export interface TableInterface {
     id: number,
-    element: ElementDataAndWei,
+    element: TableElement,
 }
 
-export const InitDataAndWeiTable: DataAndWeiTable [] = [{
+export const InitTables: TableInterface[] = [{
     id: 0,
     element: {
         file: "",
-        shape: "0 x 0 x 0",
+        shape: [0, 0, 0],
         type: "",
         scan: "",
         time: 0,

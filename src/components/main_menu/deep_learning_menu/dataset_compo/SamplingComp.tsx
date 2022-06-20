@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import {
     IonAccordion,
     IonAccordionGroup, IonButton, IonCol,
@@ -13,11 +13,11 @@ import {addOutline, construct, image} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import * as ReactBootStrap from "react-bootstrap";
-import {DataAndWeiTable, InitDataAndWeiTable} from "./DatasetInterfaces";
+import {InitTables, TableInterface} from "./DatasetInterfaces";
 
 type type_operation = "Data" | "Label" | "Weight";
 
-interface multiplesPath {
+interface MultiplesPath {
     id: number,
     workspacePath: string,
     filePath: string,
@@ -25,8 +25,9 @@ interface multiplesPath {
 
 interface AddNewFileInterface {
     idMenu: number
-    pathFilesVec: multiplesPath[],
-    onPathFilesVec: (vecFiles: multiplesPath, index: number) => void,
+    onIdMenu: (id: number) => void,
+    tableVec: TableInterface[],
+    onTableVec: (newFile: MultiplesPath) => void,
     typeOperation: type_operation,
     trigger: string,
 }
@@ -39,26 +40,18 @@ interface AddNewFileInterface {
  */
 const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        idMenu,
+                                                       onIdMenu,
                                                        typeOperation,
                                                        trigger,
-                                                       pathFilesVec,
-                                                       onPathFilesVec
+                                                       tableVec,
+                                                       onTableVec
                                                    }) => {
 
-    const [pathFiles, setPathFiles] = useState<multiplesPath>({
+    const [pathFiles, setPathFiles] = useState<MultiplesPath>({
         id: idMenu,
         workspacePath: "",
         filePath: ""
     });
-
-    const [loadFile, setLoadFile] = useState<boolean>(false);
-
-    useEffect(() => {
-        if (loadFile) {
-            onPathFilesVec(pathFiles, idMenu);
-            setLoadFile(false)
-        }
-    }, [loadFile, onPathFilesVec]);
 
     return (
         <IonPopover
@@ -112,7 +105,12 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
             <IonButton
                 size={"default"}
                 color={"tertiary"}
-                onClick={() => setLoadFile(true)}>Load {typeOperation}</IonButton>
+                onClick={() => {
+                    console.log("path");
+                    console.table(pathFiles);
+                    onTableVec(pathFiles);
+                    onIdMenu(pathFiles.id);
+                }}>Load {typeOperation}</IonButton>
         </IonPopover>
     );
 }
@@ -129,40 +127,133 @@ interface SamplingInterface {
 const SamplingComp: React.FC = () => {
 
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
-    const [newLabelId, setNewLabelId] = useStorageState<number>(sessionStorage, 'newLabelId', 1);
-    const [labelList, setLabelList] = useStorageState<DataAndWeiTable[]>(sessionStorage, 'newLabelListTable', InitDataAndWeiTable);
-    const [pathFilesVec, setPathFilesVec] = useStorageState<multiplesPath[]>(sessionStorage, "pathFilesVec", [
-        {
-            id: 0,
-            workspacePath: "",
-            filePath: ""
-        },
-        {
-            id: 1,
-            workspacePath: "",
-            filePath: ""
-        },
-        {
-            id: 2,
-            workspacePath: "",
-            filePath: ""
-        }
-    ]);
-
-    const handlePathVec = (newPathFileElement: multiplesPath, index: number) => {
-        console.log("bla : ", newPathFileElement);
-        const newVec = pathFilesVec
-            .map(l => l.id === index
-                ? {...l, workspacePath: newPathFileElement.workspacePath, filePath: newPathFileElement.filePath}
-                : l);
-
-        console.log("newVec : ", newVec);
-        setPathFilesVec(newVec);
-    }
+    const [newDataId, setNewDataId] = useStorageState<number>(sessionStorage, 'newDataId', 0);
+    const [dataTable, setDataTable] = useStorageState<TableInterface[]>(sessionStorage, 'dataTable', InitTables);
+    const [newLabelId, setNewLabelId] = useStorageState<number>(sessionStorage, 'newLabelId', 0);
+    const [labelTable, setLabelTable] = useStorageState<TableInterface[]>(sessionStorage, 'labelTable', InitTables);
+    const [newWeightId, setNewWeightId] = useStorageState<number>(sessionStorage, 'newWeightId', 0);
+    const [weightTable, setWeightTable] = useStorageState<TableInterface[]>(sessionStorage, 'WeightTable', InitTables);
 
     useEventBus('toggleMode', (darkMode: boolean) => {
         setDarkMode(darkMode);
     });
+
+    //TODO : need to implement the back-end function to read the images here
+    const handleNewDataId = (id: number) => {
+        setNewDataId(id + 1);
+    }
+
+    const handleDataTable = (newFile: MultiplesPath) => {
+        console.log("new element for Data Table : ", newFile);
+        if (newFile.id === 0) {
+            setDataTable([{
+                id: newFile.id,
+                element: {
+                    file: newFile.filePath,
+                    shape: [0, 0, 0],
+                    type: "",
+                    scan: "",
+                    time: 0,
+                    size: 0,
+                    fullPath: newFile.workspacePath + newFile.filePath
+                }
+            }]);
+        } else {
+            setDataTable([...dataTable, {
+                id: newFile.id,
+                element: {
+                    file: newFile.filePath,
+                    shape: [0, 0, 0],
+                    type: "",
+                    scan: "",
+                    time: 0,
+                    size: 0,
+                    fullPath: newFile.workspacePath + newFile.filePath
+                }
+            }]);
+        }
+
+        handleNewDataId(newFile.id);
+
+    }
+
+    //TODO : need to implement the back-end function to read the images here
+    const handleNewLabelId = (id: number) => {
+        setNewLabelId(id + 1);
+    }
+
+    const handleLabelTable = (newFile: MultiplesPath) => {
+        console.log("new element for Label Table : ", newFile);
+
+        if (newFile.id === 0) {
+            setLabelTable([{
+                id: newFile.id,
+                element: {
+                    file: newFile.filePath,
+                    shape: [0, 0, 0],
+                    type: "",
+                    scan: "",
+                    time: 0,
+                    size: 0,
+                    fullPath: newFile.workspacePath + newFile.filePath
+                }
+            }]);
+        } else {
+            setLabelTable([...labelTable, {
+                id: newFile.id,
+                element: {
+                    file: newFile.filePath,
+                    shape: [0, 0, 0],
+                    type: "",
+                    scan: "",
+                    time: 0,
+                    size: 0,
+                    fullPath: newFile.workspacePath + newFile.filePath
+                }
+            }]);
+        }
+
+        handleNewLabelId(newFile.id);
+
+    }
+
+    //TODO : need to implement the back-end function to read the images here
+    const handleNewWeightId = (id: number) => {
+        setNewWeightId(id + 1);
+    }
+    const handleWeightTable = (newFile: MultiplesPath) => {
+        console.log("new element for Weight Table : ", newFile);
+        if (newFile.id === 0) {
+            setWeightTable([{
+                id: newFile.id,
+                element: {
+                    file: newFile.filePath,
+                    shape: [0, 0, 0],
+                    type: "",
+                    scan: "",
+                    time: 0,
+                    size: 0,
+                    fullPath: newFile.workspacePath + newFile.filePath
+                }
+            }]);
+        } else {
+            setWeightTable([...weightTable, {
+                id: newFile.id,
+                element: {
+                    file: newFile.filePath,
+                    shape: [0, 0, 0],
+                    type: "",
+                    scan: "",
+                    time: 0,
+                    size: 0,
+                    fullPath: newFile.workspacePath + newFile.filePath
+                }
+            }]);
+        }
+
+        handleNewWeightId(newFile.id);
+
+    }
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
 
@@ -172,19 +263,17 @@ const SamplingComp: React.FC = () => {
         patchSize: [256, 256, 1],
     });
 
-    const removeLabelElement = (labelElement: DataAndWeiTable) => {
+    //TODO : need to implement this functions to change this tables
+    /*const removeLabelElement = (labelElement: DataAndWeiTable) => {
         setLabelList(labelList!.filter(l => l.id !== labelElement.id));
 
         if (labelList?.length === 2) {
             setNewLabelId(1);
         }
 
-    }
+    }*/
 
-    const selectIdGenerator = (id: number) => {
-        setNewLabelId(id + 1);
-    }
-    const changeLabelList = (newLabelName: string, labelId: number) => {
+    /*const changeLabelList = (newLabelName: string, labelId: number) => {
 
         const newList = labelList!
             .map(l => l.id === labelId
@@ -192,6 +281,10 @@ const SamplingComp: React.FC = () => {
                 : l);
 
         setLabelList(newList);
+    }*/
+
+    const generateNewIdData = (id: number) => {
+        setNewDataId(id + 1);
     }
 
     const selectLabel = (id: number) => {
@@ -201,7 +294,7 @@ const SamplingComp: React.FC = () => {
         });
     }
 
-    const renderLabel = (labelElement: DataAndWeiTable) => {
+    const renderLabel = (labelElement: TableInterface) => {
         const isActive = labelElement.id === selectedLabel;
 
         return (
@@ -303,14 +396,15 @@ const SamplingComp: React.FC = () => {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {labelList!.map(renderLabel)}
+                                    {dataTable!.map(renderLabel)}
                                     </tbody>
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={0}
-                                pathFilesVec={pathFilesVec}
-                                onPathFilesVec={handlePathVec}
+                                idMenu={newDataId}
+                                onIdMenu={handleNewDataId}
+                                tableVec={dataTable}
+                                onTableVec={handleDataTable}
                                 trigger={"data-menu"}
                                 typeOperation={"Data"}/>
                             <IonItemDivider/>
@@ -348,14 +442,15 @@ const SamplingComp: React.FC = () => {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {labelList!.map(renderLabel)}
+                                    {labelTable!.map(renderLabel)}
                                     </tbody>
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={1}
-                                pathFilesVec={pathFilesVec}
-                                onPathFilesVec={handlePathVec}
+                                idMenu={newLabelId}
+                                onIdMenu={handleNewLabelId}
+                                tableVec={labelTable}
+                                onTableVec={handleLabelTable}
                                 trigger={"label-menu"}
                                 typeOperation={"Label"}/>
                             <IonItemDivider/>
@@ -393,14 +488,15 @@ const SamplingComp: React.FC = () => {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {labelList!.map(renderLabel)}
+                                    {weightTable!.map(renderLabel)}
                                     </tbody>
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={2}
-                                pathFilesVec={pathFilesVec}
-                                onPathFilesVec={handlePathVec}
+                                idMenu={newWeightId}
+                                onIdMenu={handleNewWeightId}
+                                tableVec={weightTable}
+                                onTableVec={handleWeightTable}
                                 trigger={"weight-menu"}
                                 typeOperation={"Weight"}/>
                             <IonItemDivider/>
