@@ -47,8 +47,9 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        onTableVec
                                                    }) => {
 
+    let id = idMenu;
     const [pathFiles, setPathFiles] = useState<MultiplesPath>({
-        id: idMenu,
+        id: id,
         workspacePath: "",
         filePath: ""
     });
@@ -57,7 +58,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
         <IonPopover
             trigger={trigger}
             onDidDismiss={() => setPathFiles({
-                id: idMenu,
+                id: 0,
                 workspacePath: "",
                 filePath: ""
             })}
@@ -109,7 +110,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                     console.log("path");
                     console.table(pathFiles);
                     onTableVec(pathFiles);
-                    onIdMenu(pathFiles.id);
+                    setPathFiles({...pathFiles, id: id + 1});
                 }}>Load {typeOperation}</IonButton>
         </IonPopover>
     );
@@ -298,14 +299,11 @@ const SamplingComp: React.FC = () => {
         const isActive = labelElement.id === selectedLabel;
 
         return (
-            <tr key={labelElement.id} className={isActive ? "label-table-active" : ""}
+            <tr className={isActive ? "label-table-active" : ""}
                 onClick={() => selectLabel(labelElement.id)}>
                 {/*Table Content*/}
                 <td>
-                    {/*<OptionsIcons
-                        label={labelElement}
-                        onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>*/}
+                    {labelElement.element.file}
                 </td>
                 <td>
                     {/*<OptionsIcons
