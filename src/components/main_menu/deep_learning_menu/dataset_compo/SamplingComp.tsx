@@ -24,9 +24,7 @@ interface MultiplesPath {
 }
 
 interface AddNewFileInterface {
-    idMenu: number
-    onIdMenu: (id: number) => void,
-    tableVec: TableInterface[],
+    idMenu: number,
     onTableVec: (newFile: MultiplesPath) => void,
     typeOperation: type_operation,
     trigger: string,
@@ -40,14 +38,13 @@ interface AddNewFileInterface {
  */
 const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        idMenu,
-                                                       onIdMenu,
                                                        typeOperation,
                                                        trigger,
-                                                       tableVec,
                                                        onTableVec
                                                    }) => {
 
     let id = idMenu;
+    console.log("id menu : ",idMenu);
     const [pathFiles, setPathFiles] = useState<MultiplesPath>({
         id: id,
         workspacePath: "",
@@ -57,11 +54,6 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     return (
         <IonPopover
             trigger={trigger}
-            onDidDismiss={() => setPathFiles({
-                id: 0,
-                workspacePath: "",
-                filePath: ""
-            })}
             className={"add-menu"}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
@@ -128,11 +120,8 @@ interface SamplingInterface {
 const SamplingComp: React.FC = () => {
 
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
-    const [newDataId, setNewDataId] = useStorageState<number>(sessionStorage, 'newDataId', 0);
     const [dataTable, setDataTable] = useStorageState<TableInterface[]>(sessionStorage, 'dataTable', InitTables);
-    const [newLabelId, setNewLabelId] = useStorageState<number>(sessionStorage, 'newLabelId', 0);
     const [labelTable, setLabelTable] = useStorageState<TableInterface[]>(sessionStorage, 'labelTable', InitTables);
-    const [newWeightId, setNewWeightId] = useStorageState<number>(sessionStorage, 'newWeightId', 0);
     const [weightTable, setWeightTable] = useStorageState<TableInterface[]>(sessionStorage, 'WeightTable', InitTables);
 
     useEventBus('toggleMode', (darkMode: boolean) => {
@@ -140,10 +129,6 @@ const SamplingComp: React.FC = () => {
     });
 
     //TODO : need to implement the back-end function to read the images here
-    const handleNewDataId = (id: number) => {
-        setNewDataId(id + 1);
-    }
-
     const handleDataTable = (newFile: MultiplesPath) => {
         console.log("new element for Data Table : ", newFile);
         if (newFile.id === 0) {
@@ -173,19 +158,11 @@ const SamplingComp: React.FC = () => {
                 }
             }]);
         }
-
-        handleNewDataId(newFile.id);
-
     }
 
     //TODO : need to implement the back-end function to read the images here
-    const handleNewLabelId = (id: number) => {
-        setNewLabelId(id + 1);
-    }
-
     const handleLabelTable = (newFile: MultiplesPath) => {
         console.log("new element for Label Table : ", newFile);
-
         if (newFile.id === 0) {
             setLabelTable([{
                 id: newFile.id,
@@ -213,15 +190,9 @@ const SamplingComp: React.FC = () => {
                 }
             }]);
         }
-
-        handleNewLabelId(newFile.id);
-
     }
 
     //TODO : need to implement the back-end function to read the images here
-    const handleNewWeightId = (id: number) => {
-        setNewWeightId(id + 1);
-    }
     const handleWeightTable = (newFile: MultiplesPath) => {
         console.log("new element for Weight Table : ", newFile);
         if (newFile.id === 0) {
@@ -251,9 +222,6 @@ const SamplingComp: React.FC = () => {
                 }
             }]);
         }
-
-        handleNewWeightId(newFile.id);
-
     }
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
@@ -283,10 +251,6 @@ const SamplingComp: React.FC = () => {
 
         setLabelList(newList);
     }*/
-
-    const generateNewIdData = (id: number) => {
-        setNewDataId(id + 1);
-    }
 
     const selectLabel = (id: number) => {
         setSelectedLabel(id);
@@ -399,9 +363,7 @@ const SamplingComp: React.FC = () => {
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={newDataId}
-                                onIdMenu={handleNewDataId}
-                                tableVec={dataTable}
+                                idMenu={dataTable.length - 1}
                                 onTableVec={handleDataTable}
                                 trigger={"data-menu"}
                                 typeOperation={"Data"}/>
@@ -445,9 +407,7 @@ const SamplingComp: React.FC = () => {
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={newLabelId}
-                                onIdMenu={handleNewLabelId}
-                                tableVec={labelTable}
+                                idMenu={labelTable.length - 1}
                                 onTableVec={handleLabelTable}
                                 trigger={"label-menu"}
                                 typeOperation={"Label"}/>
@@ -491,9 +451,7 @@ const SamplingComp: React.FC = () => {
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={newWeightId}
-                                onIdMenu={handleNewWeightId}
-                                tableVec={weightTable}
+                                idMenu={weightTable.length - 1}
                                 onTableVec={handleWeightTable}
                                 trigger={"weight-menu"}
                                 typeOperation={"Weight"}/>
