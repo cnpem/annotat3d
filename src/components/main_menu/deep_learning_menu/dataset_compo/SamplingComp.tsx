@@ -114,53 +114,38 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
 }
 
 interface DeleteMenuInterface {
-    trigger: string
-    typeOperation: type_operation
+    labelElement: TableInterface;
 }
 
-const DeleteMenu: React.FC<DeleteMenuInterface> = ({trigger, typeOperation}) => {
+const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement}) => {
 
     return (
-        <IonPopover
-            trigger={trigger}
-            className={"add-menu"}>
-            <IonAccordionGroup multiple={true}>
-                {/*Load workspace menu*/}
-                <IonAccordion>
-                    <IonItem slot={"header"}>
-                        <IonIcon slot={"start"} icon={construct}/>
-                        <IonLabel><small>Load {typeOperation} workspace</small></IonLabel>
-                    </IonItem>
-                    <IonList slot={"content"}>
+        <IonItem className={"ion-item-table"}>
+            <IonButtons>
+                <IonButton id={`delete-${labelElement.type}-button-${labelElement.id}`} size="small"
+                           onClick={() => {
+                               console.table(labelElement);
+                           }}>
+                    <IonIcon icon={closeOutline}/>
+                </IonButton>
+                {/*Delete popUp*/}
+                <IonPopover
+                    trigger={`delete-${labelElement.type}-button-${labelElement.id}`}>
+                    <IonContent>
                         <IonItem>
-                            <IonLabel position="stacked">Workspace Path</IonLabel>
-                            <IonInput
-                                placeholder={"/path/to/workspace"}/>
+                            Do you wish to delete {labelElement.element.file} ?
                         </IonItem>
-                    </IonList>
-                </IonAccordion>
-                {/*Load type menu*/}
-                <IonAccordion>
-                    <IonItem slot={"header"}>
-                        <IonIcon slot={"start"} icon={image}/>
-                        <IonLabel><small>Load {typeOperation}</small></IonLabel>
-                    </IonItem>
-                    <IonList slot={"content"}>
-                        <IonItem>
-                            <IonLabel position="stacked">{typeOperation} Path</IonLabel>
-                            <IonInput
-                                placeholder={`/path/to/${typeOperation}`}/>
-                        </IonItem>
-                    </IonList>
-                </IonAccordion>
-            </IonAccordionGroup>
-            <IonButton
-                size={"default"}
-                color={"tertiary"}
-                onClick={() => {
-                    console.log("path");
-                }}>Load {typeOperation}</IonButton>
-        </IonPopover>
+                    </IonContent>
+
+                    <IonButton
+                        size={"default"}
+                        color={"tertiary"}
+                        onClick={() => {
+                        }}>Confirm</IonButton>
+                </IonPopover>
+            </IonButtons>
+            {labelElement.element.file}
+        </IonItem>
     );
 }
 
@@ -308,7 +293,7 @@ const SamplingComp: React.FC = () => {
         });
     }
 
-    const [showDeletePopup, setShowDeletePopup] = useState<boolean>(false);
+    let deleteTrigger = "";
     const renderLabel = (labelElement: TableInterface) => {
         const isActive = labelElement.id === selectedLabel;
 
@@ -317,17 +302,8 @@ const SamplingComp: React.FC = () => {
                 onClick={() => selectLabel(labelElement.id)}>
                 {/*Table Content*/}
                 <td>
-                    <IonItem className={"ion-item-table"}>
-                        <IonButtons>
-                            <IonButton id={"delete-label-button-" + labelElement.id} size="small"
-                                       onClick={() => {
-                                           console.table(labelElement);
-                                       }}>
-                                <IonIcon icon={closeOutline}/>
-                            </IonButton>
-                        </IonButtons>
-                        {labelElement.element.file}
-                    </IonItem>
+                    <FileNameComp
+                        labelElement={labelElement}/>
                 </td>
                 <td>
                     <IonItem className={"ion-item-table"}>
@@ -425,6 +401,21 @@ const SamplingComp: React.FC = () => {
                                 onTableVec={handleDataTable}
                                 trigger={"data-menu"}
                                 typeOperation={"Data"}/>
+                            {/*Delete popUp*/}
+                            <IonPopover
+                                trigger={"delete-label-button"}>
+                                <IonContent>
+                                    <IonItem>
+                                        Do you wish to delete {deleteTrigger} ?
+                                    </IonItem>
+                                </IonContent>
+
+                                <IonButton
+                                    size={"default"}
+                                    color={"tertiary"}
+                                    onClick={() => {
+                                    }}>Confirm</IonButton>
+                            </IonPopover>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -469,6 +460,21 @@ const SamplingComp: React.FC = () => {
                                 onTableVec={handleLabelTable}
                                 trigger={"label-menu"}
                                 typeOperation={"Label"}/>
+                            {/*Delete popUp*/}
+                            <IonPopover
+                                trigger={"delete-label-button"}>
+                                <IonContent>
+                                    <IonItem>
+                                        Do you wish to delete {deleteTrigger} ?
+                                    </IonItem>
+                                </IonContent>
+
+                                <IonButton
+                                    size={"default"}
+                                    color={"tertiary"}
+                                    onClick={() => {
+                                    }}>Confirm</IonButton>
+                            </IonPopover>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -513,6 +519,21 @@ const SamplingComp: React.FC = () => {
                                 onTableVec={handleWeightTable}
                                 trigger={"weight-menu"}
                                 typeOperation={"Weight"}/>
+                            {/*Delete popUp*/}
+                            <IonPopover
+                                trigger={"delete-label-button"}>
+                                <IonContent>
+                                    <IonItem>
+                                        Do you wish to delete {deleteTrigger} ?
+                                    </IonItem>
+                                </IonContent>
+
+                                <IonButton
+                                    size={"default"}
+                                    color={"tertiary"}
+                                    onClick={() => {
+                                    }}>Confirm</IonButton>
+                            </IonPopover>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
