@@ -24,12 +24,16 @@ interface LabelTableProps {
 const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
     const [newLabelId, setNewLabelId] = useStorageState<number>(sessionStorage, 'newLabelId', 1);
-    const [labelList, setLabelList] = useStorageState<LabelInterface[]>(sessionStorage, 'labelList', [{ labelName: "Background", color: props.colors[0], id: 0 }]);
+    const [labelList, setLabelList] = useStorageState<LabelInterface[]>(sessionStorage, 'labelList', [{
+        labelName: "Background",
+        color: props.colors[0],
+        id: 0
+    }]);
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
 
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
-    const [ionToastLabelFounded, ] = useIonToast();
+    const [ionToastLabelFounded,] = useIonToast();
     const toastTimer = 2000;
 
     useEventBus('toggleMode', (darkMode: boolean) => {
@@ -49,15 +53,15 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     })
 
     useEventBus("LabelLoaded", (labelVec: LabelInterface[]) => {
-            console.log("Label color : ", props.colors);
-            for(let label of labelVec){
-                label.color = colorFromId(props.colors, label.id);
-                console.log("label list into the change : ", labelVec);
-            }
-            setLabelList(labelVec);
-            setNewLabelId(labelVec.length);
-            console.log("label List rn : ", labelVec);
-        })
+        console.log("Label color : ", props.colors);
+        for (let label of labelVec) {
+            label.color = colorFromId(props.colors, label.id);
+            console.log("label list into the change : ", labelVec);
+        }
+        setLabelList(labelVec);
+        setNewLabelId(labelVec.length);
+        console.log("label List rn : ", labelVec);
+    })
 
     useEffect(() => {
         console.log("doing this dispatch rn");
@@ -67,7 +71,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     const removeLabelElement = (label: LabelInterface) => {
         setLabelList(labelList!.filter(l => l.id !== label.id));
 
-        if(labelList.length === 2) {
+        if (labelList.length === 2) {
             setNewLabelId(1);
         }
 
@@ -76,11 +80,11 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     const changeLabelList = (newLabelName: string, labelId: number, color: [number, number, number]) => {
 
         const newList = labelList!
-        .map(l => l.id === labelId
-            ? {...l, labelName: newLabelName, color: color}
-            : l);
+            .map(l => l.id === labelId
+                ? {...l, labelName: newLabelName, color: color}
+                : l);
 
-        if (!isEqual(labelList!.filter(l=>l.id === labelId)[0].color, color)) {
+        if (!isEqual(labelList!.filter(l => l.id === labelId)[0].color, color)) {
             dispatch('labelColorsChanged', [{id: labelId, color: color}]);
         }
 
@@ -106,11 +110,12 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
         const isActive = labelElement.id === selectedLabel;
 
-        return(
-            <tr key={labelElement.id} className={ isActive? "label-table-active" : "" } onClick={ () => selectLabel(labelElement.id) }>
+        return (
+            <tr key={labelElement.id} className={isActive ? "label-table-active" : ""}
+                onClick={() => selectLabel(labelElement.id)}>
                 <td>
-                    <div style={ {display: "flex"} }>
-                        <div className="round-bar" style={{ background: `rgb(${labelElement.color.join(',')})` }}> </div>
+                    <div style={{display: "flex"}}>
+                        <div className="round-bar" style={{background: `rgb(${labelElement.color.join(',')})`}}></div>
                         <IonLabel>{labelElement.labelName}</IonLabel>
                     </div>
                 </td>
@@ -133,25 +138,25 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         selectLabel(0);
     }
 
-    return(
+    return (
         <div>
             <IonRow>
                 <IonCol>
                     <InputLabel colors={defaultColormap} labelList={labelList} onLabelList={selectLabelList}
-                        newLabelId={newLabelId} onNewLabelId={selectIdGenerator}/>
+                                newLabelId={newLabelId} onNewLabelId={selectIdGenerator}/>
                 </IonCol>
             </IonRow>
             <div className={"label-table"}>
                 <ReactBootStrap.Table striped bordered hover
-                    className={darkMode? 'table-dark' : ''}>
+                                      className={darkMode ? 'table-dark' : ''}>
                     <thead>
-                        <tr>
-                            <th className={NAME_WIDTH}><IonLabel>Label Name</IonLabel></th>
-                            <th className={OPTIONS_WIDTH}>Options</th>
-                        </tr>
+                    <tr>
+                        <th className={NAME_WIDTH}><IonLabel>Label Name</IonLabel></th>
+                        <th className={OPTIONS_WIDTH}>Options</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {labelList!.map(renderLabel)}
+                    {labelList!.map(renderLabel)}
                     </tbody>
                 </ReactBootStrap.Table>
             </div>

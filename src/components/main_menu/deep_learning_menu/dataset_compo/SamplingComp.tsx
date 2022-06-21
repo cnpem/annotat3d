@@ -13,10 +13,8 @@ import {addOutline, closeOutline, construct, image} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import * as ReactBootStrap from "react-bootstrap";
-import {InitTables, TableInterface} from "./DatasetInterfaces";
-import "./LabelTable.css";
-
-type type_operation = "Data" | "Label" | "Weight";
+import {InitTables, TableInterface, type_operation} from "./DatasetInterfaces";
+import "./Tables.css";
 
 interface MultiplesPath {
     id: number,
@@ -26,7 +24,7 @@ interface MultiplesPath {
 
 interface AddNewFileInterface {
     idMenu: number,
-    onTableVec: (newFile: MultiplesPath) => void,
+    onTableVec: (newFile: MultiplesPath, type: type_operation) => void,
     typeOperation: type_operation,
     trigger: string,
 }
@@ -108,8 +106,59 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 onClick={() => {
                     console.log("path");
                     console.table(pathFiles);
-                    onTableVec(pathFiles);
+                    onTableVec(pathFiles, typeOperation);
                     setPathFiles({...pathFiles, id: pathFiles.id + 1});
+                }}>Load {typeOperation}</IonButton>
+        </IonPopover>
+    );
+}
+
+interface DeleteMenuInterface {
+    trigger: string
+    typeOperation: type_operation
+}
+
+const DeleteMenu: React.FC<DeleteMenuInterface> = ({trigger, typeOperation}) => {
+
+    return (
+        <IonPopover
+            trigger={trigger}
+            className={"add-menu"}>
+            <IonAccordionGroup multiple={true}>
+                {/*Load workspace menu*/}
+                <IonAccordion>
+                    <IonItem slot={"header"}>
+                        <IonIcon slot={"start"} icon={construct}/>
+                        <IonLabel><small>Load {typeOperation} workspace</small></IonLabel>
+                    </IonItem>
+                    <IonList slot={"content"}>
+                        <IonItem>
+                            <IonLabel position="stacked">Workspace Path</IonLabel>
+                            <IonInput
+                                placeholder={"/path/to/workspace"}/>
+                        </IonItem>
+                    </IonList>
+                </IonAccordion>
+                {/*Load type menu*/}
+                <IonAccordion>
+                    <IonItem slot={"header"}>
+                        <IonIcon slot={"start"} icon={image}/>
+                        <IonLabel><small>Load {typeOperation}</small></IonLabel>
+                    </IonItem>
+                    <IonList slot={"content"}>
+                        <IonItem>
+                            <IonLabel position="stacked">{typeOperation} Path</IonLabel>
+                            <IonInput
+                                placeholder={`/path/to/${typeOperation}`}/>
+                        </IonItem>
+                    </IonList>
+                </IonAccordion>
+            </IonAccordionGroup>
+            <IonButton
+                size={"default"}
+                color={"tertiary"}
+                onClick={() => {
+                    console.log("path");
                 }}>Load {typeOperation}</IonButton>
         </IonPopover>
     );
@@ -136,11 +185,11 @@ const SamplingComp: React.FC = () => {
     });
 
     //TODO : need to implement the back-end function to read the images here
-    const handleDataTable = (newFile: MultiplesPath) => {
-        console.log("new element for Data Table : ", newFile);
+    const handleDataTable = (newFile: MultiplesPath, type: type_operation) => {
         if (newFile.id === 0) {
             setDataTable([{
                 id: newFile.id,
+                type: type,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -154,6 +203,7 @@ const SamplingComp: React.FC = () => {
         } else {
             setDataTable([...dataTable, {
                 id: newFile.id,
+                type: type,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -168,11 +218,11 @@ const SamplingComp: React.FC = () => {
     }
 
     //TODO : need to implement the back-end function to read the images here
-    const handleLabelTable = (newFile: MultiplesPath) => {
-        console.log("new element for Label Table : ", newFile);
+    const handleLabelTable = (newFile: MultiplesPath, type: type_operation) => {
         if (newFile.id === 0) {
             setLabelTable([{
                 id: newFile.id,
+                type: type,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -186,6 +236,7 @@ const SamplingComp: React.FC = () => {
         } else {
             setLabelTable([...labelTable, {
                 id: newFile.id,
+                type: type,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -200,11 +251,11 @@ const SamplingComp: React.FC = () => {
     }
 
     //TODO : need to implement the back-end function to read the images here
-    const handleWeightTable = (newFile: MultiplesPath) => {
-        console.log("new element for Weight Table : ", newFile);
+    const handleWeightTable = (newFile: MultiplesPath, type: type_operation) => {
         if (newFile.id === 0) {
             setWeightTable([{
                 id: newFile.id,
+                type: type,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -218,6 +269,7 @@ const SamplingComp: React.FC = () => {
         } else {
             setWeightTable([...weightTable, {
                 id: newFile.id,
+                type: type,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -249,16 +301,6 @@ const SamplingComp: React.FC = () => {
 
     }*/
 
-    /*const changeLabelList = (newLabelName: string, labelId: number) => {
-
-        const newList = labelList!
-            .map(l => l.id === labelId
-                ? {...l, file: newLabelName}
-                : l);
-
-        setLabelList(newList);
-    }*/
-
     const selectLabel = (id: number) => {
         setSelectedLabel(id);
         dispatch('labelSelected', {
@@ -266,65 +308,67 @@ const SamplingComp: React.FC = () => {
         });
     }
 
+    const [showDeletePopup, setShowDeletePopup] = useState<boolean>(false);
     const renderLabel = (labelElement: TableInterface) => {
         const isActive = labelElement.id === selectedLabel;
 
         return (
-            <tr className={isActive ? "label-table-active" : ""}
+            <tr key={labelElement.id} className={isActive ? "label-table-active" : ""}
                 onClick={() => selectLabel(labelElement.id)}>
                 {/*Table Content*/}
                 <td>
-                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                    <IonItem className={"ion-item-table"}>
                         <IonButtons>
                             <IonButton id={"delete-label-button-" + labelElement.id} size="small"
                                        onClick={() => {
-                                           console.table(labelElement)
+                                           console.table(labelElement);
                                        }}>
                                 <IonIcon icon={closeOutline}/>
                             </IonButton>
                         </IonButtons>
                         {labelElement.element.file}
-                    </div>
+                    </IonItem>
                 </td>
                 <td>
-                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                    <IonItem className={"ion-item-table"}>
                         {`${labelElement.element.shape[0]} x 
                         ${labelElement.element.shape[1]} x 
                         ${labelElement.element.shape[2]}`}
-                    </div>
+                    </IonItem>
                 </td>
                 <td>
-                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                    <IonItem className={"ion-item-table"}>
                         {labelElement.element.type}
-                    </div>
+                    </IonItem>
                 </td>
                 <td>
-                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                    <IonItem className={"ion-item-table"}>
                         {labelElement.element.scan}
-                    </div>
+                    </IonItem>
                 </td>
                 <td>
-                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                    <IonItem className={"ion-item-table"}>
                         {labelElement.element.time}
-                    </div>
+                    </IonItem>
                 </td>
                 <td>
-                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                    <IonItem className={"ion-item-table"}>
                         {labelElement.element.size}
-                    </div>
+                    </IonItem>
                 </td>
                 <td>
-                    <div style={{display: "inline-flex", justifyContent: "flex-start"}}>
+                    <IonItem className={"ion-item-table"}>
                         {labelElement.element.fullPath}
-                    </div>
+                    </IonItem>
                 </td>
             </tr>
         );
 
     };
 
-    const NAME_WIDTH = "col-3";
+    const NAME_WIDTH = "col-100";
     //TODO : Need to create a new component just to resize the table
+    //TODO : Need to create a way to make this table bigger.
 
     return (
         <small>
@@ -355,9 +399,11 @@ const SamplingComp: React.FC = () => {
                                     Add
                                 </IonButton>
                             </div>
+                            {/*Data table*/}
                             <div className={"label-table"}>
-                                <ReactBootStrap.Table striped bordered hover
-                                                      className={darkMode ? 'table-dark' : ''}>
+                                <ReactBootStrap.Table
+                                    striped bordered hover
+                                    className={darkMode ? 'table-dark table-sm' : ''}>
                                     <thead>
                                     <tr>
                                         <th className={NAME_WIDTH}><IonLabel>File Name</IonLabel></th>

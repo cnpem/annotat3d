@@ -209,6 +209,8 @@ export const InitIonRangeVec: IonRangeElement[] = [
  * Interfaces used on SamplingComp.tsx
  */
 
+export type type_operation = "Data" | "Label" | "Weight";
+
 /**
  * Build-in interface for Element of data and weight table
  */
@@ -227,11 +229,13 @@ interface TableElement {
  */
 export interface TableInterface {
     id: number,
+    type: type_operation,
     element: TableElement,
 }
 
 export const InitTables: TableInterface[] = [{
     id: 0,
+    type: "Data",
     element: {
         file: "",
         shape: [0, 0, 0],
