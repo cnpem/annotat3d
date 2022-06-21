@@ -346,6 +346,7 @@ class Canvas {
 
 
     setImageShape(imageShape: ImageShapeInterface) { // bruno
+        console.log('bruno Canvas.setImageShape', imageShape);
         this.imageShape = imageShape;
     }
 
@@ -555,9 +556,9 @@ class Canvas {
     }
 
     checkUpdateCropPreview() { // bruno
-        console.log('bruno: checking crop preview |o/');
+        console.log('bruno: checking crop preview');
         if ( this.cropSlice.visible ) {
-            console.log('bruno: updating crop preview |o/');
+            console.log('bruno: changing crop preview image');
             this.setCropPreviewMaskImage();
         }
     }
@@ -606,28 +607,45 @@ class Canvas {
     private setCropPreviewMaskImage() { // bruno
 
         const alpha = this.cropSlice.alpha;
-        console.log('bruno: making another mask axis and shape:', this.axis, this.imageShape); // bruno urgent
+        console.log('bruno: making another mask axis and shape:', this.axis, this.imageShape, this.imgData); // bruno urgent
 
-        const width = this.imgData!!.shape[1];
-        const height = this.imgData!!.shape[0];
+        // const width = this.imgData!!.shape[1];
+        // const height = this.imgData!!.shape[0];
+
+        let width : number; 
+        let height : number;
         const depth = this.sliceNum;
+
+        
 
         let cropW: CropAxisInterface;
         let cropH: CropAxisInterface;
         let cropD: CropAxisInterface;
 
         if (this.axis == 'XY') {
+            width = this.imageShape!!.x;
+            height = this.imageShape!!.y;
             cropW = this.cropShape!!.cropX;
             cropH = this.cropShape!!.cropY;
             cropD = this.cropShape!!.cropZ;
         } else if (this.axis == 'XZ') {
+            width = this.imageShape!!.x;
+            height = this.imageShape!!.z;
             cropW = this.cropShape!!.cropX;
             cropH = this.cropShape!!.cropZ;
             cropD = this.cropShape!!.cropY;
         } else if (this.axis == 'YZ') {
+            width = this.imageShape!!.y;
+            height = this.imageShape!!.z;
             cropW = this.cropShape!!.cropY;
             cropH = this.cropShape!!.cropZ;
             cropD = this.cropShape!!.cropX;
+        } else {
+            width = 0;
+            height = 0;
+            cropW = {lower: 0, upper: 0};
+            cropH = {lower: 0, upper: 0};
+            cropD = {lower: 0, upper: 0};
         }
 
         const insideBox = (y: number, x: number) => {
@@ -641,7 +659,7 @@ class Canvas {
             return uIn(depth, cropD) && uIn(yinv, cropH) && uIn(x, cropW);
         };
 
-        const len = width*height;
+        const len : number = width*height;
         let rgbaData = new Uint8Array(len * 4);
 
         const colors = this.colors;
@@ -928,13 +946,14 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     getAnnotSlice() {
+        console.log('bruno: whos calling me?');// bruno
 
         const params = {
             axis: this.props.axis,
             slice: this.props.slice,
         };
 
-        console.log('get annot slice');
+        console.log('get annot slice', params);
         sfetch('POST', '/get_annot_slice', JSON.stringify(params), 'gzip/numpyndarray')
             .then((slice) => {
                 console.log('annot slice');
@@ -986,8 +1005,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             };
 
             this.onImageLoaded = ( payload ) => {
+                console.log('bruno CanvasContainer.onImageLoaded', payload, payload.imageShape);
                 this.registerImageShape( payload.imageShape );
-                console.log('bruno: onImageLoaded: payload:', payload);
                 const promise = this.fetchAll(true);
                 promise?.then(() => {
                     sfetch("POST", "/is_annotation_empty", "", "json")
@@ -1043,6 +1062,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             }
 
             this.onAnnotationChanged = () => {
+                    console.log('bruno: did it really changed?');// bruno
                 this.getAnnotSlice();
             }
 
@@ -1052,9 +1072,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 console.log('contour changed: ', contour);
             }
 
-            this.onAnnotationChanged = () => {
-                this.getAnnotSlice();
-            }
+            // this.onAnnotationChanged = () => { // bruno
+            //     this.getAnnotSlice();
+            // }
 
             this.onFutureChanged = (hasSlice: boolean) => {
                 if (hasSlice) {
@@ -1063,6 +1083,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                     this.canvas?.deleteFutureImage();
                     this.setState({...this.state, future_sight_on: false});
                 }
+                console.log('bruno: onFutureChanged: updating crop preview');
                 this.updateCropPreview();
             }
 
@@ -1077,6 +1098,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             }
 
             this.onCropPreviewMode = (activateCropPreview: boolean ) => {
+                console.log('bruno: onCropPreviewMode');
                 this.cropPreviewMode(activateCropPreview);
             }
 
@@ -1131,11 +1153,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) { // bruno ver isso aqui
 
-        console.log("bruno: On Did Update : ", this.props.canvasMode);
+        console.log("bruno: On componentDidUpdate (but why?): ", this.props.canvasMode);
 
         if (isEqual(prevProps, this.props)) //if all properties are the same (deep comparison)
             return;
-
 
         if (this.props.canvasMode !== prevProps.canvasMode) {
             if (this.props.canvasMode === 'imaging') {
@@ -1158,7 +1179,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     registerImageShape( imageShape: ImageShapeInterface ) { // bruno
-        console.log('bruno: am i changing imageShape?', imageShape);
+        console.log('bruno CanvasContainer.registerImageShape', imageShape);
         this.canvas?.setImageShape( imageShape );
     }
 

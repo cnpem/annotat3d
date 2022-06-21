@@ -174,6 +174,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 }
 
                 setShowErrorWindow(false);
+                console.log('bruno on FileLoadDialog will call ImageLoaded with payload', info)
                 dispatch("ImageLoaded", info);
                 dispatch("ActivateComponents", false);
 

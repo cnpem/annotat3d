@@ -40,21 +40,34 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         upper: props.imageShape.z
     });
 
-    const [toggleCropPreviewButton, setToggleCropPreviewButton] = useStorageState<boolean>(sessionStorage, 'toggleCropPreviewButton', false);
+    // const [toggleCropPreviewButton, setToggleCropPreviewButton] = useStorageState<boolean>(sessionStorage, 'toggleCropPreviewButton', false);
 
-    const handlerToggleCropPreviewMode = (e:CustomEvent) => {
+    // const handlerToggleCropPreviewMode = (e:CustomEvent) => {
+    //     const cropShape:CropShapeInterface = {
+    //         cropX: cropX,
+    //         cropY: cropY,
+    //         cropZ: cropZ
+    //     }
+    //     console.log("bruno: preview toggle!", "shape: ", cropShape);
+    //     // send shape to event listener (canvas)
+    //     dispatch('cropShape', cropShape); 
+    //     // changes toggle button state
+    //     setToggleCropPreviewButton(e.detail.checked);
+    //     // send change to outside event listeners 
+    //     dispatch('cropPreviewMode', e.detail.checked); 
+    // };
+
+    function onPreview() {
+        console.log("bruno: yay! Preview!");
         const cropShape:CropShapeInterface = {
             cropX: cropX,
             cropY: cropY,
             cropZ: cropZ
         }
-        console.log("bruno: preview toggle!", "shape: ", cropShape);
         // send shape to event listener (canvas)
         dispatch('cropShape', cropShape); 
-        // changes toggle button state
-        setToggleCropPreviewButton(e.detail.checked);
         // send change to outside event listeners 
-        dispatch('cropPreviewMode', e.detail.checked); 
+        dispatch('cropPreviewMode', true); 
     };
 
     function onApply() {
@@ -84,18 +97,37 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         })
     };
     
-    function onMerge() {
-        console.log("bruno: yay! Merge!");
+    function onReset() {
+        console.log("bruno: yay! Reset!");
+        setCropX({
+            lower: 0,
+            upper: props.imageShape.x
+        });
+        setCropY({
+            lower: 0,
+            upper: props.imageShape.y
+        });
+        setCropZ({
+            lower: 0,
+            upper: props.imageShape.z
+        });
+        const cropShape:CropShapeInterface = {
+            cropX: cropX,
+            cropY: cropY,
+            cropZ: cropZ
+        }
+        dispatch('cropShape', cropShape);
+        dispatch('cropPreviewMode', false); 
     };
 
     return (
         <Fragment>
             <ModuleCard disabled={props.disabled} name=""
-                 onApply={onApply} onOther={onMerge} OtherName="Merge">
+                 onPreview={onPreview} onApply={onApply} onOther={onReset} OtherName="Reset">
                 <IonItem>
                     <IonLabel>Crop Image</IonLabel>
-                    <IonToggle checked={toggleCropPreviewButton} onIonChange={handlerToggleCropPreviewMode}>
-                    </IonToggle>
+                    {/* <IonToggle checked={toggleCropPreviewButton} onIonChange={handlerToggleCropPreviewMode}>
+                    </IonToggle> */}
                 </IonItem>
                 <IonItem>
                     <IonRange name={'cropRangeX'} dualKnobs={true} value={cropX} min={0} max={props.imageShape.x} step={1} snaps={true} pin={true} ticks={false}

@@ -44,21 +44,20 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
     const handleSliceValue = (e: CustomEvent) => {
         setSliceValue(+e.detail.value);
-        console.log('bruno test', +e.detail.value);
         const payload: SliceInfoInterface =  {
             axis: sliceName,
             slice: +e.detail.value
         };
         dispatch('sliceChanged', payload);
-        dispatch('cropPreviewMode', cropPreviewMode); // bruno
+        dispatch('cropPreviewMode', cropPreviewMode); 
     }
 
     const handleIonInputSliceValue = (e: CustomEvent) => {
         setSliceValue(+e.detail.value);
-        // console.log('bruno test', +e.detail.value);
     }
 
     const handleSliceName = (e: CustomEvent) => {
+        console.log('bruno: handleSliceName hello')
         const curSliceName = e.detail.value as 'XY'|'YZ'|'XZ';
         setSliceName(curSliceName);
         const maxSliceValue = maxValSlider[curSliceName];
@@ -71,8 +70,10 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             slice: sliceValue
         };
 
+        console.log('bruno: handleSliceName sliceChanged')
         dispatch('sliceChanged', payload);
-        dispatch('cropPreviewMode', cropPreviewMode); // bruno
+        console.log('bruno: handleSliceName cropPreviewMode')
+        dispatch('cropPreviewMode', cropPreviewMode); 
     }
 
     useEffect(() => {
