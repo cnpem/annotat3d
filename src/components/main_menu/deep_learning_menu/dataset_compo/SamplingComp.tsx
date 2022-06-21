@@ -15,6 +15,7 @@ import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventb
 import * as ReactBootStrap from "react-bootstrap";
 import {InitTables, TableInterface, type_operation} from "./DatasetInterfaces";
 import "./Tables.css";
+import "./Dataset.css";
 
 interface MultiplesPath {
     id: number,
@@ -115,9 +116,15 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
 
 interface DeleteMenuInterface {
     labelElement: TableInterface;
+    removeLabelElement: (labelElement: TableInterface) => void;
 }
 
-const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement}) => {
+/**
+ * Component used in Filename in each bootstrap-table map. This table can be for Data, Label or Weight.
+ * @param labelElement {TableInterface} - element of a bootstrap-table
+ * @param removeLabelElement {(labelElement: TableInterface) => void} - function to delete an element of a bootstrap-table
+ */
+const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelElement}) => {
 
     return (
         <IonItem className={"ion-item-table"}>
@@ -130,18 +137,17 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement}) => {
                 </IonButton>
                 {/*Delete popUp*/}
                 <IonPopover
-                    trigger={`delete-${labelElement.type}-button-${labelElement.id}`}>
+                    trigger={`delete-${labelElement.type}-button-${labelElement.id}`}
+                    className={"delete-popover"}>
                     <IonContent>
                         <IonItem>
-                            Do you wish to delete {labelElement.element.file} ?
+                            Do you wish to delete "{labelElement.element.file}" ?
                         </IonItem>
                     </IonContent>
-
                     <IonButton
                         size={"default"}
                         color={"tertiary"}
-                        onClick={() => {
-                        }}>Confirm</IonButton>
+                        onClick={() => removeLabelElement(labelElement)}>Confirm</IonButton>
                 </IonPopover>
             </IonButtons>
             {labelElement.element.file}
@@ -276,15 +282,18 @@ const SamplingComp: React.FC = () => {
         patchSize: [256, 256, 1],
     });
 
-    //TODO : need to implement this functions to change this tables
-    /*const removeLabelElement = (labelElement: DataAndWeiTable) => {
-        setLabelList(labelList!.filter(l => l.id !== labelElement.id));
-
-        if (labelList?.length === 2) {
-            setNewLabelId(1);
+    const removeLabelElement = (labelElement: TableInterface) => {
+        if (labelElement.type === "Data") {
+            const newVec = dataTable!.filter(l => l.id !== labelElement.id);
+            setDataTable(newVec);
+        } else if (labelElement.type === "Label") {
+            const newVec = labelTable!.filter(l => l.id !== labelElement.id);
+            setLabelTable(newVec);
+        } else if (labelElement.type === "Weight") {
+            const newVec = weightTable!.filter(l => l.id !== labelElement.id);
+            setWeightTable(newVec);
         }
-
-    }*/
+    }
 
     const selectLabel = (id: number) => {
         setSelectedLabel(id);
@@ -293,7 +302,6 @@ const SamplingComp: React.FC = () => {
         });
     }
 
-    let deleteTrigger = "";
     const renderLabel = (labelElement: TableInterface) => {
         const isActive = labelElement.id === selectedLabel;
 
@@ -303,7 +311,8 @@ const SamplingComp: React.FC = () => {
                 {/*Table Content*/}
                 <td>
                     <FileNameComp
-                        labelElement={labelElement}/>
+                        labelElement={labelElement}
+                        removeLabelElement={removeLabelElement}/>
                 </td>
                 <td>
                     <IonItem className={"ion-item-table"}>
@@ -401,21 +410,6 @@ const SamplingComp: React.FC = () => {
                                 onTableVec={handleDataTable}
                                 trigger={"data-menu"}
                                 typeOperation={"Data"}/>
-                            {/*Delete popUp*/}
-                            <IonPopover
-                                trigger={"delete-label-button"}>
-                                <IonContent>
-                                    <IonItem>
-                                        Do you wish to delete {deleteTrigger} ?
-                                    </IonItem>
-                                </IonContent>
-
-                                <IonButton
-                                    size={"default"}
-                                    color={"tertiary"}
-                                    onClick={() => {
-                                    }}>Confirm</IonButton>
-                            </IonPopover>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -460,21 +454,6 @@ const SamplingComp: React.FC = () => {
                                 onTableVec={handleLabelTable}
                                 trigger={"label-menu"}
                                 typeOperation={"Label"}/>
-                            {/*Delete popUp*/}
-                            <IonPopover
-                                trigger={"delete-label-button"}>
-                                <IonContent>
-                                    <IonItem>
-                                        Do you wish to delete {deleteTrigger} ?
-                                    </IonItem>
-                                </IonContent>
-
-                                <IonButton
-                                    size={"default"}
-                                    color={"tertiary"}
-                                    onClick={() => {
-                                    }}>Confirm</IonButton>
-                            </IonPopover>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -519,21 +498,6 @@ const SamplingComp: React.FC = () => {
                                 onTableVec={handleWeightTable}
                                 trigger={"weight-menu"}
                                 typeOperation={"Weight"}/>
-                            {/*Delete popUp*/}
-                            <IonPopover
-                                trigger={"delete-label-button"}>
-                                <IonContent>
-                                    <IonItem>
-                                        Do you wish to delete {deleteTrigger} ?
-                                    </IonItem>
-                                </IonContent>
-
-                                <IonButton
-                                    size={"default"}
-                                    color={"tertiary"}
-                                    onClick={() => {
-                                    }}>Confirm</IonButton>
-                            </IonPopover>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>

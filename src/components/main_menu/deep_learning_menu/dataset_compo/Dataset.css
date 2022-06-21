@@ -2,14 +2,17 @@
 Component used for "Dataset" in "deep learning"
 This is the link i used as reference to change this component
 https://www.damirscorner.com/blog/posts/20220204-PositioningIonicPopovers.html
+https://css-tricks.com/quick-css-trick-how-to-center-an-object-exactly-in-the-center/
 Also, this video can help in any case too
 https://www.youtube.com/watch?v=ZCrQjk6PdK0
  */
 .file-popover-dataset::part(content) {
+    position: fixed;
     top: 1% !important;
-    left: 30% !important;
-    --width: 700px;
+    left: 50%;
+    --width: 95%;
     --max-height: 920px;
+    transform: translate(-50%, 3%) !important;
 }
 
 /**
@@ -17,4 +20,14 @@ Component used in ion-popover in SamplingComp.tsx
  */
 .add-menu {
     --width: 380px;
+}
+
+/**
+Component used in ion-popover in SamplingComp.tsx to delete an element of Bootstrap-table
+ */
+.delete-popover::part(content) {
+    --width: 400px;
+    --min-width: 300px;
+    --max-height: 650px;
+    position: fixed !important;
 }
