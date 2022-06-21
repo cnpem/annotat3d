@@ -22,8 +22,6 @@ interface SlicesMenuProps {
  * @constructor
  */
 const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
-
-    console.log('bruno on crop menu img shape', props.imageShape);
     
     const [cropX, setCropX] = useStorageState<CropAxisInterface>(sessionStorage, 'cropX', {
         lower: 0,
@@ -77,7 +75,7 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             cropY: cropY,
             cropZ: cropZ
         }
-        // bruno make this on backend
+        // bruno: make this on backend
         sfetch("POST", "/crop_image/image", JSON.stringify(cropShape), "json")
         .then((img_info:ImageInfoInterface) => {
 

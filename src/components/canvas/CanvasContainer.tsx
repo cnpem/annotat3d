@@ -19,6 +19,7 @@ import {currentEventValue, dispatch, subscribe, unsubscribe} from '../../utils/e
 import {defaultColormap} from '../../utils/colormap';
 import { CropAxisInterface, CropShapeInterface } from '../tools_menu/CropInterface';
 import { ImageShapeInterface } from '../tools_menu/ImageShapeInterface';
+import ImageInfoInterface from '../main_menu/file/ImageInfoInterface';
 
 class Brush {
 
@@ -227,7 +228,7 @@ class Canvas {
     labelSlice: PIXI.Sprite;
     superpixelSlice: PIXI.Sprite;
     futureSlice: PIXI.Sprite;
-    cropSlice: PIXI.Sprite; // bruno
+    cropSlice: PIXI.Sprite; 
 
     superpixelColor: number = 0xff0000;
 
@@ -240,8 +241,8 @@ class Canvas {
     labelData?: NdArray<TypedArray>;
     futureData?: NdArray<TypedArray>;
 
-    imageShape?: ImageShapeInterface; // bruno
-    cropShape?: CropShapeInterface; // bruno
+    imageShape?: ImageShapeInterface; 
+    cropShape?: CropShapeInterface; 
     
     imgMin: number = 0.0;
     imgMax: number = 1.0;
@@ -275,10 +276,10 @@ class Canvas {
 
         this.labelSlice = new PIXI.Sprite();
 
-        this.cropSlice = new PIXI.Sprite(); // bruno
-        this.cropSlice.alpha = 0.8; // bruno
-        this.cropSlice.blendMode = PIXI.BLEND_MODES.ADD; // bruno
-        this.cropSlice.visible = false; // bruno
+        this.cropSlice = new PIXI.Sprite(); 
+        this.cropSlice.alpha = 0.8; 
+        this.cropSlice.blendMode = PIXI.BLEND_MODES.ADD; 
+        this.cropSlice.visible = false; 
 
         this.futureSlice = new PIXI.Sprite();
         this.futureSlice.visible = false;
@@ -328,6 +329,8 @@ class Canvas {
 
         //this.setSuperpixelVisibility(false);
         this.setLabelVisibility(true);
+        console.log('bruno: on Canvas.constructor')
+        this.setImageShape();
     }
 
     setColor(colors: { id: number, color: [number, number, number] }[]) {
@@ -345,9 +348,20 @@ class Canvas {
     }
 
 
-    setImageShape(imageShape: ImageShapeInterface) { // bruno
-        console.log('bruno Canvas.setImageShape', imageShape);
-        this.imageShape = imageShape;
+    setImageShape() { // bruno
+        console.log('bruno: Canvas.setImageShape');
+        sfetch('POST', '/get_image_info/image', '', 'json')
+        .then((imgInfo:ImageInfoInterface) => {
+            console.log('bruno: on Canvas.setImageShape then image exists: ', imgInfo.imageShape);
+            const imageShape: ImageShapeInterface = {
+                x: imgInfo.imageShape.x,
+                y: imgInfo.imageShape.y,
+                z: imgInfo.imageShape.z
+            };
+            this.imageShape = imageShape;  
+        }).catch((error) => {
+            console.log('on setImageShape catch', error);
+        });
     }
 
     setSliceNum(sliceNum: number) {
@@ -606,17 +620,16 @@ class Canvas {
 
     private setCropPreviewMaskImage() { // bruno
 
-        const alpha = this.cropSlice.alpha;
-        console.log('bruno: making another mask axis and shape:', this.axis, this.imageShape, this.imgData); // bruno urgent
+        console.log('bruno: on Canvas.setCropPreviewMaskImage making another mask axis and shape:', this.axis, this.imageShape); // bruno: 
+        if (this.imageShape == undefined){
+            return console.log('bruno: imageShape is undefined!!!');
+        } 
 
-        // const width = this.imgData!!.shape[1];
-        // const height = this.imgData!!.shape[0];
+        const alpha = this.cropSlice.alpha;
 
         let width : number; 
         let height : number;
         const depth = this.sliceNum;
-
-        
 
         let cropW: CropAxisInterface;
         let cropH: CropAxisInterface;
@@ -758,8 +771,8 @@ class Canvas {
         const texture = this.textureFromSlice(uint8data, x, y);
         this.slice.texture = texture;
 
-        console.log('Image exists: Unlocking components.');
-        dispatch('LockComponents', false);
+        // console.log('Image exists: Unlocking components.');
+        // dispatch('LockComponents', false);
     }
 
     increaseBrushSize() {
@@ -881,9 +894,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     fetchAll = (recenter: boolean = false) => {
+        console.log('bruno: on fetchAll');
         console.log("update ...", this.props.slice);
         return this.getImageSlice()
             .then(() => {
+                console.log('bruno: on fetchAll then');
+                console.log('ImageSlice exists: Unlocking components.');
+                dispatch('LockComponents', false);
                 if (recenter) {
                     this.canvas!.recenter();
                 }
@@ -891,7 +908,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.getAnnotSlice();
                 this.getLabelSlice();
                 this.getFutureSlice();
+            }).catch((error) => {
+                console.log('on fetchAll catch', error);
             });
+            ;
     }
 
 
@@ -912,6 +932,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray')
             .then((superpixelSlice) => {
                 this.canvas!!.setSuperpixelImage(superpixelSlice);
+            }).catch((error) => {
+                console.log('on getSupoerpixelSlice catch', error);
             });
     }
 
@@ -925,6 +947,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
             .then(imgSlice => {
                 this.canvas!!.setImage(imgSlice);
+            }).catch((error) => {
+                console.log('on getImageSlice catch', error);
             });
     }
 
@@ -942,11 +966,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas?.setFutureImage(previewSlice);
                 this.canvas?.setPreviewVisibility(true);
                 this.setState({...this.state, future_sight_on: true});
+            }).catch((error) => {
+                console.log('on getFutureSlice catch', error);
             });
     }
 
     getAnnotSlice() {
-        console.log('bruno: whos calling me?');// bruno
+        console.log('calling CanvasContainer.getAnnotSlice (this throws a 400 sometimes)'); // bruno
 
         const params = {
             axis: this.props.axis,
@@ -958,6 +984,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             .then((slice) => {
                 console.log('annot slice');
                 this.canvas!!.annotation.draw(slice);
+            }).catch((error) => {
+                console.log('on getAnnotSlice catch', error);
             });
     }
 
@@ -972,6 +1000,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
             .then(labelSlice => {
                 this.canvas!!.setLabelImage(labelSlice);
+            }).catch((error) => {
+                console.log('on getLabelSlice catch', error);
             });
 
     }
@@ -1005,8 +1035,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             };
 
             this.onImageLoaded = ( payload ) => {
-                console.log('bruno CanvasContainer.onImageLoaded', payload, payload.imageShape);
-                this.registerImageShape( payload.imageShape );
                 const promise = this.fetchAll(true);
                 promise?.then(() => {
                     sfetch("POST", "/is_annotation_empty", "", "json")
@@ -1151,9 +1179,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('cropPreviewMode', this.onCropPreviewMode);
     }
 
-    componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) { // bruno ver isso aqui
-
-        console.log("bruno: On componentDidUpdate (but why?): ", this.props.canvasMode);
+    componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) { // bruno: ver isso aqui
 
         if (isEqual(prevProps, this.props)) //if all properties are the same (deep comparison)
             return;
@@ -1178,12 +1204,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.canvas?.adjustContrast(minimum, maximum);
     }
 
-    registerImageShape( imageShape: ImageShapeInterface ) { // bruno
-        console.log('bruno CanvasContainer.registerImageShape', imageShape);
-        this.canvas?.setImageShape( imageShape );
-    }
-
-    updateCropPreview = () => { // bruno 
+    updateCropPreview = () => { // bruno: 
         this.canvas?.checkUpdateCropPreview();
     }
 
