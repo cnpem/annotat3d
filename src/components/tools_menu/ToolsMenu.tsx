@@ -10,6 +10,7 @@ import SlicesMenu from "./SlicesMenu";
 
 import {eyeOutline, brushOutline, colorWandOutline} from "ionicons/icons";
 import ImageInfoInterface from "../main_menu/file/ImageInfoInterface";
+import { useEventBus } from "../../utils/eventbus";
 
 interface SideMenuProps {
     hideMenu: boolean;
@@ -30,12 +31,20 @@ const menuChoicesList = [
     }
 ];
 
-
 const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
 
     const [imageShape, setImageShape] = useState<ImageShapeInterface>({
         x: 0, y: 0, z: 0
     });
+
+    useEventBus('ImageLoaded', (imgInfo:ImageInfoInterface) => {
+        console.log('ToolsMenu: useEventBus imgInfo: ', imgInfo.imageShape);
+        setImageShape({
+            x: imgInfo.imageShape.x,
+            y: imgInfo.imageShape.y,
+            z: imgInfo.imageShape.z
+        });
+    })
 
     useEffect(() => {
         sfetch('POST', '/get_image_info/image', '', 'json')
@@ -49,8 +58,8 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
         });
     }, [setImageShape]);
 
+    const toolsMenuList = [ <SideMenuVis imageShape={imageShape}/>, <SideMenuAnnot/>, <ProcessingMenu/> ];
     const toolsMenuChoices = ['visualization', 'annotation', 'processing'] as const;
-    const toolsMenuList = [ <SideMenuVis imageShape={imageShape} />, <SideMenuAnnot/>, <ProcessingMenu/> ];
 
     type InputMenuChoicesType = typeof toolsMenuChoices[number];
     type InputMenuChoicesListType = typeof menuChoicesList[number];

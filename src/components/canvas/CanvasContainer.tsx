@@ -801,6 +801,7 @@ class Canvas {
     }
 
     resize() {
+        console.log('Canvas: resize');
         const center = this.viewport.center;
 
         this.app.renderer.resize(this.div.offsetWidth, this.div.offsetHeight);

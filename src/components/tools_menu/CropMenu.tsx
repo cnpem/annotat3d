@@ -11,7 +11,7 @@ import { ModuleCard } from './ModuleCard';
 
 // import { dispatch, useEventBus } from '../../utils/eventbus';
 // import { SliceInfoInterface } from "./SliceInfoInterface";
-interface SlicesMenuProps {
+interface CropMenuProps {
     imageShape: ImageShapeInterface;
     disabled: boolean
 }
@@ -20,7 +20,7 @@ interface SlicesMenuProps {
  * @param props
  * @constructor
  */
-const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
+const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
     
     const [cropX, setCropX] = useStorageState<CropAxisInterface>(sessionStorage, 'cropX', {
         lower: 0,
