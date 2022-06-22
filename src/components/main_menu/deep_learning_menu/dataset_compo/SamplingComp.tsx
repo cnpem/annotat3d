@@ -9,7 +9,7 @@ import {
     IonLabel,
     IonList, IonPopover, IonRow
 } from "@ionic/react";
-import {addOutline, closeOutline, construct, image} from "ionicons/icons";
+import {addOutline, closeOutline, construct, image, trashOutline} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import * as ReactBootStrap from "react-bootstrap";
@@ -25,6 +25,7 @@ interface MultiplesPath {
 
 interface AddNewFileInterface {
     idMenu: number,
+    onIdMenu: (newId: number, type: type_operation) => void,
     onTableVec: (newFile: MultiplesPath, typeOperation: type_operation) => void,
     typeOperation: type_operation,
     trigger: string,
@@ -33,12 +34,14 @@ interface AddNewFileInterface {
 /**
  * React component that creates the add menu interface
  * @param idMenu {number} - id used to create a new element in the table
+ * @param onIdMenu {(newId: number, type: type_operation)} - handler used to update the idMenu for a especific table
  * @param onTableVec {(newFile: MultiplesPath) => void} - setter used to create a new element
  * @param trigger {string} - string that contains the trigger to open the popup
  * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
  */
 const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        idMenu,
+                                                       onIdMenu,
                                                        onTableVec,
                                                        typeOperation,
                                                        trigger,
@@ -52,7 +55,8 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     return (
         <IonPopover
             trigger={trigger}
-            className={"add-menu"}>
+            className={"add-menu"}
+            onDidDismiss={() => onIdMenu(pathFiles.id, typeOperation)}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
                 <IonAccordion>
@@ -95,6 +99,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 size={"default"}
                 color={"tertiary"}
                 onClick={() => {
+                    console.log("type operation : ", typeOperation);
                     console.log("path");
                     console.table(pathFiles);
                     onTableVec(pathFiles, typeOperation);
@@ -104,9 +109,58 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     );
 }
 
+interface WarningWindowInterface {
+    openWarningWindow: boolean,
+    onOpenWarningWindow: (flag: boolean) => void,
+
+    typeOperation: type_operation,
+    onTableList: (typeOperation: type_operation) => void,
+}
+
+/**
+ * Component used to create an ion-Alert to delete all elements of a table
+ * @todo : need to implement the backend function later
+ * @param openWarningWindow {boolean} - boolean variable to open this window
+ * @param onOpenWarningWindow {(flag: boolean) => void} - handler for openWarningWindow
+ * @param typeOperation {type_operation} - type of operation to delete
+ * @param onTableList {(typeOperation: type_operation) => void} - handler to delete all elements of a table
+ */
+const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
+                                                               openWarningWindow,
+                                                               onOpenWarningWindow,
+                                                               typeOperation,
+                                                               onTableList
+                                                           }) => {
+
+    return (
+        <IonAlert
+            isOpen={openWarningWindow}
+            onDidDismiss={() => onOpenWarningWindow(false)}
+            header={`Deleting all ${typeOperation}s`}
+            message={`Do you wish to delete all ${typeOperation}s ?`}
+            buttons={[
+                {
+                    text: "No",
+                    id: "no-button",
+                    handler: () => {
+                        onOpenWarningWindow(false);
+                    }
+                },
+                {
+                    text: "Yes",
+                    id: "yes-button",
+                    handler: () => {
+                        onTableList(typeOperation);
+                        onOpenWarningWindow(false);
+                    }
+                }
+            ]}/>
+    )
+}
+
 interface DeleteMenuInterface {
-    labelElement: TableInterface;
-    removeLabelElement: (labelElement: TableInterface) => void;
+    labelElement: TableInterface,
+    removeLabelElement: (labelElement: TableInterface) => void,
 }
 
 /**
@@ -169,13 +223,23 @@ interface SamplingInterface {
 const SamplingComp: React.FC = () => {
 
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
+    const [openDeleteAll, setOpenDeleteAll] = useState<boolean>(false);
+    const [typeOperation, setTypeOperation] = useState<type_operation>("Data");
+
     const [dataTable, setDataTable] = useStorageState<TableInterface[]>(sessionStorage, 'dataTable', InitTables);
     const [labelTable, setLabelTable] = useStorageState<TableInterface[]>(sessionStorage, 'labelTableDataset', InitTables);
     const [weightTable, setWeightTable] = useStorageState<TableInterface[]>(sessionStorage, 'WeightTable', InitTables);
+    const [idTableData, setIdTableData] = useStorageState<number>(sessionStorage, "idTableData", 0);
+    const [idTableLabel, setIdTableLabel] = useStorageState<number>(sessionStorage, "idTableLabel", 0);
+    const [idTableWeight, setIdTableWeight] = useStorageState<number>(sessionStorage, "idTableWeight", 0);
 
     useEventBus('toggleMode', (darkMode: boolean) => {
         setDarkMode(darkMode);
     });
+
+    const handleOpenDeleteAll = (flag: boolean) => {
+        setOpenDeleteAll(flag);
+    }
 
     //TODO : need to implement the back-end function to read the images here
     const handleDataTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
@@ -208,6 +272,7 @@ const SamplingComp: React.FC = () => {
                 }
             }]);
         }
+        setIdTableData(newFile.id + 1);
     }
 
     //TODO : need to implement the back-end function to read the images here
@@ -241,6 +306,7 @@ const SamplingComp: React.FC = () => {
                 }
             }]);
         }
+        setIdTableLabel(newFile.id + 1);
     }
 
     //TODO : need to implement the back-end function to read the images here
@@ -274,6 +340,30 @@ const SamplingComp: React.FC = () => {
                 }
             }]);
         }
+        setIdTableWeight(newFile.id + 1);
+    }
+
+    const handleIdValues = (newId: number, type: type_operation) => {
+        if (type === "Data") {
+            setIdTableData(newId);
+        } else if (type === "Label") {
+            setIdTableLabel(newId);
+        } else if (type === "Weight") {
+            setIdTableWeight(newId);
+        }
+    }
+
+    const resetTable = (typeOperation: type_operation) => {
+        if (typeOperation === "Data") {
+            setDataTable([]);
+            setIdTableData(0);
+        } else if (typeOperation === "Label") {
+            setLabelTable([]);
+            setIdTableLabel(0);
+        } else if (typeOperation === "Weight") {
+            setWeightTable([]);
+            setIdTableWeight(0);
+        }
     }
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
@@ -286,12 +376,21 @@ const SamplingComp: React.FC = () => {
     const removeLabelElement = (labelElement: TableInterface) => {
         if (labelElement.typeOperation === "Data") {
             const newVec = dataTable!.filter(l => l.id !== labelElement.id);
+            if (newVec.length === 0) {
+                setIdTableData(0);
+            }
             setDataTable(newVec);
         } else if (labelElement.typeOperation === "Label") {
             const newVec = labelTable!.filter(l => l.id !== labelElement.id);
+            if (newVec.length === 0) {
+                setIdTableLabel(0);
+            }
             setLabelTable(newVec);
         } else if (labelElement.typeOperation === "Weight") {
             const newVec = weightTable!.filter(l => l.id !== labelElement.id);
+            if (newVec.length === 0) {
+                setIdTableWeight(0);
+            }
             setWeightTable(newVec);
         }
     }
@@ -305,7 +404,6 @@ const SamplingComp: React.FC = () => {
 
     const renderLabel = (labelElement: TableInterface) => {
         const isActive = labelElement.id === selectedLabel;
-
         return (
             <tr key={labelElement.id} className={isActive ? "label-table-active" : ""}
                 onClick={() => selectLabel(labelElement.id)}>
@@ -350,20 +448,12 @@ const SamplingComp: React.FC = () => {
 
     };
 
-    const NAME_WIDTH = "col-100";
-    //TODO : Need to create a new component just to resize the table
-    //TODO : Need to create a way to make this table bigger.
+    const NAME_WIDTH = "col-3";
 
     return (
         <small>
             <IonContent
-                scrollEvents={true}
-                onIonScrollStart={() => {
-                }}
-                onIonScroll={() => {
-                }}
-                onIonScrollEnd={() => {
-                }}>
+                scrollEvents={true}>
                 {/*Sampling menu option*/}
                 <IonAccordionGroup multiple={true}>
                     {/*Data menu option*/}
@@ -382,9 +472,21 @@ const SamplingComp: React.FC = () => {
                                         slot={"end"}/>
                                     Add
                                 </IonButton>
+                                <IonButton
+                                    color={"danger"}
+                                    size={"default"}
+                                    slot={"end"}
+                                    disabled={dataTable.length <= 0}
+                                    onClick={() => {
+                                        setTypeOperation("Data");
+                                        setOpenDeleteAll(true);
+                                    }}>
+                                    <IonIcon icon={trashOutline} slot={"end"}/>
+                                    Delete all
+                                </IonButton>
                             </div>
                             {/*Data table*/}
-                            <div className={"table-responsive text-nowrap"}>
+                            <div className={"label-table-dataset table-responsive text-nowrap"}>
                                 <ReactBootStrap.Table
                                     striped bordered hover
                                     className={darkMode ? 'table-dark table-sm' : ''}>
@@ -405,7 +507,8 @@ const SamplingComp: React.FC = () => {
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={dataTable.length}
+                                idMenu={idTableData}
+                                onIdMenu={handleIdValues}
                                 onTableVec={handleDataTable}
                                 trigger={"data-menu"}
                                 typeOperation={"Data"}/>
@@ -428,8 +531,20 @@ const SamplingComp: React.FC = () => {
                                         slot={"end"}/>
                                     Add
                                 </IonButton>
+                                <IonButton
+                                    color={"danger"}
+                                    size={"default"}
+                                    slot={"end"}
+                                    disabled={labelTable.length <= 0}
+                                    onClick={() => {
+                                        setTypeOperation("Label");
+                                        setOpenDeleteAll(true);
+                                    }}>
+                                    <IonIcon icon={trashOutline} slot={"end"}/>
+                                    Delete all
+                                </IonButton>
                             </div>
-                            <div className={"label-table-dataset"}>
+                            <div className={"label-table-dataset table-responsive text-nowrap"}>
                                 <ReactBootStrap.Table striped bordered hover
                                                       className={darkMode ? 'table-dark w-auto' : 'w-auto'}>
                                     <thead>
@@ -449,7 +564,8 @@ const SamplingComp: React.FC = () => {
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={labelTable.length}
+                                idMenu={idTableLabel}
+                                onIdMenu={handleIdValues}
                                 onTableVec={handleLabelTable}
                                 trigger={"label-menu"}
                                 typeOperation={"Label"}/>
@@ -472,8 +588,20 @@ const SamplingComp: React.FC = () => {
                                         slot={"end"}/>
                                     Add
                                 </IonButton>
+                                <IonButton
+                                    color={"danger"}
+                                    size={"default"}
+                                    slot={"end"}
+                                    disabled={weightTable.length <= 0}
+                                    onClick={() => {
+                                        setTypeOperation("Weight");
+                                        setOpenDeleteAll(true);
+                                    }}>
+                                    <IonIcon icon={trashOutline} slot={"end"}/>
+                                    Delete all
+                                </IonButton>
                             </div>
-                            <div className={"label-table-dataset"}>
+                            <div className={"label-table-dataset table-responsive text-nowrap"}>
                                 <ReactBootStrap.Table striped bordered hover
                                                       className={darkMode ? 'table-dark' : ''}>
                                     <thead>
@@ -493,7 +621,8 @@ const SamplingComp: React.FC = () => {
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={weightTable.length}
+                                idMenu={idTableWeight}
+                                onIdMenu={handleIdValues}
                                 onTableVec={handleWeightTable}
                                 trigger={"weight-menu"}
                                 typeOperation={"Weight"}/>
@@ -589,6 +718,12 @@ const SamplingComp: React.FC = () => {
                         </IonList>
                     </IonAccordion>
                 </IonAccordionGroup>
+                <DeleteAllWindow
+                    openWarningWindow={openDeleteAll}
+                    onOpenWarningWindow={handleOpenDeleteAll}
+                    typeOperation={typeOperation}
+                    onTableList={resetTable}/>
+                <IonItemDivider/>
             </IonContent>
         </small>
     );

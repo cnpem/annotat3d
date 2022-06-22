@@ -4,34 +4,35 @@ This script is used for the css components for bootstrap-tables used in Sampling
 
 @import '../../../../theme/variables.css';
 
-.round-bar {
-    margin-left: 8px;
-    margin-right: 8px;
-    width: 64px;
-    height: 18px;
-    -webkit-border-radius: 8px;
-    -moz-border-radius: 8px;
-    border-radius: 8px;
-    background: red;
-}
-
-.label-table-dataset{
+/**
+css for Data, Label and Weight bootstrap-table
+ */
+.label-table-dataset {
     height: 20em;
     table-layout: fixed;
     word-wrap: break-word;
     overflow-y: auto;
 }
 
+/**
+Ion-item used in each row of bootstrap-table in SamplingComp.tsx
+ */
 .ion-item-table {
     --ion-item-background: transparent !important;
     --ion-border-color: transparent !important;
     display: inline-flex !important;
 }
 
+/**
+css for Data, Label and Weight bootstrap-table
+ */
 .label-table-active {
     background-color: var(--ion-color-primary);
 }
 
+/**
+css for Data, Label and Weight bootstrap-table
+ */
 .label-table-active ion-label {
     color: white;
     font-weight: 600;
