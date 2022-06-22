@@ -617,7 +617,7 @@ class Canvas {
 
         let error : string;
 
-        if (this.imageShape == undefined) {
+        if (this.imageShape === undefined) {
             error = 'Canvas.setCropPreviewMaskImage: imageShape is undefined';
             console.log(error);
             return 
@@ -633,26 +633,26 @@ class Canvas {
         let cropH: CropAxisInterface;
         let cropD: CropAxisInterface;
 
-        if (this.axis == 'XY') {
+        if (this.axis === 'XY') {
             width = this.imageShape!!.x;
             height = this.imageShape!!.y;
             cropW = this.cropShape!!.cropX;
             cropH = this.cropShape!!.cropY;
             cropD = this.cropShape!!.cropZ;
-        } else if (this.axis == 'XZ') {
+        } else if (this.axis === 'XZ') {
             width = this.imageShape!!.x;
             height = this.imageShape!!.z;
             cropW = this.cropShape!!.cropX;
             cropH = this.cropShape!!.cropZ;
             cropD = this.cropShape!!.cropY;
-        } else if (this.axis == 'YZ') {
+        } else if (this.axis === 'YZ') {
             width = this.imageShape!!.y;
             height = this.imageShape!!.z;
             cropW = this.cropShape!!.cropY;
             cropH = this.cropShape!!.cropZ;
             cropD = this.cropShape!!.cropX;
         } else {
-            if (this.cropShape == undefined) {
+            if (this.cropShape === undefined) {
                 error = 'Canvas.setCropPreviewMaskImage: cropShape is undefined';
             } else {
                 error = 'Canvas.setCropPreviewMaskImage: error setting dimensions in axis: '+this.axis;
