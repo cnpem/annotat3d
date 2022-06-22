@@ -233,17 +233,5 @@ export interface TableInterface {
     element: TableElement,
 }
 
-export const InitTables: TableInterface[] = [{
-    id: 0,
-    type: "Data",
-    element: {
-        file: "",
-        shape: [0, 0, 0],
-        type: "",
-        scan: "",
-        time: 0,
-        size: 0,
-        fullPath: ""
-    }
-}]
+export const InitTables: TableInterface[] = []
 

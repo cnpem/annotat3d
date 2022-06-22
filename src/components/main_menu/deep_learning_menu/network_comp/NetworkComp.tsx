@@ -10,7 +10,7 @@ const NetworkComp: React.FC = () => {
     return (
         <Fragment>
             <IonButton id="nested-button">Click to open popover</IonButton>
-            <IonPopover trigger="nested-button" dismissOnSelect={true}>
+            <IonPopover trigger="nested-button" dismissOnSelect={false}>
                 <IonContent>
                     <IonList>
                         <IonItem button={true} detail={false}>
@@ -22,16 +22,15 @@ const NetworkComp: React.FC = () => {
                         <IonItem button={true} detail={true} id="nested-trigger">
                             <IonLabel>Option 3</IonLabel>
                         </IonItem>
-
-                        <IonPopover trigger="nested-trigger" dismissOnSelect={true} side="end">
-                            <IonContent>
-                                <IonItem button={true}>
-                                    <IonLabel>Nested Option</IonLabel>
-                                </IonItem>
-                            </IonContent>
-                        </IonPopover>
                     </IonList>
                 </IonContent>
+                <IonPopover trigger="nested-trigger" dismissOnSelect={true} side="end">
+                    <IonContent>
+                        <IonItem button={true}>
+                            <IonLabel>Nested Option</IonLabel>
+                        </IonItem>
+                    </IonContent>
+                </IonPopover>
             </IonPopover>
         </Fragment>
     );

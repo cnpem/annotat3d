@@ -1,5 +1,5 @@
 import "./Dataset.css"
-import React, {useState} from "react";
+import React, {Fragment, useState} from "react";
 import {
     IonButton, IonIcon, IonItem, IonLabel,
     IonPopover, IonSegment, IonSegmentButton, SegmentChangeEventDetail
@@ -21,13 +21,6 @@ type InputMenuChoicesType = typeof menuChoices[number];
 const WorkspaceComp: React.FC = () => {
 
     const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, "DatasetMenu", "sampling");
-
-    // Init States
-    const [showPopover, setShowPopover] = useState<{ open: boolean, event: Event | undefined }>({
-        open: false,
-        event: undefined,
-    });
-
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
     const [augmentationOpSelected, setAugmentationOpSelected] = useState<AugmentationInterface[]>(InitAugmentationOptions);
@@ -85,17 +78,20 @@ const WorkspaceComp: React.FC = () => {
      * Clean up popover dialog
      */
     const cleanUp = () => {
-        setShowPopover({open: false, event: undefined});
         setShowErrorWindow(false);
         setErrorMsg("");
         setAugmentationOpSelected(InitAugmentationOptions);
         setIonRangeVec(InitIonRangeVec);
     };
     return (
-        <>
+        <Fragment>
+            {/* Function effect to open the popup */}
+            <IonItem button
+                     id={"open-menu-dataset"}>
+                Dataset
+            </IonItem>
             <IonPopover
-                isOpen={showPopover.open}
-                event={showPopover.event}
+                trigger={"open-menu-dataset"}
                 onDidDismiss={() => cleanUp()}
                 className={"file-popover-dataset"}>
                 <IonSegment value={menuOp} onIonChange={selectMenuOp}>
@@ -104,19 +100,13 @@ const WorkspaceComp: React.FC = () => {
                 {menuChoices.map(renderMenu)}
                 <IonButton
                     color={"tertiary"}
-                    slot={"end"}
-                    onClick={e => setShowPopover({open: false, event: e.nativeEvent})}>
+                    slot={"end"}>
                     OK
                     <IonIcon
                         icon={checkbox}
                         slot={"end"}/>
                 </IonButton>
             </IonPopover>
-            {/* Function effect to open the popup */}
-            <IonItem button
-                     onClick={e => setShowPopover({open: true, event: e.nativeEvent})}>
-                Dataset
-            </IonItem>
             {/*Error window*/}
             <ErrorWindowComp
                 errorMsg={errorMsg}
@@ -124,7 +114,7 @@ const WorkspaceComp: React.FC = () => {
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
-        </>
+        </Fragment>
     );
 }
 

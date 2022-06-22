@@ -8,10 +8,10 @@ https://www.youtube.com/watch?v=ZCrQjk6PdK0
  */
 .file-popover-dataset::part(content) {
     position: fixed;
-    top: 1% !important;
+    top: 0 !important;
     left: 50%;
-    --width: 95%;
-    --max-height: 920px;
+    --width: 70%;
+    --max-height: 90%;
     transform: translate(-50%, 3%) !important;
 }
 

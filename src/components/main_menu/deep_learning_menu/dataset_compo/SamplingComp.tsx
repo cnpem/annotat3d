@@ -36,7 +36,6 @@ interface AddNewFileInterface {
  * @param onTableVec {(newFile: MultiplesPath) => void} - setter used to create a new element
  * @param trigger {string} - string that contains the trigger to open the popup
  * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
- * @constructor
  */
 const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        idMenu,
@@ -44,23 +43,16 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        typeOperation,
                                                        trigger,
                                                    }) => {
-
-    const [pathFiles, setPathFiles] = useState<MultiplesPath>({
+    let pathFiles: MultiplesPath = {
         id: idMenu,
         workspacePath: "",
         filePath: ""
-    });
+    };
 
     return (
         <IonPopover
             trigger={trigger}
-            className={"add-menu"}
-            onDidDismiss={() => {
-                setPathFiles({
-                    ...pathFiles,
-                    filePath: "",
-                });
-            }}>
+            className={"add-menu"}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
                 <IonAccordion>
@@ -74,10 +66,9 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                             <IonInput
                                 placeholder={"/path/to/workspace"}
                                 value={pathFiles.workspacePath}
-                                onIonChange={(e: CustomEvent) => setPathFiles({
-                                    ...pathFiles,
-                                    workspacePath: e.detail.value!
-                                })}/>
+                                onIonChange={(e: CustomEvent) => {
+                                    pathFiles.workspacePath = e.detail.value!
+                                }}/>
                         </IonItem>
                     </IonList>
                 </IonAccordion>
@@ -93,10 +84,9 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                             <IonInput
                                 placeholder={`/path/to/${typeOperation}`}
                                 value={pathFiles.filePath}
-                                onIonChange={(e: CustomEvent) => setPathFiles({
-                                    ...pathFiles,
-                                    filePath: e.detail.value!
-                                })}/>
+                                onIonChange={(e: CustomEvent) => {
+                                    pathFiles.filePath = e.detail.value!
+                                }}/>
                         </IonItem>
                     </IonList>
                 </IonAccordion>
@@ -108,7 +98,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                     console.log("path");
                     console.table(pathFiles);
                     onTableVec(pathFiles, typeOperation);
-                    setPathFiles({...pathFiles, id: pathFiles.id + 1});
+                    pathFiles.id += 1;
                 }}>Load {typeOperation}</IonButton>
         </IonPopover>
     );
@@ -127,7 +117,8 @@ interface DeleteMenuInterface {
 const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelElement}) => {
 
     return (
-        <IonItem className={"ion-item-table"}>
+        <IonItem className={"ion-item-table"}
+                 id={"file-name-comp"}>
             <IonButtons>
                 <IonButton id={`delete-${labelElement.type}-button-${labelElement.id}`} size="small"
                            onClick={() => {
@@ -168,7 +159,7 @@ const SamplingComp: React.FC = () => {
 
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
     const [dataTable, setDataTable] = useStorageState<TableInterface[]>(sessionStorage, 'dataTable', InitTables);
-    const [labelTable, setLabelTable] = useStorageState<TableInterface[]>(sessionStorage, 'labelTable', InitTables);
+    const [labelTable, setLabelTable] = useStorageState<TableInterface[]>(sessionStorage, 'labelTableDataset', InitTables);
     const [weightTable, setWeightTable] = useStorageState<TableInterface[]>(sessionStorage, 'WeightTable', InitTables);
 
     useEventBus('toggleMode', (darkMode: boolean) => {
@@ -275,7 +266,6 @@ const SamplingComp: React.FC = () => {
     }
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
-
     const [sampleElement, setSampleElement] = useStorageState<SamplingInterface>(sessionStorage, "sampleElement", {
         nClasses: 2,
         sampleSize: 100,
@@ -392,12 +382,12 @@ const SamplingComp: React.FC = () => {
                                     <thead>
                                     <tr>
                                         <th className={NAME_WIDTH}><IonLabel>File Name</IonLabel></th>
-                                        <th className={NAME_WIDTH}>Shape</th>
-                                        <th className={NAME_WIDTH}>Type</th>
-                                        <th className={NAME_WIDTH}>Scan</th>
-                                        <th className={NAME_WIDTH}>Time</th>
-                                        <th className={NAME_WIDTH}>Size</th>
-                                        <th className={NAME_WIDTH}>Full Path</th>
+                                        <th className={NAME_WIDTH}><IonLabel>Shape</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Type</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Scan</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Time</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Size</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Full Path</IonLabel></th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -406,7 +396,7 @@ const SamplingComp: React.FC = () => {
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={dataTable.length - 1}
+                                idMenu={dataTable.length}
                                 onTableVec={handleDataTable}
                                 trigger={"data-menu"}
                                 typeOperation={"Data"}/>
@@ -436,12 +426,12 @@ const SamplingComp: React.FC = () => {
                                     <thead>
                                     <tr>
                                         <th className={NAME_WIDTH}><IonLabel>File Name</IonLabel></th>
-                                        <th className={NAME_WIDTH}>Shape</th>
-                                        <th className={NAME_WIDTH}>Type</th>
-                                        <th className={NAME_WIDTH}>Scan</th>
-                                        <th className={NAME_WIDTH}>Time</th>
-                                        <th className={NAME_WIDTH}>Size</th>
-                                        <th className={NAME_WIDTH}>Full Path</th>
+                                        <th className={NAME_WIDTH}><IonLabel>Shape</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Type</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Scan</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Time</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Size</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Full Path</IonLabel></th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -450,7 +440,7 @@ const SamplingComp: React.FC = () => {
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={labelTable.length - 1}
+                                idMenu={labelTable.length}
                                 onTableVec={handleLabelTable}
                                 trigger={"label-menu"}
                                 typeOperation={"Label"}/>
@@ -480,12 +470,12 @@ const SamplingComp: React.FC = () => {
                                     <thead>
                                     <tr>
                                         <th className={NAME_WIDTH}><IonLabel>File Name</IonLabel></th>
-                                        <th className={NAME_WIDTH}>Shape</th>
-                                        <th className={NAME_WIDTH}>Type</th>
-                                        <th className={NAME_WIDTH}>Scan</th>
-                                        <th className={NAME_WIDTH}>Time</th>
-                                        <th className={NAME_WIDTH}>Size</th>
-                                        <th className={NAME_WIDTH}>Full Path</th>
+                                        <th className={NAME_WIDTH}><IonLabel>Shape</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Type</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Scan</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Time</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Size</IonLabel></th>
+                                        <th className={NAME_WIDTH}><IonLabel>Full Path</IonLabel></th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -494,7 +484,7 @@ const SamplingComp: React.FC = () => {
                                 </ReactBootStrap.Table>
                             </div>
                             <AddNewFile
-                                idMenu={weightTable.length - 1}
+                                idMenu={weightTable.length}
                                 onTableVec={handleWeightTable}
                                 trigger={"weight-menu"}
                                 typeOperation={"Weight"}/>

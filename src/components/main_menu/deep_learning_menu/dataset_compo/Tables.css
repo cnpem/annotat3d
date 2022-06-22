@@ -15,9 +15,16 @@ This script is used for the css components for bootstrap-tables used in Sampling
     background: red;
 }
 
-.label-table {
+.label-table-dataset {
     height: 20em;
+    table-layout: fixed;
+    word-wrap: break-word !important;
     overflow-y: auto;
+}
+
+td {
+    white-space: normal !important;
+    word-wrap: break-word;
 }
 
 .ion-item-table {
