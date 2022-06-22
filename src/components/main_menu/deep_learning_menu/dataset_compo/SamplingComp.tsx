@@ -317,9 +317,7 @@ const SamplingComp: React.FC = () => {
                 </td>
                 <td>
                     <IonItem className={"ion-item-table"}>
-                        {`${labelElement.element.shape[0]} x 
-                        ${labelElement.element.shape[1]} x 
-                        ${labelElement.element.shape[2]}`}
+                        {`${labelElement.element.shape[0]} x ${labelElement.element.shape[1]} x ${labelElement.element.shape[2]}`}
                     </IonItem>
                 </td>
                 <td>
@@ -386,7 +384,7 @@ const SamplingComp: React.FC = () => {
                                 </IonButton>
                             </div>
                             {/*Data table*/}
-                            <div className={"label-table"}>
+                            <div className={"table-responsive text-nowrap"}>
                                 <ReactBootStrap.Table
                                     striped bordered hover
                                     className={darkMode ? 'table-dark table-sm' : ''}>
@@ -431,9 +429,9 @@ const SamplingComp: React.FC = () => {
                                     Add
                                 </IonButton>
                             </div>
-                            <div className={"label-table"}>
+                            <div className={"label-table-dataset"}>
                                 <ReactBootStrap.Table striped bordered hover
-                                                      className={darkMode ? 'table-dark' : ''}>
+                                                      className={darkMode ? 'table-dark w-auto' : 'w-auto'}>
                                     <thead>
                                     <tr>
                                         <th className={NAME_WIDTH}><IonLabel>File Name</IonLabel></th>
@@ -475,7 +473,7 @@ const SamplingComp: React.FC = () => {
                                     Add
                                 </IonButton>
                             </div>
-                            <div className={"label-table"}>
+                            <div className={"label-table-dataset"}>
                                 <ReactBootStrap.Table striped bordered hover
                                                       className={darkMode ? 'table-dark' : ''}>
                                     <thead>
