@@ -84,9 +84,7 @@ def open_image(image_id: str):
                     "imageName": file_name, "imageDtype": image_dtype}
 
     if image_id == 'image':
-        print('bruno: saving image_info', image_info)
         data_repo.set_info(data=image_info)
-        print('bruno: saved? ', data_repo.get_info())
 
     return jsonify(image_info)
 

@@ -7,7 +7,6 @@ import LoadingComponent from "./LoadingComponent";
 import {ModuleCard, ModuleCardItem} from "./ModuleCard";
 
 function onApplyThen(info : {slice: number, axis: string}) {
-    // bruno: what else do I need to dispatch here? #new issue created for this
     dispatch('futureChanged', info);    
 };
 

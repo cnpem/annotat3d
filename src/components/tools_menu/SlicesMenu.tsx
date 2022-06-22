@@ -6,7 +6,7 @@ import {albumsOutline} from "ionicons/icons";
 
 import {ImageShapeInterface} from './ImageShapeInterface';
 
-import { currentEventValue, dispatch, useEventBus} from '../../utils/eventbus';
+import {dispatch, useEventBus} from '../../utils/eventbus';
 import {SliceInfoInterface} from "./SliceInfoInterface";
 import {useStorageState} from "react-storage-hooks";
 import {Fragment, useEffect} from "react";
@@ -57,7 +57,6 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     }
 
     const handleSliceName = (e: CustomEvent) => {
-        console.log('bruno: handleSliceName hello')
         const curSliceName = e.detail.value as 'XY'|'YZ'|'XZ';
         setSliceName(curSliceName);
         const maxSliceValue = maxValSlider[curSliceName];
@@ -70,9 +69,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             slice: sliceValue
         };
 
-        console.log('bruno: handleSliceName sliceChanged')
         dispatch('sliceChanged', payload);
-        console.log('bruno: handleSliceName cropPreviewMode')
         dispatch('cropPreviewMode', cropPreviewMode); 
     }
 

@@ -75,7 +75,6 @@ const SideMenuVis: React.FC = () => {
     useEffect(() => {
         sfetch('POST', '/get_image_info/image', '', 'json')
         .then((imgInfo:ImageInfoInterface) => {
-            console.log('bruno: on SideMenuVis.tsx useEffect image info: ', imgInfo.imageShape);
             setImageShape({
                 x: imgInfo.imageShape.x,
                 y: imgInfo.imageShape.y,
@@ -83,16 +82,6 @@ const SideMenuVis: React.FC = () => {
             });
         });
     }, [setImageShape]);
-    
-    // looks like this is not been used
-    // useEventBus('ImageLoaded', (imgInfo:ImageInfoInterface) => {
-    //     console.log('bruno: use event bus image info: ', imgInfo.imageShape);
-    //     setImageShape({
-    //         x: imgInfo.imageShape.x,
-    //         y: imgInfo.imageShape.y,
-    //         z: imgInfo.imageShape.z
-    //     });
-    // })
 
     return(
         <React.Fragment>

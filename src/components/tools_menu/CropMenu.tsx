@@ -1,10 +1,9 @@
-import { IonItem, IonLabel, IonRange, IonToggle } from '@ionic/react';
+import { IonItem, IonLabel, IonRange } from '@ionic/react';
 import { Fragment } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 
 import { dispatch } from '../../utils/eventbus';
 import { sfetch } from '../../utils/simplerequest';
-import ErrorInterface from '../main_menu/file/ErrorInterface';
 import ImageInfoInterface from '../main_menu/file/ImageInfoInterface';
 import { CropAxisInterface, CropShapeInterface } from './CropInterface';
 import { ImageShapeInterface } from './ImageShapeInterface';
@@ -38,25 +37,7 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         upper: props.imageShape.z
     });
 
-    // const [toggleCropPreviewButton, setToggleCropPreviewButton] = useStorageState<boolean>(sessionStorage, 'toggleCropPreviewButton', false);
-
-    // const handlerToggleCropPreviewMode = (e:CustomEvent) => {
-    //     const cropShape:CropShapeInterface = {
-    //         cropX: cropX,
-    //         cropY: cropY,
-    //         cropZ: cropZ
-    //     }
-    //     console.log("bruno: preview toggle!", "shape: ", cropShape);
-    //     // send shape to event listener (canvas)
-    //     dispatch('cropShape', cropShape); 
-    //     // changes toggle button state
-    //     setToggleCropPreviewButton(e.detail.checked);
-    //     // send change to outside event listeners 
-    //     dispatch('cropPreviewMode', e.detail.checked); 
-    // };
-
     function onPreview() {
-        console.log("bruno: yay! Preview!");
         const cropShape:CropShapeInterface = {
             cropX: cropX,
             cropY: cropY,
@@ -96,7 +77,6 @@ const CropMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     };
     
     function onReset() {
-        console.log("bruno: yay! Reset!");
         setCropX({
             lower: 0,
             upper: props.imageShape.x

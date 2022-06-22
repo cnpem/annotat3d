@@ -160,8 +160,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 const imgName = imgPath.split("/");
                 msgReturned = `${imgName[imgName.length - 1]} loaded as ${loadImgOp}`;
 
-                console.log('bruno: image shape: ', image.imageShape);
-
                 const info: ImageInfoInterface = {
                     imageShape: image.imageShape,
                     imageDtype: image.imageDtype,
@@ -174,7 +172,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 }
 
                 setShowErrorWindow(false);
-                console.log('bruno: on FileLoadDialog will call ImageLoaded with payload', info)
                 dispatch("ImageLoaded", info);
                 dispatch("ActivateComponents", false);
 

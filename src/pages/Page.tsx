@@ -29,7 +29,6 @@ const Page: React.FC = () => {
     const [canvasMode, setCanvasMode] = useState<'drawing' | 'imaging'>('drawing');
 
     useEventBus('sliceChanged', (payload: SliceInfoInterface) => {
-        console.log('bruno: Page.tsx listening to sliceChanged and calling futureChanged')
         setSliceInfo(payload);
         sfetch('POST', '/close_image/future')
         .then(() => {

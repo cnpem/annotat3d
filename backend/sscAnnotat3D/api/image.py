@@ -68,11 +68,6 @@ def get_image_info(image_id: str):
         return handle_exception(f"Image {image_id} not found.")
 
     image_info = data_repo.get_info()
-    print('bruno, something here?', image_info)
 
     return jsonify(image_info)
-    # return jsonify({
-    #     'shape': {'x':img.shape[2], 'y':img.shape[1], 'z':img.shape[0]},
-    #     'dtype': str(img.dtype)
-    # })
 
