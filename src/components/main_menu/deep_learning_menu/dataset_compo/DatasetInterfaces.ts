@@ -229,7 +229,7 @@ interface TableElement {
  */
 export interface TableInterface {
     id: number,
-    type: type_operation,
+    typeOperation: type_operation,
     element: TableElement,
 }
 

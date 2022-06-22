@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {
     IonAccordion,
-    IonAccordionGroup, IonButton, IonButtons, IonCol,
+    IonAccordionGroup, IonAlert, IonButton, IonButtons, IonCol,
     IonContent,
     IonIcon, IonInput,
     IonItem,
@@ -25,7 +25,7 @@ interface MultiplesPath {
 
 interface AddNewFileInterface {
     idMenu: number,
-    onTableVec: (newFile: MultiplesPath, type: type_operation) => void,
+    onTableVec: (newFile: MultiplesPath, typeOperation: type_operation) => void,
     typeOperation: type_operation,
     trigger: string,
 }
@@ -115,31 +115,42 @@ interface DeleteMenuInterface {
  * @param removeLabelElement {(labelElement: TableInterface) => void} - function to delete an element of a bootstrap-table
  */
 const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelElement}) => {
-
+    const [showAlert, setShowAlert] = useState<boolean>(false);
     return (
         <IonItem className={"ion-item-table"}
                  id={"file-name-comp"}>
             <IonButtons>
-                <IonButton id={`delete-${labelElement.type}-button-${labelElement.id}`} size="small"
+                <IonButton id={`delete-${labelElement.typeOperation}-button-${labelElement.id}`}
+                           size="small"
                            onClick={() => {
+                               console.log("label to delete : ", labelElement);
                                console.table(labelElement);
+                               setShowAlert(true);
                            }}>
                     <IonIcon icon={closeOutline}/>
                 </IonButton>
                 {/*Delete popUp*/}
-                <IonPopover
-                    trigger={`delete-${labelElement.type}-button-${labelElement.id}`}
-                    className={"delete-popover"}>
-                    <IonContent>
-                        <IonItem>
-                            Do you wish to delete "{labelElement.element.file}" ?
-                        </IonItem>
-                    </IonContent>
-                    <IonButton
-                        size={"default"}
-                        color={"tertiary"}
-                        onClick={() => removeLabelElement(labelElement)}>Confirm</IonButton>
-                </IonPopover>
+                <IonAlert
+                    isOpen={showAlert}
+                    onDidDismiss={() => setShowAlert(false)}
+                    message={`Do you wish to delete the ${labelElement.typeOperation} with name "${labelElement.element.file}" ?`}
+                    buttons={[
+                        {
+                            text: "No",
+                            id: "no-button",
+                            handler: () => {
+                                setShowAlert(false);
+                            }
+                        },
+                        {
+                            text: "Yes",
+                            id: "yes-button",
+                            handler: () => {
+                                removeLabelElement(labelElement);
+                                setShowAlert(false);
+                            }
+                        }
+                    ]}/>
             </IonButtons>
             {labelElement.element.file}
         </IonItem>
@@ -167,11 +178,11 @@ const SamplingComp: React.FC = () => {
     });
 
     //TODO : need to implement the back-end function to read the images here
-    const handleDataTable = (newFile: MultiplesPath, type: type_operation) => {
+    const handleDataTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
         if (newFile.id === 0) {
             setDataTable([{
                 id: newFile.id,
-                type: type,
+                typeOperation: typeOperation,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -185,7 +196,7 @@ const SamplingComp: React.FC = () => {
         } else {
             setDataTable([...dataTable, {
                 id: newFile.id,
-                type: type,
+                typeOperation: typeOperation,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -200,11 +211,11 @@ const SamplingComp: React.FC = () => {
     }
 
     //TODO : need to implement the back-end function to read the images here
-    const handleLabelTable = (newFile: MultiplesPath, type: type_operation) => {
+    const handleLabelTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
         if (newFile.id === 0) {
             setLabelTable([{
                 id: newFile.id,
-                type: type,
+                typeOperation: typeOperation,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -218,7 +229,7 @@ const SamplingComp: React.FC = () => {
         } else {
             setLabelTable([...labelTable, {
                 id: newFile.id,
-                type: type,
+                typeOperation: typeOperation,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -233,11 +244,11 @@ const SamplingComp: React.FC = () => {
     }
 
     //TODO : need to implement the back-end function to read the images here
-    const handleWeightTable = (newFile: MultiplesPath, type: type_operation) => {
+    const handleWeightTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
         if (newFile.id === 0) {
             setWeightTable([{
                 id: newFile.id,
-                type: type,
+                typeOperation: typeOperation,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -251,7 +262,7 @@ const SamplingComp: React.FC = () => {
         } else {
             setWeightTable([...weightTable, {
                 id: newFile.id,
-                type: type,
+                typeOperation: typeOperation,
                 element: {
                     file: newFile.filePath,
                     shape: [0, 0, 0],
@@ -273,13 +284,13 @@ const SamplingComp: React.FC = () => {
     });
 
     const removeLabelElement = (labelElement: TableInterface) => {
-        if (labelElement.type === "Data") {
+        if (labelElement.typeOperation === "Data") {
             const newVec = dataTable!.filter(l => l.id !== labelElement.id);
             setDataTable(newVec);
-        } else if (labelElement.type === "Label") {
+        } else if (labelElement.typeOperation === "Label") {
             const newVec = labelTable!.filter(l => l.id !== labelElement.id);
             setLabelTable(newVec);
-        } else if (labelElement.type === "Weight") {
+        } else if (labelElement.typeOperation === "Weight") {
             const newVec = weightTable!.filter(l => l.id !== labelElement.id);
             setWeightTable(newVec);
         }
