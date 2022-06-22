@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef} from "react";
 import {IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonItem} from "@ionic/react";
 import {moon, sunny} from "ionicons/icons";
 import {dispatch, useEventBus} from "../../utils/eventbus";
@@ -11,15 +11,17 @@ import {isEqual} from "lodash";
 import { AlphaPicker, SliderPicker } from 'react-color';
 import CropMenu from "./CropMenu";
 import { ImageShapeInterface } from "./ImageShapeInterface";
-import { sfetch } from "../../utils/simplerequest";
-import ImageInfoInterface from "../main_menu/file/ImageInfoInterface";
 
 function rgbToHex(r: number, g: number, b: number) {
     const bin = (r << 16) | (g << 8) | b;
     return bin;
 }
 
-const SideMenuVis: React.FC = () => {
+interface SideMenuVisProps {
+    imageShape: ImageShapeInterface;
+}
+
+const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
 
     const [lockVisCards, setLockVisCards] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
 
@@ -67,21 +69,6 @@ const SideMenuVis: React.FC = () => {
         dispatch('annotationVisibilityChanged', showAnnotations);
         dispatch('annotationAlphaChanged', annotationAlpha);
     });
-
-    const [imageShape, setImageShape] = useState<ImageShapeInterface>({
-        x: 0, y: 0, z: 0
-    });
-
-    useEffect(() => {
-        sfetch('POST', '/get_image_info/image', '', 'json')
-        .then((imgInfo:ImageInfoInterface) => {
-            setImageShape({
-                x: imgInfo.imageShape.x,
-                y: imgInfo.imageShape.y,
-                z: imgInfo.imageShape.z
-            });
-        });
-    }, [setImageShape]);
 
     return(
         <React.Fragment>
@@ -177,7 +164,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <CropMenu imageShape={imageShape} disabled={lockVisCards} />
+            <CropMenu imageShape={props.imageShape} disabled={lockVisCards} />
         </React.Fragment>
     );
 }

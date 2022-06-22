@@ -1,7 +1,6 @@
 import {IonCard, IonCardContent, IonCardHeader, IonIcon, IonLabel, IonSegment, IonSegmentButton, SegmentChangeEventDetail} from "@ionic/react";
 import React, {Fragment, useEffect, useState} from "react";
 import {useStorageState} from "react-storage-hooks";
-import { useEventBus } from "../../utils/eventbus";
 import { sfetch } from "../../utils/simplerequest";
 import { ImageShapeInterface } from "./ImageShapeInterface";
 import ProcessingMenu from "./ProcessingMenu";
@@ -13,7 +12,7 @@ import {eyeOutline, brushOutline, colorWandOutline} from "ionicons/icons";
 import ImageInfoInterface from "../main_menu/file/ImageInfoInterface";
 
 interface SideMenuProps {
-    hideMenu: boolean
+    hideMenu: boolean;
 }
 
 const menuChoicesList = [
@@ -31,14 +30,31 @@ const menuChoicesList = [
     }
 ];
 
-const menuChoices = ['visualization', 'annotation', 'processing'] as const;
-const menus = [ <SideMenuVis/>, <SideMenuAnnot/>, <ProcessingMenu/> ];
-
-type InputMenuChoicesType = typeof menuChoices[number];
-
-type InputMenuChoicesListType = typeof menuChoicesList[number];
 
 const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
+
+    const [imageShape, setImageShape] = useState<ImageShapeInterface>({
+        x: 0, y: 0, z: 0
+    });
+
+    useEffect(() => {
+        sfetch('POST', '/get_image_info/image', '', 'json')
+        .then((imgInfo:ImageInfoInterface) => {
+            console.log('ToolsMenu: useEffect imgInfo: ', imageShape, ' > ', imgInfo.imageShape);
+            setImageShape({
+                x: imgInfo.imageShape.x,
+                y: imgInfo.imageShape.y,
+                z: imgInfo.imageShape.z
+            });
+        });
+    }, [setImageShape]);
+
+    const toolsMenuChoices = ['visualization', 'annotation', 'processing'] as const;
+    const toolsMenuList = [ <SideMenuVis imageShape={imageShape} />, <SideMenuAnnot/>, <ProcessingMenu/> ];
+
+    type InputMenuChoicesType = typeof toolsMenuChoices[number];
+    type InputMenuChoicesListType = typeof menuChoicesList[number];
+
 
     const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, "toolsMenu", "visualization");
 
@@ -56,7 +72,7 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
 
     const renderMenu = (choice: InputMenuChoicesType, idx: number) => {
         return (
-            <div hidden={menuOp!==choice}>{ menus[idx] }</div>
+            <div hidden={menuOp!==choice}>{ toolsMenuList[idx] }</div>
         );
     }
 
@@ -66,34 +82,10 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
                 <IonSegment value={menuOp} onIonChange={selectMenuOp}>
                     { menuChoicesList.map(renderSegmentButton) }
                 </IonSegment>
-                { menuChoices.map(renderMenu) }
+                { toolsMenuChoices.map(renderMenu) }
             </Fragment>
         );
     }
-
-    const [imageShape, setImageShape] = useState<ImageShapeInterface>({
-        x: 0, y: 0, z: 0
-    });
-
-    useEffect(() => {
-        sfetch('POST', '/get_image_info/image', '', 'json')
-        .then((imgInfo:ImageInfoInterface) => {
-            console.log('image info: ', imgInfo);
-            setImageShape({
-                x: imgInfo.imageShape.x,
-                y: imgInfo.imageShape.y,
-                z: imgInfo.imageShape.z
-            });
-        });
-    }, [setImageShape]);
-
-    useEventBus('ImageLoaded', (imgInfo:ImageInfoInterface) => {
-        setImageShape({
-            x: imgInfo.imageShape.x,
-            y: imgInfo.imageShape.y,
-            z: imgInfo.imageShape.z
-        });
-    })
 
     return(
         <React.Fragment>
