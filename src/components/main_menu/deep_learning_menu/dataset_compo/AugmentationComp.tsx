@@ -1,4 +1,4 @@
-import React, {Fragment} from "react";
+import React, {Fragment, useEffect, useRef} from "react";
 import {
     IonAccordion,
     IonAccordionGroup,
@@ -12,6 +12,7 @@ import {
 } from "@ionic/react";
 import {construct} from "ionicons/icons";
 import {AugmentationInterface, IonRangeElement} from "./DatasetInterfaces";
+import {isEqual} from "lodash";
 
 interface CheckedElements {
     checkedVector: AugmentationInterface[];
@@ -35,15 +36,30 @@ interface MenuContentRangeInterface {
  */
 const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onIonRangeVec, index}) => {
 
+    const contrastRangeRef = useRef<HTMLIonRangeElement | null>(null);
+    /**
+     * This useEffect is important to always update the ion-range every time he changes
+     */
+    useEffect(() => {
+        if (contrastRangeRef) {
+            if (!isEqual(contrastRangeRef.current!.value, ionRangeVec[index].actualRangeVal)) {
+                setTimeout(() => {
+                    contrastRangeRef.current!.value = ionRangeVec[index].actualRangeVal;
+                }, 20);
+            }
+        }
+    });
+
     return (
         <Fragment>
             <IonItem>
                 <IonRange
                     dualKnobs={true}
+                    ref={contrastRangeRef}
                     name={ionRangeVec[index].ionNameMenu + ionRangeVec[index].ionRangeId}
                     min={ionRangeVec[index].ionRangeLimit.minRange}
                     max={ionRangeVec[index].ionRangeLimit.maxRange}
-                    value={ionRangeVec[index].actualRangeVal}
+                    debounce={300}
                     step={0.01}
                     onIonKnobMoveEnd={(e: CustomEvent) => {
                         console.log("value in ion-range : ", e.detail.value);
@@ -53,10 +69,10 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onI
             <IonItem>
                 <IonInput
                     type={"number"}
-                    min={ionRangeVec[index].ionRangeLimit.minRange}
                     max={ionRangeVec[index].ionRangeLimit.maxRange}
                     clearInput={true}
                     value={Math.round(ionRangeVec[index].actualRangeVal.lower * 100) / 100}
+                    step={"0.01"}
                     onIonChange={(e: CustomEvent) => {
                         console.log("value in ion-input (lower) : ", e.detail.value);
                         onIonRangeVec({
@@ -66,9 +82,10 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onI
                     }}/>
                 <IonInput
                     type={"number"}
-                    min={ionRangeVec[index].ionRangeLimit.minRange}
                     max={ionRangeVec[index].ionRangeLimit.maxRange}
-                    clearInput value={Math.round(ionRangeVec[index].actualRangeVal.upper * 100) / 100}
+                    clearInput={true}
+                    value={Math.round(ionRangeVec[index].actualRangeVal.upper * 100) / 100}
+                    step={"0.01"}
                     onIonChange={(e: CustomEvent) => {
                         console.log("value in ion-input : ", e.detail.value);
                         onIonRangeVec({
