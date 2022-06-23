@@ -52,7 +52,7 @@ const SideMenuVis: React.FC = () => {
         }
 
         //now I am just dispatch all events on mount
-        //(however, I should change canvas container to store tis state properly)
+        //(however, I should change canvas container to store this state properly)
         //to use the useStorageState I should migrate canvas container to new format (react hooks)
         //If I did not have time to undo, and you are reading this, Peixinho says "I am sorry"
 

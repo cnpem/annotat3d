@@ -269,7 +269,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                 </IonItem>
                                 <IonList slot="content">
                                     <IonItem>
-                                        <IonLabel position="stacked">{"Superpixel Path"}</IonLabel>
+                                        <IonLabel position="stacked">Workspace Path</IonLabel>
                                         <IonInput
                                             placeholder={"/path/to/workspace"}
                                             value={pathFiles.workspacePath}
