@@ -59,14 +59,14 @@ def get_image_slice(image_id: str):
     return send_file(io.BytesIO(compressed_byte_slice), "application/gzip")
 
 
-@app.route("/get_image_info/<image_id>", methods=["POST"])
+@app.route("/get_image_info/<image_info_key>", methods=["POST"])
 @cross_origin()
-def get_image_info(image_id: str):
-    img = data_repo.get_image(image_id)
+def get_image_info(image_info_key: str):
+    img = data_repo.get_image('image')
 
     if img is None:
-        return handle_exception(f"Image {image_id} not found.")
-
-    image_info = data_repo.get_info()
+        return handle_exception(f"Image not found.")
+    
+    image_info = data_repo.get_info(image_info_key)
 
     return jsonify(image_info)
