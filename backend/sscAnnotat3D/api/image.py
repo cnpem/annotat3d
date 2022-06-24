@@ -65,12 +65,11 @@ def get_image_info(image_info_key: str):
     img = data_repo.get_image('image')
 
     if img is None:
-        return handle_exception(f"Image not found.")
+        return handle_exception("Image not found.")
     
     image_info = data_repo.get_info(image_info_key)
     
     if (image_info == None):
-        image_info = {"imageShape": {'x':0, 'y':0, 'z':0}, "imageExt": '',
-                  "imageName": '', "imageDtype": ''}
+        return handle_exception("Image info not found.")
 
     return jsonify(image_info)
