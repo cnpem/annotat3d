@@ -19,9 +19,73 @@ def handle_exception(error_msg: str):
 
 app.register_error_handler(400, handle_exception)
 
-def _convert_dtype_to_str(img_dtype: np.dtype):
 
+def _convert_dtype_to_str(img_dtype: np.dtype):
     return np.dtype(img_dtype).name
+
+
+@app.route("/open_files_dataset/<file_id>", methods=["POST"])
+@cross_origin()
+def open_files_dataset(file_id: str):
+    """
+    todo : need to see if this script is reading files using sscIO or others files
+    todo : it seems that ssc-deepsirius is using simpleITK for .tif files and numpy for .raw
+    :param file_id:
+    :return:
+    """
+    try:
+        file_path = request.json["file_path"]
+    except:
+        return handle_exception("Error while trying to get the image path")
+
+    try:
+        file_dtype = request.json["image_dtype"]
+    except:
+        return handle_exception("Error while trying to get the image dtype")
+
+    file = file_path.split("/")[-1]
+    file_name, extension = os.path.splitext(file)
+
+    if (file == ""):
+        return handle_exception("Empty path isn't valid !")
+
+    raw_extensions = [".raw", ".b"]
+    tif_extensions = [".tif", ".tiff", ".npy", ".cbf"]
+
+    extensions = [*raw_extensions, *tif_extensions]
+
+    if extension not in extensions:
+        return handle_exception("The extension {} isn't supported !".format(extension))
+
+    error_msg = ""
+
+    try:
+        use_image_raw_parse = request.json["use_image_raw_parse"]
+        if (extension in tif_extensions or use_image_raw_parse):
+            image, info = sscIO.io.read_volume(file_path, 'numpy')
+            error_msg = "No such file or directory {}".format(file_path)
+
+            if (_convert_dtype_to_str(image.dtype) != file_dtype and (file_id == "image" or file_id == "label")):
+                image = image.astype(file_dtype)
+
+        else:
+            image_raw_shape = request.json["image_raw_shape"]
+            image, info = sscIO.io.read_volume(file_path, 'numpy',
+                                               shape=(image_raw_shape[2], image_raw_shape[1], image_raw_shape[0]),
+                                               dtype=file_dtype)
+
+            error_msg = "Unable to reshape the volume {} into shape {} and type {}. " \
+                        "Please change the dtype and shape and load the image again".format(file, request.json[
+                "image_raw_shape"], file_dtype)
+        image_shape = image.shape
+        image_dtype = _convert_dtype_to_str(image.dtype)
+    except:
+        return handle_exception(error_msg)
+
+    image_info = {"imageShape": image_shape, "imageExt": extension,
+                  "imageName": file_name, "imageDtype": image_dtype}
+
+    return jsonify(image_info)
 
 
 @app.route("/open_image/<image_id>", methods=["POST"])
@@ -82,6 +146,7 @@ def open_image(image_id: str):
     data_repo.set_image(key=image_id, data=image)
     return jsonify(image_info)
 
+
 @app.route("/close_image/<image_id>", methods=["POST"])
 @cross_origin()
 def close_image(image_id: str):
@@ -96,7 +161,6 @@ def close_image(image_id: str):
 @app.route("/save_image/<image_id>", methods=["POST"])
 @cross_origin()
 def save_image(image_id: str):
-
     try:
         image_path = request.json["image_path"]
     except:
@@ -122,6 +186,7 @@ def save_image(image_id: str):
                   "imageName": save_status["file_name"], "imageDtype": image_dtype}
 
     return jsonify(image_info)
+
 
 @app.route("/open_new_workspace", methods=["POST"])
 @cross_origin()
@@ -153,6 +218,7 @@ def open_new_workspace():
 
     return handle_exception("unable to create the Workspace ! : {}".format(error_desc))
 
+
 @app.route("/load_workspace", methods=["POST"])
 @cross_origin()
 def load_workspace():
@@ -174,9 +240,8 @@ def load_workspace():
     deep_model = DeepLearningWorkspaceDialog()
     check_valid_workspace = deep_model.check_workspace(workspace_path)
 
-    if(check_valid_workspace):
+    if (check_valid_workspace):
         data_repo.set_deep_model(data={"deep_model_path": workspace_path})
         return jsonify(check_valid_workspace)
 
     return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
-

@@ -1,3 +1,5 @@
+import dataType from "../../file/Dtypes";
+
 /**
  * This script contains all the interfaces for dataset_compo directory
 
@@ -212,16 +214,84 @@ export const InitIonRangeVec: IonRangeElement[] = [
 export type type_operation = "Data" | "Label" | "Weight";
 
 /**
+ * dtypes array
+ */
+export const dtypeList: dataType[] = [
+    {
+        value: "uint8",
+        label: "8-bit"
+    },
+    {
+        value: "int16",
+        label: "16-bit Signed"
+    },
+    {
+        value: "uint16",
+        label: "16-bit Unsigned"
+    },
+    {
+        value: "int32",
+        label: "32-bit Signed"
+    },
+    {
+        value: "uint32",
+        label: "32-bit Unsigned"
+    },
+    {
+        value: "int64",
+        label: "64-bit Signed"
+    },
+    {
+        value: "uint64",
+        label: "64-bit Unsigned"
+    },
+    {
+        value: "float32",
+        label: "32-bit Float"
+    },
+    {
+        value: "float64",
+        label: "64-bit Float"
+    },
+    {
+        value: "complex64",
+        label: "64-bit Complex"
+    }
+];
+
+export type dtype_type =
+    "uint8"
+    | "int16"
+    | "uint16"
+    | "int32"
+    | "uint32"
+    | "int64"
+    | "uint64"
+    | "float32"
+    | "float64"
+    | "complex64";
+
+/**
  * Build-in interface for Element of data and weight table
  */
-interface TableElement {
-    file: string,
+export interface TableElement {
+    fileName: string,
     shape: Array<number>,
-    type: string,
+    type: dtype_type,
     scan: string,
     time: number,
     size: number,
-    fullPath: string
+    filePath: string
+}
+
+export const InitFileStatus: TableElement = {
+    fileName: "",
+    shape: new Array(3),
+    type: "uint16",
+    scan: "",
+    time: 0,
+    size: 0,
+    filePath: ""
 }
 
 /**

@@ -7,20 +7,27 @@ import {
     IonItem,
     IonItemDivider,
     IonLabel,
-    IonList, IonPopover, IonRow
+    IonList, IonPopover, IonRow, IonSelect, IonSelectOption
 } from "@ionic/react";
 import {addOutline, closeOutline, construct, image, trashOutline} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import * as ReactBootStrap from "react-bootstrap";
-import {InitTables, TableInterface, type_operation} from "./DatasetInterfaces";
+import {
+    dtypeList,
+    InitFileStatus,
+    InitTables,
+    TableElement,
+    TableInterface,
+    type_operation
+} from "./DatasetInterfaces";
 import "./Tables.css";
 import "./Dataset.css";
 
 interface MultiplesPath {
     id: number,
     workspacePath: string,
-    filePath: string,
+    file: TableElement,
 }
 
 interface AddNewFileInterface {
@@ -49,7 +56,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     let pathFiles: MultiplesPath = {
         id: idMenu,
         workspacePath: "",
-        filePath: ""
+        file: InitFileStatus,
     };
 
     return (
@@ -86,12 +93,72 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                         <IonItem>
                             <IonLabel position="stacked">{typeOperation} Path</IonLabel>
                             <IonInput
-                                placeholder={`/path/to/${typeOperation}`}
-                                value={pathFiles.filePath}
+                                placeholder={`/path/to/${typeOperation}.tif, .tiff, .raw or .b`}
+                                value={pathFiles.file.filePath}
                                 onIonChange={(e: CustomEvent) => {
-                                    pathFiles.filePath = e.detail.value!
+                                    pathFiles.file.filePath = e.detail.value!
                                 }}/>
                         </IonItem>
+                        {/* Image Size Grid*/}
+                        <IonItem>
+                            <IonRow>
+                                <IonCol>
+                                    <IonLabel position="stacked">{typeOperation} Size</IonLabel>
+                                    <div style={{display: 'flex', justifyContent: 'flex-start'}}>
+                                        <IonInput
+                                            className={"ion-input"}
+                                            type="number"
+                                            min={"0"}
+                                            value={pathFiles.file.shape[0]}
+                                            placeholder="X"
+                                            onIonChange={(e: CustomEvent) => {
+                                                pathFiles.file.shape[0] = parseInt(e.detail.value!, 10);
+                                            }}
+                                        />
+                                        <IonInput
+                                            className={"ion-input"}
+                                            type="number"
+                                            min={"0"}
+                                            value={pathFiles.file.shape[1]}
+                                            placeholder="Y"
+                                            onIonChange={(e: CustomEvent) => {
+                                                pathFiles.file.shape[1] = parseInt(e.detail.value!, 10);
+                                            }}
+                                        />
+                                        <IonInput
+                                            className={"ion-input"}
+                                            type="number"
+                                            min={"0"}
+                                            value={pathFiles.file.shape[2]}
+                                            placeholder="Z"
+                                            onIonChange={(e: CustomEvent) => {
+                                                pathFiles.file.shape[3] = parseInt(e.detail.value!, 10);
+                                            }}
+                                        />
+                                    </div>
+                                </IonCol>
+                                <IonCol>
+                                    {/* Select dtype */}
+                                    <IonLabel position="stacked">{typeOperation} Type</IonLabel>
+                                    <IonSelect
+                                        style={{maxWidth: '100%'}}
+                                        interface={"popover"}
+                                        value={pathFiles.file.type}
+                                        placeholder={"Select One"}
+                                        onIonChange={(e: CustomEvent) => {
+                                            pathFiles.file.type = e.detail.value;
+                                        }}>
+                                        {dtypeList.map((type) => {
+                                            return (
+                                                <IonSelectOption
+                                                    value={type.value}>{type.label}</IonSelectOption>
+                                            );
+                                        })}
+                                    </IonSelect>
+                                </IonCol>
+                            </IonRow>
+                        </IonItem>
+                        <IonItemDivider/>
                     </IonList>
                 </IonAccordion>
             </IonAccordionGroup>
@@ -187,7 +254,7 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                 <IonAlert
                     isOpen={showAlert}
                     onDidDismiss={() => setShowAlert(false)}
-                    message={`Do you wish to delete the ${labelElement.typeOperation} with name "${labelElement.element.file}" ?`}
+                    message={`Do you wish to delete the ${labelElement.typeOperation} with name "${labelElement.element.filePath}" ?`}
                     buttons={[
                         {
                             text: "No",
@@ -206,7 +273,7 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                         }
                     ]}/>
             </IonButtons>
-            {labelElement.element.file}
+            {labelElement.element.filePath}
         </IonItem>
     );
 }
@@ -248,13 +315,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
+                    filePath: newFile.workspacePath + newFile.file.filePath,
                     shape: [0, 0, 0],
-                    type: "",
+                    type: newFile.file.type,
                     scan: "",
                     time: 0,
                     size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.workspacePath + newFile.file.filePath,
                 }
             }]);
         } else {
@@ -262,13 +329,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
+                    filePath: newFile.file.filePath,
                     shape: [0, 0, 0],
-                    type: "",
+                    type: newFile.file.type,
                     scan: "",
                     time: 0,
                     size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.workspacePath + newFile.file.filePath,
                 }
             }]);
         }
@@ -282,13 +349,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
+                    filePath: newFile.file.filePath,
                     shape: [0, 0, 0],
-                    type: "",
+                    type: newFile.file.type,
                     scan: "",
                     time: 0,
                     size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.workspacePath + newFile.file.filePath,
                 }
             }]);
         } else {
@@ -296,13 +363,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
+                    filePath: newFile.file.filePath,
                     shape: [0, 0, 0],
-                    type: "",
+                    type: newFile.file.type,
                     scan: "",
                     time: 0,
                     size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.workspacePath + newFile.file.filePath
                 }
             }]);
         }
@@ -316,13 +383,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
+                    filePath: newFile.file.filePath,
                     shape: [0, 0, 0],
-                    type: "",
+                    type: newFile.file.type,
                     scan: "",
                     time: 0,
                     size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.workspacePath + newFile.file.filePath
                 }
             }]);
         } else {
@@ -330,13 +397,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
+                    filePath: newFile.file.filePath,
                     shape: [0, 0, 0],
-                    type: "",
+                    type: newFile.file.type,
                     scan: "",
                     time: 0,
                     size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.workspacePath + newFile.file.filePath,
                 }
             }]);
         }
@@ -440,7 +507,7 @@ const SamplingComp: React.FC = () => {
                 </td>
                 <td>
                     <IonItem className={"ion-item-table"}>
-                        {labelElement.element.fullPath}
+                        {labelElement.element.fileName}
                     </IonItem>
                 </td>
             </tr>
@@ -644,12 +711,16 @@ const SamplingComp: React.FC = () => {
                                         <div style={{display: "flex", justifyContent: "flex-start"}}>
                                             <IonInput
                                                 type={"number"}
-                                                min={"0"} value={sampleElement.nClasses}
+                                                min={"0"}
+                                                max={"99"}
+                                                value={sampleElement.nClasses}
                                                 onIonChange={(e: CustomEvent) => {
-                                                    setSampleElement({
-                                                        ...sampleElement,
-                                                        nClasses: parseInt(e.detail.value!, 10)
-                                                    })
+                                                    if (e.detail.value <= 99) {
+                                                        setSampleElement({
+                                                            ...sampleElement,
+                                                            nClasses: parseInt(e.detail.value!, 10)
+                                                        })
+                                                    }
                                                 }}/>
                                         </div>
                                     </IonCol>

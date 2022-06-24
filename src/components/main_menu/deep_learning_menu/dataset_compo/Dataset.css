@@ -19,7 +19,8 @@ https://www.youtube.com/watch?v=ZCrQjk6PdK0
 Component used in ion-popover in SamplingComp.tsx
  */
 .add-menu {
-    --width: 380px;
+    --width: 25%;
+    --max-height: 33%;
 }
 
 /**
@@ -30,4 +31,11 @@ Component used in ion-popover in SamplingComp.tsx to delete an element of Bootst
     --min-width: 300px;
     --max-height: 650px;
     position: fixed !important;
+}
+
+/**
+Component used in ion-input in SamplingComp.tsx to center the text in data, label, weight size
+ */
+.ion-input {
+    text-align: center !important;
 }
