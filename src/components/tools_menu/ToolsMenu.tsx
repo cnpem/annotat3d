@@ -47,7 +47,7 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
     })
 
     useEffect(() => {
-        sfetch('POST', '/get_image_info/image', '', 'json')
+        sfetch('POST', '/get_image_info/image_info', '', 'json')
         .then((imgInfo:ImageInfoInterface) => {
             console.log('ToolsMenu: useEffect imgInfo: ', imageShape, ' > ', imgInfo.imageShape);
             setImageShape({

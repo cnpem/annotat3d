@@ -348,7 +348,7 @@ class Canvas {
 
 
     setImageShape() {         
-        sfetch('POST', '/get_image_info/image', '', 'json')
+        sfetch('POST', '/get_image_info/image_info', '', 'json')
         .then((imgInfo:ImageInfoInterface) => {
             const imageShape: ImageShapeInterface = {
                 x: imgInfo.imageShape.x,
