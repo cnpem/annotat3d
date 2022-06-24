@@ -14,6 +14,7 @@ import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import * as ReactBootStrap from "react-bootstrap";
 import {
+    dtype_type,
     dtypeList,
     InitFileStatus,
     InitTables,
@@ -23,6 +24,8 @@ import {
 } from "./DatasetInterfaces";
 import "./Tables.css";
 import "./Dataset.css";
+import {sfetch} from "../../../../utils/simplerequest";
+import ErrorInterface from "../../file/ErrorInterface";
 
 interface MultiplesPath {
     id: number,
@@ -36,6 +39,13 @@ interface AddNewFileInterface {
     onTableVec: (newFile: MultiplesPath, typeOperation: type_operation) => void,
     typeOperation: type_operation,
     trigger: string,
+}
+
+interface BackendPayload {
+    image_path: string,
+    image_dtype: dtype_type,
+    image_raw_shape: Array<number>,
+    use_image_raw_parse: boolean
 }
 
 /**
@@ -58,6 +68,25 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
         workspacePath: "",
         file: InitFileStatus,
     };
+
+    const readFile = () => {
+        const params: BackendPayload = {
+            image_path: pathFiles.workspacePath + pathFiles.file.filePath,
+            image_dtype: pathFiles.file.type,
+            image_raw_shape: [pathFiles.file.shape[0] || 0, pathFiles.file.shape[1] || 0, pathFiles.file.shape[2] || 0],
+            use_image_raw_parse: (pathFiles.file.shape[0] == null && pathFiles.file.shape[1] == null && pathFiles.file.shape[2] == null)
+        }
+
+        sfetch("POST", `/open_files_dataset/${typeOperation.toLowerCase()}-${pathFiles.id}`, JSON.stringify(params), "json").then(
+            (element: TableElement) => {
+                console.log("Backend response");
+                console.table(element);
+
+            }).catch((error: ErrorInterface) => {
+                console.log("oia o erro ai ");
+                console.log(error.error_msg);
+        })
+    }
 
     return (
         <IonPopover
@@ -169,6 +198,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                     console.log("type operation : ", typeOperation);
                     console.log("path");
                     console.table(pathFiles);
+                    readFile();
                     onTableVec(pathFiles, typeOperation);
                     pathFiles.id += 1;
                 }}>Load {typeOperation}</IonButton>

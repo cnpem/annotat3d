@@ -24,6 +24,12 @@ def _convert_dtype_to_str(img_dtype: np.dtype):
     return np.dtype(img_dtype).name
 
 
+def _debugger_print(msg: str, payload):
+    print("\n----------------------------------------------------------")
+    print("{} : {}".format(msg, payload))
+    print("-------------------------------------------------------------\n")
+
+
 @app.route("/open_files_dataset/<file_id>", methods=["POST"])
 @cross_origin()
 def open_files_dataset(file_id: str):
@@ -34,7 +40,7 @@ def open_files_dataset(file_id: str):
     :return:
     """
     try:
-        file_path = request.json["file_path"]
+        file_path = request.json["image_path"]
     except:
         return handle_exception("Error while trying to get the image path")
 
@@ -42,6 +48,10 @@ def open_files_dataset(file_id: str):
         file_dtype = request.json["image_dtype"]
     except:
         return handle_exception("Error while trying to get the image dtype")
+
+    _debugger_print("request in open files dataset", request.json)
+    _debugger_print("file_id", file_id)
+    _debugger_print("slipt file_id", file_id.split("-"))
 
     file = file_path.split("/")[-1]
     file_name, extension = os.path.splitext(file)
@@ -82,8 +92,13 @@ def open_files_dataset(file_id: str):
     except:
         return handle_exception(error_msg)
 
-    image_info = {"imageShape": image_shape, "imageExt": extension,
-                  "imageName": file_name, "imageDtype": image_dtype}
+    image_info = {"fileName": file_name,
+                  "shape": image_shape,
+                  "imageDtype": image_dtype,
+                  "scan": info,
+                  "time": 0,
+                  "size": 0,
+                  "filePath": file_path}
 
     return jsonify(image_info)
 
