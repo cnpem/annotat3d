@@ -70,4 +70,3 @@ def get_image_info(image_id: str):
     image_info = data_repo.get_info()
 
     return jsonify(image_info)
-

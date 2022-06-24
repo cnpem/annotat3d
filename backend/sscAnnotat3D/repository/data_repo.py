@@ -33,10 +33,10 @@ def get_annotation(key='annotation'):
 def delete_annotation(key='annotation'):
     del __annotations[key]
 
-def set_info(key='session_info', data: dict = None):
+def set_info(key='image_info', data: dict = None):
     if data is not None:
         __info[key] = data
 
-def get_info(key='session_info'):
+def get_info(key='image_info'):
     return __info.get(key)
 

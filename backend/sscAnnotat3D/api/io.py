@@ -81,7 +81,7 @@ def open_image(image_id: str):
     data_repo.set_image(key=image_id, data=image)
 
     image_info = {"imageShape": {'x':image_shape[2], 'y':image_shape[1], 'z':image_shape[0]}, "imageExt": extension,
-                    "imageName": file_name, "imageDtype": image_dtype}
+                    "imageName": file_name, "imageDtype": image_dtype, "imageFullPath": image_path}
 
     if image_id == 'image':
         data_repo.set_info(data=image_info)
@@ -124,7 +124,7 @@ def save_image(image_id: str):
         return handle_exception(save_status["error_msg"])
 
     image_shape = image.shape
-    image_info = {"imageShape": image_shape, "imageExt": save_status["extension"],
+    image_info = {"imageShape": {'x':image_shape[2], 'y':image_shape[1], 'z':image_shape[0]}, "imageExt": save_status["extension"],
                   "imageName": save_status["file_name"], "imageDtype": image_dtype}
 
     return jsonify(image_info)
@@ -186,3 +186,129 @@ def load_workspace():
 
     return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
 
+# crop functions
+
+@app.route("/crop_apply", methods=["POST"])
+@cross_origin()
+def crop_apply():
+    print('\n\nbruno: onApply:') 
+    image_id = 'image'
+    input_img = data_repo.get_image(image_id)
+
+    if input_img is None:
+        return handle_exception(f"Image {image_id} not found.")
+
+    image_info = data_repo.get_info(key='image_info')
+
+    cropX = request.json['cropX']
+    cropY = request.json['cropY']
+    cropZ = request.json['cropZ']
+
+    xlo, xhi = cropX['lower'], cropX['upper']
+    yloInv, yhiInv = cropY['lower'], cropY['upper']
+    zlo, zhi = cropZ['lower'], cropZ['upper']
+
+    crop_info = {
+        'isCropped': True,
+        'cropShape':  {'cropX':cropX, 'cropY':cropY, 'cropZ':cropZ},
+        'imageFullShape': image_info['imageShape']
+    }
+
+    # correcting upside down reference of the y axis
+    ylen = input_img.shape[1]
+    ylo = ylen - yhiInv - 1
+    yhi = ylen - yloInv - 1
+
+    output_img = input_img[zlo:zhi, ylo:yhi, xlo:xhi]
+    output_shape = output_img.shape
+
+  
+    data_repo.set_image(image_id, data=output_img)
+        
+    image_info['imageShape'] =  {'x':output_shape[2], 'y':output_shape[1], 'z':output_shape[0]}
+
+    data_repo.set_info(key='image_info', data=image_info)
+    data_repo.set_info(key='crop_info', data=crop_info)                      
+
+    return jsonify(image_info)    
+
+@app.route("/crop_merge", methods=["POST"])
+@cross_origin()
+def crop_merge():
+    print('\n\nbruno: onMerge:') 
+
+    crop_info = data_repo.get_info(key='crop_info')
+
+    if (not crop_info['isCropped']):
+        return handle_exception(f"Image is not a cropped image or doesn't have crop info.")
+
+    crop_img = data_repo.get_image('image')
+
+    if crop_img is None:
+        return handle_exception(f"Cropped image not found.")
+
+    image_info = data_repo.get_info(key='image_info')
+    
+    imageFullShape = crop_info['imageFullShape']
+
+    # opening big image again
+    
+    try:
+        full_image, info = sscIO.io.read_volume(image_info['imageFullPath'], 'numpy',
+                        shape=(imageFullShape['z'], imageFullShape['y'], imageFullShape['x']),
+                        dtype=image_info['imageDtype'])
+    except:
+        return handle_exception('Reopen original image failed')
+
+    image_info = data_repo.get_info(key='image_info')
+
+    output_img = full_image
+    
+    # ---
+    # manipulate label image, annotations and etc
+    # ---
+
+    # cropShape = crop_info['cropShape']    
+
+    # cropX = cropShape['cropX']
+    # cropY = cropShape['cropY']
+    # cropZ = cropShape['cropZ']
+
+    # xlo, xhi = cropX['lower'], cropX['upper']
+    # yloInv, yhiInv = cropY['lower'], cropY['upper']
+    # zlo, zhi = cropZ['lower'], cropZ['upper']
+
+    # # correcting upside down reference of the y axis
+    # ylen = input_img.shape[1]
+    # print('ylen: {ylen}, ylo: {ylo}, yhi: {yhi}'.format(ylen=ylen, ylo=yloInv, yhi=yhiInv))
+    # ylo = ylen - yhiInv - 1
+    # yhi = ylen - yloInv - 1
+    # print('ylo, yhi: ', ylo, yhi)
+
+    # output_label_img = np.zeros_like(full_image)
+    # small_label_img = ?
+    # output_label_img[zlo:zhi, ylo:yhi, xlo:xhi] = small_label_img
+
+    # output_img = input_img[zlo:zhi, ylo:yhi, xlo:xhi]
+    # output_shape = output_img.shapecrua_A_190x207x100_16b.raw
+
+    # print('cropX: ', cropX['lower'], cropX['upper'])
+    # print('output shape: ', output_img.shape)
+
+    data_repo.set_image('image', data=output_img)
+    # data_repo.set_image('label', data=output_label_img)
+        
+    # update infos
+    print('\nteste: ', imageFullShape)
+
+    image_info['imageShape'] =  imageFullShape
+    crop_info = {
+        'isCropped': False
+    }
+    
+    data_repo.set_info(key='image_info', data=image_info)
+    data_repo.set_info(key='crop_info', data=crop_info) 
+    print('image info: ',image_info)  
+    print('teste: ', jsonify(image_info))                  
+
+    return jsonify(image_info)

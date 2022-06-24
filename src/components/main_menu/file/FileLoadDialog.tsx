@@ -165,6 +165,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                     imageDtype: image.imageDtype,
                     imageName: image.imageName,
                     imageExt: image.imageExt,
+                    imageFullPath: image.imageFullPath
                 }
 
                 if (loadImgOp === "superpixel") {
@@ -299,7 +300,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setShowPopover({open: false, event: undefined});
         setPathFiles({
             workspacePath: pathFiles.workspacePath,
-            imagePath: "",
+            imagePath: pathFiles.imagePath, //bruno
             superpixelPath: "",
             labelPath: "",
             annotPath: ""
@@ -342,7 +343,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                 </IonItem>
                                 <IonList slot="content">
                                     <IonItem>
-                                        <IonLabel position="stacked">{"Superpixel Path"}</IonLabel>
+                                        <IonLabel position="stacked">{"Workspace Path"}</IonLabel>
                                         <IonInput
                                             placeholder={"/path/to/workspace"}
                                             value={pathFiles.workspacePath}
