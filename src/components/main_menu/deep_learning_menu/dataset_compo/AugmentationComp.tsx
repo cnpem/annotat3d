@@ -161,7 +161,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
             {/*Rotate -90 Degrees menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
-                    <IonIcon slot={"start"} icon={construct}/>
                     <IonLabel><small>Rotate -90 Degrees</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
@@ -180,7 +179,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
             {/*Contrast menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
-                    <IonIcon slot={"start"} icon={construct}/>
                     <IonLabel><small>Contrast</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
@@ -206,7 +204,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
             {/*Linear Contrast menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
-                    <IonIcon slot={"start"} icon={construct}/>
                     <IonLabel><small>Linear Contrast</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
@@ -232,7 +229,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
             {/*Dropout menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
-                    <IonIcon slot={"start"} icon={construct}/>
                     <IonLabel><small>Dropout</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
@@ -258,7 +254,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
             {/*Gaussian Blur menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
-                    <IonIcon slot={"start"} icon={construct}/>
                     <IonLabel><small>Gaussian Blur</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
@@ -284,7 +279,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
             {/*Average Blur menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
-                    <IonIcon slot={"start"} icon={construct}/>
                     <IonLabel><small>Average Blur</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
@@ -310,7 +304,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
             {/*Additive Poisson menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
-                    <IonIcon slot={"start"} icon={construct}/>
                     <IonLabel><small>Additive Poisson</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
@@ -336,7 +329,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
             {/*Elastic Deformation menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
-                    <IonIcon slot={"start"} icon={construct}/>
                     <IonLabel><small>Elastic Deformation</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
