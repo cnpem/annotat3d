@@ -92,6 +92,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
             console.log('CropMenu: onApply Success! ', img_info);
 
             dispatch('ImageLoaded', img_info); 
+            // dispatch('annotationChanged', null);
             onReset();
             const msg : string = 'Crop Applied cropShape: '+cropShape+' new imageShape:'+ img_info.imageShape;
             showToast(msg, toastTime);

@@ -4,7 +4,7 @@ import os.path
 
 import sscIO.io
 import numpy as np
-from sscAnnotat3D.repository import data_repo
+from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 
 from flask_cors import cross_origin
@@ -191,12 +191,24 @@ def load_workspace():
 @app.route("/crop_apply", methods=["POST"])
 @cross_origin()
 def crop_apply():
-    print('\n\nbruno: onApply:') 
-    image_id = 'image'
-    input_img = data_repo.get_image(image_id)
+    """
+    Replaces image with a smaller image based on the indexes given by cropX, cropY and cropZ 
+
+    Args:
+        No args. Uses information from data_repo and JSON package sent in POST.
+    Examples:
+        This is an example on how you can use this function to get the annotation using the id\n
+        sfetch("POST", "/crop_apply", JSON.stringify(cropShape), "json")
+
+    Returns:
+        (tuple[bool, int]): this function returns "True" and 200 if an annotation is available.Otherwise, this tuple will return "False" and error 400
+
+    """
+
+    input_img = data_repo.get_image('image')
 
     if input_img is None:
-        return handle_exception(f"Image {image_id} not found.")
+        return handle_exception(f"Image not found.")
 
     image_info = data_repo.get_info(key='image_info')
 
@@ -208,12 +220,6 @@ def crop_apply():
     yloInv, yhiInv = cropY['lower'], cropY['upper']
     zlo, zhi = cropZ['lower'], cropZ['upper']
 
-    crop_info = {
-        'isCropped': True,
-        'cropShape':  {'cropX':cropX, 'cropY':cropY, 'cropZ':cropZ},
-        'imageFullShape': image_info['imageShape']
-    }
-
     # correcting upside down reference of the y axis
     ylen = input_img.shape[1]
     ylo = ylen - yhiInv - 1
@@ -221,11 +227,15 @@ def crop_apply():
 
     output_img = input_img[zlo:zhi, ylo:yhi, xlo:xhi]
     output_shape = output_img.shape
-
   
-    data_repo.set_image(image_id, data=output_img)
+    data_repo.set_image('image', data=output_img)
         
     image_info['imageShape'] =  {'x':output_shape[2], 'y':output_shape[1], 'z':output_shape[0]}
+    crop_info = {
+        'isCropped': True,
+        'cropShape':  {'cropX':cropX, 'cropY':cropY, 'cropZ':cropZ},
+        'imageFullShape': image_info['imageShape']
+    }
 
     data_repo.set_info(key='image_info', data=image_info)
     data_repo.set_info(key='crop_info', data=crop_info)                      
@@ -235,7 +245,6 @@ def crop_apply():
 @app.route("/crop_merge", methods=["POST"])
 @cross_origin()
 def crop_merge():
-    print('\n\nbruno: onMerge:') 
 
     crop_info = data_repo.get_info(key='crop_info')
 
@@ -267,6 +276,31 @@ def crop_merge():
     # ---
     # manipulate label image, annotations and etc
     # ---
+
+    # cropShape = crop_info['cropShape']    
+
+    # cropX = cropShape['cropX']
+    # cropY = cropShape['cropY']
+    # cropZ = cropShape['cropZ']
+
+    # xlo, xhi = cropX['lower'], cropX['upper']
+    # yloInv, yhiInv = cropY['lower'], cropY['upper']
+    # zlo, zhi = cropZ['lower'], cropZ['upper']
+
+    # # correcting upside down reference of the y axis
+    # ylen = imageFullShape['y']
+    # ylo = ylen - yhiInv - 1
+    # yhi = ylen - yloInv - 1
+
+    # def isInside(coords):
+    #     zBox, yBox, xBox = coords
+    #     return 
+
+    # # annotation
+    # annot_module.load_annotation(annot_path)
+    # module_repo.set_module('annotation', module=annot_module)
+    # for coords in annot_module.get_annotation().keys():
+
 
     # cropShape = crop_info['cropShape']    
 
