@@ -9,7 +9,7 @@ import {
     IonLabel,
     IonList, IonPopover, IonRow, IonSelect, IonSelectOption
 } from "@ionic/react";
-import {addOutline, closeOutline, image, trashOutline} from "ionicons/icons";
+import {addOutline, closeOutline, construct, image, trashOutline} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import * as ReactBootStrap from "react-bootstrap";
@@ -63,6 +63,9 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        typeOperation,
                                                        trigger,
                                                    }) => {
+
+    const [workspacePath, setWorkspacePath] = useState<string>("");
+    const [filePath, setFilePath] = useState<string>("");
     let pathFiles: MultiplesPath = {
         id: idMenu,
         workspacePath: "",
@@ -70,6 +73,8 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     };
 
     const readFile = () => {
+        pathFiles.workspacePath = workspacePath;
+        pathFiles.file.filePath = filePath;
         const params: BackendPayload = {
             image_path: pathFiles.workspacePath + pathFiles.file.filePath,
             image_dtype: pathFiles.file.type,
@@ -96,11 +101,16 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
         <IonPopover
             trigger={trigger}
             className={"add-menu"}
-            onDidDismiss={() => onIdMenu(pathFiles.id, typeOperation)}>
+            onDidDismiss={() => {
+                onIdMenu(pathFiles.id, typeOperation);
+                setFilePath("");
+                setWorkspacePath("");
+            }}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
                 <IonAccordion>
                     <IonItem slot={"header"}>
+                        <IonIcon slot={"start"} icon={construct}/>
                         <IonLabel><small>Load {typeOperation} workspace</small></IonLabel>
                     </IonItem>
                     <IonList slot={"content"}>
@@ -108,9 +118,9 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                             <IonLabel position="stacked">Workspace Path</IonLabel>
                             <IonInput
                                 placeholder={"/path/to/workspace"}
-                                value={pathFiles.workspacePath}
+                                value={workspacePath}
                                 onIonChange={(e: CustomEvent) => {
-                                    pathFiles.workspacePath = e.detail.value!
+                                    setWorkspacePath(e.detail.value);
                                 }}/>
                         </IonItem>
                     </IonList>
@@ -126,9 +136,9 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                             <IonLabel position="stacked">{typeOperation} Path</IonLabel>
                             <IonInput
                                 placeholder={`/path/to/${typeOperation}.tif, .tiff, .raw or .b`}
-                                value={pathFiles.file.filePath}
+                                value={filePath}
                                 onIonChange={(e: CustomEvent) => {
-                                    pathFiles.file.filePath = e.detail.value!
+                                    setFilePath(e.detail.value);
                                 }}/>
                         </IonItem>
                         {/* Image Size Grid*/}
@@ -359,13 +369,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    filePath: newFile.file.fileName,
+                    fileName: newFile.file.fileName,
                     shape: newFile.file.shape,
                     type: newFile.file.type,
                     scan: newFile.file.type,
                     time: newFile.file.time,
                     size: newFile.file.size,
-                    fileName: newFile.file.filePath
+                    filePath: newFile.file.filePath
                 }
             }]);
         }
@@ -378,13 +388,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    filePath: newFile.file.filePath,
-                    shape: [0, 0, 0],
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
                     type: newFile.file.type,
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fileName: newFile.workspacePath + newFile.file.filePath,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
                 }
             }]);
         } else {
@@ -392,13 +402,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    filePath: newFile.file.filePath,
-                    shape: [0, 0, 0],
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
                     type: newFile.file.type,
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fileName: newFile.workspacePath + newFile.file.filePath
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
                 }
             }]);
         }
@@ -411,13 +421,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    filePath: newFile.file.filePath,
-                    shape: [0, 0, 0],
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
                     type: newFile.file.type,
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fileName: newFile.workspacePath + newFile.file.filePath
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
                 }
             }]);
         } else {
@@ -425,13 +435,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    filePath: newFile.file.filePath,
-                    shape: [0, 0, 0],
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
                     type: newFile.file.type,
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fileName: newFile.workspacePath + newFile.file.filePath,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
                 }
             }]);
         }

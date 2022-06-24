@@ -35,10 +35,17 @@ def _debugger_print(msg: str, payload):
 @cross_origin()
 def open_files_dataset(file_id: str):
     """
-    todo : need to see if this script is reading files using sscIO or others files
-    todo : it seems that ssc-deepsirius is using simpleITK for .tif files and numpy for .raw
-    :param file_id:
-    :return:
+    Function used to open files in dataset menu
+
+    Notes:
+        This function is used to read files in SamplingComp.tsx
+
+    Args:
+        file_id (str): string used to load a file based on this id
+
+    Returns:
+        (dict): This function returns a dict that contains information about the loaded file
+
     """
     try:
         file_path = request.json["image_path"]
@@ -101,7 +108,7 @@ def open_files_dataset(file_id: str):
                   "type": image_dtype,
                   "scan": info,
                   "time": np.round(end - start, 2),
-                  "size": np.round(image.nbytes/1000000, 2),
+                  "size": np.round(image.nbytes / 1000000, 2),
                   "filePath": file_path}
 
     if (file_id.split("-")[0] == "data"):
@@ -122,6 +129,20 @@ def open_files_dataset(file_id: str):
 @app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()
 def open_image(image_id: str):
+    """
+    Function used to open images, superpixel images or label images
+
+    Notes:
+        This function is used on FileLoadDialog.tsx
+
+    Args:
+        image_id (str): string that can be "image", "label" or "superpixel" used as key to load this images
+
+    Returns:
+        (dict): This function returns a dict that contains information about the loaded file
+
+    """
+
     try:
         image_path = request.json["image_path"]
     except:
@@ -181,6 +202,17 @@ def open_image(image_id: str):
 @app.route("/close_image/<image_id>", methods=["POST"])
 @cross_origin()
 def close_image(image_id: str):
+    """
+    Function used to close a file based on the id of the callout.
+
+    Args:
+        image_id (str): string that can be "image", "label" or "superpixel" used as key to close this images
+
+    Returns:
+        (str): Returns a string "success on deleting the image !" if the image was deleted and "failure trying to delete the image" otherwise
+
+    """
+
     try:
         data_repo.delete_image(key=image_id)
     except:
@@ -192,6 +224,20 @@ def close_image(image_id: str):
 @app.route("/save_image/<image_id>", methods=["POST"])
 @cross_origin()
 def save_image(image_id: str):
+    """
+    Function used to save an image, a superpixel or a label
+
+    Notes:
+        This function is used on FileSaveDialog.tsx
+
+    Args:
+        image_id (str): string that can be "image", "label" or "superpixel" used as key to save this images
+
+    Returns:
+        (dict): This function returns a dict that contains information about the loaded file
+
+    """
+
     try:
         image_path = request.json["image_path"]
     except:
