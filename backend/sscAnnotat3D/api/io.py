@@ -1,3 +1,4 @@
+import time
 from flask import Blueprint, request, jsonify
 from werkzeug.exceptions import BadRequest
 import os.path
@@ -72,7 +73,9 @@ def open_files_dataset(file_id: str):
     try:
         use_image_raw_parse = request.json["use_image_raw_parse"]
         if (extension in tif_extensions or use_image_raw_parse):
+            start = time.process_time()
             image, info = sscIO.io.read_volume(file_path, 'numpy')
+            end = time.process_time()
             error_msg = "No such file or directory {}".format(file_path)
 
             if (_convert_dtype_to_str(image.dtype) != file_dtype and (file_id == "image" or file_id == "label")):
@@ -80,10 +83,11 @@ def open_files_dataset(file_id: str):
 
         else:
             image_raw_shape = request.json["image_raw_shape"]
+            start = time.process_time()
             image, info = sscIO.io.read_volume(file_path, 'numpy',
                                                shape=(image_raw_shape[2], image_raw_shape[1], image_raw_shape[0]),
                                                dtype=file_dtype)
-
+            end = time.process_time()
             error_msg = "Unable to reshape the volume {} into shape {} and type {}. " \
                         "Please change the dtype and shape and load the image again".format(file, request.json[
                 "image_raw_shape"], file_dtype)
@@ -92,13 +96,25 @@ def open_files_dataset(file_id: str):
     except:
         return handle_exception(error_msg)
 
-    image_info = {"fileName": file_name,
+    image_info = {"fileName": file_name + extension,
                   "shape": image_shape,
-                  "imageDtype": image_dtype,
+                  "type": image_dtype,
                   "scan": info,
-                  "time": 0,
-                  "size": 0,
+                  "time": np.round(end - start, 2),
+                  "size": np.round(image.nbytes/1000000, 2),
                   "filePath": file_path}
+
+    if (file_id.split("-")[0] == "data"):
+        data_repo.set_dataset_data(key=file_id, data=image)
+
+    elif (file_id.split("-")[0] == "label"):
+        data_repo.set_dataset_label(key=file_id, label=image)
+
+    elif (file_id.split("-")[0] == "weight"):
+        data_repo.set_dataset_weight(key=file_id, weight=image)
+
+    else:
+        return handle_exception("invalid option \"{}\" to feed the back-end".format(file_id))
 
     return jsonify(image_info)
 

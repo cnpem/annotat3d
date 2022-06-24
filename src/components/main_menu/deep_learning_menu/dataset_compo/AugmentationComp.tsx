@@ -4,13 +4,12 @@ import {
     IonAccordionGroup,
     IonButton,
     IonCheckbox,
-    IonIcon, IonInput,
+    IonInput,
     IonItem,
     IonItemDivider,
     IonLabel,
     IonList, IonRange
 } from "@ionic/react";
-import {construct} from "ionicons/icons";
 import {AugmentationInterface, IonRangeElement} from "./DatasetInterfaces";
 import {isEqual} from "lodash";
 
@@ -108,7 +107,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
             {/*Vertical Flip menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
-                    <IonIcon slot={"start"} icon={construct}/>
                     <IonLabel><small>Vertical Flip</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
@@ -127,7 +125,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
             {/*Horizontal Flip menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
-                    <IonIcon slot={"start"} icon={construct}/>
                     <IonLabel><small>Horizontal Flip</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>
@@ -146,7 +143,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
             {/*Rotate 90 Degrees menu option*/}
             <IonAccordion>
                 <IonItem slot={"header"}>
-                    <IonIcon slot={"start"} icon={construct}/>
                     <IonLabel><small>Rotate 90 Degrees</small></IonLabel>
                 </IonItem>
                 <IonList slot={"content"}>

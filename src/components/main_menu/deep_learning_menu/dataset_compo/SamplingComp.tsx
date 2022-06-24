@@ -2,14 +2,14 @@ import React, {useState} from "react";
 import {
     IonAccordion,
     IonAccordionGroup, IonAlert, IonButton, IonButtons, IonCol,
-    IonContent,
-    IonIcon, IonInput,
+    IonContent, IonIcon,
+    IonInput,
     IonItem,
     IonItemDivider,
     IonLabel,
     IonList, IonPopover, IonRow, IonSelect, IonSelectOption
 } from "@ionic/react";
-import {addOutline, closeOutline, construct, image, trashOutline} from "ionicons/icons";
+import {addOutline, closeOutline, image, trashOutline} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import * as ReactBootStrap from "react-bootstrap";
@@ -81,10 +81,14 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
             (element: TableElement) => {
                 console.log("Backend response");
                 console.table(element);
+                pathFiles.file = element
+                onTableVec(pathFiles, typeOperation);
+                pathFiles.id += 1;
 
             }).catch((error: ErrorInterface) => {
-                console.log("oia o erro ai ");
-                console.log(error.error_msg);
+            //TODO : need to implement a error window here
+            console.log("oia o erro ai ");
+            console.log(error.error_msg);
         })
     }
 
@@ -97,7 +101,6 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 {/*Load workspace menu*/}
                 <IonAccordion>
                     <IonItem slot={"header"}>
-                        <IonIcon slot={"start"} icon={construct}/>
                         <IonLabel><small>Load {typeOperation} workspace</small></IonLabel>
                     </IonItem>
                     <IonList slot={"content"}>
@@ -199,8 +202,6 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                     console.log("path");
                     console.table(pathFiles);
                     readFile();
-                    onTableVec(pathFiles, typeOperation);
-                    pathFiles.id += 1;
                 }}>Load {typeOperation}</IonButton>
         </IonPopover>
     );
@@ -284,7 +285,7 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                 <IonAlert
                     isOpen={showAlert}
                     onDidDismiss={() => setShowAlert(false)}
-                    message={`Do you wish to delete the ${labelElement.typeOperation} with name "${labelElement.element.filePath}" ?`}
+                    message={`Do you wish to delete the ${labelElement.typeOperation} with name "${labelElement.element.fileName}" ?`}
                     buttons={[
                         {
                             text: "No",
@@ -303,7 +304,7 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                         }
                     ]}/>
             </IonButtons>
-            {labelElement.element.filePath}
+            {labelElement.element.fileName}
         </IonItem>
     );
 }
@@ -338,20 +339,19 @@ const SamplingComp: React.FC = () => {
         setOpenDeleteAll(flag);
     }
 
-    //TODO : need to implement the back-end function to read the images here
     const handleDataTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
         if (newFile.id === 0) {
             setDataTable([{
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    filePath: newFile.workspacePath + newFile.file.filePath,
-                    shape: [0, 0, 0],
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
                     type: newFile.file.type,
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fileName: newFile.workspacePath + newFile.file.filePath,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
                 }
             }]);
         } else {
@@ -359,20 +359,19 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    filePath: newFile.file.filePath,
-                    shape: [0, 0, 0],
+                    filePath: newFile.file.fileName,
+                    shape: newFile.file.shape,
                     type: newFile.file.type,
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fileName: newFile.workspacePath + newFile.file.filePath,
+                    scan: newFile.file.type,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    fileName: newFile.file.filePath
                 }
             }]);
         }
         setIdTableData(newFile.id + 1);
     }
 
-    //TODO : need to implement the back-end function to read the images here
     const handleLabelTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
         if (newFile.id === 0) {
             setLabelTable([{
@@ -406,7 +405,6 @@ const SamplingComp: React.FC = () => {
         setIdTableLabel(newFile.id + 1);
     }
 
-    //TODO : need to implement the back-end function to read the images here
     const handleWeightTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
         if (newFile.id === 0) {
             setWeightTable([{
@@ -527,17 +525,17 @@ const SamplingComp: React.FC = () => {
                 </td>
                 <td>
                     <IonItem className={"ion-item-table"}>
-                        {labelElement.element.time}
+                        {`${labelElement.element.time} s`}
                     </IonItem>
                 </td>
                 <td>
                     <IonItem className={"ion-item-table"}>
-                        {labelElement.element.size}
+                        {`${labelElement.element.size} MB`}
                     </IonItem>
                 </td>
                 <td>
                     <IonItem className={"ion-item-table"}>
-                        {labelElement.element.fileName}
+                        {labelElement.element.filePath}
                     </IonItem>
                 </td>
             </tr>
@@ -556,7 +554,6 @@ const SamplingComp: React.FC = () => {
                     {/*Data menu option*/}
                     <IonAccordion>
                         <IonItem slot={"header"}>
-                            <IonIcon slot={"start"} icon={construct}/>
                             <IonLabel><small>Data</small></IonLabel>
                         </IonItem>
                         <IonList slot={"content"}>
@@ -615,7 +612,6 @@ const SamplingComp: React.FC = () => {
                     {/*Label menu option*/}
                     <IonAccordion>
                         <IonItem slot={"header"}>
-                            <IonIcon slot={"start"} icon={construct}/>
                             <IonLabel><small>Label</small></IonLabel>
                         </IonItem>
                         <IonList slot={"content"}>
@@ -672,7 +668,6 @@ const SamplingComp: React.FC = () => {
                     {/*Weight menu option*/}
                     <IonAccordion>
                         <IonItem slot={"header"}>
-                            <IonIcon slot={"start"} icon={construct}/>
                             <IonLabel><small>Weight</small></IonLabel>
                         </IonItem>
                         <IonList slot={"content"}>
@@ -729,7 +724,6 @@ const SamplingComp: React.FC = () => {
                     {/*Sampling menu option*/}
                     <IonAccordion>
                         <IonItem slot={"header"}>
-                            <IonIcon slot={"start"} icon={construct}/>
                             <IonLabel><small>Sampling</small></IonLabel>
                         </IonItem>
                         <IonList slot={"content"}>
@@ -824,7 +818,6 @@ const SamplingComp: React.FC = () => {
                     onOpenWarningWindow={handleOpenDeleteAll}
                     typeOperation={typeOperation}
                     onTableList={resetTable}/>
-                <IonItemDivider/>
             </IonContent>
         </small>
     );
