@@ -25,7 +25,7 @@ def _convert_dtype_to_str(img_dtype: np.dtype):
     return np.dtype(img_dtype).name
 
 
-def _debugger_print(msg: str, payload):
+def _debugger_print(msg: str, payload: any):
     print("\n----------------------------------------------------------")
     print("{} : {}".format(msg, payload))
     print("-------------------------------------------------------------\n")
@@ -56,10 +56,6 @@ def open_files_dataset(file_id: str):
         file_dtype = request.json["image_dtype"]
     except:
         return handle_exception("Error while trying to get the image dtype")
-
-    _debugger_print("request in open files dataset", request.json)
-    _debugger_print("file_id", file_id)
-    _debugger_print("slipt file_id", file_id.split("-"))
 
     file = file_path.split("/")[-1]
     file_name, extension = os.path.splitext(file)
@@ -125,6 +121,62 @@ def open_files_dataset(file_id: str):
 
     return jsonify(image_info)
 
+
+@app.route("/close_files_dataset/<file_id>", methods=["POST"])
+@cross_origin()
+#TODO : need to document this function later
+def close_files_dataset(file_id: str):
+    if (file_id.split("-")[0] == "data"):
+        try:
+            data_repo.delete_dataset_data(key=file_id)
+            return jsonify("success on delete the key {} on data repository".format(file_id))
+        except:
+            return handle_exception("{} is a invalid key to get the data from repository".format(file_id))
+
+    elif (file_id.split("-")[0] == "label"):
+        try:
+            data_repo.delete_dataset_label(key=file_id)
+            return jsonify("success on delete the key {} on label repository".format(file_id))
+        except:
+            return handle_exception("{} is a invalid key to get the label from repository".format(file_id))
+
+    elif (file_id.split("-")[0] == "weight"):
+        try:
+            data_repo.delete_dataset_weight(key=file_id)
+            return jsonify("success on delete the key {} on weight repository".format(file_id))
+        except:
+            return handle_exception("{} is a invalid key to get the weight from repository".format(file_id))
+
+    else:
+        return handle_exception("{} is a invalid key".format(file_id))
+
+@app.route("/close_all_files_dataset/<file_id>", methods=["POST"])
+@cross_origin()
+#TODO : need to document this function later
+def close_all_files_dataset(file_id: str):
+    if (file_id.split("-")[0] == "data"):
+        try:
+            data_repo.delete_all_dataset_data()
+            return jsonify("success on delete all the keys from {} dataset".format(file_id))
+        except:
+            return handle_exception("{} is a invalid key to get the data from repository".format(file_id))
+
+    elif (file_id.split("-")[0] == "label"):
+        try:
+            data_repo.delete_all_dataset_label()
+            return jsonify("success on delete all the keys from {} dataset".format(file_id))
+        except:
+            return handle_exception("{} is a invalid key to get the label from repository".format(file_id))
+
+    elif (file_id.split("-")[0] == "weight"):
+        try:
+            data_repo.delete_all_dataset_weight()
+            return jsonify("success on delete all the keys from {} dataset".format(file_id))
+        except:
+            return handle_exception("{} is a invalid key to get the weight from repository".format(file_id))
+
+    else:
+        return handle_exception("{} is a invalid key".format(file_id))
 
 @app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()

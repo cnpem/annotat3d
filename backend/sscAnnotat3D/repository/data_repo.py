@@ -41,8 +41,11 @@ def set_dataset_data(key='data-0', data: np.ndarray = None):
 def get_dataset_data(key='data-0'):
     return __dataset_data_module[key]
 
-def del_dataset_data(key='data-0'):
+def delete_dataset_data(key='data-0'):
     del __dataset_data_module[key]
+
+def delete_all_dataset_data():
+    __dataset_data_module.clear()
 
 def set_dataset_label(key='label-0', label: np.ndarray = None):
     if label is not None:
@@ -51,8 +54,11 @@ def set_dataset_label(key='label-0', label: np.ndarray = None):
 def get_dataset_label(key='label-0'):
     return __dataset_label_module[key]
 
-def del_dataset_label(key='label-0'):
+def delete_dataset_label(key='label-0'):
     del __dataset_label_module[key]
+
+def delete_all_dataset_label():
+    __dataset_label_module.clear()
 
 def set_dataset_weight(key='weight-0', weight: np.ndarray = None):
     if weight is not None:
@@ -61,5 +67,8 @@ def set_dataset_weight(key='weight-0', weight: np.ndarray = None):
 def get_dataset_weight(key='weight-0'):
     return __dataset_weight_module[key]
 
-def del_dataset_weight(key='weight-0'):
+def delete_dataset_weight(key='weight-0'):
     del __dataset_weight_module[key]
+
+def delete_all_dataset_weight():
+    __dataset_weight_module.clear()

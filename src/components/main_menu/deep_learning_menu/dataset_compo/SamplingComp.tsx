@@ -258,8 +258,14 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                     text: "Yes",
                     id: "yes-button",
                     handler: () => {
-                        onTableList(typeOperation);
-                        onOpenWarningWindow(false);
+                        sfetch("POST", `/close_all_files_dataset/${typeOperation.toLowerCase()}`).then(() => {
+                            onTableList(typeOperation);
+                            onOpenWarningWindow(false);
+                        }).catch((error: ErrorInterface) => {
+                            //TODO : need to implement the error window here
+                            console.log(`error in delete all ${typeOperation}`);
+                            console.log(error.error_msg);
+                        })
                     }
                 }
             ]}/>
@@ -308,8 +314,15 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                             text: "Yes",
                             id: "yes-button",
                             handler: () => {
-                                removeLabelElement(labelElement);
-                                setShowAlert(false);
+                                sfetch("POST", `/close_files_dataset/${labelElement.typeOperation.toLowerCase()}-${labelElement.id}`, "json").then(
+                                    () => {
+                                        removeLabelElement(labelElement);
+                                        setShowAlert(false);
+                                    }
+                                ).catch((error: ErrorInterface) => {
+                                    //TODO : need to implement a error window here
+                                    console.log("error msg : ", error.error_msg);
+                                });
                             }
                         }
                     ]}/>
