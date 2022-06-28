@@ -1077,6 +1077,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             </div>
         );
     }
-};
+}
 
 export default CanvasContainer;

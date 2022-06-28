@@ -27,9 +27,10 @@ Component used in ion-popover in SamplingComp.tsx
 Component used to show the preview menu in AugmentationComp.tsx
  */
 .preview-popover {
-    position: fixed;
-    top: 50%;
-    transform: translate(-50%, -50%) !important;
+    top: 75%;
+    left: -20%;
+    height: 160% !important;
+    transform: translate(-50%, -50%);
 }
 
 /**

@@ -73,6 +73,13 @@ class Canvas {
     }
 
     recenter(w: number = this.x, h: number = this.y) {
+        const test = {
+            w: w,
+            x: this.x,
+            h: h,
+            y: this.y
+        }
+        console.table(test);
         this.viewport.moveCenter(w / 2, h / 2);
         this.viewport.fit(true, w, h);
     }
@@ -132,8 +139,7 @@ class Canvas {
         this.x = x;
         this.y = y;
 
-        const texture = this.textureFromSlice(uint8data, x, y);
-        this.slice.texture = texture;
+        this.slice.texture = this.textureFromSlice(uint8data, x, y);
     }
 
     resize() {
@@ -203,7 +209,9 @@ class PreviewContainer extends Component<IPreviewProps> {
                 this.canvas!.resize();
             });
 
-
+            //Maybe i'll need to use this commands later
+            // this.canvas?.setSliceNum(this.props.slice);
+            // this.canvas?.setAxis(this.props.axis);
             this.fetchAll(true);
 
             // Place the subscribed events here

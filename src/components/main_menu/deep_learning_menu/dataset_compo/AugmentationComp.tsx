@@ -120,10 +120,17 @@ const CanvasPopupComp: React.FC<CanvasPopupInterface> = ({trigger, isOpen}) => {
         <IonPopover
             trigger={trigger}
             className={"preview-popover"}>
-            <IonContent fullscreen>
-                <PreviewContainer
-                    slice={sliceInfo.slice}
-                    axis={sliceInfo.axis}/>
+            <IonContent>
+                <IonItem>
+                    <PreviewContainer
+                        slice={sliceInfo.slice}
+                        axis={sliceInfo.axis}/>
+                    <IonItemDivider/>
+                    <PreviewContainer
+                        slice={sliceInfo.slice}
+                        axis={sliceInfo.axis}/>
+                </IonItem>
+                <IonRange/>
             </IonContent>
         </IonPopover>
     );
