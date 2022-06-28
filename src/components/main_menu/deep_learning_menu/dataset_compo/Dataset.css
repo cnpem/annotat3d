@@ -28,7 +28,9 @@ Component used to show the preview menu in AugmentationComp.tsx
  */
 .preview-popover {
     top: 75%;
-    left: -20%;
+    left: -14%;
+    --max-height: 100% !important;
+    width: 100% !important;
     height: 160% !important;
     transform: translate(-50%, -50%);
 }

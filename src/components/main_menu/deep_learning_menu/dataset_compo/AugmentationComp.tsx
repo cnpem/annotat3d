@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useRef, useState} from "react";
+import React, {Fragment, useEffect, useRef} from "react";
 import {
     IonAccordion,
     IonAccordionGroup,
@@ -8,12 +8,10 @@ import {
     IonItem,
     IonItemDivider,
     IonLabel,
-    IonList, IonPopover, IonRange
+    IonList, IonRange
 } from "@ionic/react";
 import {AugmentationInterface, IonRangeElement} from "./DatasetInterfaces";
 import {isEqual} from "lodash";
-import {SliceInfoInterface} from "../../../tools_menu/SliceInfoInterface";
-import PreviewContainer from "./CanvasPreviewImgs";
 
 interface CheckedElements {
     checkedVector: AugmentationInterface[];
@@ -99,42 +97,69 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onI
     );
 }
 
-interface CanvasPopupInterface {
-    trigger: string,
-    isOpen: boolean,
-}
-
-const CanvasPopupComp: React.FC<CanvasPopupInterface> = ({trigger, isOpen}) => {
-    const [sliceInfo, setSliceInfo] = useState<SliceInfoInterface>({axis: 'XY', slice: 0});
-
-    // Maybe i'll use this later
-    // useEventBus('sliceChanged', (payload: SliceInfoInterface) => {
-    //     setSliceInfo(payload);
-    //     sfetch('POST', '/close_image/future')
-    //     .then(() => {
-    //         dispatch('futureChanged', null)
-    //     });
-    // });
-
-    return (
-        <IonPopover
-            trigger={trigger}
-            className={"preview-popover"}>
-            <IonContent>
-                <IonItem>
-                    <PreviewContainer
-                        slice={sliceInfo.slice}
-                        axis={sliceInfo.axis}/>
-                    <IonItemDivider/>
-                    <PreviewContainer
-                        slice={sliceInfo.slice}
-                        axis={sliceInfo.axis}/>
-                </IonItem>
-                <IonRange/>
-            </IonContent>
-        </IonPopover>
-    );
-}
+// TODO : Create a component like this to create the canvas for this component
+// const CanvasPopupComp: React.FC<CanvasPopupInterface> = ({trigger}) => {
+//     const [sliceInfo, setSliceInfo] = useState<SliceInfoInterface>({axis: 'XY', slice: 0});
+//     const [sliceValue, setSliceValue] = useState<number>(0);
+//     const [sliceName, setSliceName] = useState<slice_name>("XY");
+//     const maxValSlider: Record<slice_name, number> = {
+//         'XY': 100,
+//         'XZ': 100,
+//         'YZ': 100,
+//     };
+//
+//     const handleSliceValue = (e: CustomEvent) => {
+//         console.log("opa, bão ?")
+//         setSliceValue(+e.detail.value);
+//         const payload: SliceInfoInterface = {
+//             axis: sliceName,
+//             slice: +e.detail.value
+//         };
+//     }
+//
+//     const handleSliceName = (e: CustomEvent) => {
+//         const curSliceName = e.detail.value as slice_name;
+//         setSliceName(curSliceName);
+//         const maxSliceValue = maxValSlider[curSliceName];
+//         if (sliceValue > maxSliceValue) {
+//             setSliceValue(maxSliceValue);
+//         }
+//
+//         const payload: SliceInfoInterface = {
+//             axis: e.detail.value,
+//             slice: sliceValue
+//         };
+//
+//     }
+//
+//     // Maybe i'll use this later
+//     // useEventBus('sliceChanged', (payload: SliceInfoInterface) => {
+//     //     setSliceInfo(payload);
+//     //     sfetch('POST', '/close_image/future')
+//     //     .then(() => {
+//     //         dispatch('futureChanged', null)
+//     //     });
+//     // });
+//
+//     return (
+//         <IonPopover
+//             trigger={trigger}
+//             className={"preview-popover"}>
+//             <IonContent>
+//                 <IonItem>
+//                     <PreviewContainer
+//                         slice={sliceInfo.slice}
+//                         axis={sliceInfo.axis}/>
+//                     <IonItemDivider/>
+//                     <PreviewContainer
+//                         slice={sliceInfo.slice}
+//                         axis={sliceInfo.axis}/>
+//                 </IonItem>
+//                 <IonRange/>
+//             </IonContent>
+//         </IonPopover>
+//     );
+// }
 
 /**
  * Component that hold all the Argumentation options
@@ -165,7 +190,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                     Preview
                                 </IonButton>
                             </div>
-                            <CanvasPopupComp trigger={"vertical-flip"} isOpen={true}></CanvasPopupComp>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>

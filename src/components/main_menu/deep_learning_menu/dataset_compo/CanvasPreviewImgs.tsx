@@ -4,8 +4,13 @@ import {NdArray, TypedArray} from "ndarray";
 import {sfetch} from "../../../../utils/simplerequest";
 import {dispatch, subscribe, unsubscribe} from "../../../../utils/eventbus";
 import {clamp} from "../../../../utils/math";
-import {Component} from "react";
+import {Component, Fragment} from "react";
 import {debounce, isEqual} from "lodash";
+import {IonCol, IonItem, IonItemDivider, IonRow} from "@ionic/react";
+
+/**
+ * This component creates the canvas for preview canvas
+ */
 
 class Canvas {
 
@@ -160,12 +165,16 @@ interface IPreviewProps {
 
 class PreviewContainer extends Component<IPreviewProps> {
     pixi_container: HTMLDivElement | null;
+    pixi_container_preview: HTMLDivElement | null;
     canvas: Canvas | null;
+    canvas_preview: Canvas | null;
 
     constructor(props: IPreviewProps) {
         super(props);
         this.pixi_container = null;
+        this.pixi_container_preview = null;
         this.canvas = null;
+        this.canvas_preview = null;
     }
 
     fetchAll = (recenter: boolean = false) => {
@@ -174,6 +183,7 @@ class PreviewContainer extends Component<IPreviewProps> {
             () => {
                 if (recenter) {
                     this.canvas!.recenter()
+                    this.canvas_preview!.recenter()
                 }
             }
         );
@@ -192,6 +202,7 @@ class PreviewContainer extends Component<IPreviewProps> {
         return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
             .then(imgSlice => {
                 this.canvas!!.setImage(imgSlice);
+                this.canvas_preview!!.setImage(imgSlice);
             });
     }
 
@@ -200,13 +211,18 @@ class PreviewContainer extends Component<IPreviewProps> {
         const elem = this.pixi_container;
         if (this && elem) {
             this.canvas = new Canvas(elem, this.props.axis, this.props.slice);
-            setTimeout(() => this.canvas!.resize(), 200);
+            this.canvas_preview = new Canvas(elem, this.props.axis, this.props.slice);
+            setTimeout(() => {
+                this.canvas!.resize();
+                this.canvas_preview!.resize()
+            }, 200);
             console.log(this.canvas.viewport);
             console.log(this.pixi_container);
 
             window.addEventListener('resize', (evt) => {
                 console.log('resize ', evt);
                 this.canvas!.resize();
+                this.canvas_preview!.resize();
             });
 
             //Maybe i'll need to use this commands later
@@ -226,15 +242,32 @@ class PreviewContainer extends Component<IPreviewProps> {
         this.setState({...this.state, future_sight_on: false});
         this.canvas?.setSliceNum(this.props.slice);
         this.canvas?.setAxis(this.props.axis);
+        this.canvas_preview?.setSliceNum(this.props.slice);
+        this.canvas_preview?.setAxis(this.props.axis);
         this.fetchAllDebounced(true);
     }
 
     render() {
         return (
-            <div
-                id={"preview-root"}
-                style={{"backgroundColor": "transparent"}}
-                ref={elem => this.pixi_container = elem}/>
+            <Fragment>
+                <IonItem>
+                    <IonRow>
+                        <IonCol>
+                            <div
+                                id={"preview-root"}
+                                style={{"backgroundColor": "transparent"}}
+                                ref={elem => this.pixi_container = elem}/>
+                        </IonCol>
+                        <IonItemDivider/>
+                        <IonCol>
+                            <div
+                                id={"preview-root-2"}
+                                style={{"backgroundColor": "transparent"}}
+                                ref={elem => this.pixi_container_preview = elem}/>
+                        </IonCol>
+                    </IonRow>
+                </IonItem>
+            </Fragment>
         );
     }
 
