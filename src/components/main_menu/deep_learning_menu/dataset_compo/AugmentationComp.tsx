@@ -1,19 +1,19 @@
-import React, {Fragment, useEffect, useRef} from "react";
+import React, {Fragment, useEffect, useRef, useState} from "react";
 import {
     IonAccordion,
     IonAccordionGroup,
     IonButton,
-    IonCheckbox, IonCol, IonContent, IonHeader, IonIcon,
+    IonCheckbox, IonContent,
     IonInput,
     IonItem,
     IonItemDivider,
     IonLabel,
-    IonList, IonPopover, IonRange, IonRow, IonSelect, IonSelectOption, IonTitle, IonToolbar
+    IonList, IonPopover, IonRange
 } from "@ionic/react";
-import {AugmentationInterface, dtypeList, IonRangeElement} from "./DatasetInterfaces";
+import {AugmentationInterface, IonRangeElement} from "./DatasetInterfaces";
 import {isEqual} from "lodash";
-import CanvasContainer from "../../../canvas/CanvasContainer";
-import {construct, image} from "ionicons/icons";
+import {SliceInfoInterface} from "../../../tools_menu/SliceInfoInterface";
+import PreviewContainer from "./CanvasPreviewImgs";
 
 interface CheckedElements {
     checkedVector: AugmentationInterface[];
@@ -105,88 +105,26 @@ interface CanvasPopupInterface {
 }
 
 const CanvasPopupComp: React.FC<CanvasPopupInterface> = ({trigger, isOpen}) => {
-    // <CanvasContainer canvasMode={canvasMode}
-    //                              axis={sliceInfo.axis} slice={sliceInfo.slice}
+    const [sliceInfo, setSliceInfo] = useState<SliceInfoInterface>({axis: 'XY', slice: 0});
+
+    // Maybe i'll use this later
+    // useEventBus('sliceChanged', (payload: SliceInfoInterface) => {
+    //     setSliceInfo(payload);
+    //     sfetch('POST', '/close_image/future')
+    //     .then(() => {
+    //         dispatch('futureChanged', null)
+    //     });
+    // });
 
     return (
         <IonPopover
             trigger={trigger}
-            className={"add-menu"}>
-            <IonAccordionGroup multiple={true}>
-                {/*Load workspace menu*/}
-                <IonAccordion>
-                    <IonItem slot={"header"}>
-                        <IonIcon slot={"start"} icon={construct}/>
-                        <IonLabel><small>Load workspace</small></IonLabel>
-                    </IonItem>
-                    <IonList slot={"content"}>
-                        <IonItem>
-                            <IonLabel position="stacked">Workspace Path</IonLabel>
-                            <IonInput
-                                placeholder={"/path/to/workspace"}/>
-                        </IonItem>
-                    </IonList>
-                </IonAccordion>
-                {/*Load type menu*/}
-                <IonAccordion>
-                    <IonItem slot={"header"}>
-                        <IonIcon slot={"start"} icon={image}/>
-                        <IonLabel><small>Load</small></IonLabel>
-                    </IonItem>
-                    <IonList slot={"content"}>
-                        <IonItem>
-                            <IonLabel position="stacked">Path</IonLabel>
-                            <IonInput/>
-                        </IonItem>
-                        {/* Image Size Grid*/}
-                        <IonItem>
-                            <IonRow>
-                                <IonCol>
-                                    <IonLabel position="stacked">Size</IonLabel>
-                                    <div style={{display: 'flex', justifyContent: 'flex-start'}}>
-                                        <IonInput
-                                            className={"ion-input"}
-                                            type="number"
-                                            min={"0"}
-                                            placeholder="X"/>
-                                        <IonInput
-                                            className={"ion-input"}
-                                            type="number"
-                                            min={"0"}
-                                            placeholder="Y"/>
-                                        <IonInput
-                                            className={"ion-input"}
-                                            type="number"
-                                            min={"0"}
-                                            placeholder="Z"/>
-                                    </div>
-                                </IonCol>
-                                <IonCol>
-                                    {/* Select dtype */}
-                                    <IonLabel position="stacked">Type</IonLabel>
-                                    <IonSelect
-                                        style={{maxWidth: '100%'}}
-                                        interface={"popover"}
-                                        placeholder={"Select One"}>
-                                        {dtypeList.map((type) => {
-                                            return (
-                                                <IonSelectOption
-                                                    value={type.value}>{type.label}</IonSelectOption>
-                                            );
-                                        })}
-                                    </IonSelect>
-                                </IonCol>
-                            </IonRow>
-                        </IonItem>
-                        <IonItemDivider/>
-                    </IonList>
-                </IonAccordion>
-            </IonAccordionGroup>
-            <IonButton
-                size={"default"}
-                color={"tertiary"}
-                onClick={() => {
-                }}>Load</IonButton>
+            className={"preview-popover"}>
+            <IonContent fullscreen>
+                <PreviewContainer
+                    slice={sliceInfo.slice}
+                    axis={sliceInfo.axis}/>
+            </IonContent>
         </IonPopover>
     );
 }
@@ -195,9 +133,6 @@ const CanvasPopupComp: React.FC<CanvasPopupInterface> = ({trigger, isOpen}) => {
  * Component that hold all the Argumentation options
  */
 const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVector, ionRangeVec, onIonRangeVec}) => {
-    const darkMode = true;
-    const NAME_WIDTH = "col-3";
-
     return (
         <small>
             <IonContent

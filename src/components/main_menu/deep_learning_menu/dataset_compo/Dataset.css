@@ -24,6 +24,15 @@ Component used in ion-popover in SamplingComp.tsx
 }
 
 /**
+Component used to show the preview menu in AugmentationComp.tsx
+ */
+.preview-popover {
+    position: fixed;
+    top: 50%;
+    transform: translate(-50%, -50%) !important;
+}
+
+/**
 Component used in ion-popover in SamplingComp.tsx to delete an element of Bootstrap-table
  */
 .delete-popover::part(content) {

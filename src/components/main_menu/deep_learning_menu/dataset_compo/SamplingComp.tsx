@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {Fragment, useState} from "react";
 import {
     IonAccordion,
     IonAccordionGroup, IonAlert, IonButton, IonButtons, IonCol,
@@ -26,6 +26,7 @@ import "./Tables.css";
 import "./Dataset.css";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
+import ErrorWindowComp from "../../file/ErrorWindowComp";
 
 interface MultiplesPath {
     id: number,
@@ -45,7 +46,7 @@ interface BackendPayload {
     image_path: string,
     image_dtype: dtype_type,
     image_raw_shape: Array<number>,
-    use_image_raw_parse: boolean
+    use_image_raw_parse: boolean,
 }
 
 /**
@@ -64,6 +65,8 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        trigger,
                                                    }) => {
 
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
     const [workspacePath, setWorkspacePath] = useState<string>("");
     const [filePath, setFilePath] = useState<string>("");
     let pathFiles: MultiplesPath = {
@@ -71,6 +74,14 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
         workspacePath: "",
         file: InitFileStatus,
     };
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
 
     const readFile = () => {
         pathFiles.workspacePath = workspacePath;
@@ -91,9 +102,10 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 pathFiles.id += 1;
 
             }).catch((error: ErrorInterface) => {
-            //TODO : need to implement a error window here
-            console.log("oia o erro ai ");
+            console.log("error while trying to add an image")
             console.log(error.error_msg);
+            setErrorMsg(error.error_msg);
+            setShowErrorWindow(true);
         })
     }
 
@@ -213,6 +225,12 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                     console.table(pathFiles);
                     readFile();
                 }}>Load {typeOperation}</IonButton>
+            <ErrorWindowComp
+                headerMsg={`Error trying to add an element in ${typeOperation} table`}
+                errorMsg={errorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
         </IonPopover>
     );
 }
@@ -227,7 +245,6 @@ interface WarningWindowInterface {
 
 /**
  * Component used to create an ion-Alert to delete all elements of a table
- * @todo : need to implement the backend function later
  * @param openWarningWindow {boolean} - boolean variable to open this window
  * @param onOpenWarningWindow {(flag: boolean) => void} - handler for openWarningWindow
  * @param typeOperation {type_operation} - type of operation to delete
@@ -239,36 +256,55 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                                                                typeOperation,
                                                                onTableList
                                                            }) => {
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
 
     return (
-        <IonAlert
-            isOpen={openWarningWindow}
-            onDidDismiss={() => onOpenWarningWindow(false)}
-            header={`Deleting all ${typeOperation}s`}
-            message={`Do you wish to delete all ${typeOperation}s ?`}
-            buttons={[
-                {
-                    text: "No",
-                    id: "no-button",
-                    handler: () => {
-                        onOpenWarningWindow(false);
-                    }
-                },
-                {
-                    text: "Yes",
-                    id: "yes-button",
-                    handler: () => {
-                        sfetch("POST", `/close_all_files_dataset/${typeOperation.toLowerCase()}`).then(() => {
-                            onTableList(typeOperation);
+        <Fragment>
+            <IonAlert
+                isOpen={openWarningWindow}
+                onDidDismiss={() => onOpenWarningWindow(false)}
+                header={`Deleting all ${typeOperation}s`}
+                message={`Do you wish to delete all ${typeOperation}s ?`}
+                buttons={[
+                    {
+                        text: "No",
+                        id: "no-button",
+                        handler: () => {
                             onOpenWarningWindow(false);
-                        }).catch((error: ErrorInterface) => {
-                            //TODO : need to implement the error window here
-                            console.log(`error in delete all ${typeOperation}`);
-                            console.log(error.error_msg);
-                        })
+                        }
+                    },
+                    {
+                        text: "Yes",
+                        id: "yes-button",
+                        handler: () => {
+                            sfetch("POST", `/close_all_files_dataset/${typeOperation.toLowerCase()}`).then(() => {
+                                onTableList(typeOperation);
+                                onOpenWarningWindow(false);
+                            }).catch((error: ErrorInterface) => {
+                                console.log(`error in delete all ${typeOperation}`);
+                                console.log(error.error_msg);
+                                setErrorMsg(error.error_msg);
+                                setShowErrorWindow(true);
+                            })
+                        }
                     }
-                }
-            ]}/>
+                ]}/>
+            <ErrorWindowComp
+                headerMsg={`Error trying to delete all files in ${typeOperation} table`}
+                errorMsg={errorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
+        </Fragment>
     )
 }
 
@@ -284,6 +320,17 @@ interface DeleteMenuInterface {
  */
 const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelElement}) => {
     const [showAlert, setShowAlert] = useState<boolean>(false);
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
+
     return (
         <IonItem className={"ion-item-table"}
                  id={"file-name-comp"}>
@@ -320,14 +367,22 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                                         setShowAlert(false);
                                     }
                                 ).catch((error: ErrorInterface) => {
-                                    //TODO : need to implement a error window here
+                                    console.log("Error while deleting an element");
                                     console.log("error msg : ", error.error_msg);
+                                    setErrorMsg(error.error_msg);
+                                    setShowErrorWindow(true);
                                 });
                             }
                         }
                     ]}/>
             </IonButtons>
             {labelElement.element.fileName}
+            <ErrorWindowComp
+                headerMsg={`Error trying to delete all files in ${labelElement.typeOperation} table`}
+                errorMsg={errorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
         </IonItem>
     );
 }

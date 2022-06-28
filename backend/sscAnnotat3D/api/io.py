@@ -124,59 +124,90 @@ def open_files_dataset(file_id: str):
 
 @app.route("/close_files_dataset/<file_id>", methods=["POST"])
 @cross_origin()
-#TODO : need to document this function later
 def close_files_dataset(file_id: str):
+    """
+    Function that close a file in dataset menu using an id as reference
+
+     Notes:
+        This function is used to read files in SamplingComp.tsx
+
+    Args:
+        file_id (str): an id used to delete the image
+
+    Examples:
+        the id received is always data-n, label-n or weight-n
+
+    Returns:
+        (str): returns a string "success on delete the key data-n\ label-n\ weight-n on data repository" on success and "data-n\ label-n\ weight-n is an invalid key to get the data from repository" otherwise.
+
+    """
     if (file_id.split("-")[0] == "data"):
         try:
             data_repo.delete_dataset_data(key=file_id)
             return jsonify("success on delete the key {} on data repository".format(file_id))
         except:
-            return handle_exception("{} is a invalid key to get the data from repository".format(file_id))
+            return handle_exception("{} is an invalid key to get the data from repository".format(file_id))
 
     elif (file_id.split("-")[0] == "label"):
         try:
             data_repo.delete_dataset_label(key=file_id)
             return jsonify("success on delete the key {} on label repository".format(file_id))
         except:
-            return handle_exception("{} is a invalid key to get the label from repository".format(file_id))
+            return handle_exception("{} is an invalid key to get the label from repository".format(file_id))
 
     elif (file_id.split("-")[0] == "weight"):
         try:
             data_repo.delete_dataset_weight(key=file_id)
             return jsonify("success on delete the key {} on weight repository".format(file_id))
         except:
-            return handle_exception("{} is a invalid key to get the weight from repository".format(file_id))
+            return handle_exception("{} is an invalid key to get the weight from repository".format(file_id))
 
     else:
-        return handle_exception("{} is a invalid key".format(file_id))
+        return handle_exception("{} is an invalid key".format(file_id))
 
 @app.route("/close_all_files_dataset/<file_id>", methods=["POST"])
 @cross_origin()
 #TODO : need to document this function later
 def close_all_files_dataset(file_id: str):
+    """
+        Function that close all files in dataset menu using an id as reference
+
+         Notes:
+            This function is used to read files in SamplingComp.tsx
+
+        Args:
+            file_id (str): an id used to delete all the images
+
+        Examples:
+            the id received is always data, label or weight
+
+        Returns:
+            (str): returns a string "success on delete all the keys from data\ label\ weight dataset" on success and "data\ label\ weight is an invalid key to delete the data from repository" otherwise.
+
+        """
     if (file_id.split("-")[0] == "data"):
         try:
             data_repo.delete_all_dataset_data()
             return jsonify("success on delete all the keys from {} dataset".format(file_id))
         except:
-            return handle_exception("{} is a invalid key to get the data from repository".format(file_id))
+            return handle_exception("{} is an invalid key to delete the data from repository".format(file_id))
 
     elif (file_id.split("-")[0] == "label"):
         try:
             data_repo.delete_all_dataset_label()
             return jsonify("success on delete all the keys from {} dataset".format(file_id))
         except:
-            return handle_exception("{} is a invalid key to get the label from repository".format(file_id))
+            return handle_exception("{} is an invalid key to delete the label from repository".format(file_id))
 
     elif (file_id.split("-")[0] == "weight"):
         try:
             data_repo.delete_all_dataset_weight()
             return jsonify("success on delete all the keys from {} dataset".format(file_id))
         except:
-            return handle_exception("{} is a invalid key to get the weight from repository".format(file_id))
+            return handle_exception("{} is an invalid key to delete the weight from repository".format(file_id))
 
     else:
-        return handle_exception("{} is a invalid key".format(file_id))
+        return handle_exception("{} is an invalid key".format(file_id))
 
 @app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()
