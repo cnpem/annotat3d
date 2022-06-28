@@ -23,6 +23,11 @@ Component used in ion-popover in SamplingComp.tsx
     --max-height: 33%;
 }
 
+.create-h5-popover {
+    --width: 25%;
+    --max-height: 33%;
+}
+
 /**
 Component used to show the preview menu in AugmentationComp.tsx
  */

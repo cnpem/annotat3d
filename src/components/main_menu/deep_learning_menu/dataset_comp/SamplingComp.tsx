@@ -135,6 +135,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                                     setWorkspacePath(e.detail.value);
                                 }}/>
                         </IonItem>
+                        <IonItemDivider/>
                     </IonList>
                 </IonAccordion>
                 {/*Load type menu*/}
@@ -394,6 +395,7 @@ interface SamplingInterface {
 }
 
 /**
+ * TODO : need to implement the documentation here
  * Component that hold all the Sampling options
  */
 const SamplingComp: React.FC = () => {

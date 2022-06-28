@@ -1,7 +1,7 @@
 import dataType from "../../file/Dtypes";
 
 /**
- * This script contains all the interfaces for dataset_compo directory
+ * This script contains all the interfaces for dataset_comp directory
 
  /**
  * Interface for Augmentation option
@@ -304,4 +304,3 @@ export interface TableInterface {
 }
 
 export const InitTables: TableInterface[] = []
-
