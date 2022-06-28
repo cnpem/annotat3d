@@ -201,7 +201,7 @@ def crop_apply():
         sfetch("POST", "/crop_apply", JSON.stringify(cropShape), "json")
 
     Returns:
-        (tuple[bool, int]): this function returns "True" and 200 if an annotation is available.Otherwise, this tuple will return "False" and error 400
+        (tuple[bool, int]): this function returns "True" and 200 if sucessful. Otherwise, this tuple will return "False" and error 400
 
     """
 
@@ -217,26 +217,21 @@ def crop_apply():
     cropZ = request.json['cropZ']
 
     xlo, xhi = cropX['lower'], cropX['upper']
-    yloInv, yhiInv = cropY['lower'], cropY['upper']
+    ylo, yhi = cropY['lower'], cropY['upper']
     zlo, zhi = cropZ['lower'], cropZ['upper']
-
-    # correcting upside down reference of the y axis
-    ylen = input_img.shape[1]
-    ylo = ylen - yhiInv - 1
-    yhi = ylen - yloInv - 1
 
     output_img = input_img[zlo:zhi, ylo:yhi, xlo:xhi]
     output_shape = output_img.shape
-  
-    data_repo.set_image('image', data=output_img)
         
-    image_info['imageShape'] =  {'x':output_shape[2], 'y':output_shape[1], 'z':output_shape[0]}
     crop_info = {
-        'isCropped': True,
         'cropShape':  {'cropX':cropX, 'cropY':cropY, 'cropZ':cropZ},
         'imageFullShape': image_info['imageShape']
     }
+    image_info['imageShape'] =  {'x':output_shape[2], 'y':output_shape[1], 'z':output_shape[0]}
 
+    print('\Full shape: ', crop_info['imageFullShape'])
+
+    data_repo.set_image('image', data=output_img)
     data_repo.set_info(key='image_info', data=image_info)
     data_repo.set_info(key='crop_info', data=crop_info)                      
 
@@ -245,10 +240,23 @@ def crop_apply():
 @app.route("/crop_merge", methods=["POST"])
 @cross_origin()
 def crop_merge():
+    """
+    Replaces cropped image with the original image using its location saved in data_repo and 
+    updates the coordinates of the label image and the annotations made.
+
+    Args:
+        No args. Uses information from data_repo.
+    Examples:
+        This is an example on how you can use this function to get the annotation using the id\n
+        sfetch("POST", "/crop_merge", '', "json")
+
+    Returns:
+        (tuple[bool, int]): this function returns "True" and 200 if sucessful and "False" and 400 otherwise, with info abou the errors.
+    """
 
     crop_info = data_repo.get_info(key='crop_info')
 
-    if (not crop_info['isCropped']):
+    if (crop_info == {}):
         return handle_exception(f"Image is not a cropped image or doesn't have crop info.")
 
     crop_img = data_repo.get_image('image')
@@ -257,92 +265,72 @@ def crop_merge():
         return handle_exception(f"Cropped image not found.")
 
     image_info = data_repo.get_info(key='image_info')
-    
     imageFullShape = crop_info['imageFullShape']
 
-    # opening big image again
+    # ---
+    # opening original image
+    # ---
     
     try:
-        full_image, info = sscIO.io.read_volume(image_info['imageFullPath'], 'numpy',
+        output_img, info = sscIO.io.read_volume(image_info['imageFullPath'], 'numpy',
                         shape=(imageFullShape['z'], imageFullShape['y'], imageFullShape['x']),
                         dtype=image_info['imageDtype'])
+        data_repo.set_image('image', data=output_img)
     except:
         return handle_exception('Reopen original image failed')
-
-    image_info = data_repo.get_info(key='image_info')
-
-    output_img = full_image
     
     # ---
-    # manipulate label image, annotations and etc
+    # crop info for update coordinates of labels and annotations
     # ---
 
-    # cropShape = crop_info['cropShape']    
+    cropShape = crop_info['cropShape']
 
-    # cropX = cropShape['cropX']
-    # cropY = cropShape['cropY']
-    # cropZ = cropShape['cropZ']
+    if cropShape is None:
+        return handle_exception('Failed to read cropShape')    
 
-    # xlo, xhi = cropX['lower'], cropX['upper']
-    # yloInv, yhiInv = cropY['lower'], cropY['upper']
-    # zlo, zhi = cropZ['lower'], cropZ['upper']
+    cropX = cropShape['cropX']
+    cropY = cropShape['cropY']
+    cropZ = cropShape['cropZ']
 
-    # # correcting upside down reference of the y axis
-    # ylen = imageFullShape['y']
-    # ylo = ylen - yhiInv - 1
-    # yhi = ylen - yloInv - 1
+    zlo, zhi = cropZ['lower'], cropZ['upper']
+    ylo, yhi = cropY['lower'], cropY['upper']
+    xlo, xhi = cropX['lower'], cropX['upper']
 
-    # def isInside(coords):
-    #     zBox, yBox, xBox = coords
-    #     return 
+    # ---
+    # label image
+    # ---
 
-    # # annotation
-    # annot_module.load_annotation(annot_path)
-    # module_repo.set_module('annotation', module=annot_module)
-    # for coords in annot_module.get_annotation().keys():
+    label_img = data_repo.get_image('label')
 
+    if label_img is not None:
+        # print(zlo, zhi, ylo, yhi, xlo, xhi)
+        output_labelimg = np.zeros_like(output_img)
+        print('bruno..........: ', output_labelimg.shape, label_img.shape, ylo, yhi)
+        output_labelimg[zlo:zhi, ylo:yhi, xlo:xhi] = label_img
+        data_repo.set_image('label', data=output_labelimg)
 
-    # cropShape = crop_info['cropShape']    
+    # ---
+    # annotation (dictionary)
+    # ---
 
-    # cropX = cropShape['cropX']
-    # cropY = cropShape['cropY']
-    # cropZ = cropShape['cropZ']
+    annot_module = module_repo.get_module('annotation')
+    if annot_module is not None:
+        dic = annot_module.get_annotation()
+        newdic = dict()
+        for k in dic.keys():
+            kz, ky, kx = k
+            new_k = (kz+zlo, ky+ylo, kx+xlo)
+            newdic[new_k] = dic[k]
+        annot_module.set_annotation(newdic) 
 
-    # xlo, xhi = cropX['lower'], cropX['upper']
-    # yloInv, yhiInv = cropY['lower'], cropY['upper']
-    # zlo, zhi = cropZ['lower'], cropZ['upper']
-
-    # # correcting upside down reference of the y axis
-    # ylen = input_img.shape[1]
-    # print('ylen: {ylen}, ylo: {ylo}, yhi: {yhi}'.format(ylen=ylen, ylo=yloInv, yhi=yhiInv))
-    # ylo = ylen - yhiInv - 1
-    # yhi = ylen - yloInv - 1
-    # print('ylo, yhi: ', ylo, yhi)
-
-    # output_label_img = np.zeros_like(full_image)
-    # small_label_img = ?
-    # output_label_img[zlo:zhi, ylo:yhi, xlo:xhi] = small_label_img
-
-    # output_img = input_img[zlo:zhi, ylo:yhi, xlo:xhi]
-    # output_shape = output_img.shapecrua_A_190x207x100_16b.raw
-
-    # print('cropX: ', cropX['lower'], cropX['upper'])
-    # print('output shape: ', output_img.shape)
-
-    data_repo.set_image('image', data=output_img)
-    # data_repo.set_image('label', data=output_label_img)
-        
-    # update infos
-    print('\nteste: ', imageFullShape)
+    # ---
+    # update infos on data_repo
+    # ---
 
     image_info['imageShape'] =  imageFullShape
-    crop_info = {
-        'isCropped': False
-    }
+    crop_info = {}
     
     data_repo.set_info(key='image_info', data=image_info)
-    data_repo.set_info(key='crop_info', data=crop_info) 
-    print('image info: ',image_info)  
-    print('teste: ', jsonify(image_info))                  
+    data_repo.set_info(key='crop_info', data=crop_info)            
 
     return jsonify(image_info)

@@ -29,6 +29,13 @@ const SuperpixelModuleCard: React.FC = () => {
         setLockMenu(changeLockMenu);
     })
 
+    useEventBus('recalcSuperpixel', (recalc) => {
+        if (recalc) {
+            onApply();
+            dispatch('recalcSuperpixel', false);
+        }
+    })
+
     function onApply() {
         setLockMenu(true);
         setShowLoadingComp(true);
@@ -40,6 +47,7 @@ const SuperpixelModuleCard: React.FC = () => {
         sfetch('POST', '/superpixel', JSON.stringify(params))
         .then(() => {
             dispatch('superpixelChanged', {});
+            dispatch('superpixelParams', params);
         })
         .finally(() => {
             setLockMenu(false);

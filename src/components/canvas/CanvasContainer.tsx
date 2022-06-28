@@ -658,14 +658,15 @@ class Canvas {
         }
 
         const insideBox = (y: number, x: number) => {
+            // bruno : retirar
     
             const uIn = ( u: number, cropU: CropAxisInterface ) => { 
                 return ( cropU.lower <= u && u <= cropU.upper ); 
             };
-            // converting i to cartesian y (vertical axis is upside down)
-            const yinv : number = height - y - 1
+            // // converting i to cartesian y (vertical axis is upside down)
+            // const yinv : number = height - y - 1
 
-            return uIn(depth, cropD) && uIn(yinv, cropH) && uIn(x, cropW);
+            return uIn(depth, cropD) && uIn(y, cropH) && uIn(x, cropW);
         };
 
         const len : number = width*height;
