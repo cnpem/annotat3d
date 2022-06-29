@@ -28,7 +28,7 @@ Component used in ion-popover in DatasetComp.tsx to create the window
  */
 .create-h5-popover {
     --width: 25%;
-    --max-height: 21%;
+    --max-height: 23%;
     transform: translate(0%, -15%);
 }
 

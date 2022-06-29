@@ -304,3 +304,12 @@ export interface TableInterface {
 }
 
 export const InitTables: TableInterface[] = []
+
+/**
+ * Interface used for Sampling
+ */
+export interface SamplingInterface {
+    nClasses: number,
+    sampleSize: number,
+    patchSize: Array<number>;
+}

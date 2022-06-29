@@ -4,7 +4,7 @@ import {
     IonAccordion,
     IonAccordionGroup,
     IonButton, IonIcon, IonInput, IonItem, IonItemDivider, IonLabel, IonList,
-    IonPopover, IonSegment, IonSegmentButton, SegmentChangeEventDetail
+    IonPopover, IonSegment, IonSegmentButton, SegmentChangeEventDetail, useIonToast
 } from "@ionic/react";
 import ErrorWindowComp from "../../file/ErrorWindowComp";
 import SamplingComp from "./SamplingComp";
@@ -13,7 +13,7 @@ import {
     AugmentationInterface,
     InitAugmentationOptions,
     InitIonRangeVec,
-    IonRangeElement
+    IonRangeElement, SamplingInterface
 } from "./DatasetInterfaces";
 import AugmentationComp from "./AugmentationComp";
 import {checkbox, construct, image} from "ionicons/icons";
@@ -21,10 +21,16 @@ import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
 
 interface H5InputInterface {
-    trigger: string
+    trigger: string,
+    sample: SamplingInterface
 }
 
-const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger}) => {
+interface BackendPayload {
+    sample: SamplingInterface,
+    file_path: string
+}
+
+const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample}) => {
 
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
@@ -43,17 +49,19 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger}) => {
     // I Think that i found the save_dataset option in this link https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
     // Just need to find the line 312, 289
     const readFile = () => {
-        const params = {
+        const params: BackendPayload = {
+            sample: sample,
             file_path: workspacePath + filePath,
         };
 
         sfetch("POST", "/create_dataset/", JSON.stringify(params), "json").then(
-            () => {
-                console.log("Opa, bão ?");
+            (dataset_path: { datasetFilename: string }) => {
+                showToast(`success creating the dataset ${dataset_path.datasetFilename}`, timeToast);
             }).catch((error: ErrorInterface) => {
-                //TODO : need to implement the error window for this here
-                console.log("Error in create_dataset");
-                console.log(error.error_msg);
+            console.log("Error in create_dataset");
+            console.log(error.error_msg);
+            setErrorMsg(error.error_msg);
+            setShowErrorWindow(true);
         })
 
     }
@@ -116,7 +124,7 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger}) => {
                     readFile();
                 }}>Save Dataset</IonButton>
             <ErrorWindowComp
-                headerMsg={`Error trying to add an element in dataset`}
+                headerMsg={`Error trying to create the dataset`}
                 errorMsg={errorMsg}
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
@@ -139,6 +147,16 @@ const DatasetComp: React.FC = () => {
     const [errorMsg, setErrorMsg] = useState<string>("");
     const [augmentationOpSelected, setAugmentationOpSelected] = useState<AugmentationInterface[]>(InitAugmentationOptions);
     const [ionRangeVec, setIonRangeVec] = useState<IonRangeElement[]>(InitIonRangeVec);
+
+    const [sampleElement, setSampleElement] = useStorageState<SamplingInterface>(sessionStorage, "sampleElement", {
+        nClasses: 2,
+        sampleSize: 100,
+        patchSize: [256, 256, 1],
+    });
+
+    const handleSampleElement = (sample: SamplingInterface) => {
+        setSampleElement(sample);
+    }
 
     const changeCheckedStatus = (index: number) => {
         const newCheckedVector = augmentationOpSelected.map(
@@ -176,7 +194,9 @@ const DatasetComp: React.FC = () => {
         );
     }
 
-    const menus = [<SamplingComp/>, <AugmentationComp
+    const menus = [<SamplingComp
+        sampleElement={sampleElement}
+        onSampling={handleSampleElement}/>, <AugmentationComp
         checkedVector={augmentationOpSelected}
         onCheckedVector={changeCheckedStatus}
         ionRangeVec={ionRangeVec}
@@ -221,6 +241,7 @@ const DatasetComp: React.FC = () => {
                         icon={checkbox}
                         slot={"end"}/>
                     <CreateDatasetH5
+                        sample={sampleElement}
                         trigger={"open-h5-input"}/>
                 </IonButton>
             </IonPopover>

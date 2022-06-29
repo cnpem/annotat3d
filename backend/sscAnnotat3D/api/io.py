@@ -1,15 +1,16 @@
 import time
-from flask import Blueprint, request, jsonify
-from werkzeug.exceptions import BadRequest
+import logging
 import os.path
-
 import sscIO.io
 import numpy as np
+
+from flask import Blueprint, request, jsonify
+from werkzeug.exceptions import BadRequest
+from flask_cors import cross_origin
+
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
-from sscAnnotat3D.aux_functions import enforce_extension
-
-from flask_cors import cross_origin
+from sscDeepsirius.utils import augmentation, dataset, sampling, image
 
 app = Blueprint('io', __name__)
 
@@ -166,6 +167,7 @@ def close_files_dataset(file_id: str):
     else:
         return handle_exception("{} is an invalid key".format(file_id))
 
+
 @app.route("/close_all_files_dataset/<file_id>", methods=["POST"])
 @cross_origin()
 def close_all_files_dataset(file_id: str):
@@ -208,6 +210,7 @@ def close_all_files_dataset(file_id: str):
 
     else:
         return handle_exception("{} is an invalid key".format(file_id))
+
 
 @app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()
@@ -406,26 +409,111 @@ def load_workspace():
 
     return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
 
+
 @app.route("/create_dataset/", methods=["POST"])
 @cross_origin()
-#TODO : don't forget to look in this link
-#https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
+# TODO : need to implement the errors later
+# TODO : need to implement the documentation
+# TODO : change to z, y, x pattern everywhere ...
+# TODO : need to implement the augmentation option into the dataset
+# TODO : don't forget to look in this link
+# https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
 def create_dataset():
 
     try:
-        dataset_path = request.json["file_path"]
+        output = request.json["file_path"]
+        sample = request.json["sample"]
     except Exception as e:
         return handle_exception(str(e))
 
-    _debugger_print("opa, entrou na função", "bla")
-    _debugger_print("data table", data_repo.get_all_dataset_data())
-    _debugger_print("label table", data_repo.get_all_dataset_label())
-    _debugger_print("weight table", data_repo.get_all_dataset_weight())
+    size = (sample["patchSize"][0], sample["patchSize"][1], sample["patchSize"][2])
+    num_classes = sample["nClasses"]
+    nsamples = sample["sampleSize"]
+    offset = (0, 0, 0)
+    logging.debug('size = {}, nsamples = {}'.format(size, sample["sampleSize"]))
+
+    imgs = list(data_repo.get_all_dataset_data().values())
+    labels = list(data_repo.get_all_dataset_label().values())
+    weights = list(data_repo.get_all_dataset_weight().values())
+
+    logging.debug('uniform ...')
+    logging.debug(imgs)
+    logging.debug(labels)
+    logging.debug(weights)
+
+    weights = [None] * len(imgs)
+    imgs_props = [{}] * len(imgs)
+    labels_props = [{}] * len(labels)
+    weights_props = [{}] * len(weights)
+
+    logging.debug('imgs')
+    logging.debug(imgs)
+    logging.debug(labels)
+    logging.debug(weights)
+
+    logging.debug('props ....')
+    logging.debug(imgs_props)
+    logging.debug(labels_props)
+    logging.debug(weights_props)
+
+    if (not len(imgs) == len(labels) == len(weights) == len(imgs_props) == len(labels_props) == len(weights_props)):
+        return handle_exception(
+            "Number of image and labels mismatch.\n {} data images, {} label images, and {} weight images.".format(
+                len(imgs), len(labels), len(weights)))
 
     try:
-        test = enforce_extension(dataset_path, "h5")
-        _debugger_print("test", test)
+        data = dataset.create_dataset(output, len(imgs), nsamples, size, num_classes=num_classes,
+                                      weight=(weights is not None))
     except Exception as e:
         return handle_exception(str(e))
 
-    return jsonify("fofo")
+    zz = list(zip(imgs, labels, weights,
+                  imgs_props, labels_props, weights_props))
+
+    logging.debug(zz)
+    logging.debug(len(zz))
+
+    i = 0
+    for img_file, label_file, weight_file, \
+        img_props, label_props, weight_props in zip(imgs, labels, weights,
+                                                    imgs_props, labels_props, weights_props):
+
+        logging.debug('img_file:', img_file, img_props)
+        logging.debug('label_file:', label_file, label_props)
+        img = img_file
+        label = label_file
+        weight = weight_file
+        logging.debug('img: ', img)
+        logging.debug('label: ', label)
+        # if weight_file is not None:
+        #     weight = image.read(weight_file, **weight_props)
+        # assert img.shape == label.shape, "Image dimensions mismatch.\n%s -> %s\n%s -> %s\n" % (
+        #     img_file, img.shape, label_file, label.shape)
+        if (img.shape != label.shape):
+            return handle_exception(
+                "Image dimensions mismatch.\n{} -> {}\n{} -> {}\n".format(
+                    img_file, img.shape, label_file, label.shape))
+        lmin, lmax = label.min(), label.max()
+
+        if (lmin != 0 or lmax > num_classes - 1):
+            return handle_exception(
+                "Invalid label values. Labels in the range [{},{}]. Check if the image is correct or set the num_classes={}.".format(
+                    lmin, lmax, lmax + 1))
+
+        img_samples, coords = sampling.uniform_samples(image.zyx_to_xyz(img), size, nsamples, offset)
+        label_samples = sampling.get_samples(image.zyx_to_xyz(label), size, coords)
+
+        data['data'][i, ...] = img_samples
+        data['label'][i, ...] = label_samples
+
+        if weight is not None:
+            weight_samples = sampling.get_samples(image.zyx_to_xyz(weight), size, coords)
+            data['weight'][i, ...] = weight_samples
+        i += 1
+
+    try:
+        dataset.save_dataset(data)
+    except Exception as e:
+        return handle_exception(str(e))
+
+    return jsonify({"datasetFilename": output.split("/")[-1]})

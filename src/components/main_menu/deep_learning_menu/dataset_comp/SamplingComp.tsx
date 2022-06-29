@@ -17,7 +17,7 @@ import {
     dtype_type,
     dtypeList,
     InitFileStatus,
-    InitTables,
+    InitTables, SamplingInterface,
     TableElement,
     TableInterface,
     type_operation
@@ -388,17 +388,16 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
     );
 }
 
-interface SamplingInterface {
-    nClasses: number,
-    sampleSize: number,
-    patchSize: Array<number>;
+interface SamplingCompInterface {
+    sampleElement: SamplingInterface,
+    onSampling: (sample: SamplingInterface) => void,
 }
 
 /**
  * TODO : need to implement the documentation here
  * Component that hold all the Sampling options
  */
-const SamplingComp: React.FC = () => {
+const SamplingComp: React.FC<SamplingCompInterface> = ({sampleElement, onSampling}) => {
 
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
     const [openDeleteAll, setOpenDeleteAll] = useState<boolean>(false);
@@ -542,11 +541,6 @@ const SamplingComp: React.FC = () => {
     }
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
-    const [sampleElement, setSampleElement] = useStorageState<SamplingInterface>(sessionStorage, "sampleElement", {
-        nClasses: 2,
-        sampleSize: 100,
-        patchSize: [256, 256, 1],
-    });
 
     const removeLabelElement = (labelElement: TableInterface) => {
         if (labelElement.typeOperation === "Data") {
@@ -572,7 +566,7 @@ const SamplingComp: React.FC = () => {
 
     const selectLabel = (id: number) => {
         setSelectedLabel(id);
-        dispatch('labelSelected', {
+        dispatch('selectedElement', {
             id: id
         });
     }
@@ -820,7 +814,7 @@ const SamplingComp: React.FC = () => {
                                                 value={sampleElement.nClasses}
                                                 onIonChange={(e: CustomEvent) => {
                                                     if (e.detail.value <= 99) {
-                                                        setSampleElement({
+                                                        onSampling({
                                                             ...sampleElement,
                                                             nClasses: parseInt(e.detail.value!, 10)
                                                         })
@@ -840,7 +834,7 @@ const SamplingComp: React.FC = () => {
                                                 type={"number"}
                                                 min={"0"} value={sampleElement.sampleSize}
                                                 onIonChange={(e: CustomEvent) => {
-                                                    setSampleElement({
+                                                    onSampling({
                                                         ...sampleElement,
                                                         sampleSize: parseInt(e.detail.value!, 10)
                                                     })
@@ -860,7 +854,7 @@ const SamplingComp: React.FC = () => {
                                                 min={"0"}
                                                 value={sampleElement.patchSize[0]}
                                                 placeholder="X"
-                                                onIonChange={(e: CustomEvent) => setSampleElement({
+                                                onIonChange={(e: CustomEvent) => onSampling({
                                                     ...sampleElement,
                                                     patchSize: [parseInt(e.detail.value!, 10), sampleElement.patchSize[1], sampleElement.patchSize[2]]
                                                 })}
@@ -870,7 +864,7 @@ const SamplingComp: React.FC = () => {
                                                 min={"0"}
                                                 value={sampleElement.patchSize[1]}
                                                 placeholder="Y"
-                                                onIonChange={(e: CustomEvent) => setSampleElement({
+                                                onIonChange={(e: CustomEvent) => onSampling({
                                                     ...sampleElement,
                                                     patchSize: [sampleElement.patchSize[0], parseInt(e.detail.value!, 10), sampleElement.patchSize[2]]
                                                 })}
@@ -880,7 +874,7 @@ const SamplingComp: React.FC = () => {
                                                 min={"0"}
                                                 value={sampleElement.patchSize[2]}
                                                 placeholder="Z"
-                                                onIonChange={(e: CustomEvent) => setSampleElement({
+                                                onIonChange={(e: CustomEvent) => onSampling({
                                                     ...sampleElement,
                                                     patchSize: [sampleElement.patchSize[0], sampleElement.patchSize[1], parseInt(e.detail.value!, 10)]
                                                 })}
