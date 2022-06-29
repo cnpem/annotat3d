@@ -186,8 +186,6 @@ def load_workspace():
 
     return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
 
-# crop functions
-
 @app.route("/crop_apply", methods=["POST"])
 @cross_origin()
 def crop_apply():
@@ -288,13 +286,9 @@ def crop_merge():
     if cropShape is None:
         return handle_exception('Failed to read cropShape')    
 
-    cropX = cropShape['cropX']
-    cropY = cropShape['cropY']
-    cropZ = cropShape['cropZ']
-
-    zlo, zhi = cropZ['lower'], cropZ['upper']
-    ylo, yhi = cropY['lower'], cropY['upper']
-    xlo, xhi = cropX['lower'], cropX['upper']
+    zlo, zhi = cropShape['cropZ']['lower'], cropShape['cropZ']['upper']
+    ylo, yhi = cropShape['cropY']['lower'], cropShape['cropY']['upper']
+    xlo, xhi = cropShape['cropX']['lower'], cropShape['cropX']['upper']
 
     # ---
     # label image
@@ -303,9 +297,9 @@ def crop_merge():
     label_img = data_repo.get_image('label')
 
     if label_img is not None:
-        # print(zlo, zhi, ylo, yhi, xlo, xhi)
         output_labelimg = np.zeros_like(output_img)
-        print('bruno..........: ', output_labelimg.shape, label_img.shape, ylo, yhi)
+        # does numpy optimizes this?
+        print('Painting labeled section on the original image.')
         output_labelimg[zlo:zhi, ylo:yhi, xlo:xhi] = label_img
         data_repo.set_image('label', data=output_labelimg)
 
@@ -324,7 +318,7 @@ def crop_merge():
         annot_module.set_annotation(newdic) 
 
     # ---
-    # update infos on data_repo
+    # update info on data_repo
     # ---
 
     image_info['imageShape'] =  imageFullShape
