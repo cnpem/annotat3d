@@ -36,6 +36,8 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample}) => {
     const [errorMsg, setErrorMsg] = useState<string>("");
     const [workspacePath, setWorkspacePath] = useState<string>("");
     const [filePath, setFilePath] = useState<string>("");
+    const [showToast] = useIonToast();
+    const timeToast = 2000;
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
