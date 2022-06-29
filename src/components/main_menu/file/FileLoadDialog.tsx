@@ -300,7 +300,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setShowPopover({open: false, event: undefined});
         setPathFiles({
             workspacePath: pathFiles.workspacePath,
-            imagePath: pathFiles.imagePath, //bruno
+            imagePath: pathFiles.imagePath, 
             superpixelPath: "",
             labelPath: "",
             annotPath: ""

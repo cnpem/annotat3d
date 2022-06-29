@@ -327,9 +327,7 @@ class Canvas {
         this.axis = axis;
         this.sliceNum = sliceNum;
 
-        //this.setSuperpixelVisibility(false);
         this.setLabelVisibility(true);
-        // this.setImageShape(); bruno - this is called when the image exists
     }
 
     setColor(colors: { id: number, color: [number, number, number] }[]) {
@@ -554,6 +552,7 @@ class Canvas {
         this.labelSlice.visible = visible;
     }
 
+    /** Changes the visibility of the crop layer listening an event on CanvasContainer */
     setCropVisibility(visible: boolean = false) { 
         console.log('Canvas: Changing visibility', visible);
         if (visible) {
@@ -562,6 +561,9 @@ class Canvas {
         this.cropSlice.visible = visible;
     }
 
+    /** From an event listener of changes in axis and slices, 
+     * checks if the vancas is in crop preview mode and calls the 
+     * function that builds the preview mask if so. */
     checkUpdateCropPreview() { 
         if ( this.cropSlice.visible ) {
             this.setCropPreviewMaskImage();
@@ -604,11 +606,16 @@ class Canvas {
         const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
         this.labelSlice.texture = texture;
     }
-
+    /** Sets the crop shape from an envent listener on CanvasContainer */
     setCropShape(cropShape: CropShapeInterface ) {
         this.cropShape = cropShape;
     }
 
+    /**
+     * Builds a mask layer for the preview mode for the current slice and axis on canvas
+     * with information set on Canvas by event listeners.
+     * The resulting image is set on the cropSlice layer on canvas. 
+     */
     private setCropPreviewMaskImage() { 
 
         let error : string;
@@ -657,15 +664,10 @@ class Canvas {
             return 
         }
 
-        const insideBox = (y: number, x: number) => {
-            // bruno : retirar
-    
+        const insideBox = (y: number, x: number) => {   
             const uIn = ( u: number, cropU: CropAxisInterface ) => { 
                 return ( cropU.lower <= u && u <= cropU.upper ); 
             };
-            // // converting i to cartesian y (vertical axis is upside down)
-            // const yinv : number = height - y - 1
-
             return uIn(depth, cropD) && uIn(y, cropH) && uIn(x, cropW);
         };
 
@@ -870,7 +872,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onLabelColorsChanged!: (colors: { id: number, color: [number, number, number] }[]) => void;
     onAnnotationChanged!: () => void;
     onLabelContourChanged!: (contour: boolean) => void;
-    onFutureChanged!: (hasPreview: boolean) => void; // bruno
+    onFutureChanged!: (hasPreview: boolean) => void; 
     onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
     onExtendLabel: (flag: boolean) => void = () => {};
     onCropPreviewMode: (activateCropPreview: boolean) => void = () => {};
@@ -1078,10 +1080,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 console.log('contour changed: ', contour);
             }
 
-            // this.onAnnotationChanged = () => { // bruno
-            //     this.getAnnotSlice();
-            // }
-
             this.onFutureChanged = (hasSlice: boolean) => {
                 if (hasSlice) {
                     this.getFutureSlice();
@@ -1089,7 +1087,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                     this.canvas?.deleteFutureImage();
                     this.setState({...this.state, future_sight_on: false});
                 }
-                // this.updateCropPreview();
             }
 
             this.onChangeStateBrush = (mode: brush_mode_type) => {

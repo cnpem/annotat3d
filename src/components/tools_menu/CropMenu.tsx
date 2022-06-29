@@ -143,7 +143,6 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
             },
             cropZ: cropSliderZ
         }
-        // bruno: make this on backend
         sfetch("POST", "/crop_apply", JSON.stringify(cropShape), "json")
         .then((img_info:ImageInfoInterface) => {
             console.log('CropMenu: onApply Success! ', img_info);

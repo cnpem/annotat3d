@@ -210,6 +210,10 @@ def crop_apply():
 
     image_info = data_repo.get_info(key='image_info')
 
+    # ---
+    # input crop info from json sent by the function onApply() in CropMenu.tsx 
+    # ---
+
     cropX = request.json['cropX']
     cropY = request.json['cropY']
     cropZ = request.json['cropZ']
