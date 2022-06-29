@@ -52,7 +52,7 @@ interface BackendPayload {
 /**
  * React component that creates the add menu interface
  * @param idMenu {number} - id used to create a new element in the table
- * @param onIdMenu {(newId: number, type: type_operation)} - handler used to update the idMenu for a especific table
+ * @param onIdMenu {(newId: number, type: type_operation)} - handler used to update the idMenu for a specific table
  * @param onTableVec {(newFile: MultiplesPath) => void} - setter used to create a new element
  * @param trigger {string} - string that contains the trigger to open the popup
  * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight

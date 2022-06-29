@@ -39,36 +39,30 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger}) => {
         setShowErrorWindow(flag);
     }
 
-    //TODO : i need to implement a function to call the back-end here
-    // const readFile = () => {
-    //     pathFiles.workspacePath = workspacePath;
-    //     pathFiles.file.filePath = filePath;
-    //     const params: BackendPayload = {
-    //         image_path: pathFiles.workspacePath + pathFiles.file.filePath,
-    //         image_dtype: pathFiles.file.type,
-    //         image_raw_shape: [pathFiles.file.shape[0] || 0, pathFiles.file.shape[1] || 0, pathFiles.file.shape[2] || 0],
-    //         use_image_raw_parse: (pathFiles.file.shape[0] == null && pathFiles.file.shape[1] == null && pathFiles.file.shape[2] == null)
-    //     }
-    //
-    //     sfetch("POST", `/open_files_dataset/${typeOperation.toLowerCase()}-${pathFiles.id}`, JSON.stringify(params), "json").then(
-    //         (element: Taopen-h5-inputElement) => {
-    //             console.log("Backend response");
-    //             console.taopen-h5-input(element);
-    //             pathFiles.file = element
-    //             onTaopen-h5-inputVec(pathFiles, typeOperation);
-    //             pathFiles.id += 1;
-    //
-    //         }).catch((error: ErrorInterface) => {
-    //         console.log("error while trying to add an image")
-    //         console.log(error.error_msg);
-    //         setErrorMsg(error.error_msg);
-    //         setShowErrorWindow(true);
-    //     })
-    // }
+    //TODO : need to implement the function to feed the back-end
+    // I Think that i found the save_dataset option in this link https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
+    // Just need to find the line 312, 289
+    const readFile = () => {
+        const params = {
+            file_path: workspacePath + filePath,
+        };
+
+        sfetch("POST", "/create_dataset/", JSON.stringify(params), "json").then(
+            () => {
+                console.log("Opa, bão ?");
+            }).catch((error: ErrorInterface) => {
+                //TODO : need to implement the error window for this here
+                console.log("Error in create_dataset");
+                console.log(error.error_msg);
+        })
+
+    }
 
     return (
         <IonPopover
             trigger={trigger}
+            side={"top"}
+            alignment={"center"}
             className={"create-h5-popover"}
             onDidDismiss={() => {
                 setFilePath("");
@@ -119,6 +113,7 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger}) => {
                 onClick={() => {
                     console.log(workspacePath);
                     console.log(filePath);
+                    readFile();
                 }}>Save Dataset</IonButton>
             <ErrorWindowComp
                 headerMsg={`Error trying to add an element in dataset`}
@@ -225,6 +220,8 @@ const DatasetComp: React.FC = () => {
                     <IonIcon
                         icon={checkbox}
                         slot={"end"}/>
+                    <CreateDatasetH5
+                        trigger={"open-h5-input"}/>
                 </IonButton>
             </IonPopover>
             {/*Error window*/}
@@ -234,8 +231,6 @@ const DatasetComp: React.FC = () => {
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
-            <CreateDatasetH5
-                trigger={"open-h5-input"}/>
         </Fragment>
     );
 }

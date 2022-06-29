@@ -23,9 +23,13 @@ Component used in ion-popover in SamplingComp.tsx
     --max-height: 33%;
 }
 
+/**
+Component used in ion-popover in DatasetComp.tsx to create the window
+ */
 .create-h5-popover {
     --width: 25%;
-    --max-height: 33%;
+    --max-height: 21%;
+    transform: translate(0%, -15%);
 }
 
 /**

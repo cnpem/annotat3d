@@ -7,6 +7,7 @@ import sscIO.io
 import numpy as np
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
+from sscAnnotat3D.aux_functions import enforce_extension
 
 from flask_cors import cross_origin
 
@@ -167,7 +168,6 @@ def close_files_dataset(file_id: str):
 
 @app.route("/close_all_files_dataset/<file_id>", methods=["POST"])
 @cross_origin()
-#TODO : need to document this function later
 def close_all_files_dataset(file_id: str):
     """
         Function that close all files in dataset menu using an id as reference
@@ -405,3 +405,27 @@ def load_workspace():
         return jsonify(check_valid_workspace)
 
     return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
+
+@app.route("/create_dataset/", methods=["POST"])
+@cross_origin()
+#TODO : don't forget to look in this link
+#https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
+def create_dataset():
+
+    try:
+        dataset_path = request.json["file_path"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    _debugger_print("opa, entrou na função", "bla")
+    _debugger_print("data table", data_repo.get_all_dataset_data())
+    _debugger_print("label table", data_repo.get_all_dataset_label())
+    _debugger_print("weight table", data_repo.get_all_dataset_weight())
+
+    try:
+        test = enforce_extension(dataset_path, "h5")
+        _debugger_print("test", test)
+    except Exception as e:
+        return handle_exception(str(e))
+
+    return jsonify("fofo")

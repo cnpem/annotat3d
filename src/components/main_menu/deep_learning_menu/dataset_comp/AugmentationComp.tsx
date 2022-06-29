@@ -2,7 +2,6 @@ import React, {Fragment, useEffect, useRef} from "react";
 import {
     IonAccordion,
     IonAccordionGroup,
-    IonButton,
     IonCheckbox, IonContent,
     IonInput,
     IonItem,
@@ -162,6 +161,7 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onI
 // }
 
 /**
+ * TODO : need to create a info card for each argumentation preview
  * Component that hold all the Argumentation options
  */
 const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVector, ionRangeVec, onIonRangeVec}) => {
@@ -183,13 +183,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                     checked={checkedVector[0].isChecked}
                                     onIonChange={() => onCheckedVector(0)}/>
                             </IonItem>
-                            <div style={{display: "flex", justifyContent: "flex-end"}}>
-                                <IonButton
-                                    id={"vertical-flip"}
-                                    size={"default"} onClick={() => console.log("test preview")}>
-                                    Preview
-                                </IonButton>
-                            </div>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -205,9 +198,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                     checked={checkedVector[1].isChecked}
                                     onIonChange={() => onCheckedVector(1)}/>
                             </IonItem>
-                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <IonButton size={"default"}>Preview</IonButton>
-                            </div>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -223,9 +213,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                     checked={checkedVector[2].isChecked}
                                     onIonChange={() => onCheckedVector(2)}/>
                             </IonItem>
-                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <IonButton size={"default"}>Preview</IonButton>
-                            </div>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -241,9 +228,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                     checked={checkedVector[3].isChecked}
                                     onIonChange={() => onCheckedVector(3)}/>
                             </IonItem>
-                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <IonButton size={"default"}>Preview</IonButton>
-                            </div>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -266,9 +250,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                 ionRangeVec={ionRangeVec}
                                 onIonRangeVec={onIonRangeVec}
                                 index={0}/>
-                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <IonButton size={"default"}>Preview</IonButton>
-                            </div>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -291,9 +272,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                 ionRangeVec={ionRangeVec}
                                 onIonRangeVec={onIonRangeVec}
                                 index={1}/>
-                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <IonButton size={"default"}>Preview</IonButton>
-                            </div>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -316,9 +294,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                 ionRangeVec={ionRangeVec}
                                 onIonRangeVec={onIonRangeVec}
                                 index={2}/>
-                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <IonButton size={"default"}>Preview</IonButton>
-                            </div>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -341,9 +316,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                 ionRangeVec={ionRangeVec}
                                 onIonRangeVec={onIonRangeVec}
                                 index={3}/>
-                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <IonButton size={"default"}>Preview</IonButton>
-                            </div>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -366,9 +338,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                 ionRangeVec={ionRangeVec}
                                 onIonRangeVec={onIonRangeVec}
                                 index={4}/>
-                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <IonButton size={"default"}>Preview</IonButton>
-                            </div>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -391,9 +360,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                 ionRangeVec={ionRangeVec}
                                 onIonRangeVec={onIonRangeVec}
                                 index={5}/>
-                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <IonButton size={"default"}>Preview</IonButton>
-                            </div>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -424,7 +390,6 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                 onIonRangeVec={onIonRangeVec}
                                 index={7}/>
                             <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <IonButton size={"default"}>Preview</IonButton>
                             </div>
                             <IonItemDivider/>
                         </IonList>
