@@ -231,6 +231,7 @@ class Canvas {
     cropSlice: PIXI.Sprite; 
 
     superpixelColor: number = 0xff0000;
+    cropColor: number = 0xff0000;
 
     colors: [number, number, number][];
 
@@ -280,6 +281,7 @@ class Canvas {
         this.cropSlice.alpha = 0.8; 
         this.cropSlice.blendMode = PIXI.BLEND_MODES.ADD; 
         this.cropSlice.visible = false; 
+        this.cropSlice.tint = this.cropColor;
 
         this.futureSlice = new PIXI.Sprite();
         this.futureSlice.visible = false;
@@ -785,6 +787,11 @@ class Canvas {
         this.superpixelSlice.tint = this.superpixelColor;
     }
 
+    setCropColor(color: number) {
+        this.cropColor = color;
+        this.cropSlice.tint = this.cropColor;
+    }
+
     setSuperpixelImage(superpixel_slice: NdArray<TypedArray>) {
         const uint8data = superpixel_slice.data.map(x => x * 255) as Uint8Array;
         const x = superpixel_slice.shape[1];
@@ -877,6 +884,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onExtendLabel: (flag: boolean) => void = () => {};
     onCropPreviewMode: (activateCropPreview: boolean) => void = () => {};
     onCropShape: (cropShape: CropShapeInterface) => void = () => {};
+    onCropPreviewColorChanged: (color: any) => void = () => {
+    };
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -1036,6 +1045,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas?.setSuperpixelColor(color);
             }
 
+            this.onCropPreviewColorChanged = (color) => {
+                console.log('crop preview color changed: ', color);
+                this.canvas?.setCropColor(color);
+            }
+
             this.onContrastChanged = (payload: number[]) => {
                 this.adjustContrast(payload[0], payload[1]);
             }
@@ -1126,6 +1140,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe("ExtendLabel", this.onExtendLabel);
             subscribe('cropShape', this.onCropShape);
             subscribe('cropPreviewMode', this.onCropPreviewMode);
+            subscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
         }
     }
 
@@ -1150,6 +1165,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe("ExtendLabel", this.onExtendLabel);
         unsubscribe('cropShape', this.onCropShape);
         unsubscribe('cropPreviewMode', this.onCropPreviewMode);
+        unsubscribe('cropPreviewColorchanged', this.onSuperpixelColorChanged);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) { 

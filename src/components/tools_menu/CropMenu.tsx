@@ -2,6 +2,11 @@ import { IonButton, IonCard, IonCardContent, IonItem, IonLabel, IonRange, IonRow
 import { isEqual } from 'lodash';
 import { Fragment, useEffect, useRef } from 'react';
 import { useStorageState } from 'react-storage-hooks';
+//ignoring types for react-color, as it seems broken
+//TODO: investigate if this is fixed, otherwise declare the types manually
+// same problem in SideMenuVis.tsx
+// @ts-ignore
+import { SliderPicker } from 'react-color';
 
 import { dispatch, useEventBus } from '../../utils/eventbus';
 import { sfetch } from '../../utils/simplerequest';
@@ -13,6 +18,12 @@ interface CropMenuProps {
     imageShape: ImageShapeInterface;
     disabled: boolean
 }
+
+function rgbToHex(r: number, g: number, b: number) {
+    const bin = (r << 16) | (g << 8) | b;
+    return bin;
+} 
+
 
 /**
  * Enables the user to select the limits of a region of interest in the image trough three sliders (one for each axis).
@@ -34,6 +45,8 @@ interface CropMenuProps {
  */
 const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
 
+    const [cropPreviewColor, setCropPreviewColor] = useStorageState<number>(sessionStorage, 'cropPreviewColor', 0xf03030);
+
     const [showToast] = useIonToast();
     const toastTime = 2000;
     
@@ -53,6 +66,23 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
     });
 
     const [superpixelMode, setSuperpixelMode] = useStorageState<boolean>(sessionStorage, 'superpixelMode', false);
+
+    /**
+     * Listener to the 'superpixelChanged' event so it can register in a session variable if the superpixel was calculated previously.
+     */
+    useEventBus('superpixelChanged', () => {
+        setSuperpixelMode(true);
+    })
+
+    /**
+     * Dispatch event to recalculate the superpixel for the new (bigger) image after merge 
+     * if the superpixel was calculated previously.
+     */
+    function resetSuperpixel(): void {
+        if (superpixelMode) {
+            dispatch('recalcSuperpixel', true);
+        }
+    }
 
     // positional range references for sliders
     const rangeRefX = useRef<HTMLIonRangeElement | null>(null);
@@ -146,9 +176,13 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
         sfetch("POST", "/crop_apply", JSON.stringify(cropShape), "json")
         .then((img_info:ImageInfoInterface) => {
             console.log('CropMenu: onApply Success! ', img_info);
-
+            // loads crop image
             dispatch('ImageLoaded', img_info); 
-            // dispatch('annotationChanged', null);
+            // recalcullates superpixel if it was previously calcullated
+            resetSuperpixel();
+            // show superpixel
+            // dispatch('superpixelVisibilityChanged', true);
+            // resets crop mode (sliders positions and hides crop preview)
             onReset();
             const msg : string = 'Crop Applied cropShape: '+cropShape+' new imageShape:'+ img_info.imageShape;
             showToast(msg, toastTime);
@@ -162,34 +196,20 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
      */
     function onMerge() {
         sfetch("POST", "/crop_merge", '', "json")
-        .then((img_info) => {
+        .then((img_info:ImageInfoInterface) => {
             console.log('CropMenu: onMerge then ');
             console.log('CropMenu: onMerge Success! ', img_info);
+            // loads big image
             dispatch('ImageLoaded', img_info); 
-            dispatch('labelChanged','');
+            // recalcullates superpixel if it was previously calcullated
             resetSuperpixel();
+            // replace label image updated in the backend
+            dispatch('labelChanged','');
+            // resets crop mode (sliders positions and hides crop preview)
             onReset();
-            showToast('Crop Merged');
-            showToast(`Merge |o/!`, toastTime);
-        })        
+            showToast('Crop Merged', toastTime);
+        })    
     };
-
-    /**
-     * Listener to the 'superpixelChanged' event so it can register in a session variable if the superpixel was calculated previously.
-     */
-    useEventBus('superpixelChanged', () => {
-        setSuperpixelMode(true);
-    })
-
-    /**
-     * Dispatch event to recalculate the superpixel for the new (bigger) image after merge 
-     * if the superpixel was calculated previously.
-     */
-    function resetSuperpixel(): void {
-        if (superpixelMode) {
-            dispatch('recalcSuperpixel', true);
-        }
-    }
     
     return (
         <Fragment>
@@ -203,6 +223,13 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                     <IonItem>
                         <IonLabel>Crop Image</IonLabel>
                     </IonItem>
+                    <SliderPicker color={'#'+cropPreviewColor.toString(16)}
+                            onChange={ (e: any) => {
+                                console.log(e);
+                                const color = rgbToHex(e.rgb.r, e.rgb.g, e.rgb.b);
+                                dispatch('cropPreviewColorchanged', color);
+                                setCropPreviewColor(color);
+                            } }/>
                     <IonItem>
                         <IonRange name={'cropRangeX'} ref={rangeRefX} dualKnobs={true} min={0} max={props.imageShape.x} step={1} snaps={true} pin={true} ticks={false}
                             onIonKnobMoveEnd={(ex) => { setCropSliderX(ex.detail.value as any) }}>                        
@@ -250,9 +277,11 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                             onClick={onMerge}>
                             Merge
                         </IonButton>
-                    </IonRow>                        
+                    </IonRow>
                 </IonCardContent>
+                
             </IonCard>
+            
         </Fragment>
     );
 }
