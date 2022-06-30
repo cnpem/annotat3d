@@ -1,6 +1,7 @@
 import time
 import logging
 import os.path
+import os
 import sscIO.io
 import numpy as np
 
@@ -410,32 +411,10 @@ def load_workspace():
     return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
 
 
-@app.route("/create_dataset/", methods=["POST"])
-@cross_origin()
-# TODO : need to implement the errors later
-# TODO : need to implement the documentation
 # TODO : change to z, y, x pattern everywhere ...
-# TODO : need to implement the augmentation option into the dataset
-# TODO : don't forget to look in this link
-# https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
-def create_dataset():
-
-    try:
-        output = request.json["file_path"]
-        sample = request.json["sample"]
-    except Exception as e:
-        return handle_exception(str(e))
-
-    size = (sample["patchSize"][0], sample["patchSize"][1], sample["patchSize"][2])
-    num_classes = sample["nClasses"]
-    nsamples = sample["sampleSize"]
-    offset = (0, 0, 0)
-    logging.debug('size = {}, nsamples = {}'.format(size, sample["sampleSize"]))
-
-    imgs = list(data_repo.get_all_dataset_data().values())
-    labels = list(data_repo.get_all_dataset_label().values())
-    weights = list(data_repo.get_all_dataset_weight().values())
-
+def _create_dataset(imgs: list, labels: list, weights: list,
+                    output: str, nsamples: int, num_classes: int, size: tuple,
+                    offset: tuple):
     logging.debug('uniform ...')
     logging.debug(imgs)
     logging.debug(labels)
@@ -457,7 +436,7 @@ def create_dataset():
     logging.debug(weights_props)
 
     if (not len(imgs) == len(labels) == len(weights) == len(imgs_props) == len(labels_props) == len(weights_props)):
-        return handle_exception(
+        return [], handle_exception(
             "Number of image and labels mismatch.\n {} data images, {} label images, and {} weight images.".format(
                 len(imgs), len(labels), len(weights)))
 
@@ -465,7 +444,7 @@ def create_dataset():
         data = dataset.create_dataset(output, len(imgs), nsamples, size, num_classes=num_classes,
                                       weight=(weights is not None))
     except Exception as e:
-        return handle_exception(str(e))
+        return [], handle_exception(str(e))
 
     zz = list(zip(imgs, labels, weights,
                   imgs_props, labels_props, weights_props))
@@ -485,18 +464,15 @@ def create_dataset():
         weight = weight_file
         logging.debug('img: ', img)
         logging.debug('label: ', label)
-        # if weight_file is not None:
-        #     weight = image.read(weight_file, **weight_props)
-        # assert img.shape == label.shape, "Image dimensions mismatch.\n%s -> %s\n%s -> %s\n" % (
-        #     img_file, img.shape, label_file, label.shape)
+
         if (img.shape != label.shape):
-            return handle_exception(
+            return [], handle_exception(
                 "Image dimensions mismatch.\n{} -> {}\n{} -> {}\n".format(
                     img_file, img.shape, label_file, label.shape))
         lmin, lmax = label.min(), label.max()
 
         if (lmin != 0 or lmax > num_classes - 1):
-            return handle_exception(
+            return [], handle_exception(
                 "Invalid label values. Labels in the range [{},{}]. Check if the image is correct or set the num_classes={}.".format(
                     lmin, lmax, lmax + 1))
 
@@ -514,6 +490,51 @@ def create_dataset():
     try:
         dataset.save_dataset(data)
     except Exception as e:
+        return [], handle_exception(str(e))
+
+    return data, ""
+
+
+@app.route("/create_dataset/", methods=["POST"])
+@cross_origin()
+# TODO : need to implement the documentation
+# TODO : need to implement the augmentation option into the dataset. For this, i can look into the file https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py line 479
+# TODO : don't forget to look in this link
+# https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
+# TODO : for the augmentation menu. I'll see .augment from tis script
+def create_dataset():
+    try:
+        output = request.json["file_path"]
+        sample = request.json["sample"]
+        augmentation_vec = request.json["augmentation"]
+    except Exception as e:
         return handle_exception(str(e))
+
+    size = (sample["patchSize"][0], sample["patchSize"][1], sample["patchSize"][2])
+    num_classes = sample["nClasses"]
+    nsamples = sample["sampleSize"]
+    offset = (0, 0, 0)
+    _debugger_print("augmentation_vec", augmentation_vec)
+    _debugger_print("augmentation_vec type", type(augmentation_vec))
+
+    isChecked_vec = [isChecked_vec["isChecked"] for isChecked_vec in augmentation_vec]
+    _debugger_print("isChecked_vec", isChecked_vec)
+    checked_index = [i for i, val in enumerate(isChecked_vec) if val]
+    _debugger_print("checked_index", checked_index)
+    logging.debug('size = {}, nsamples = {}'.format(size, sample["sampleSize"]))
+
+    imgs = list(data_repo.get_all_dataset_data().values())
+    labels = list(data_repo.get_all_dataset_label().values())
+    weights = list(data_repo.get_all_dataset_weight().values())
+
+    data, error_status = _create_dataset(imgs, labels, weights,
+                                         output, nsamples, num_classes,
+                                         size, offset)
+
+    if (not data):
+        return error_status
+
+    if (checked_index):
+        print("augmentation option")
 
     return jsonify({"datasetFilename": output.split("/")[-1]})

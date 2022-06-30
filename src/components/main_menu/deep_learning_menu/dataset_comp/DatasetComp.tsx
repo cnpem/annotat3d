@@ -22,15 +22,17 @@ import ErrorInterface from "../../file/ErrorInterface";
 
 interface H5InputInterface {
     trigger: string,
-    sample: SamplingInterface
+    sample: SamplingInterface,
+    augmentation: AugmentationInterface[]
 }
 
 interface BackendPayload {
     sample: SamplingInterface,
+    augmentation: AugmentationInterface[],
     file_path: string
 }
 
-const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample}) => {
+const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample, augmentation}) => {
 
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
@@ -53,9 +55,11 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample}) => {
     const readFile = () => {
         const params: BackendPayload = {
             sample: sample,
-            file_path: workspacePath + filePath,
+            augmentation: augmentation,
+            file_path: workspacePath + filePath
         };
 
+        //TODO : Maybe i'll need to dispatch the values from the ion-range later
         sfetch("POST", "/create_dataset/", JSON.stringify(params), "json").then(
             (dataset_path: { datasetFilename: string }) => {
                 showToast(`success creating the dataset ${dataset_path.datasetFilename}`, timeToast);
@@ -243,6 +247,7 @@ const DatasetComp: React.FC = () => {
                         icon={checkbox}
                         slot={"end"}/>
                     <CreateDatasetH5
+                        augmentation={augmentationOpSelected}
                         sample={sampleElement}
                         trigger={"open-h5-input"}/>
                 </IonButton>
