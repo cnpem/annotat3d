@@ -60,7 +60,7 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample, augmentat
         };
 
         //TODO : Maybe i'll need to dispatch the values from the ion-range later
-        sfetch("POST", "/create_dataset/", JSON.stringify(params), "json").then(
+        sfetch("POST", "/create_dataset", JSON.stringify(params), "json").then(
             (dataset_path: { datasetFilename: string }) => {
                 showToast(`success creating the dataset ${dataset_path.datasetFilename}`, timeToast);
             }).catch((error: ErrorInterface) => {

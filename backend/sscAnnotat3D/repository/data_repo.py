@@ -1,11 +1,25 @@
 import numpy as np
 
+# TODO : need to implement the docstring later
+
 __images = dict()
 __annotations = dict()
 __deep_model = dict()
 __dataset_data_module = dict()
 __dataset_label_module = dict()
 __dataset_weight_module = dict()
+__argument_checked_options = dict({
+    0: {"augmentationOption": "vertical-flip", "isChecked": True},
+    1: {"augmentationOption": "vertical-flip", "isChecked": True},
+    2: {"augmentationOption": "rotate-90-degrees", "isChecked": True},
+    3: {"augmentationOption": "rotate-less-90-degrees", "isChecked": True},
+    4: {"augmentationOption": "contrast", "isChecked": True},
+    5: {"augmentationOption": "linear-contrast", "isChecked": True},
+    6: {"augmentationOption": "dropout", "isChecked": True},
+    7: {"augmentationOption": "gaussian-blur", "isChecked": True},
+    8: {"augmentationOption": "average-blur", "isChecked": True},
+    9: {"augmentationOption": "additive-poisson-noise", "isChecked": True},
+    10: {"augmentationOption": "elastic-deformation", "isChecked": True}})
 
 
 def set_deep_model(key='deep_learning', data: dict = None):
@@ -104,3 +118,8 @@ def delete_dataset_weight(key='weight-0'):
 
 def delete_all_dataset_weight():
     __dataset_weight_module.clear()
+
+
+def set_augmentation_options(key: int = 0, data: dict = None):
+    if (data is not None):
+        __argument_checked_options[key] = data

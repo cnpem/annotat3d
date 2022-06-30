@@ -31,58 +31,58 @@ export interface AugmentationInterface {
  */
 export const InitAugmentationOptions: AugmentationInterface[] = [
     {
-        augmentationOption: "Vertical Flip",
-        isChecked: false,
+        augmentationOption: "vertical-flip",
+        isChecked: true,
         checkedId: 0,
     },
     {
-        augmentationOption: "Horizontal Flip",
-        isChecked: false,
+        augmentationOption: "horizontal-flip",
+        isChecked: true,
         checkedId: 1,
     },
     {
-        augmentationOption: "Rotate 90 Degress",
-        isChecked: false,
+        augmentationOption: "rotate-90-degrees",
+        isChecked: true,
         checkedId: 2,
     },
     {
-        augmentationOption: "Rotate -90 Degress",
-        isChecked: false,
+        augmentationOption: "rotate-less-90-degrees",
+        isChecked: true,
         checkedId: 3,
     },
     {
-        augmentationOption: "Contrast",
-        isChecked: false,
+        augmentationOption: "contrast",
+        isChecked: true,
         checkedId: 4,
     },
     {
-        augmentationOption: "Linear Contrast",
-        isChecked: false,
+        augmentationOption: "linear-contrast",
+        isChecked: true,
         checkedId: 5,
     },
     {
-        augmentationOption: "Dropout",
-        isChecked: false,
+        augmentationOption: "dropout",
+        isChecked: true,
         checkedId: 6,
     },
     {
-        augmentationOption: "Gaussian Blur",
-        isChecked: false,
+        augmentationOption: "gaussian-blur",
+        isChecked: true,
         checkedId: 7,
     },
     {
-        augmentationOption: "Average Blur",
-        isChecked: false,
+        augmentationOption: "average-blur",
+        isChecked: true,
         checkedId: 8,
     },
     {
-        augmentationOption: "Additive Poisson Noise",
-        isChecked: false,
+        augmentationOption: "additive-poisson-noise",
+        isChecked: true,
         checkedId: 9,
     },
     {
-        augmentationOption: "Elastic Deformation",
-        isChecked: false,
+        augmentationOption: "elastic-deformation",
+        isChecked: true,
         checkedId: 10,
     }
 ];

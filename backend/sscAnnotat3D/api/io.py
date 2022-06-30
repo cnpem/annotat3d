@@ -495,7 +495,26 @@ def _create_dataset(imgs: list, labels: list, weights: list,
     return data, ""
 
 
-@app.route("/create_dataset/", methods=["POST"])
+@app.route("/set_augment_list", methods=["POST"])
+@cross_origin()
+def set_augment_list():
+    try:
+        checked_op = request.json["checked_element"]
+
+    except Exception as e:
+        return handle_exception(str(e))
+
+    _debugger_print("Checked_op", checked_op)
+    new_augment_elem = dict({checked_op["checkedId"]: {"augmentationOption": checked_op["augmentationOption"],
+                                                       "isChecked": checked_op["isChecked"]}})
+    data_repo.set_augmentation_options(checked_op["checkedId"], new_augment_elem)
+    return jsonify({
+        "checkedId": checked_op["checkedId"],
+        "augmentationOption": checked_op["augmentationOption"],
+        "isChecked": checked_op["isChecked"]})
+
+
+@app.route("/create_dataset", methods=["POST"])
 @cross_origin()
 # TODO : need to implement the documentation
 # TODO : need to implement the augmentation option into the dataset. For this, i can look into the file https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py line 479
@@ -531,10 +550,13 @@ def create_dataset():
                                          output, nsamples, num_classes,
                                          size, offset)
 
+    test = []
+    for i in checked_index:
+        print("augmentation option")
+        test.append(i)
+    _debugger_print("Checked option", test)
+
     if (not data):
         return error_status
-
-    if (checked_index):
-        print("augmentation option")
 
     return jsonify({"datasetFilename": output.split("/")[-1]})
