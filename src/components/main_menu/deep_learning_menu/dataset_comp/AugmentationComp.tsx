@@ -27,6 +27,16 @@ interface MenuContentRangeInterface {
     onIonRangeVec: (newRangeVal: { lower: number, upper: number }, index: number) => void;
 }
 
+interface BackendPayload {
+    ionRangeId: number,
+    ionNameMenu: string,
+    ionRangeName: string,
+    actualRangeVal: {
+        lower: number,
+        upper: number,
+    }
+}
+
 /**
  * Internal component that create the range content for each menu in Argumentation menu
  * @param {IonRangeElement[]} ionRangeVec - vector that contains the ion-range objects
@@ -48,6 +58,23 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onI
             }
         }
     });
+
+    const feedBackend = (index: number, value: { lower: number, upper: number }, ionRangeElement: IonRangeElement) => {
+        const backendPayload: BackendPayload = {
+            ionRangeId: ionRangeElement.ionRangeId,
+            ionNameMenu: ionRangeElement.ionNameMenu,
+            ionRangeName: ionRangeElement.ionRangeName,
+            actualRangeVal: ionRangeElement.actualRangeVal
+        }
+        console.log("payload content for ion-range");
+        console.table(backendPayload);
+        sfetch("POST", "/set_augment_ion_range", JSON.stringify(backendPayload), "json").then(
+            () => {
+                onIonRangeVec(value, index);
+            }
+        );
+
+    }
 
     return (
         <Fragment>
@@ -73,11 +100,11 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onI
                     value={Math.round(ionRangeVec[index].actualRangeVal.lower * 100) / 100}
                     step={"0.01"}
                     onIonChange={(e: CustomEvent) => {
-                        console.log("value in ion-input (lower) : ", e.detail.value);
-                        onIonRangeVec({
+                        const value = {
                             lower: e.detail.value,
                             upper: ionRangeVec[index].actualRangeVal.upper
-                        } as { lower: number, upper: number }, index);
+                        } as { lower: number, upper: number };
+                        feedBackend(index, value, ionRangeVec[index]);
                     }}/>
                 <IonInput
                     type={"number"}
@@ -86,11 +113,11 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onI
                     value={Math.round(ionRangeVec[index].actualRangeVal.upper * 100) / 100}
                     step={"0.01"}
                     onIonChange={(e: CustomEvent) => {
-                        console.log("value in ion-input : ", e.detail.value);
-                        onIonRangeVec({
+                        const value = {
                             lower: ionRangeVec[index].actualRangeVal.lower,
                             upper: e.detail.value
-                        } as { lower: number, upper: number }, index);
+                        } as { lower: number, upper: number };
+                        feedBackend(index, value, ionRangeVec[index]);
                     }}/>
             </IonItem>
         </Fragment>

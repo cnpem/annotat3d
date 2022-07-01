@@ -495,12 +495,30 @@ def _create_dataset(imgs: list, labels: list, weights: list,
     return data, ""
 
 
+@app.route("/set_augment_ion_range", methods=["POST"])
+@cross_origin()
+def set_augment_ion_range():
+    try:
+        ion_range_id = request.json["ionRangeId"]
+        ion_name_menu = request.json["ionNameMenu"]
+        ion_range_name = request.json["ionRangeName"]
+        actual_range_val = request.json["actualRangeVal"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    new_data = {
+        "ionNameMenu": ion_name_menu + "-" + ion_range_name,
+        "actualRangeVal": {"lower": actual_range_val["lower"], "upper": actual_range_val["upper"]}}
+    data_repo.set_augment_ion_range(ion_range_id, new_data)
+
+    return jsonify("success on the dispatch")
+
+
 @app.route("/set_augment_list", methods=["POST"])
 @cross_origin()
 def set_augment_list():
     try:
         checked_op = request.json["checked_element"]
-
     except Exception as e:
         return handle_exception(str(e))
 
