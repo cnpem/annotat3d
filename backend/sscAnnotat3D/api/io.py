@@ -231,7 +231,27 @@ def crop_apply():
     }
     image_info['imageShape'] =  {'x':output_shape[2], 'y':output_shape[1], 'z':output_shape[0]}
 
-    print('\Full shape: ', crop_info['imageFullShape'])
+    # ---
+    # annotation 
+    # ---
+    annot_module = module_repo.get_module('annotation')
+    if annot_module is not None:
+        anot_full = annot_module.get_annotation()
+        anot_crop = dict()
+        keylist = list(anot_full.keys());
+        for coords in keylist:
+            kz, ky, kx = coords
+            if (zlo <= kz <  zhi and ylo <= ky <  yhi and xlo <= kx <  xhi):
+                print('passed...', coords)
+                # removes from annot_full and adds to annot_crop
+                # so when the merge operation occurs, annot_crop can be appended
+                # to the annot_full dictionary preserving its order by click 
+                k_crop = (kz-zlo, ky-ylo, kx-xlo)
+                anot_crop[k_crop] = anot_full.pop(coords)
+        annot_module.set_annotation(anot_crop)
+        data_repo.set_info(key='anot_backup', data=anot_full)   
+
+
 
     data_repo.set_image('image', data=output_img)
     data_repo.set_info(key='image_info', data=image_info)
@@ -284,7 +304,6 @@ def crop_merge():
     # ---
     # crop info for update coordinates of labels and annotations
     # ---
-
     cropShape = crop_info['cropShape']
 
     if cropShape is None:
@@ -297,7 +316,6 @@ def crop_merge():
     # ---
     # label image
     # ---
-
     label_img = data_repo.get_image('label')
 
     if label_img is not None:
@@ -308,18 +326,19 @@ def crop_merge():
         data_repo.set_image('label', data=output_labelimg)
 
     # ---
-    # annotation (dictionary)
+    # annotation 
     # ---
-
     annot_module = module_repo.get_module('annotation')
     if annot_module is not None:
-        dic = annot_module.get_annotation()
-        newdic = dict()
-        for k in dic.keys():
+        annot_full = data_repo.get_info(key='anot_backup')
+        if annot_full is None:
+            annot_full = dict()
+        anot_crop = annot_module.get_annotation()
+        for k in anot_crop.keys():
             kz, ky, kx = k
             new_k = (kz+zlo, ky+ylo, kx+xlo)
-            newdic[new_k] = dic[k]
-        annot_module.set_annotation(newdic) 
+            annot_full[new_k] = anot_crop[k]
+        annot_module.set_annotation(annot_full) 
 
     # ---
     # update info on data_repo
