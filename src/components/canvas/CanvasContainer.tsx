@@ -278,10 +278,10 @@ class Canvas {
         this.labelSlice = new PIXI.Sprite();
 
         this.cropSlice = new PIXI.Sprite(); 
-        this.cropSlice.alpha = 0.8; 
+        this.cropSlice.tint = this.cropColor;
+        this.cropSlice.alpha = 0.2; 
         this.cropSlice.blendMode = PIXI.BLEND_MODES.ADD; 
         this.cropSlice.visible = false; 
-        this.cropSlice.tint = this.cropColor;
 
         this.futureSlice = new PIXI.Sprite();
         this.futureSlice.visible = false;
@@ -628,8 +628,6 @@ class Canvas {
             return 
         } 
 
-        const alpha = this.cropSlice.alpha;
-
         let width : number; 
         let height : number;
         const depth = this.sliceNum;
@@ -674,29 +672,21 @@ class Canvas {
         };
 
         const len : number = width*height;
-        let rgbaData = new Uint8Array(len * 4);
-
-        const colors = this.colors;
+        let uint8data = new Uint8Array(len);
 
         const rowMajIdx = (yi: number, xj: number) => {
             return xj + yi*width;
         };
 
-        const color = colors[0];
-
         for (let yi = 0; yi < height; ++yi) {
             for (let xj = 0; xj < width; ++xj) {
                 if ( !insideBox(yi, xj, ) ) {
-                    const idx = rowMajIdx(yi, xj) * 4;
-                    rgbaData[idx] = color[0];
-                    rgbaData[idx + 1] = color[1];
-                    rgbaData[idx + 2] = color[2];
-                    rgbaData[idx + 3] = 128 * alpha; 
+                    const idx = rowMajIdx(yi, xj) ;//* 4;
+                    uint8data[idx] = 255;
                 } 
             }
         }        
-
-        const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
+        const texture = this.textureFromSlice(uint8data, width, height);
         this.cropSlice.texture = texture;
     }
 
@@ -884,8 +874,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onExtendLabel: (flag: boolean) => void = () => {};
     onCropPreviewMode: (activateCropPreview: boolean) => void = () => {};
     onCropShape: (cropShape: CropShapeInterface) => void = () => {};
-    onCropPreviewColorChanged: (color: any) => void = () => {
-    };
+    onCropPreviewColorChanged: (color: any) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -1165,7 +1154,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe("ExtendLabel", this.onExtendLabel);
         unsubscribe('cropShape', this.onCropShape);
         unsubscribe('cropPreviewMode', this.onCropPreviewMode);
-        unsubscribe('cropPreviewColorchanged', this.onSuperpixelColorChanged);
+        unsubscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) { 

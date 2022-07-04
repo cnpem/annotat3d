@@ -21,6 +21,7 @@ interface CropMenuProps {
 
 function rgbToHex(r: number, g: number, b: number) {
     const bin = (r << 16) | (g << 8) | b;
+    console.log('on CropMenu: rebToHex color = ', bin);
     return bin;
 } 
 
@@ -45,7 +46,7 @@ function rgbToHex(r: number, g: number, b: number) {
  */
 const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
 
-    const [cropPreviewColor, setCropPreviewColor] = useStorageState<number>(sessionStorage, 'cropPreviewColor', 0xf03030);
+    const [cropPreviewColor, setCropPreviewColor] = useStorageState<number>(sessionStorage, 'cropPreviewColor', 0xBF4040);
 
     const [showToast] = useIonToast();
     const toastTime = 2000;
@@ -225,7 +226,6 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                     </IonItem>
                     <SliderPicker color={'#'+cropPreviewColor.toString(16)}
                             onChange={ (e: any) => {
-                                console.log(e);
                                 const color = rgbToHex(e.rgb.r, e.rgb.g, e.rgb.b);
                                 dispatch('cropPreviewColorchanged', color);
                                 setCropPreviewColor(color);
