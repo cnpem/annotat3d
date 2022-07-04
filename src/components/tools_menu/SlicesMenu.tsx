@@ -101,7 +101,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             </IonSegment>
 
             <IonItem>
-                <IonRange min={0} max={maxValSlider[sliceName]} pin={true} value={sliceValue} onIonChange={handleSliceValue} disabled={LockMenu}>
+                <IonRange min={0} max={maxValSlider[sliceName]} pin={true} value={sliceValue} onIonKnobMoveEnd={handleSliceValue} disabled={LockMenu}>
                     <IonIcon size={"small"} slot={"start"} icon={albumsOutline}/>
                 </IonRange>
             </IonItem>

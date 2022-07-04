@@ -51,12 +51,12 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
     useEffect(() => {
         if (contrastRangeRef) {
             if (!isEqual(contrastRangeRef.current!.value, contrast)) {
+                // this is used to  reposition the slider markers to the last values set on contrast
                 setTimeout(() => {
                     contrastRangeRef.current!.value = contrast;
                 }, 20);
             }
         }
-
         //now I am just dispatch all events on mount
         //(however, I should change canvas container to store tis state properly)
         //to use the useStorageState I should migrate canvas container to new format (react hooks)
@@ -75,13 +75,15 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
             <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <IonRange ref={contrastRangeRef} pin={true} debounce={300}
-                        dualKnobs={true} onIonChange={ (e) => {
+                        dualKnobs={true} 
+                        onIonChange={ (e:CustomEvent) => {
                             if (e.detail.value) {
                                 const range = e.detail.value as any;
                                 setContrast(range);
                                 dispatch('contrastChanged', [range.lower/100, range.upper/100]);
                             }
-                        }}>
+                        }}
+                        >
                         <IonIcon slot='start' icon={sunny}></IonIcon>
                         <IonIcon slot='end' icon={moon}></IonIcon>
                     </IonRange>
@@ -101,7 +103,7 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
                     <div hidden={!showSuperpixel}>
                         <SliderPicker color={'#'+superpixelColor.toString(16)}
                             onChange={ (e: any) => {
-                                console.log(e);
+                                console.log('Superpixel SliderPicker e: ',e);
                                 const color = rgbToHex(e.rgb.r, e.rgb.g, e.rgb.b);
                                 dispatch('superpixelColorChanged', color);
                                 setSuperpixelColor(color);
