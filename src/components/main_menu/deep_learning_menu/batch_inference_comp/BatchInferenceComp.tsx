@@ -14,14 +14,21 @@ import {checkbox} from "ionicons/icons";
 import ErrorWindowComp from "../../file/ErrorWindowComp";
 import {useStorageState} from "react-storage-hooks";
 import InferenceComp from "./InferenceComp";
+import {initialPatches, PatchesInterface} from "./BatchInferenceInterfaces";
+import Settings from "./Settings";
 
 const menuChoices = ["Inference", "Settings"] as const;
 type InputMenuChoicesType = typeof menuChoices[number];
 
+/**
+ * Component that create the Batch Inference menu
+ * @example <BatchInferenceComp/>
+ */
 const BatchInferenceComp: React.FC = () => {
 
     const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, "DatasetMenu", "Inference");
     const [disableComp, setDisableComp] = useStorageState<boolean>(sessionStorage, "workspaceLoaded", true);
+    const [patches, setPatches] = useStorageState<PatchesInterface>(sessionStorage, "patches", initialPatches)
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
 
@@ -33,11 +40,16 @@ const BatchInferenceComp: React.FC = () => {
         setShowErrorWindow(flag);
     }
 
+    const handlePatches = (patches: PatchesInterface) => {
+        setPatches(patches);
+    }
+
     useEventBus("workspaceLoaded", (isDisabled: boolean) => {
         setDisableComp(isDisabled);
     });
 
-    const menus = [<InferenceComp/>];
+    const menus = [<InferenceComp/>, <Settings patches={patches}
+                                               onPatches={handlePatches}/>];
 
     /**
      * Clean up popover dialog

@@ -13,18 +13,12 @@ import ErrorWindowComp from "../../file/ErrorWindowComp";
 import {useStorageState} from "react-storage-hooks";
 import {addOutline, closeOutline, construct, image, trashOutline} from "ionicons/icons";
 import {InitTables, TableInterface, type_operation} from "../dataset_comp/DatasetInterfaces";
-import {MultiplesPath} from "./BatchInferenceInterfaces";
+import {MultiplesPath, SelectInterface} from "./BatchInferenceInterfaces";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
 import * as ReactBootStrap from "react-bootstrap";
 import "./Table.css";
-
-interface SelectInterface {
-    key: number,
-    value: string,
-    label: string
-}
 
 const typeNetworks: SelectInterface[] = [
     {
@@ -138,8 +132,8 @@ const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabel
 }
 
 /**
+ * Component that create the Inference menu option
  * TODO : Need to implement all the functions for the elements and the back-end function for this
- * @constructor
  */
 const InferenceComp: React.FC = () => {
     const [inputImagesTable, setInputImagesTable] = useStorageState<TableInterface[]>(sessionStorage, 'inputImagesTable', InitTables);
@@ -162,7 +156,6 @@ const InferenceComp: React.FC = () => {
         setDarkMode(darkMode);
     });
 
-    // TODO : need to implement the backEnd function later
     const handleNewFile = (newFile: MultiplesPath, typeOperation: type_operation) => {
         if (newFile.id === 0) {
             setInputImagesTable([{
