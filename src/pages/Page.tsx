@@ -18,7 +18,6 @@ import {sfetch} from "../utils/simplerequest";
 /**
  * Module that contains the initial page of Annotat3D web
  * @tutorial the variable name is used as the main site title
- * @constructor
  * @return returns the React file to create the site /inbox
  */
 const Page: React.FC = () => {
@@ -67,7 +66,7 @@ const Page: React.FC = () => {
             </IonContent>
 
             <IonFooter>
-                <span>{ sliceInfo.axis + ": " + sliceInfo.slice }</span>
+                <span>{ sliceInfo.axis + " : " + sliceInfo.slice }</span>
             </IonFooter>
         </IonPage>
     );

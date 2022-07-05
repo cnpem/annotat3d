@@ -3,7 +3,7 @@ import {MenuItem} from "../MenuItems";
 import {layersOutline, layersSharp} from "ionicons/icons";
 import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
 import WorkspaceComp from "./workspace_comp/WorkspaceComp";
-import DatasetDialog from "./dataset_compo/DatasetDialog";
+import DatasetDialog from "./dataset_comp/DatasetComp";
 import NetworkComp from "./network_comp/NetworkComp";
 
 /**

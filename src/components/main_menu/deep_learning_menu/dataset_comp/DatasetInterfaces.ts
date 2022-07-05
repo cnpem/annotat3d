@@ -1,5 +1,7 @@
+import dataType from "../../file/Dtypes";
+
 /**
- * This script contains all the interfaces for dataset_compo directory
+ * This script contains all the interfaces for dataset_comp directory
 
  /**
  * Interface for Augmentation option
@@ -29,58 +31,58 @@ export interface AugmentationInterface {
  */
 export const InitAugmentationOptions: AugmentationInterface[] = [
     {
-        augmentationOption: "Vertical Flip",
-        isChecked: false,
+        augmentationOption: "vertical-flip",
+        isChecked: true,
         checkedId: 0,
     },
     {
-        augmentationOption: "Horizontal Flip",
-        isChecked: false,
+        augmentationOption: "horizontal-flip",
+        isChecked: true,
         checkedId: 1,
     },
     {
-        augmentationOption: "Rotate 90 Degress",
-        isChecked: false,
+        augmentationOption: "rotate-90-degrees",
+        isChecked: true,
         checkedId: 2,
     },
     {
-        augmentationOption: "Rotate -90 Degress",
-        isChecked: false,
+        augmentationOption: "rotate-less-90-degrees",
+        isChecked: true,
         checkedId: 3,
     },
     {
-        augmentationOption: "Contrast",
-        isChecked: false,
+        augmentationOption: "contrast",
+        isChecked: true,
         checkedId: 4,
     },
     {
-        augmentationOption: "Linear Contrast",
-        isChecked: false,
+        augmentationOption: "linear-contrast",
+        isChecked: true,
         checkedId: 5,
     },
     {
-        augmentationOption: "Dropout",
-        isChecked: false,
+        augmentationOption: "dropout",
+        isChecked: true,
         checkedId: 6,
     },
     {
-        augmentationOption: "Gaussian Blur",
-        isChecked: false,
+        augmentationOption: "gaussian-blur",
+        isChecked: true,
         checkedId: 7,
     },
     {
-        augmentationOption: "Average Blur",
-        isChecked: false,
+        augmentationOption: "average-blur",
+        isChecked: true,
         checkedId: 8,
     },
     {
-        augmentationOption: "Additive Poisson Noise",
-        isChecked: false,
+        augmentationOption: "additive-poisson-noise",
+        isChecked: true,
         checkedId: 9,
     },
     {
-        augmentationOption: "Elastic Deformation",
-        isChecked: false,
+        augmentationOption: "elastic-deformation",
+        isChecked: true,
         checkedId: 10,
     }
 ];
@@ -212,16 +214,84 @@ export const InitIonRangeVec: IonRangeElement[] = [
 export type type_operation = "Data" | "Label" | "Weight";
 
 /**
+ * dtypes array
+ */
+export const dtypeList: dataType[] = [
+    {
+        value: "uint8",
+        label: "8-bit"
+    },
+    {
+        value: "int16",
+        label: "16-bit Signed"
+    },
+    {
+        value: "uint16",
+        label: "16-bit Unsigned"
+    },
+    {
+        value: "int32",
+        label: "32-bit Signed"
+    },
+    {
+        value: "uint32",
+        label: "32-bit Unsigned"
+    },
+    {
+        value: "int64",
+        label: "64-bit Signed"
+    },
+    {
+        value: "uint64",
+        label: "64-bit Unsigned"
+    },
+    {
+        value: "float32",
+        label: "32-bit Float"
+    },
+    {
+        value: "float64",
+        label: "64-bit Float"
+    },
+    {
+        value: "complex64",
+        label: "64-bit Complex"
+    }
+];
+
+export type dtype_type =
+    "uint8"
+    | "int16"
+    | "uint16"
+    | "int32"
+    | "uint32"
+    | "int64"
+    | "uint64"
+    | "float32"
+    | "float64"
+    | "complex64";
+
+/**
  * Build-in interface for Element of data and weight table
  */
-interface TableElement {
-    file: string,
+export interface TableElement {
+    fileName: string,
     shape: Array<number>,
-    type: string,
+    type: dtype_type,
     scan: string,
     time: number,
     size: number,
-    fullPath: string
+    filePath: string
+}
+
+export const InitFileStatus: TableElement = {
+    fileName: "",
+    shape: new Array(3),
+    type: "uint16",
+    scan: "",
+    time: 0,
+    size: 0,
+    filePath: ""
 }
 
 /**
@@ -235,3 +305,11 @@ export interface TableInterface {
 
 export const InitTables: TableInterface[] = []
 
+/**
+ * Interface used for Sampling
+ */
+export interface SamplingInterface {
+    nClasses: number,
+    sampleSize: number,
+    patchSize: Array<number>;
+}

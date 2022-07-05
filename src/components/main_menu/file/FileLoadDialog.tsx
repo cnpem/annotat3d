@@ -16,6 +16,7 @@ import {
     IonAccordionGroup, IonContent, IonToast
 } from "@ionic/react";
 import "./FileDialog.css"
+import dataType from "./Dtypes";
 import {construct, create, extensionPuzzle, image, images, information} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
@@ -306,7 +307,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                 <IonLabel position="stacked">Image Size</IonLabel>
                                                 <div style={{display: 'flex', justifyContent: 'flex-start'}}>
                                                     <IonInput
-                                                        className={"ion-text-center"}
+                                                        className={"ion-input"}
                                                         type="number"
                                                         min={"0"}
                                                         value={imgShapeRaw[0]}
@@ -314,7 +315,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                         onIonChange={e => setImageShapeRaw([parseInt(e.detail.value!, 10), imgShapeRaw[1], imgShapeRaw[2]])}
                                                     />
                                                     <IonInput
-                                                        className={"ion-text-center"}
+                                                        className={"ion-input"}
                                                         type="number"
                                                         min={"0"}
                                                         value={imgShapeRaw[1]}
@@ -322,7 +323,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                         onIonChange={e => setImageShapeRaw([imgShapeRaw[0], parseInt(e.detail.value!, 10), imgShapeRaw[2]])}
                                                     />
                                                     <IonInput
-                                                        className={"ion-text-center"}
+                                                        className={"ion-input"}
                                                         type="number"
                                                         min={"0"}
                                                         value={imgShapeRaw[2]}
