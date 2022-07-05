@@ -2,8 +2,8 @@ import React, {useState} from "react";
 import {
     IonAccordion,
     IonAccordionGroup, IonAlert,
-    IonButton, IonButtons,
-    IonContent, IonIcon,
+    IonButton, IonButtons, IonCheckbox,
+    IonContent, IonIcon, IonInput,
     IonItem, IonItemDivider,
     IonLabel,
     IonList,
@@ -11,7 +11,7 @@ import {
 } from "@ionic/react";
 import ErrorWindowComp from "../../file/ErrorWindowComp";
 import {useStorageState} from "react-storage-hooks";
-import {addOutline, closeOutline, trashOutline} from "ionicons/icons";
+import {addOutline, closeOutline, construct, image, trashOutline} from "ionicons/icons";
 import {InitTables, TableInterface, type_operation} from "../dataset_comp/DatasetInterfaces";
 import {MultiplesPath} from "./BatchInferenceInterfaces";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
@@ -20,13 +20,13 @@ import ErrorInterface from "../../file/ErrorInterface";
 import * as ReactBootStrap from "react-bootstrap";
 import "./Table.css";
 
-interface Network {
+interface SelectInterface {
     key: number,
     value: string,
     label: string
 }
 
-const typeNetworks: Network[] = [
+const typeNetworks: SelectInterface[] = [
     {
         key: 0,
         value: "u-net",
@@ -42,7 +42,20 @@ const typeNetworks: Network[] = [
         value: "bla-net",
         label: "Bla-Net"
     },
-]
+];
+
+const typePM: SelectInterface[] = [
+    {
+        key: 0,
+        value: "16-bits",
+        label: "16 bits"
+    },
+    {
+        key: 1,
+        value: "32-bits",
+        label: "32 bits"
+    }
+];
 
 interface DeleteMenuInterface {
     labelElement: TableInterface,
@@ -124,6 +137,10 @@ const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabel
     );
 }
 
+/**
+ * TODO : Need to implement all the functions for the elements and the back-end function for this
+ * @constructor
+ */
 const InferenceComp: React.FC = () => {
     const [inputImagesTable, setInputImagesTable] = useStorageState<TableInterface[]>(sessionStorage, 'inputImagesTable', InitTables);
     const [idTable, setIdTable] = useStorageState<number>(sessionStorage, "idTable", 0);
@@ -254,7 +271,7 @@ const InferenceComp: React.FC = () => {
         <small>
             <IonContent scrollEvents={true}>
                 <IonAccordionGroup multiple={true}>
-                    {/*Network option*/}
+                    {/*Network menu*/}
                     <IonAccordion>
                         <IonItem slot={"header"}>
                             <IonLabel><small>Network</small></IonLabel>
@@ -276,13 +293,14 @@ const InferenceComp: React.FC = () => {
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
+                    {/*Input Images menu*/}
                     <IonAccordion>
                         <IonItem slot={"header"}>
-                            <IonLabel><small>Network</small></IonLabel>
+                            <IonLabel><small>Input Images</small></IonLabel>
                         </IonItem>
-                        {/*Ion select option*/}
+                        {/*Input images table*/}
                         <IonList slot={"content"}>
-                            {/*Data table*/}
+                            {/*Images table*/}
                             <div className={"label-table table-responsive text-nowrap"}>
                                 <ReactBootStrap.Table
                                     striped bordered hover
@@ -302,6 +320,53 @@ const InferenceComp: React.FC = () => {
                                     {inputImagesTable!.map(renderLabel)}
                                     </tbody>
                                 </ReactBootStrap.Table>
+                            </div>
+                            <IonItemDivider/>
+                        </IonList>
+                    </IonAccordion>
+                    {/*Output menu*/}
+                    <IonAccordion>
+                        <IonItem slot={"header"}>
+                            <IonLabel><small>Output</small></IonLabel>
+                        </IonItem>
+                        {/*Ion select option*/}
+                        <IonList slot={"content"}>
+                            {/*Workspace input*/}
+                            <IonItem>
+                                <IonIcon slot={"start"} icon={construct}></IonIcon>
+                                <IonLabel position={"floating"}><small>Workspace Path</small></IonLabel>
+                                <IonInput/>
+                            </IonItem>
+                            {/*File path input*/}
+                            <IonItem>
+                                <IonIcon slot={"start"} icon={image}></IonIcon>
+                                <IonLabel position={"floating"}><small>File Path</small></IonLabel>
+                                <IonInput/>
+                            </IonItem>
+                            {/*Probability Map menu*/}
+                            <IonItem>
+                                <IonLabel>Probability Map</IonLabel>
+                                <IonCheckbox/>
+                            </IonItem>
+                            {/*Label menu*/}
+                            <IonItem>
+                                <IonLabel>Label</IonLabel>
+                                <IonCheckbox/>
+                            </IonItem>
+                            <IonItem>
+                                <IonLabel>Output Bits</IonLabel>
+                                <IonSelect interface={"popover"}>
+                                    {typePM.map((type) => {
+                                        return (
+                                            <IonSelectOption
+                                                key={type.key}
+                                                value={type.value}>{type.label}</IonSelectOption>
+                                        );
+                                    })}
+                                </IonSelect>
+                            </IonItem>
+                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+                                <IonButton size={"default"}>Browse</IonButton>
                             </div>
                             <IonItemDivider/>
                         </IonList>
