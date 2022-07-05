@@ -40,3 +40,6 @@ def set_info(key='image_info', data: dict = None):
 def get_info(key='image_info'):
     return __info.get(key)
 
+def delete_info(key):
+    del __info[key]
+

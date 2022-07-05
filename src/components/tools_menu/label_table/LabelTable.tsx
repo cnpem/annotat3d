@@ -61,6 +61,7 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
         }).finally(() => {
             closeWarningWindow();
         });
+        sfetch("POST", "/delete_info/anot_backup", "");
     }
 
     return(

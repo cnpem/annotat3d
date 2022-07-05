@@ -53,17 +53,17 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
     
     const [cropSliderX, setCropSliderX] = useStorageState<CropAxisInterface>(sessionStorage, 'cropSliderX', {
         lower: 0,
-        upper: props.imageShape.x
+        upper: 0
     });
 
     const [cropSliderY, setCropSliderY] = useStorageState<CropAxisInterface>(sessionStorage, 'cropSliderY', {
         lower: 0,
-        upper: props.imageShape.y
+        upper: 0
     });
 
     const [cropSliderZ, setCropSliderZ] = useStorageState<CropAxisInterface>(sessionStorage, 'cropSliderZ', {
         lower: 0,
-        upper: props.imageShape.z
+        upper: 0
     });
 
     const [superpixelMode, setSuperpixelMode] = useStorageState<boolean>(sessionStorage, 'superpixelMode', false);
@@ -126,8 +126,8 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
         const cropShape:CropShapeInterface = {
             cropX: cropSliderX,
             cropY: {
-                lower: yLength - cropSliderY.upper - 1,
-                upper: yLength - cropSliderY.lower - 1
+                lower: yLength - cropSliderY.upper,
+                upper: yLength - cropSliderY.lower
             },
             cropZ: cropSliderZ
         }
@@ -143,18 +143,16 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
      * Deactivates the preview mode and reset the limits of the sliders.
      */
     function onReset() {
-        setCropSliderX({
+        console.log('CropMenu: onReset')
+        const zeros : CropAxisInterface = {
             lower: 0,
-            upper: props.imageShape.x
-        });
-        setCropSliderY({
-            lower: 0,
-            upper: props.imageShape.y
-        });
-        setCropSliderZ({
-            lower: 0,
-            upper: props.imageShape.z
-        });
+            upper: 0
+        }
+        console.log('CropMenu: onReset p2')
+        // reset useStoragestate vars
+        setCropSliderX(zeros);
+        setCropSliderY(zeros);
+        setCropSliderZ(zeros);
         dispatch('cropPreviewMode', false); 
         dispatch('labelChanged','');
         showToast('Reset crop preview region done!', toastTime);
@@ -169,11 +167,12 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
         const cropShape:CropShapeInterface = {
             cropX: cropSliderX,
             cropY: {
-                lower: yLength - cropSliderY.upper - 1,
-                upper: yLength - cropSliderY.lower - 1
+                lower: yLength - cropSliderY.upper,
+                upper: yLength - cropSliderY.lower
             },
             cropZ: cropSliderZ
         }
+        console.log('CropMenu: onApply', cropShape);
         sfetch("POST", "/crop_apply", JSON.stringify(cropShape), "json")
         .then((img_info:ImageInfoInterface) => {
             console.log('CropMenu: onApply Success! ', img_info);
@@ -181,8 +180,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
             dispatch('ImageLoaded', img_info); 
             // recalcullates superpixel if it was previously calcullated
             resetSuperpixel();
-            // show superpixel
-            // dispatch('superpixelVisibilityChanged', true);
+            dispatch('annotationChanged', null);
             // resets crop mode (sliders positions and hides crop preview)
             onReset();
             const msg : string = 'Crop Applied cropShape: '+cropShape+' new imageShape:'+ img_info.imageShape;
@@ -206,6 +204,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
             resetSuperpixel();
             // replace label image updated in the backend
             dispatch('labelChanged','');
+            dispatch('annotationChanged', null);
             // resets crop mode (sliders positions and hides crop preview)
             onReset();
             showToast('Crop Merged', toastTime);
