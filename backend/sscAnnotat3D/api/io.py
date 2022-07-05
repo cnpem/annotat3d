@@ -8,11 +8,12 @@ import numpy as np
 from flask import Blueprint, request, jsonify
 from werkzeug.exceptions import BadRequest
 from flask_cors import cross_origin
+from imgaug import augmenters as iaa
 
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 from sscDeepsirius.utils import augmentation, dataset, sampling, image
-
+#from backend.sscDeepsiriusLocal.deepsirius.utils import augmentation, dataset, sampling, image -> local files
 app = Blueprint('io', __name__)
 
 
@@ -411,6 +412,95 @@ def load_workspace():
     return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
 
 
+def elastic_augmenter(params=None):
+    if params is None:
+        params = {}
+    alpha = params.get('alpha', (25.0, 50.0))
+    sigma = params.get('sigma', [4.0, 6.0])
+    return iaa.ElasticTransformation(alpha=alpha, name='elastic', sigma=sigma, mode='reflect').to_deterministic()
+
+
+def fliph_augmenter(params=None):
+    del params
+    return iaa.Fliplr(1.0, name='flip_horizontal').to_deterministic()
+
+
+def flipv_augmenter(params=None):
+    del params
+    return iaa.Flipud(1.0, name='flip_vertical').to_deterministic()
+
+
+def contrast_augmenter(params=None):
+    if params is None:
+        params = {}
+    contrast = params.get('contrast', (0.1, 1.9))
+    return iaa.GammaContrast(contrast, name='contrast').to_deterministic()
+
+
+def gaussian_augmenter(params=None):
+    if params is None:
+        params = {}
+    sigma = params.get('sigma', (0.25, 1.0))
+    return iaa.GaussianBlur(sigma=sigma, name='gaussian_blur').to_deterministic()
+
+
+def average_augmenter(params=None):
+    if params is None:
+        params = {}
+    k = params.get('k', (1, 2))
+    return iaa.AverageBlur(k=k, name='average_blur').to_deterministic()
+
+
+def rot90_augmenter(params=None):
+    del params
+    return iaa.Rot90(1, name='rot90').to_deterministic()
+
+
+def rot270_augmenter(params=None):
+    del params
+    return iaa.Rot90(3, name='rot270').to_deterministic()
+
+
+def linearContrast_augmenter(params=None):
+    if params is None:
+        params = {}
+    linearContrast = params.get('linearContrast', (0.4, 1.6))
+    return iaa.LinearContrast(linearContrast, name='linearContrast').to_deterministic()
+
+
+def dropout_augmenter(params=None):
+    if params is None:
+        params = {}
+    dropout = params.get('dropout', (0, 0.2))
+    if (dropout[0] == dropout[1]):
+        dropout = (dropout[0], dropout[0] + 0.001)
+    return iaa.Dropout(p=dropout, name='dropout').to_deterministic()
+
+
+def poisson_augmenter(params=None):
+    if params is None:
+        params = {}
+    scale = params.get('scale', (1, 2))
+    return iaa.AdditivePoissonNoise(scale, name='poisson_noise').to_deterministic()
+
+
+def _augm_constructors():
+    _constructors = {
+        'elastic': elastic_augmenter,
+        'flip_horizontal': fliph_augmenter,
+        'flip_vertical': flipv_augmenter,
+        'gaussian_blur': gaussian_augmenter,
+        'contrast': contrast_augmenter,
+        'average_blur': average_augmenter,
+        'rot90': rot90_augmenter,
+        'rot270': rot270_augmenter,
+        'linearContrast': linearContrast_augmenter,
+        'dropout': dropout_augmenter,
+        'poisson_noise': poisson_augmenter
+    }
+    return _constructors
+
+
 # TODO : change to z, y, x pattern everywhere ...
 def _create_dataset(imgs: list, labels: list, weights: list,
                     output: str, nsamples: int, num_classes: int, size: tuple,
@@ -535,7 +625,7 @@ def set_augment_list():
 @app.route("/create_dataset", methods=["POST"])
 @cross_origin()
 # TODO : need to implement the documentation
-# TODO : need to implement the augmentation option into the dataset. For this, i can look into the file https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py line 479
+# TODO : need to implement the augmentation option into the dataset. For this, x can look into the file https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py line 479
 # TODO : don't forget to look in this link
 # https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
 # TODO : for the augmentation menu. I'll see .augment from tis script
@@ -569,10 +659,18 @@ def create_dataset():
                                          size, offset)
 
     test = []
-    for i in checked_index:
-        print("augmentation option")
-        test.append(i)
+    for x in checked_index:
+        print("augmentation option : {}".format(x))
+        test.append(x)
+
     _debugger_print("Checked option", test)
+
+    try:
+        augmentation.augment(output, output, test)
+    except Exception as e:
+        _debugger_print("Eita, deu caô :(", "F")
+        _debugger_print("Error : ", str(e))
+        return handle_exception(str(e))
 
     if (not data):
         return error_status
