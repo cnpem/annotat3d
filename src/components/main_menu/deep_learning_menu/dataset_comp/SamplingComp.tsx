@@ -394,8 +394,9 @@ interface SamplingCompInterface {
 }
 
 /**
- * TODO : need to implement the documentation here
- * Component that hold all the Sampling options
+ * Component used to create the sampling menu
+ * @param sampleElement {SamplingInterface} - A Sample object
+ * @param onSampling {(sample: SamplingInterface) => void} - Setter for sampleElement
  */
 const SamplingComp: React.FC<SamplingCompInterface> = ({sampleElement, onSampling}) => {
 
