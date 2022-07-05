@@ -1,26 +1,37 @@
-import React, {useState} from "react";
+import React, {Fragment, useState} from "react";
 import {
     IonAccordion,
     IonAccordionGroup, IonAlert, IonButton, IonButtons, IonCol,
-    IonContent,
-    IonIcon, IonInput,
+    IonContent, IonIcon,
+    IonInput,
     IonItem,
     IonItemDivider,
     IonLabel,
-    IonList, IonPopover, IonRow
+    IonList, IonPopover, IonRow, IonSelect, IonSelectOption
 } from "@ionic/react";
-import {addOutline, closeOutline, image, trashOutline} from "ionicons/icons";
+import {addOutline, closeOutline, construct, image, trashOutline} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import * as ReactBootStrap from "react-bootstrap";
-import {InitTables, TableInterface, type_operation} from "./DatasetInterfaces";
+import {
+    dtype_type,
+    dtypeList,
+    InitFileStatus,
+    InitTables, SamplingInterface,
+    TableElement,
+    TableInterface,
+    type_operation
+} from "./DatasetInterfaces";
 import "./Tables.css";
 import "./Dataset.css";
+import {sfetch} from "../../../../utils/simplerequest";
+import ErrorInterface from "../../file/ErrorInterface";
+import ErrorWindowComp from "../../file/ErrorWindowComp";
 
 interface MultiplesPath {
     id: number,
     workspacePath: string,
-    filePath: string,
+    file: TableElement,
 }
 
 interface AddNewFileInterface {
@@ -31,10 +42,17 @@ interface AddNewFileInterface {
     trigger: string,
 }
 
+interface BackendPayload {
+    image_path: string,
+    image_dtype: dtype_type,
+    image_raw_shape: Array<number>,
+    use_image_raw_parse: boolean,
+}
+
 /**
  * React component that creates the add menu interface
  * @param idMenu {number} - id used to create a new element in the table
- * @param onIdMenu {(newId: number, type: type_operation)} - handler used to update the idMenu for a especific table
+ * @param onIdMenu {(newId: number, type: type_operation)} - handler used to update the idMenu for a specific table
  * @param onTableVec {(newFile: MultiplesPath) => void} - setter used to create a new element
  * @param trigger {string} - string that contains the trigger to open the popup
  * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
@@ -46,21 +64,65 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        typeOperation,
                                                        trigger,
                                                    }) => {
+
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
+    const [workspacePath, setWorkspacePath] = useState<string>("");
+    const [filePath, setFilePath] = useState<string>("");
     let pathFiles: MultiplesPath = {
         id: idMenu,
         workspacePath: "",
-        filePath: ""
+        file: InitFileStatus,
     };
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
+
+    const readFile = () => {
+        pathFiles.workspacePath = workspacePath;
+        pathFiles.file.filePath = filePath;
+        const params: BackendPayload = {
+            image_path: pathFiles.workspacePath + pathFiles.file.filePath,
+            image_dtype: pathFiles.file.type,
+            image_raw_shape: [pathFiles.file.shape[0] || 0, pathFiles.file.shape[1] || 0, pathFiles.file.shape[2] || 0],
+            use_image_raw_parse: (pathFiles.file.shape[0] == null && pathFiles.file.shape[1] == null && pathFiles.file.shape[2] == null)
+        }
+
+        sfetch("POST", `/open_files_dataset/${typeOperation.toLowerCase()}-${pathFiles.id}`, JSON.stringify(params), "json").then(
+            (element: TableElement) => {
+                console.log("Backend response");
+                console.table(element);
+                pathFiles.file = element
+                onTableVec(pathFiles, typeOperation);
+                pathFiles.id += 1;
+
+            }).catch((error: ErrorInterface) => {
+            console.log("error while trying to add an image")
+            console.log(error.error_msg);
+            setErrorMsg(error.error_msg);
+            setShowErrorWindow(true);
+        })
+    }
 
     return (
         <IonPopover
             trigger={trigger}
             className={"add-menu"}
-            onDidDismiss={() => onIdMenu(pathFiles.id, typeOperation)}>
+            onDidDismiss={() => {
+                onIdMenu(pathFiles.id, typeOperation);
+                setFilePath("");
+                setWorkspacePath("");
+            }}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
                 <IonAccordion>
                     <IonItem slot={"header"}>
+                        <IonIcon slot={"start"} icon={construct}/>
                         <IonLabel><small>Load {typeOperation} workspace</small></IonLabel>
                     </IonItem>
                     <IonList slot={"content"}>
@@ -68,11 +130,12 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                             <IonLabel position="stacked">Workspace Path</IonLabel>
                             <IonInput
                                 placeholder={"/path/to/workspace"}
-                                value={pathFiles.workspacePath}
+                                value={workspacePath}
                                 onIonChange={(e: CustomEvent) => {
-                                    pathFiles.workspacePath = e.detail.value!
+                                    setWorkspacePath(e.detail.value);
                                 }}/>
                         </IonItem>
+                        <IonItemDivider/>
                     </IonList>
                 </IonAccordion>
                 {/*Load type menu*/}
@@ -85,12 +148,72 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                         <IonItem>
                             <IonLabel position="stacked">{typeOperation} Path</IonLabel>
                             <IonInput
-                                placeholder={`/path/to/${typeOperation}`}
-                                value={pathFiles.filePath}
+                                placeholder={`/path/to/${typeOperation}.tif, .tiff, .raw or .b`}
+                                value={filePath}
                                 onIonChange={(e: CustomEvent) => {
-                                    pathFiles.filePath = e.detail.value!
+                                    setFilePath(e.detail.value);
                                 }}/>
                         </IonItem>
+                        {/* Image Size Grid*/}
+                        <IonItem>
+                            <IonRow>
+                                <IonCol>
+                                    <IonLabel position="stacked">{typeOperation} Size</IonLabel>
+                                    <div style={{display: 'flex', justifyContent: 'flex-start'}}>
+                                        <IonInput
+                                            className={"ion-input"}
+                                            type="number"
+                                            min={"0"}
+                                            value={pathFiles.file.shape[0]}
+                                            placeholder="X"
+                                            onIonChange={(e: CustomEvent) => {
+                                                pathFiles.file.shape[0] = parseInt(e.detail.value!, 10);
+                                            }}
+                                        />
+                                        <IonInput
+                                            className={"ion-input"}
+                                            type="number"
+                                            min={"0"}
+                                            value={pathFiles.file.shape[1]}
+                                            placeholder="Y"
+                                            onIonChange={(e: CustomEvent) => {
+                                                pathFiles.file.shape[1] = parseInt(e.detail.value!, 10);
+                                            }}
+                                        />
+                                        <IonInput
+                                            className={"ion-input"}
+                                            type="number"
+                                            min={"0"}
+                                            value={pathFiles.file.shape[2]}
+                                            placeholder="Z"
+                                            onIonChange={(e: CustomEvent) => {
+                                                pathFiles.file.shape[3] = parseInt(e.detail.value!, 10);
+                                            }}
+                                        />
+                                    </div>
+                                </IonCol>
+                                <IonCol>
+                                    {/* Select dtype */}
+                                    <IonLabel position="stacked">{typeOperation} Type</IonLabel>
+                                    <IonSelect
+                                        style={{maxWidth: '100%'}}
+                                        interface={"popover"}
+                                        value={pathFiles.file.type}
+                                        placeholder={"Select One"}
+                                        onIonChange={(e: CustomEvent) => {
+                                            pathFiles.file.type = e.detail.value;
+                                        }}>
+                                        {dtypeList.map((type) => {
+                                            return (
+                                                <IonSelectOption
+                                                    value={type.value}>{type.label}</IonSelectOption>
+                                            );
+                                        })}
+                                    </IonSelect>
+                                </IonCol>
+                            </IonRow>
+                        </IonItem>
+                        <IonItemDivider/>
                     </IonList>
                 </IonAccordion>
             </IonAccordionGroup>
@@ -101,9 +224,14 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                     console.log("type operation : ", typeOperation);
                     console.log("path");
                     console.table(pathFiles);
-                    onTableVec(pathFiles, typeOperation);
-                    pathFiles.id += 1;
+                    readFile();
                 }}>Load {typeOperation}</IonButton>
+            <ErrorWindowComp
+                headerMsg={`Error trying to add an element in ${typeOperation} table`}
+                errorMsg={errorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
         </IonPopover>
     );
 }
@@ -118,7 +246,6 @@ interface WarningWindowInterface {
 
 /**
  * Component used to create an ion-Alert to delete all elements of a table
- * @todo : need to implement the backend function later
  * @param openWarningWindow {boolean} - boolean variable to open this window
  * @param onOpenWarningWindow {(flag: boolean) => void} - handler for openWarningWindow
  * @param typeOperation {type_operation} - type of operation to delete
@@ -130,30 +257,55 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                                                                typeOperation,
                                                                onTableList
                                                            }) => {
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
 
     return (
-        <IonAlert
-            isOpen={openWarningWindow}
-            onDidDismiss={() => onOpenWarningWindow(false)}
-            header={`Deleting all ${typeOperation}s`}
-            message={`Do you wish to delete all ${typeOperation}s ?`}
-            buttons={[
-                {
-                    text: "No",
-                    id: "no-button",
-                    handler: () => {
-                        onOpenWarningWindow(false);
+        <Fragment>
+            <IonAlert
+                isOpen={openWarningWindow}
+                onDidDismiss={() => onOpenWarningWindow(false)}
+                header={`Deleting all ${typeOperation}s`}
+                message={`Do you wish to delete all ${typeOperation}s ?`}
+                buttons={[
+                    {
+                        text: "No",
+                        id: "no-button",
+                        handler: () => {
+                            onOpenWarningWindow(false);
+                        }
+                    },
+                    {
+                        text: "Yes",
+                        id: "yes-button",
+                        handler: () => {
+                            sfetch("POST", `/close_all_files_dataset/${typeOperation.toLowerCase()}`).then(() => {
+                                onTableList(typeOperation);
+                                onOpenWarningWindow(false);
+                            }).catch((error: ErrorInterface) => {
+                                console.log(`error in delete all ${typeOperation}`);
+                                console.log(error.error_msg);
+                                setErrorMsg(error.error_msg);
+                                setShowErrorWindow(true);
+                            })
+                        }
                     }
-                },
-                {
-                    text: "Yes",
-                    id: "yes-button",
-                    handler: () => {
-                        onTableList(typeOperation);
-                        onOpenWarningWindow(false);
-                    }
-                }
-            ]}/>
+                ]}/>
+            <ErrorWindowComp
+                headerMsg={`Error trying to delete all files in ${typeOperation} table`}
+                errorMsg={errorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
+        </Fragment>
     )
 }
 
@@ -169,6 +321,17 @@ interface DeleteMenuInterface {
  */
 const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelElement}) => {
     const [showAlert, setShowAlert] = useState<boolean>(false);
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
+
     return (
         <IonItem className={"ion-item-table"}
                  id={"file-name-comp"}>
@@ -186,7 +349,7 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                 <IonAlert
                     isOpen={showAlert}
                     onDidDismiss={() => setShowAlert(false)}
-                    message={`Do you wish to delete the ${labelElement.typeOperation} with name "${labelElement.element.file}" ?`}
+                    message={`Do you wish to delete the ${labelElement.typeOperation} with name "${labelElement.element.fileName}" ?`}
                     buttons={[
                         {
                             text: "No",
@@ -199,27 +362,42 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                             text: "Yes",
                             id: "yes-button",
                             handler: () => {
-                                removeLabelElement(labelElement);
-                                setShowAlert(false);
+                                sfetch("POST", `/close_files_dataset/${labelElement.typeOperation.toLowerCase()}-${labelElement.id}`, "json").then(
+                                    () => {
+                                        removeLabelElement(labelElement);
+                                        setShowAlert(false);
+                                    }
+                                ).catch((error: ErrorInterface) => {
+                                    console.log("Error while deleting an element");
+                                    console.log("error msg : ", error.error_msg);
+                                    setErrorMsg(error.error_msg);
+                                    setShowErrorWindow(true);
+                                });
                             }
                         }
                     ]}/>
             </IonButtons>
-            {labelElement.element.file}
+            {labelElement.element.fileName}
+            <ErrorWindowComp
+                headerMsg={`Error trying to delete all files in ${labelElement.typeOperation} table`}
+                errorMsg={errorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
         </IonItem>
     );
 }
 
-interface SamplingInterface {
-    nClasses: number,
-    sampleSize: number,
-    patchSize: Array<number>;
+interface SamplingCompInterface {
+    sampleElement: SamplingInterface,
+    onSampling: (sample: SamplingInterface) => void,
 }
 
 /**
+ * TODO : need to implement the documentation here
  * Component that hold all the Sampling options
  */
-const SamplingComp: React.FC = () => {
+const SamplingComp: React.FC<SamplingCompInterface> = ({sampleElement, onSampling}) => {
 
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
     const [openDeleteAll, setOpenDeleteAll] = useState<boolean>(false);
@@ -240,20 +418,19 @@ const SamplingComp: React.FC = () => {
         setOpenDeleteAll(flag);
     }
 
-    //TODO : need to implement the back-end function to read the images here
     const handleDataTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
         if (newFile.id === 0) {
             setDataTable([{
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
-                    shape: [0, 0, 0],
-                    type: "",
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
                 }
             }]);
         } else {
@@ -261,33 +438,32 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
-                    shape: [0, 0, 0],
-                    type: "",
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.type,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
                 }
             }]);
         }
         setIdTableData(newFile.id + 1);
     }
 
-    //TODO : need to implement the back-end function to read the images here
     const handleLabelTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
         if (newFile.id === 0) {
             setLabelTable([{
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
-                    shape: [0, 0, 0],
-                    type: "",
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
                 }
             }]);
         } else {
@@ -295,33 +471,32 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
-                    shape: [0, 0, 0],
-                    type: "",
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
                 }
             }]);
         }
         setIdTableLabel(newFile.id + 1);
     }
 
-    //TODO : need to implement the back-end function to read the images here
     const handleWeightTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
         if (newFile.id === 0) {
             setWeightTable([{
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
-                    shape: [0, 0, 0],
-                    type: "",
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
                 }
             }]);
         } else {
@@ -329,13 +504,13 @@ const SamplingComp: React.FC = () => {
                 id: newFile.id,
                 typeOperation: typeOperation,
                 element: {
-                    file: newFile.filePath,
-                    shape: [0, 0, 0],
-                    type: "",
-                    scan: "",
-                    time: 0,
-                    size: 0,
-                    fullPath: newFile.workspacePath + newFile.filePath
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
                 }
             }]);
         }
@@ -366,11 +541,6 @@ const SamplingComp: React.FC = () => {
     }
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
-    const [sampleElement, setSampleElement] = useStorageState<SamplingInterface>(sessionStorage, "sampleElement", {
-        nClasses: 2,
-        sampleSize: 100,
-        patchSize: [256, 256, 1],
-    });
 
     const removeLabelElement = (labelElement: TableInterface) => {
         if (labelElement.typeOperation === "Data") {
@@ -396,7 +566,7 @@ const SamplingComp: React.FC = () => {
 
     const selectLabel = (id: number) => {
         setSelectedLabel(id);
-        dispatch('labelSelected', {
+        dispatch('selectedElement', {
             id: id
         });
     }
@@ -429,17 +599,17 @@ const SamplingComp: React.FC = () => {
                 </td>
                 <td>
                     <IonItem className={"ion-item-table"}>
-                        {labelElement.element.time}
+                        {`${labelElement.element.time} s`}
                     </IonItem>
                 </td>
                 <td>
                     <IonItem className={"ion-item-table"}>
-                        {labelElement.element.size}
+                        {`${labelElement.element.size} MB`}
                     </IonItem>
                 </td>
                 <td>
                     <IonItem className={"ion-item-table"}>
-                        {labelElement.element.fullPath}
+                        {labelElement.element.filePath}
                     </IonItem>
                 </td>
             </tr>
@@ -639,12 +809,16 @@ const SamplingComp: React.FC = () => {
                                         <div style={{display: "flex", justifyContent: "flex-start"}}>
                                             <IonInput
                                                 type={"number"}
-                                                min={"0"} value={sampleElement.nClasses}
+                                                min={"0"}
+                                                max={"99"}
+                                                value={sampleElement.nClasses}
                                                 onIonChange={(e: CustomEvent) => {
-                                                    setSampleElement({
-                                                        ...sampleElement,
-                                                        nClasses: parseInt(e.detail.value!, 10)
-                                                    })
+                                                    if (e.detail.value <= 99) {
+                                                        onSampling({
+                                                            ...sampleElement,
+                                                            nClasses: parseInt(e.detail.value!, 10)
+                                                        })
+                                                    }
                                                 }}/>
                                         </div>
                                     </IonCol>
@@ -660,7 +834,7 @@ const SamplingComp: React.FC = () => {
                                                 type={"number"}
                                                 min={"0"} value={sampleElement.sampleSize}
                                                 onIonChange={(e: CustomEvent) => {
-                                                    setSampleElement({
+                                                    onSampling({
                                                         ...sampleElement,
                                                         sampleSize: parseInt(e.detail.value!, 10)
                                                     })
@@ -680,7 +854,7 @@ const SamplingComp: React.FC = () => {
                                                 min={"0"}
                                                 value={sampleElement.patchSize[0]}
                                                 placeholder="X"
-                                                onIonChange={(e: CustomEvent) => setSampleElement({
+                                                onIonChange={(e: CustomEvent) => onSampling({
                                                     ...sampleElement,
                                                     patchSize: [parseInt(e.detail.value!, 10), sampleElement.patchSize[1], sampleElement.patchSize[2]]
                                                 })}
@@ -690,7 +864,7 @@ const SamplingComp: React.FC = () => {
                                                 min={"0"}
                                                 value={sampleElement.patchSize[1]}
                                                 placeholder="Y"
-                                                onIonChange={(e: CustomEvent) => setSampleElement({
+                                                onIonChange={(e: CustomEvent) => onSampling({
                                                     ...sampleElement,
                                                     patchSize: [sampleElement.patchSize[0], parseInt(e.detail.value!, 10), sampleElement.patchSize[2]]
                                                 })}
@@ -700,7 +874,7 @@ const SamplingComp: React.FC = () => {
                                                 min={"0"}
                                                 value={sampleElement.patchSize[2]}
                                                 placeholder="Z"
-                                                onIonChange={(e: CustomEvent) => setSampleElement({
+                                                onIonChange={(e: CustomEvent) => onSampling({
                                                     ...sampleElement,
                                                     patchSize: [sampleElement.patchSize[0], sampleElement.patchSize[1], parseInt(e.detail.value!, 10)]
                                                 })}
