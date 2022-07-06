@@ -8,6 +8,7 @@ __deep_model = dict()
 __dataset_data_module = dict()
 __dataset_label_module = dict()
 __dataset_weight_module = dict()
+__inference_data = dict()
 __augment_checked_options = dict({
     0: {"augmentationOption": "vertical-flip", "isChecked": True},
     1: {"augmentationOption": "vertical-flip", "isChecked": True},
@@ -141,3 +142,20 @@ def set_augment_ion_range(key: int = 0, data: dict = None):
 
 def get_augment_ion_range(key: int = 0):
     return __augment_ion_range.get(key, None)
+
+
+def set_inference_data(key="image-0", data: np.ndarray = None):
+    if (data is not None):
+        __inference_data[key] = data
+
+
+def get_inference_data(key="image-0"):
+    return __inference_data[key]
+
+
+def del_inference_data(key="image-0"):
+    del __inference_data[key]
+
+
+def del_all_inference_data():
+    __inference_data.clear()
