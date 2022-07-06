@@ -1,4 +1,9 @@
-import {PatchesInterface, SelectInterface, type_machine} from "./BatchInferenceInterfaces";
+import {
+    BatchInference, CudaDeviceGPU,
+    PatchesInterface,
+    type_machine, typeMachine,
+    typePartition
+} from "./BatchInferenceInterfaces";
 import {
     IonAccordion,
     IonAccordionGroup, IonCheckbox,
@@ -10,38 +15,7 @@ import {
     IonList,
     IonRow, IonSelect, IonSelectOption
 } from "@ionic/react";
-import React, {Fragment, useState} from "react";
-
-const typeMachine: SelectInterface[] = [
-    {
-        key: 0,
-        value: "local",
-        label: "Local"
-    },
-    {
-        key: 1,
-        value: "tepui",
-        label: "Tepui"
-    }
-];
-
-const typePartition: SelectInterface[] = [
-    {
-        key: 0,
-        value: "1-gpu",
-        label: "1 GPU",
-    },
-    {
-        key: 1,
-        value: "2-gpu",
-        label: "2 GPU",
-    },
-    {
-        key: 2,
-        value: "4-gpu",
-        label: "4 GPU",
-    }
-]
+import React, {Fragment} from "react";
 
 const RemoteDevicesComp: React.FC = () => {
     return (
@@ -61,60 +35,81 @@ const RemoteDevicesComp: React.FC = () => {
     );
 }
 
-const CudaDevicesComp: React.FC = () => {
+interface CudaDeviceInterface {
+    cudaDevices: CudaDeviceGPU[],
+    onCudaDevices: (index: number) => void,
+}
+
+const CudaDevicesComp: React.FC<CudaDeviceInterface> = ({cudaDevices, onCudaDevices}) => {
     return (
         <IonGrid>
             {/*CUDA devices*/}
             <IonLabel>CUDA devices</IonLabel>
             <IonRow>
                 <IonCol>
-                    <IonItem>
-                        <IonLabel>GPU 0</IonLabel>
-                        <IonCheckbox/>
+                    <IonItem disabled={cudaDevices[0].isDisabled}>
+                        <IonLabel>{cudaDevices[0].label}</IonLabel>
+                        <IonCheckbox
+                            checked={cudaDevices[0].isChecked}
+                            onIonChange={() => onCudaDevices(0)}/>
                     </IonItem>
                 </IonCol>
                 <IonCol>
-                    <IonItem>
-                        <IonLabel>GPU 1</IonLabel>
-                        <IonCheckbox/>
+                    <IonItem disabled={cudaDevices[1].isDisabled}>
+                        <IonLabel>{cudaDevices[1].label}</IonLabel>
+                        <IonCheckbox
+                            checked={cudaDevices[1].isChecked}
+                            onIonChange={() => onCudaDevices(1)}/>
                     </IonItem>
                 </IonCol>
                 <IonCol>
-                    <IonItem>
-                        <IonLabel>GPU 2</IonLabel>
-                        <IonCheckbox/>
+                    <IonItem disabled={cudaDevices[2].isDisabled}>
+                        <IonLabel>{cudaDevices[2].label}</IonLabel>
+                        <IonCheckbox
+                            checked={cudaDevices[2].isChecked}
+                            onIonChange={() => onCudaDevices(2)}/>
                     </IonItem>
                 </IonCol>
                 <IonCol>
-                    <IonItem>
-                        <IonLabel>GPU 3</IonLabel>
-                        <IonCheckbox/>
+                    <IonItem disabled={cudaDevices[3].isDisabled}>
+                        <IonLabel>{cudaDevices[3].label}</IonLabel>
+                        <IonCheckbox
+                            checked={cudaDevices[3].isChecked}
+                            onIonChange={() => onCudaDevices(3)}/>
                     </IonItem>
                 </IonCol>
             </IonRow>
             <IonRow>
                 <IonCol>
-                    <IonItem>
-                        <IonLabel>GPU 4</IonLabel>
-                        <IonCheckbox/>
+                    <IonItem disabled={cudaDevices[4].isDisabled}>
+                        <IonLabel>{cudaDevices[4].label}</IonLabel>
+                        <IonCheckbox
+                            checked={cudaDevices[4].isChecked}
+                            onIonChange={() => onCudaDevices(4)}/>
                     </IonItem>
                 </IonCol>
                 <IonCol>
-                    <IonItem>
-                        <IonLabel>GPU 5</IonLabel>
-                        <IonCheckbox/>
+                    <IonItem disabled={cudaDevices[5].isDisabled}>
+                        <IonLabel>{cudaDevices[5].label}</IonLabel>
+                        <IonCheckbox
+                            checked={cudaDevices[5].isChecked}
+                            onIonChange={() => onCudaDevices(5)}/>
                     </IonItem>
                 </IonCol>
                 <IonCol>
-                    <IonItem>
-                        <IonLabel>GPU 6</IonLabel>
-                        <IonCheckbox/>
+                    <IonItem disabled={cudaDevices[6].isDisabled}>
+                        <IonLabel>{cudaDevices[6].label}</IonLabel>
+                        <IonCheckbox
+                            checked={cudaDevices[6].isChecked}
+                            onIonChange={() => onCudaDevices(6)}/>
                     </IonItem>
                 </IonCol>
                 <IonCol>
-                    <IonItem>
-                        <IonLabel>GPU 7</IonLabel>
-                        <IonCheckbox/>
+                    <IonItem disabled={cudaDevices[7].isDisabled}>
+                        <IonLabel>{cudaDevices[7].label}</IonLabel>
+                        <IonCheckbox
+                            checked={cudaDevices[7].isChecked}
+                            onIonChange={() => onCudaDevices(7)}/>
                     </IonItem>
                 </IonCol>
             </IonRow>
@@ -125,11 +120,27 @@ const CudaDevicesComp: React.FC = () => {
 interface SettingsInterface {
     patches: PatchesInterface,
     onPatches: (patches: PatchesInterface) => void,
+
+    machine: type_machine,
+    onMachine: (machine: type_machine) => void,
+
+    batch: BatchInference,
+    onBatch: (batch: BatchInference) => void,
+
+    cudaDevices: CudaDeviceGPU[],
+    onCudaDevices: (index: number) => void,
 }
 
-const Settings: React.FC<SettingsInterface> = ({patches, onPatches}) => {
-    const [machine, setMachine] = useState<type_machine>("local");
-
+const Settings: React.FC<SettingsInterface> = ({
+                                                   patches,
+                                                   onPatches,
+                                                   machine,
+                                                   onMachine,
+                                                   batch,
+                                                   onBatch,
+                                                   cudaDevices,
+                                                   onCudaDevices
+                                               }) => {
     return (
         <small>
             <IonContent scrollEvents={true}>
@@ -144,7 +155,7 @@ const Settings: React.FC<SettingsInterface> = ({patches, onPatches}) => {
                                 <IonLabel>Machine</IonLabel>
                                 <IonSelect
                                     interface={"popover"}
-                                    onIonChange={(e: CustomEvent) => setMachine(e.detail.value as type_machine)}>
+                                    onIonChange={(e: CustomEvent) => onMachine(e.detail.value as type_machine)}>
                                     {typeMachine.map((type) => {
                                         return (
                                             <IonSelectOption
@@ -155,7 +166,8 @@ const Settings: React.FC<SettingsInterface> = ({patches, onPatches}) => {
                                 </IonSelect>
                             </IonItem>
                             <IonItem>
-                                {(machine === "local") ? <CudaDevicesComp/> : <RemoteDevicesComp/>}
+                                {(machine === "local") ? <CudaDevicesComp
+                                    cudaDevices={cudaDevices} onCudaDevices={onCudaDevices}/> : <RemoteDevicesComp/>}
                             </IonItem>
                             <IonItemDivider/>
                         </IonList>
@@ -284,7 +296,7 @@ const Settings: React.FC<SettingsInterface> = ({patches, onPatches}) => {
                             <IonLabel><small>Batch</small></IonLabel>
                         </IonItem>
                         <IonList slot={"content"}>
-                            <IonItem>
+                            <IonItem disabled={batch.isDisabled}>
                                 {/*Inference Batch menu*/}
                                 <IonRow>
                                     <IonCol>
@@ -292,15 +304,15 @@ const Settings: React.FC<SettingsInterface> = ({patches, onPatches}) => {
                                         <div style={{display: 'flex', justifyContent: 'flex-start'}}>
                                             <IonInput
                                                 type="number"
-                                                max={"999"}
+                                                max={"99"}
                                                 min={"0"}
-                                                value={patches.volumePadding[0]}
+                                                value={batch.value}
                                                 onIonChange={(e: CustomEvent) => {
-                                                    if (e.detail.value <= 999) {
-                                                        onPatches({
-                                                            ...patches,
-                                                            volumePadding: [parseInt(e.detail.value!, 10), patches.volumePadding[1], patches.volumePadding[2]]
-                                                        })
+                                                    if (e.detail.value <= 99) {
+                                                        onBatch({
+                                                            value: e.detail.value as number,
+                                                            isDisabled: batch.isDisabled
+                                                        });
                                                     }
                                                 }}
                                             />

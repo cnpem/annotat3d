@@ -14,7 +14,13 @@ import {checkbox} from "ionicons/icons";
 import ErrorWindowComp from "../../file/ErrorWindowComp";
 import {useStorageState} from "react-storage-hooks";
 import InferenceComp from "./InferenceComp";
-import {initialPatches, PatchesInterface} from "./BatchInferenceInterfaces";
+import {
+    BatchInference,
+    CudaDeviceGPU,
+    initialPatches,
+    PatchesInterface,
+    type_machine, typeCUDADevices
+} from "./BatchInferenceInterfaces";
 import Settings from "./Settings";
 
 const menuChoices = ["Inference", "Settings"] as const;
@@ -31,6 +37,28 @@ const BatchInferenceComp: React.FC = () => {
     const [patches, setPatches] = useStorageState<PatchesInterface>(sessionStorage, "patches", initialPatches)
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
+    const [machine, setMachine] = useState<type_machine>("local");
+    const [batch, setBatch] = useState<BatchInference>({value: 4, isDisabled: true});
+    //TODO : () => {return typeCUDADevices} this function works to return the initial value, maybe this is a good idea to see the gpu on the backend
+    const [cudaDevices, setCudaDevices] = useState<CudaDeviceGPU[]>(() => {
+        return typeCUDADevices
+    });
+
+    const handleCudaDevices = (index: number) => {
+        const newList = cudaDevices.map(element => element.key === index
+            ? {...element, isChecked: !element.isChecked} : element);
+        console.log("newList");
+        console.table(newList);
+        setCudaDevices(newList);
+    }
+
+    const handleBatch = (batch: BatchInference) => {
+        setBatch(batch);
+    }
+
+    const handleMachine = (machine: type_machine) => {
+        setMachine(machine);
+    }
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -49,7 +77,13 @@ const BatchInferenceComp: React.FC = () => {
     });
 
     const menus = [<InferenceComp/>, <Settings patches={patches}
-                                               onPatches={handlePatches}/>];
+                                               onPatches={handlePatches}
+                                               machine={machine}
+                                               onMachine={handleMachine}
+                                               batch={batch}
+                                               onBatch={handleBatch}
+                                               cudaDevices={cudaDevices}
+                                               onCudaDevices={handleCudaDevices}/>];
 
     /**
      * Clean up popover dialog
