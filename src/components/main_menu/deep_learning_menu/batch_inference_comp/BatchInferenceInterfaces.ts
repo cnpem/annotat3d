@@ -33,3 +33,13 @@ export interface SelectInterface {
     value: string,
     label: string
 }
+
+/**
+ * Export machine type
+ */
+export type type_machine = "local" | "tepui";
+
+/**
+ * Export dtype for pm
+ */
+export type dtype_pm = "16 bits" | "32 bits";

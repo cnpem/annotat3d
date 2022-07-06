@@ -96,7 +96,7 @@ const BatchInferenceComp: React.FC = () => {
                 <IonButton
                     color={"tertiary"}
                     slot={"end"}>
-                    OK
+                    Inference
                     <IonIcon
                         icon={checkbox}
                         slot={"end"}/>

@@ -1,17 +1,16 @@
-import {PatchesInterface, SelectInterface} from "./BatchInferenceInterfaces";
+import {PatchesInterface, SelectInterface, type_machine} from "./BatchInferenceInterfaces";
 import {
     IonAccordion,
-    IonAccordionGroup,
+    IonAccordionGroup, IonCheckbox,
     IonCol,
-    IonContent,
+    IonContent, IonGrid,
     IonInput,
     IonItem, IonItemDivider,
     IonLabel,
     IonList,
     IonRow, IonSelect, IonSelectOption
 } from "@ionic/react";
-import React from "react";
-import {type} from "os";
+import React, {Fragment, useState} from "react";
 
 const typeMachine: SelectInterface[] = [
     {
@@ -26,12 +25,111 @@ const typeMachine: SelectInterface[] = [
     }
 ];
 
+const typePartition: SelectInterface[] = [
+    {
+        key: 0,
+        value: "1-gpu",
+        label: "1 GPU",
+    },
+    {
+        key: 1,
+        value: "2-gpu",
+        label: "2 GPU",
+    },
+    {
+        key: 2,
+        value: "4-gpu",
+        label: "4 GPU",
+    }
+]
+
+const RemoteDevicesComp: React.FC = () => {
+    return (
+        <Fragment>
+            <IonLabel>Partition</IonLabel>
+            <IonSelect
+                interface={"popover"}>
+                {typePartition.map((type) => {
+                    return (
+                        <IonSelectOption
+                            key={type.key}
+                            value={type.value}>{type.label}</IonSelectOption>
+                    );
+                })}
+            </IonSelect>
+        </Fragment>
+    );
+}
+
+const CudaDevicesComp: React.FC = () => {
+    return (
+        <IonGrid>
+            {/*CUDA devices*/}
+            <IonLabel>CUDA devices</IonLabel>
+            <IonRow>
+                <IonCol>
+                    <IonItem>
+                        <IonLabel>GPU 0</IonLabel>
+                        <IonCheckbox/>
+                    </IonItem>
+                </IonCol>
+                <IonCol>
+                    <IonItem>
+                        <IonLabel>GPU 1</IonLabel>
+                        <IonCheckbox/>
+                    </IonItem>
+                </IonCol>
+                <IonCol>
+                    <IonItem>
+                        <IonLabel>GPU 2</IonLabel>
+                        <IonCheckbox/>
+                    </IonItem>
+                </IonCol>
+                <IonCol>
+                    <IonItem>
+                        <IonLabel>GPU 3</IonLabel>
+                        <IonCheckbox/>
+                    </IonItem>
+                </IonCol>
+            </IonRow>
+            <IonRow>
+                <IonCol>
+                    <IonItem>
+                        <IonLabel>GPU 4</IonLabel>
+                        <IonCheckbox/>
+                    </IonItem>
+                </IonCol>
+                <IonCol>
+                    <IonItem>
+                        <IonLabel>GPU 5</IonLabel>
+                        <IonCheckbox/>
+                    </IonItem>
+                </IonCol>
+                <IonCol>
+                    <IonItem>
+                        <IonLabel>GPU 6</IonLabel>
+                        <IonCheckbox/>
+                    </IonItem>
+                </IonCol>
+                <IonCol>
+                    <IonItem>
+                        <IonLabel>GPU 7</IonLabel>
+                        <IonCheckbox/>
+                    </IonItem>
+                </IonCol>
+            </IonRow>
+        </IonGrid>
+    );
+}
+
 interface SettingsInterface {
     patches: PatchesInterface,
     onPatches: (patches: PatchesInterface) => void,
 }
 
 const Settings: React.FC<SettingsInterface> = ({patches, onPatches}) => {
+    const [machine, setMachine] = useState<type_machine>("local");
+
     return (
         <small>
             <IonContent scrollEvents={true}>
@@ -44,7 +142,9 @@ const Settings: React.FC<SettingsInterface> = ({patches, onPatches}) => {
                         <IonList slot={"content"}>
                             <IonItem>
                                 <IonLabel>Machine</IonLabel>
-                                <IonSelect interface={"popover"}>
+                                <IonSelect
+                                    interface={"popover"}
+                                    onIonChange={(e: CustomEvent) => setMachine(e.detail.value as type_machine)}>
                                     {typeMachine.map((type) => {
                                         return (
                                             <IonSelectOption
@@ -53,6 +153,9 @@ const Settings: React.FC<SettingsInterface> = ({patches, onPatches}) => {
                                         );
                                     })}
                                 </IonSelect>
+                            </IonItem>
+                            <IonItem>
+                                {(machine === "local") ? <CudaDevicesComp/> : <RemoteDevicesComp/>}
                             </IonItem>
                             <IonItemDivider/>
                         </IonList>
