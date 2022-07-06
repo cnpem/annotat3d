@@ -16,7 +16,6 @@ import {
     IonAccordionGroup, IonContent, IonToast
 } from "@ionic/react";
 import "./FileDialog.css"
-import dataType from "./Dtypes";
 import {construct, create, extensionPuzzle, image, images, information} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
