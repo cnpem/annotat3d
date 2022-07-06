@@ -17,6 +17,9 @@ import {
 } from "@ionic/react";
 import React, {Fragment} from "react";
 
+/**
+ * Component to create the remove devices in TEPUI
+ */
 const RemoteDevicesComp: React.FC = () => {
     return (
         <Fragment>
@@ -40,6 +43,11 @@ interface CudaDeviceInterface {
     onCudaDevices: (index: number) => void,
 }
 
+/**
+ * Function that creates the table with the gpu components
+ * @param cudaDevices {CudaDeviceGPU[]} - vector of objects that contains all the CUDA devices
+ * @param onCudaDevices {(index: number) => void} - setter for cudaDevices
+ */
 const CudaDevicesComp: React.FC<CudaDeviceInterface> = ({cudaDevices, onCudaDevices}) => {
     return (
         <IonGrid>
@@ -131,6 +139,17 @@ interface SettingsInterface {
     onCudaDevices: (index: number) => void,
 }
 
+/**
+ * Component that create the settings menu
+ * @param patches {PatchesInterface} - object that contains the patches in settings
+ * @param onPatches {(patches: PatchesInterface) => void} - setter for patches
+ * @param machine {type_machine} - variable that contains if the machine is local or remote (TEPUI)
+ * @param onMachine {(machine: type_machine) => void} - setter for machine
+ * @param batch {BatchInference} - object that contains the batch value
+ * @param onBatch {(batch: BatchInference) => void} - setter for batch
+ * @param cudaDevices {CudaDeviceGPU[]} - vector of objects that contains all the CUDA devices
+ * @param onCudaDevices {(index: number) => void} - setter for cudaDevices
+ */
 const Settings: React.FC<SettingsInterface> = ({
                                                    patches,
                                                    onPatches,

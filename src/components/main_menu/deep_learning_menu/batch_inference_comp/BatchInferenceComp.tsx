@@ -16,10 +16,10 @@ import {useStorageState} from "react-storage-hooks";
 import InferenceComp from "./InferenceComp";
 import {
     BatchInference,
-    CudaDeviceGPU,
-    initialPatches,
+    CudaDeviceGPU, initialOutput,
+    initialPatches, OutputInterface,
     PatchesInterface,
-    type_machine, typeCUDADevices
+    type_machine, type_network, typeCUDADevices
 } from "./BatchInferenceInterfaces";
 import Settings from "./Settings";
 
@@ -43,12 +43,20 @@ const BatchInferenceComp: React.FC = () => {
     const [cudaDevices, setCudaDevices] = useState<CudaDeviceGPU[]>(() => {
         return typeCUDADevices
     });
+    const [output, setOutput] = useState<OutputInterface>(initialOutput);
+    const [network, setNetwork] = useState<type_network>("u-net-2d");
+
+    const handleNetwork = (net: type_network) => {
+        setNetwork(net);
+    }
+
+    const handleOutput = (newOutput: OutputInterface) => {
+        setOutput(newOutput);
+    }
 
     const handleCudaDevices = (index: number) => {
         const newList = cudaDevices.map(element => element.key === index
             ? {...element, isChecked: !element.isChecked} : element);
-        console.log("newList");
-        console.table(newList);
         setCudaDevices(newList);
     }
 
@@ -76,14 +84,17 @@ const BatchInferenceComp: React.FC = () => {
         setDisableComp(isDisabled);
     });
 
-    const menus = [<InferenceComp/>, <Settings patches={patches}
-                                               onPatches={handlePatches}
-                                               machine={machine}
-                                               onMachine={handleMachine}
-                                               batch={batch}
-                                               onBatch={handleBatch}
-                                               cudaDevices={cudaDevices}
-                                               onCudaDevices={handleCudaDevices}/>];
+    const menus = [<InferenceComp output={output}
+                                  onOutput={handleOutput}
+                                  network={network}
+                                  onNetwork={handleNetwork}/>, <Settings patches={patches}
+                                                                         onPatches={handlePatches}
+                                                                         machine={machine}
+                                                                         onMachine={handleMachine}
+                                                                         batch={batch}
+                                                                         onBatch={handleBatch}
+                                                                         cudaDevices={cudaDevices}
+                                                                         onCudaDevices={handleCudaDevices}/>];
 
     /**
      * Clean up popover dialog

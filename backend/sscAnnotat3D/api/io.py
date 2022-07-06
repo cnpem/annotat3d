@@ -751,7 +751,16 @@ def open_inference_files(file_id: str):
 @app.route("/close_inference_file/<file_id>", methods=["POST"])
 @cross_origin()
 def close_inference_file(file_id: str):
-    _debugger_print("delete key", file_id)
+    """
+    Function that deletes a file in inference a menu using a key as string
+
+    Args:
+        file_id (str): string used as key to delete the file
+
+    Returns:
+        (str): Returns a string that contains the error or "success on delete the key i in Input Image inference"
+
+    """
     try:
         data_repo.del_inference_data(file_id)
         return jsonify("success on delete the key {} in Input Image inference".format(file_id))
@@ -762,6 +771,13 @@ def close_inference_file(file_id: str):
 @app.route("/close_all_files_dataset", methods=["POST"])
 @cross_origin()
 def close_all_inference_files():
+    """
+    Function that delete all the files in inference menu
+
+    Returns:
+        (str): Returns a string that contains the error or "Success to delete all data"
+
+    """
     try:
         data_repo.del_all_inference_data()
         return jsonify("Success to delete all data")

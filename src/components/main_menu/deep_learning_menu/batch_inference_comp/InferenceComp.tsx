@@ -20,43 +20,12 @@ import {
     TableElement,
     TableInterface,
 } from "../dataset_comp/DatasetInterfaces";
-import {MultiplesPath, SelectInterface} from "./BatchInferenceInterfaces";
+import {dtype_pm, MultiplesPath, OutputInterface, type_network, typeNetworks, typePM} from "./BatchInferenceInterfaces";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
 import * as ReactBootStrap from "react-bootstrap";
 import "./Table.css";
-
-const typeNetworks: SelectInterface[] = [
-    {
-        key: 0,
-        value: "u-net",
-        label: "U-Net"
-    },
-    {
-        key: 1,
-        value: "v-net",
-        label: "V-Net"
-    },
-    {
-        key: 2,
-        value: "bla-net",
-        label: "Bla-Net"
-    },
-];
-
-const typePM: SelectInterface[] = [
-    {
-        key: 0,
-        value: "16-bits",
-        label: "16 bits"
-    },
-    {
-        key: 1,
-        value: "32-bits",
-        label: "32 bits"
-    }
-];
 
 interface WarningWindowInterface {
     openWarningWindow: boolean,
@@ -65,6 +34,12 @@ interface WarningWindowInterface {
     onTableList: () => void,
 }
 
+/**
+ * Component used to create a warning window and delete all the table elements
+ * @param openWarningWindow {boolean} - flag to open the warning window
+ * @param onOpenWarningWindow {(flag: boolean) => void} - setter for openWarningWindow
+ * @param onTableList {() => void} - setter for the table
+ */
 const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                                                                openWarningWindow,
                                                                onOpenWarningWindow,
@@ -136,6 +111,13 @@ interface BackendPayload {
     use_image_raw_parse: boolean,
 }
 
+/**
+ * Component that create a window to add a new file into the table
+ * @param idMenu {number} - number that represents the id of this new element
+ * @param onIdMenu {(newId: number) => void} - setter for idMenu
+ * @param onTableVec {(newFile: MultiplesPath) => void} - setter for the table
+ * @param trigger {string} - trigger to open the popover
+ */
 const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        idMenu,
                                                        onIdMenu,
@@ -319,10 +301,9 @@ interface DeleteMenuInterface {
 }
 
 /**
- * TODO : need to implement the documentation here
- * @param labelElement
- * @param removeLabelElement
- * @constructor
+ * Component used to delete a file from the table
+ * @param labelElement {TableInterface} - file from the table
+ * @param removeLabelElement {(labelElement: TableInterface) => void} - function to remove the element of this table
  */
 const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelElement}) => {
     const [showAlert, setShowAlert] = useState<boolean>(false);
@@ -393,11 +374,22 @@ const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabel
     );
 }
 
+interface InferenceInterface {
+    output: OutputInterface,
+    onOutput: (newOutput: OutputInterface) => void,
+
+    network: type_network,
+    onNetwork: (net: type_network) => void,
+}
+
 /**
- * Component that create the Inference menu option
- * TODO : Need to implement all the functions for the elements and the back-end function for this
+ * Element that create the Inference component
+ * @param output {OutputInterface} - output object
+ * @param onOutput {(newOutput: OutputInterface) => void} - setter for output
+ * @param network {type_network} - variable that represents the network chosen by the user
+ * @param onNetwork {net: type_network) => void} - setter for network
  */
-const InferenceComp: React.FC = () => {
+const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network, onNetwork}) => {
     const [inputImagesTable, setInputImagesTable] = useStorageState<TableInterface[]>(sessionStorage, 'inputImagesTable', InitTables);
     const [idTable, setIdTable] = useStorageState<number>(sessionStorage, "idTable", 0);
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
@@ -531,7 +523,10 @@ const InferenceComp: React.FC = () => {
                         <IonList slot={"content"}>
                             <IonItem>
                                 <IonLabel>Network type</IonLabel>
-                                <IonSelect interface={"popover"}>
+                                <IonSelect
+                                    interface={"popover"}
+                                    onIonChange={(e: CustomEvent) =>
+                                        onNetwork(e.detail.value as type_network)}>
                                     {typeNetworks.map((type) => {
                                         return (
                                             <IonSelectOption
@@ -612,27 +607,51 @@ const InferenceComp: React.FC = () => {
                             <IonItem>
                                 <IonIcon slot={"start"} icon={construct}></IonIcon>
                                 <IonLabel position={"floating"}><small>Workspace Path</small></IonLabel>
-                                <IonInput/>
+                                <IonInput
+                                    value={output.workspacePath}
+                                    onIonChange={(e: CustomEvent) => onOutput({
+                                        ...output,
+                                        workspacePath: e.detail.value as string
+                                    })}/>
                             </IonItem>
                             {/*File path input*/}
                             <IonItem>
                                 <IonIcon slot={"start"} icon={image}></IonIcon>
                                 <IonLabel position={"floating"}><small>File Path</small></IonLabel>
-                                <IonInput/>
+                                <IonInput
+                                    value={output.filePath}
+                                    onIonChange={(e: CustomEvent) => onOutput({
+                                        ...output,
+                                        filePath: e.detail.value as string
+                                    })}/>
                             </IonItem>
                             {/*Probability Map menu*/}
                             <IonItem>
                                 <IonLabel>Probability Map</IonLabel>
-                                <IonCheckbox/>
+                                <IonCheckbox
+                                    checked={output.probabilityMap}
+                                    onIonChange={() => onOutput({
+                                        ...output,
+                                        probabilityMap: !output.probabilityMap
+                                    })}/>
                             </IonItem>
                             {/*Label menu*/}
                             <IonItem>
                                 <IonLabel>Label</IonLabel>
-                                <IonCheckbox/>
+                                <IonCheckbox
+                                    checked={output.label}
+                                    onIonChange={() => onOutput({
+                                        ...output,
+                                        label: !output.label
+                                    })}/>
                             </IonItem>
                             <IonItem>
                                 <IonLabel>Output Bits</IonLabel>
-                                <IonSelect interface={"popover"}>
+                                <IonSelect
+                                    interface={"popover"} onIonChange={(e: CustomEvent) => onOutput({
+                                    ...output,
+                                    outputBits: e.detail.value as dtype_pm
+                                })}>
                                     {typePM.map((type) => {
                                         return (
                                             <IonSelectOption

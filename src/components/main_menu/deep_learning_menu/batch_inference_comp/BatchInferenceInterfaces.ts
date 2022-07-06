@@ -22,7 +22,7 @@ export interface PatchesInterface {
  */
 export const initialPatches: PatchesInterface = {
     volumePadding: [0, 0, 0],
-    patchBolder: [0, 0, 0]
+    patchBolder: [0, 0, 0],
 }
 
 /**
@@ -31,14 +31,20 @@ export const initialPatches: PatchesInterface = {
 export interface SelectInterface {
     key: number,
     value: string,
-    label: string
+    label: string,
 }
 
+/**
+ * Interface for BatchInference in Settings.tsx
+ */
 export interface BatchInference {
     value: number,
-    isDisabled: boolean
+    isDisabled: boolean,
 }
 
+/**
+ * Interface for CUDADevice in Settings.tsx
+ */
 export interface CudaDeviceGPU {
     key: number,
     value: string,
@@ -47,29 +53,59 @@ export interface CudaDeviceGPU {
     isChecked: boolean,
 }
 
+export interface OutputInterface {
+    workspacePath: string,
+    filePath: string,
+    probabilityMap: boolean,
+    label: boolean,
+    outputBits: dtype_pm,
+}
+
 /**
  * Export machine type
  */
 export type type_machine = "local" | "tepui";
 
 /**
+ * Export network type
+ */
+export type type_network = "u-net-2d" | "u-net-3d" | "v-net";
+
+/**
  * Export dtype for pm
  */
 export type dtype_pm = "16 bits" | "32 bits";
 
+/**
+ * Interface for the component output used in InterfaceComp.tsx
+ */
+export const initialOutput: OutputInterface = {
+    workspacePath: "",
+    filePath: "",
+    probabilityMap: false,
+    label: false,
+    outputBits: "16 bits",
+}
+
+/**
+ * Initial state for machine type in Settings.tsx
+ */
 export const typeMachine: SelectInterface[] = [
     {
         key: 0,
         value: "local",
-        label: "Local"
+        label: "Local",
     },
     {
         key: 1,
         value: "tepui",
-        label: "Tepui"
+        label: "Tepui",
     }
 ];
 
+/**
+ * Partition type used in Settings.tsx
+ */
 export const typePartition: SelectInterface[] = [
     {
         key: 0,
@@ -88,6 +124,9 @@ export const typePartition: SelectInterface[] = [
     }
 ];
 
+/**
+ * Type of CUDA devices used in Settings.tsx
+ */
 export const typeCUDADevices: CudaDeviceGPU[] = [
     {
         key: 0,
@@ -144,5 +183,42 @@ export const typeCUDADevices: CudaDeviceGPU[] = [
         label: "GPU 7",
         isDisabled: true,
         isChecked: false,
+    }
+];
+
+/**
+ * Type of networks used in InferenceComp.tsx
+ */
+export const typeNetworks: SelectInterface[] = [
+    {
+        key: 0,
+        value: "u-net-2d",
+        label: "U-Net 2D",
+    },
+    {
+        key: 1,
+        value: "u-net-3d",
+        label: "U-Net 3D",
+    },
+    {
+        key: 2,
+        value: "v-net",
+        label: "V-Net",
+    },
+];
+
+/**
+ * Types of possible pm for the output
+ */
+export const typePM: SelectInterface[] = [
+    {
+        key: 0,
+        value: "16-bits",
+        label: "16 bits",
+    },
+    {
+        key: 1,
+        value: "32-bits",
+        label: "32 bits",
     }
 ];
