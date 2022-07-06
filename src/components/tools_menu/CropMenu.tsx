@@ -1,4 +1,4 @@
-import { IonButton, IonCard, IonCardContent, IonItem, IonLabel, IonRange, IonRow, useIonToast } from '@ionic/react';
+import { IonButton, IonCard, IonCardContent, IonItem, IonLabel, IonRange, IonRow, IonToggle, useIonToast } from '@ionic/react';
 import { isEqual } from 'lodash';
 import { Fragment, useEffect, useRef } from 'react';
 import { useStorageState } from 'react-storage-hooks';
@@ -46,10 +46,8 @@ function rgbToHex(r: number, g: number, b: number) {
  */
 const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
 
-    const [cropPreviewColor, setCropPreviewColor] = useStorageState<number>(sessionStorage, 'cropPreviewColor', 0xBF4040);
-
-    const [showToast] = useIonToast();
-    const toastTime = 2000;
+    const [toggleCropMode, setToggleCropMode] = useStorageState<boolean>(sessionStorage, 'toggleCropMode', false);
+    const [superpixelMode, setSuperpixelMode] = useStorageState<boolean>(sessionStorage, 'superpixelMode', false);
     
     const [cropSliderX, setCropSliderX] = useStorageState<CropAxisInterface>(sessionStorage, 'cropSliderX', {
         lower: 0,
@@ -66,7 +64,10 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
         upper: 0
     });
 
-    const [superpixelMode, setSuperpixelMode] = useStorageState<boolean>(sessionStorage, 'superpixelMode', false);
+    const [cropPreviewColor, setCropPreviewColor] = useStorageState<number>(sessionStorage, 'cropPreviewColor', 0xBF4040);
+
+    const [showToast] = useIonToast();
+    const toastTime = 2000;
 
     /**
      * Listener to the 'superpixelChanged' event so it can register in a session variable if the superpixel was calculated previously.
@@ -115,6 +116,72 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
         }
     });
 
+    const handleSliderChangeX = (e: CustomEvent) => {
+        const newCropLims = e.detail.value as any;
+        setCropSliderX(newCropLims);
+        // preview
+        const yLength : number = props.imageShape.y;
+        const cropShape:CropShapeInterface = {
+            cropX: newCropLims,
+            cropY: {
+                lower: yLength - cropSliderY.upper,
+                upper: yLength - cropSliderY.lower
+            },
+            cropZ: cropSliderZ
+        }
+        console.log('CropMenu: onPreview', cropShape);
+        // send shape to event listener (canvas)
+        dispatch('cropShape', cropShape); 
+        // send change to outside event listeners 
+        dispatch('cropPreviewMode', true); 
+        setToggleCropMode(true);
+        showToast('On Crop Preview Mode! Click Reset to deactivate.', toastTime);
+    }
+
+    const handleSliderChangeY = (e: CustomEvent) => {
+        const newCropLims = e.detail.value as any;
+        setCropSliderY(newCropLims);
+        // preview
+        const yLength : number = props.imageShape.y;
+        const cropShape:CropShapeInterface = {
+            cropX: cropSliderX,
+            cropY: {
+                lower: yLength - newCropLims.upper,
+                upper: yLength - newCropLims.lower
+            },
+            cropZ: cropSliderZ
+        }
+        console.log('CropMenu: onPreview', cropShape);
+        // send shape to event listener (canvas)
+        dispatch('cropShape', cropShape); 
+        // send change to outside event listeners 
+        dispatch('cropPreviewMode', true); 
+        setToggleCropMode(true);
+        showToast('On Crop Preview Mode! Click Reset to deactivate.', toastTime);
+    }
+
+    const handleSliderChangeZ = (e: CustomEvent) => {
+        const newCropLims = e.detail.value as any;
+        setCropSliderZ(newCropLims);
+        // preview
+        const yLength : number = props.imageShape.y;
+        const cropShape:CropShapeInterface = {
+            cropX: cropSliderX,
+            cropY: {
+                lower: yLength - cropSliderY.upper,
+                upper: yLength - cropSliderY.lower
+            },
+            cropZ: newCropLims
+        }
+        console.log('CropMenu: onPreview', cropShape);
+        // send shape to event listener (canvas)
+        dispatch('cropShape', cropShape); 
+        // send change to outside event listeners 
+        dispatch('cropPreviewMode', true); 
+        setToggleCropMode(true);
+        showToast('On Crop Preview Mode! Click Reset to deactivate.', toastTime);
+    }
+
     /**
      * Activate functions on CanvasContainer.Canvas that creates a mask layer 
      * over the image for the current slice and every update when the 
@@ -153,6 +220,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
         setCropSliderX(zeros);
         setCropSliderY(zeros);
         setCropSliderZ(zeros);
+        setToggleCropMode(false);
         dispatch('cropPreviewMode', false); 
         dispatch('labelChanged','');
         showToast('Reset crop preview region done!', toastTime);
@@ -222,28 +290,35 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Crop Image</IonLabel>
+                        <IonToggle checked={toggleCropMode}
+                            onIonChange={(e: any) => {
+                                onPreview();
+                            }}></IonToggle>
                     </IonItem>
-                    <SliderPicker color={'#'+cropPreviewColor.toString(16)}
-                            onChange={ (e: any) => {
-                                const color = rgbToHex(e.rgb.r, e.rgb.g, e.rgb.b);
-                                dispatch('cropPreviewColorchanged', color);
-                                setCropPreviewColor(color);
-                            } }/>
+                    {/* <div hidden={toggleCropMode}> */}
+                        <SliderPicker color={'#'+cropPreviewColor.toString(16)}
+                                onChange={ (e: any) => {
+                                    const color = rgbToHex(e.rgb.r, e.rgb.g, e.rgb.b);
+                                    dispatch('cropPreviewColorchanged', color);
+                                    setCropPreviewColor(color);
+                                } }/>
+                    {/* </div> */}
+                    
                     <IonItem>
                         <IonRange name={'cropRangeX'} ref={rangeRefX} dualKnobs={true} min={0} max={props.imageShape.x} step={1} snaps={true} pin={true} ticks={false}
-                            onIonKnobMoveEnd={(ex) => { setCropSliderX(ex.detail.value as any) }}>                        
+                            onIonKnobMoveEnd={handleSliderChangeX}>                        
                             <IonLabel slot="start"><h2>X</h2></IonLabel>
                         </IonRange>
                     </IonItem>
                     <IonItem>
                         <IonRange name={'cropRangeY'} ref={rangeRefY} dualKnobs={true} min={0} max={props.imageShape.y} step={1} snaps={true} pin={true} ticks={false}
-                            onIonKnobMoveEnd={(ey) => {setCropSliderY(ey.detail.value as any) }}>
+                            onIonKnobMoveEnd={handleSliderChangeY}>
                             <IonLabel slot="start"><h2>Y</h2></IonLabel>
                         </IonRange>
                     </IonItem>
                     <IonItem>
                         <IonRange name={'cropRangeZ'} ref={rangeRefZ} dualKnobs={true} min={0} max={props.imageShape.z} step={1} snaps={true} pin={true} ticks={false}
-                            onIonKnobMoveEnd={(ez) => {setCropSliderZ(ez.detail.value as any) }}>
+                            onIonKnobMoveEnd={handleSliderChangeZ}>
                             <IonLabel slot="start"><h2>Z</h2></IonLabel>
                         </IonRange>
                     </IonItem>                
