@@ -13,6 +13,7 @@ from imgaug import augmenters as iaa
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 from sscDeepsirius.utils import augmentation, dataset, sampling, image
+from sscDeepsirius.utils.dataset import create_dataset_web
 #from backend.sscDeepsiriusLocal.deepsirius.utils import augmentation, dataset, sampling, image -> local files
 app = Blueprint('io', __name__)
 
@@ -641,36 +642,32 @@ def create_dataset():
     num_classes = sample["nClasses"]
     nsamples = sample["sampleSize"]
     offset = (0, 0, 0)
-    _debugger_print("augmentation_vec", augmentation_vec)
-    _debugger_print("augmentation_vec type", type(augmentation_vec))
 
     isChecked_vec = [isChecked_vec["isChecked"] for isChecked_vec in augmentation_vec]
-    _debugger_print("isChecked_vec", isChecked_vec)
     checked_index = [i for i, val in enumerate(isChecked_vec) if val]
-    _debugger_print("checked_index", checked_index)
     logging.debug('size = {}, nsamples = {}'.format(size, sample["sampleSize"]))
 
     imgs = list(data_repo.get_all_dataset_data().values())
     labels = list(data_repo.get_all_dataset_label().values())
     weights = list(data_repo.get_all_dataset_weight().values())
 
-    data, error_status = _create_dataset(imgs, labels, weights,
+    data, error_status = create_dataset_web(imgs, labels, weights,
                                          output, nsamples, num_classes,
                                          size, offset)
 
+    # TODO : need to use this part of the code on the end of this branch
+    # if (error_status != ""):
+    #     _debugger_print("problem while using create_dataset_web", error_status)
+    #     return handle_exception(error_status)
+
     test = []
     for x in checked_index:
-        print("augmentation option : {}".format(x))
         test.append(x)
 
-    _debugger_print("Checked option", test)
-
-    try:
-        augmentation.augment(output, output, test)
-    except Exception as e:
-        _debugger_print("Eita, deu caô :(", "F")
-        _debugger_print("Error : ", str(e))
-        return handle_exception(str(e))
+    # try:
+    #     augmentation.augment(output, output, test)
+    # except Exception as e:
+    #     return handle_exception(str(e))
 
     if (not data):
         return error_status
