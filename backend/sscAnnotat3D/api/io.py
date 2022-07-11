@@ -554,10 +554,11 @@ def create_dataset():
                                             output, nsamples, num_classes,
                                             size, offset)
 
-    if (data == []):
+    if (not data):
         _debugger_print("problem while using create_dataset_web", error_status)
         return handle_exception(error_status)
 
+    initial_output = output
     splited_str = output.split("/")
     dataset_name = splited_str[-1]
     new_dataset_name = splited_str[-1].split(".")[0] + "_augment" + ".h5"
@@ -565,11 +566,11 @@ def create_dataset():
     _debugger_print("new output", output)
 
     if (checked_vec):
-        data = augment_web(output, checked_vec, data)
-
-    dataset.save_dataset(data)
+        data, error_status = augment_web(output, initial_output, checked_vec, data)
 
     if (not data):
-        return error_status
+        return handle_exception(error_status)
+
+    dataset.save_dataset(data)
 
     return jsonify({"datasetFilename": output.split("/")[-1]})
