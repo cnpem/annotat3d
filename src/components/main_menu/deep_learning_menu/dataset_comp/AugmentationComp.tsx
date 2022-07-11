@@ -193,26 +193,6 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onI
  * Component that hold all the Argumentation options
  */
 const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVector, ionRangeVec, onIonRangeVec}) => {
-
-    const sendBackendCheckedList = (index: number, checkedElement: AugmentationInterface, checked: boolean) => {
-        onCheckedVector(index);
-        const backendPayload: { checked_element: AugmentationInterface } = {
-            checked_element: {
-                checkedId: checkedElement.checkedId,
-                augmentationOption: checkedElement.augmentationOption,
-                isChecked: checked
-            }
-        };
-        console.log("dispatch : ", backendPayload.checked_element);
-        sfetch("POST", "/set_augment_list", JSON.stringify(backendPayload), "json").then(
-            (bla: AugmentationInterface) => {
-                console.log("After the dispatch");
-                console.table(bla);
-            }
-        )
-
-    }
-
     return (
         <small>
             <IonContent
@@ -229,8 +209,7 @@ const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVe
                                 <IonLabel>Augment with Vertical Flip</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[0].isChecked}
-                                    onIonChange={(e: CustomEvent) => sendBackendCheckedList(0,
-                                        checkedVector[0], e.detail.checked as boolean)}/>
+                                    onIonChange={() => onCheckedVector(0)}/>
                             </IonItem>
                             <IonItemDivider/>
                         </IonList>

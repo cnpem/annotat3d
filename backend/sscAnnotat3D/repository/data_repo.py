@@ -8,18 +8,6 @@ __deep_model = dict()
 __dataset_data_module = dict()
 __dataset_label_module = dict()
 __dataset_weight_module = dict()
-__augment_checked_options = dict({
-    0: {"augmentationOption": "vertical-flip", "isChecked": True},
-    1: {"augmentationOption": "vertical-flip", "isChecked": True},
-    2: {"augmentationOption": "rotate-90-degrees", "isChecked": True},
-    3: {"augmentationOption": "rotate-less-90-degrees", "isChecked": True},
-    4: {"augmentationOption": "contrast", "isChecked": True},
-    5: {"augmentationOption": "linear-contrast", "isChecked": True},
-    6: {"augmentationOption": "dropout", "isChecked": True},
-    7: {"augmentationOption": "gaussian-blur", "isChecked": True},
-    8: {"augmentationOption": "average-blur", "isChecked": True},
-    9: {"augmentationOption": "additive-poisson-noise", "isChecked": True},
-    10: {"augmentationOption": "elastic-deformation", "isChecked": True}})
 __augment_ion_range = dict({
     0: {"ionNameMenu": "Contrast-Gamma", "actualRangeVal": {"lower": 0.95, "upper": 1.55}},
     1: {"ionNameMenu": "Linear Contrast-Gamma", "actualRangeVal": {"lower": 0.76, "upper": 1.24}},
@@ -127,11 +115,6 @@ def delete_dataset_weight(key='weight-0'):
 
 def delete_all_dataset_weight():
     __dataset_weight_module.clear()
-
-
-def set_augmentation_options(key: int = 0, data: dict = None):
-    if (data is not None):
-        __augment_checked_options[key] = data
 
 
 def set_augment_ion_range(key: int = 0, data: dict = None):

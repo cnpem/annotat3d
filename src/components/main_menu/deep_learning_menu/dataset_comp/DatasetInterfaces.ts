@@ -32,57 +32,57 @@ export interface AugmentationInterface {
 export const InitAugmentationOptions: AugmentationInterface[] = [
     {
         augmentationOption: "vertical-flip",
-        isChecked: true,
+        isChecked: false,
         checkedId: 0,
     },
     {
         augmentationOption: "horizontal-flip",
-        isChecked: true,
+        isChecked: false,
         checkedId: 1,
     },
     {
         augmentationOption: "rotate-90-degrees",
-        isChecked: true,
+        isChecked: false,
         checkedId: 2,
     },
     {
         augmentationOption: "rotate-less-90-degrees",
-        isChecked: true,
+        isChecked: false,
         checkedId: 3,
     },
     {
         augmentationOption: "contrast",
-        isChecked: true,
+        isChecked: false,
         checkedId: 4,
     },
     {
         augmentationOption: "linear-contrast",
-        isChecked: true,
+        isChecked: false,
         checkedId: 5,
     },
     {
         augmentationOption: "dropout",
-        isChecked: true,
+        isChecked: false,
         checkedId: 6,
     },
     {
         augmentationOption: "gaussian-blur",
-        isChecked: true,
+        isChecked: false,
         checkedId: 7,
     },
     {
         augmentationOption: "average-blur",
-        isChecked: true,
+        isChecked: false,
         checkedId: 8,
     },
     {
         augmentationOption: "additive-poisson-noise",
-        isChecked: true,
+        isChecked: false,
         checkedId: 9,
     },
     {
         augmentationOption: "elastic-deformation",
-        isChecked: true,
+        isChecked: false,
         checkedId: 10,
     }
 ];

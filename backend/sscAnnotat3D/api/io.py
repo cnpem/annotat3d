@@ -12,9 +12,10 @@ from imgaug import augmenters as iaa
 
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
-from sscDeepsirius.utils import augmentation, dataset, sampling, image
+from sscDeepsirius.utils import dataset, sampling, image
 from sscDeepsirius.utils.dataset import create_dataset_web
-#from backend.sscDeepsiriusLocal.deepsirius.utils import augmentation, dataset, sampling, image -> local files
+from sscDeepsirius.utils.augmentation import augment_web
+
 app = Blueprint('io', __name__)
 
 
@@ -502,90 +503,6 @@ def _augm_constructors():
     return _constructors
 
 
-# TODO : change to z, y, x pattern everywhere ...
-def _create_dataset(imgs: list, labels: list, weights: list,
-                    output: str, nsamples: int, num_classes: int, size: tuple,
-                    offset: tuple):
-    logging.debug('uniform ...')
-    logging.debug(imgs)
-    logging.debug(labels)
-    logging.debug(weights)
-
-    weights = [None] * len(imgs)
-    imgs_props = [{}] * len(imgs)
-    labels_props = [{}] * len(labels)
-    weights_props = [{}] * len(weights)
-
-    logging.debug('imgs')
-    logging.debug(imgs)
-    logging.debug(labels)
-    logging.debug(weights)
-
-    logging.debug('props ....')
-    logging.debug(imgs_props)
-    logging.debug(labels_props)
-    logging.debug(weights_props)
-
-    if (not len(imgs) == len(labels) == len(weights) == len(imgs_props) == len(labels_props) == len(weights_props)):
-        return [], handle_exception(
-            "Number of image and labels mismatch.\n {} data images, {} label images, and {} weight images.".format(
-                len(imgs), len(labels), len(weights)))
-
-    try:
-        data = dataset.create_dataset(output, len(imgs), nsamples, size, num_classes=num_classes,
-                                      weight=(weights is not None))
-    except Exception as e:
-        return [], handle_exception(str(e))
-
-    zz = list(zip(imgs, labels, weights,
-                  imgs_props, labels_props, weights_props))
-
-    logging.debug(zz)
-    logging.debug(len(zz))
-
-    i = 0
-    for img_file, label_file, weight_file, \
-        img_props, label_props, weight_props in zip(imgs, labels, weights,
-                                                    imgs_props, labels_props, weights_props):
-
-        logging.debug('img_file:', img_file, img_props)
-        logging.debug('label_file:', label_file, label_props)
-        img = img_file
-        label = label_file
-        weight = weight_file
-        logging.debug('img: ', img)
-        logging.debug('label: ', label)
-
-        if (img.shape != label.shape):
-            return [], handle_exception(
-                "Image dimensions mismatch.\n{} -> {}\n{} -> {}\n".format(
-                    img_file, img.shape, label_file, label.shape))
-        lmin, lmax = label.min(), label.max()
-
-        if (lmin != 0 or lmax > num_classes - 1):
-            return [], handle_exception(
-                "Invalid label values. Labels in the range [{},{}]. Check if the image is correct or set the num_classes={}.".format(
-                    lmin, lmax, lmax + 1))
-
-        img_samples, coords = sampling.uniform_samples(image.zyx_to_xyz(img), size, nsamples, offset)
-        label_samples = sampling.get_samples(image.zyx_to_xyz(label), size, coords)
-
-        data['data'][i, ...] = img_samples
-        data['label'][i, ...] = label_samples
-
-        if weight is not None:
-            weight_samples = sampling.get_samples(image.zyx_to_xyz(weight), size, coords)
-            data['weight'][i, ...] = weight_samples
-        i += 1
-
-    try:
-        dataset.save_dataset(data)
-    except Exception as e:
-        return [], handle_exception(str(e))
-
-    return data, ""
-
-
 @app.route("/set_augment_ion_range", methods=["POST"])
 @cross_origin()
 def set_augment_ion_range():
@@ -605,31 +522,13 @@ def set_augment_ion_range():
     return jsonify("success on the dispatch")
 
 
-@app.route("/set_augment_list", methods=["POST"])
-@cross_origin()
-def set_augment_list():
-    try:
-        checked_op = request.json["checked_element"]
-    except Exception as e:
-        return handle_exception(str(e))
-
-    _debugger_print("Checked_op", checked_op)
-    new_augment_elem = dict({checked_op["checkedId"]: {"augmentationOption": checked_op["augmentationOption"],
-                                                       "isChecked": checked_op["isChecked"]}})
-    data_repo.set_augmentation_options(checked_op["checkedId"], new_augment_elem)
-    return jsonify({
-        "checkedId": checked_op["checkedId"],
-        "augmentationOption": checked_op["augmentationOption"],
-        "isChecked": checked_op["isChecked"]})
-
-
 @app.route("/create_dataset", methods=["POST"])
 @cross_origin()
 # TODO : need to implement the documentation
 # TODO : need to implement the augmentation option into the dataset. For this, x can look into the file https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py line 479
 # TODO : don't forget to look in this link
 # https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
-# TODO : for the augmentation menu. I'll see .augment from tis script
+# TODO : for the augmentation menu. I'll see .augment from this script
 def create_dataset():
     try:
         output = request.json["file_path"]
@@ -643,8 +542,8 @@ def create_dataset():
     nsamples = sample["sampleSize"]
     offset = (0, 0, 0)
 
-    isChecked_vec = [isChecked_vec["isChecked"] for isChecked_vec in augmentation_vec]
-    checked_index = [i for i, val in enumerate(isChecked_vec) if val]
+    checked_vec = [x["augmentationOption"] for x in augmentation_vec if x["isChecked"]]
+    _debugger_print("Checked", checked_vec)
     logging.debug('size = {}, nsamples = {}'.format(size, sample["sampleSize"]))
 
     imgs = list(data_repo.get_all_dataset_data().values())
@@ -652,22 +551,23 @@ def create_dataset():
     weights = list(data_repo.get_all_dataset_weight().values())
 
     data, error_status = create_dataset_web(imgs, labels, weights,
-                                         output, nsamples, num_classes,
-                                         size, offset)
+                                            output, nsamples, num_classes,
+                                            size, offset)
 
-    # TODO : need to use this part of the code on the end of this branch
-    # if (error_status != ""):
-    #     _debugger_print("problem while using create_dataset_web", error_status)
-    #     return handle_exception(error_status)
+    if (data == []):
+        _debugger_print("problem while using create_dataset_web", error_status)
+        return handle_exception(error_status)
 
-    test = []
-    for x in checked_index:
-        test.append(x)
+    splited_str = output.split("/")
+    dataset_name = splited_str[-1]
+    new_dataset_name = splited_str[-1].split(".")[0] + "_augment" + ".h5"
+    output = output.replace(dataset_name, new_dataset_name)
+    _debugger_print("new output", output)
 
-    # try:
-    #     augmentation.augment(output, output, test)
-    # except Exception as e:
-    #     return handle_exception(str(e))
+    if (checked_vec):
+        data = augment_web(output, checked_vec, data)
+
+    dataset.save_dataset(data)
 
     if (not data):
         return error_status
