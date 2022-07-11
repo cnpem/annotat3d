@@ -8,15 +8,6 @@ __deep_model = dict()
 __dataset_data_module = dict()
 __dataset_label_module = dict()
 __dataset_weight_module = dict()
-__augment_ion_range = dict({
-    0: {"ionNameMenu": "Contrast-Gamma", "actualRangeVal": {"lower": 0.95, "upper": 1.55}},
-    1: {"ionNameMenu": "Linear Contrast-Gamma", "actualRangeVal": {"lower": 0.76, "upper": 1.24}},
-    2: {"ionNameMenu": "Dropout-Gamma", "actualRangeVal": {"lower": 0.06, "upper": 0.14}},
-    3: {"ionNameMenu": "Gaussian Blur-Sigma", "actualRangeVal": {"lower": 0.97, "upper": 2.13}},
-    4: {"ionNameMenu": "Average Blur-K", "actualRangeVal": {"lower": 4.30, "upper": 8.70}},
-    5: {"ionNameMenu": "Additive Poisson Noise-Scale", "actualRangeVal": {"lower": 6.00, "upper": 14.00}},
-    6: {"ionNameMenu": "Elastic Deformation-Alpha", "actualRangeVal": {"lower": 15.07, "upper": 35.03}},
-    7: {"ionNameMenu": "Elastic Deformation-Sigma", "actualRangeVal": {"lower": 1.57, "upper": 3.53}}})
 
 
 def set_deep_model(key='deep_learning', data: dict = None):
@@ -115,12 +106,3 @@ def delete_dataset_weight(key='weight-0'):
 
 def delete_all_dataset_weight():
     __dataset_weight_module.clear()
-
-
-def set_augment_ion_range(key: int = 0, data: dict = None):
-    if (data is not None):
-        __augment_ion_range[key] = data
-
-
-def get_augment_ion_range(key: int = 0):
-    return __augment_ion_range.get(key, None)

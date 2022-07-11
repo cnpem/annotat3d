@@ -23,16 +23,18 @@ import ErrorInterface from "../../file/ErrorInterface";
 interface H5InputInterface {
     trigger: string,
     sample: SamplingInterface,
-    augmentation: AugmentationInterface[]
+    augmentation: AugmentationInterface[],
+    ionRangeVec: IonRangeElement[]
 }
 
 interface BackendPayload {
     sample: SamplingInterface,
     augmentation: AugmentationInterface[],
+    ion_range_vec: IonRangeElement[],
     file_path: string
 }
 
-const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample, augmentation}) => {
+const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample, augmentation, ionRangeVec}) => {
 
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
@@ -56,6 +58,7 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample, augmentat
         const params: BackendPayload = {
             sample: sample,
             augmentation: augmentation,
+            ion_range_vec: ionRangeVec,
             file_path: workspacePath + filePath
         };
 
@@ -248,6 +251,7 @@ const DatasetComp: React.FC = () => {
                         slot={"end"}/>
                     <CreateDatasetH5
                         augmentation={augmentationOpSelected}
+                        ionRangeVec={ionRangeVec}
                         sample={sampleElement}
                         trigger={"open-h5-input"}/>
                 </IonButton>
