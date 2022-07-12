@@ -414,6 +414,17 @@ def load_workspace():
 
 
 def _augmenters_list(augmentation_vec: list = None, ion_range_vec: list = None):
+    """
+    Build-in function that formats the front-end data into the correct structure in the function augment_web
+
+    Args:
+        augmentation_vec (list): a list that contains all the elements to augment
+        ion_range_vec (list): a list that contains the value of ion-rage of some augment parameters
+
+    Returns:
+        (list): returns a list that contains the params to augment and the respective values
+
+    """
     augmenters = []
 
     # vertical-flip option
@@ -497,12 +508,18 @@ def _augmenters_list(augmentation_vec: list = None, ion_range_vec: list = None):
 
 @app.route("/create_dataset", methods=["POST"])
 @cross_origin()
-# TODO : need to implement the documentation
-# TODO : need to implement the augmentation option into the dataset. For this, x can look into the file https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py line 479
-# TODO : don't forget to look in this link
-# https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
-# TODO : for the augmentation menu. I'll see .augment from this script
 def create_dataset():
+    """
+    Function that creates the .h5 dataset
+
+    Notes:
+        This function is used in DatasetComp.tsx
+
+    Returns:
+        (dict): returns a dict that contains the dataset .h5 name. Otherwise, will return an error for the front-end
+
+    """
+
     try:
         output = request.json["file_path"]
         sample = request.json["sample"]
@@ -543,4 +560,4 @@ def create_dataset():
 
     dataset.save_dataset(data)
 
-    return jsonify({"datasetFilename": output.split("/")[-1]})
+    return jsonify({"datasetFilename": initial_output.split("/")[-1]})
