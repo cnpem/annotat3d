@@ -8,7 +8,7 @@ import { useStorageState } from 'react-storage-hooks';
 // @ts-ignore
 import { SliderPicker } from 'react-color';
 
-import { dispatch, useEventBus } from '../../utils/eventbus';
+import { dispatch } from '../../utils/eventbus';
 import { sfetch } from '../../utils/simplerequest';
 import ImageInfoInterface from '../main_menu/file/ImageInfoInterface';
 import { CropAxisInterface, CropShapeInterface } from './CropInterface';
