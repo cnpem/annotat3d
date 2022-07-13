@@ -5,6 +5,7 @@ import numpy as np
 
 __images = dict()
 __annotations = dict()
+__info = dict()
 __deep_model = dict()
 __dataset_data_module = dict()
 __dataset_label_module = dict()
