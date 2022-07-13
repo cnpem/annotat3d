@@ -16,7 +16,6 @@ import {
     IonAccordionGroup, IonContent, IonToast
 } from "@ionic/react";
 import "./FileDialog.css"
-import dataType from "./Dtypes";
 import {construct, create, extensionPuzzle, image, images, information} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
@@ -26,79 +25,7 @@ import ErrorInterface from "./ErrorInterface";
 import {LabelInterface} from "../../tools_menu/label_table/LabelInterface";
 import LoadingComponent from "../../tools_menu/LoadingComponent";
 import {useStorageState} from "react-storage-hooks";
-
-/**
- * dtypes array
- */
-const dtypeList: dataType[] = [
-    {
-        value: "uint8",
-        label: "8-bit"
-    },
-    {
-        value: "int16",
-        label: "16-bit Signed"
-    },
-    {
-        value: "uint16",
-        label: "16-bit Unsigned"
-    },
-    {
-        value: "int32",
-        label: "32-bit Signed"
-    },
-    {
-        value: "uint32",
-        label: "32-bit Unsigned"
-    },
-    {
-        value: "int64",
-        label: "64-bit Signed"
-    },
-    {
-        value: "uint64",
-        label: "64-bit Unsigned"
-    },
-    {
-        value: "float32",
-        label: "32-bit Float"
-    },
-    {
-        value: "float64",
-        label: "64-bit Float"
-    },
-    {
-        value: "complex64",
-        label: "64-bit Complex"
-    }
-];
-
-type dtype_type =
-    "uint8"
-    | "int16"
-    | "uint16"
-    | "int32"
-    | "uint32"
-    | "int64"
-    | "uint64"
-    | "float32"
-    | "float64"
-    | "complex64";
-
-type img_operation = "image" | "superpixel" | "label";
-
-interface multiplesPath {
-    workspacePath: string,
-    imagePath: string,
-    superpixelPath: string,
-    labelPath: string,
-    annotPath: string,
-}
-
-interface QueueToast {
-    message: string,
-    isError: boolean,
-}
+import {dtype_type, dtypeList, img_operation, multiplesPath, QueueToast} from "./FileLoadInterface";
 
 /**
  * Load Image dialog
@@ -343,7 +270,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                 </IonItem>
                                 <IonList slot="content">
                                     <IonItem>
-                                        <IonLabel position="stacked">{"Workspace Path"}</IonLabel>
+                                        <IonLabel position="stacked">Workspace Path</IonLabel>
                                         <IonInput
                                             placeholder={"/path/to/workspace"}
                                             value={pathFiles.workspacePath}
@@ -380,6 +307,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                 <IonLabel position="stacked">Image Size</IonLabel>
                                                 <div style={{display: 'flex', justifyContent: 'flex-start'}}>
                                                     <IonInput
+                                                        className={"ion-input"}
                                                         type="number"
                                                         min={"0"}
                                                         value={imgShapeRaw[0]}
@@ -387,6 +315,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                         onIonChange={e => setImageShapeRaw([parseInt(e.detail.value!, 10), imgShapeRaw[1], imgShapeRaw[2]])}
                                                     />
                                                     <IonInput
+                                                        className={"ion-input"}
                                                         type="number"
                                                         min={"0"}
                                                         value={imgShapeRaw[1]}
@@ -394,6 +323,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                                         onIonChange={e => setImageShapeRaw([imgShapeRaw[0], parseInt(e.detail.value!, 10), imgShapeRaw[2]])}
                                                     />
                                                     <IonInput
+                                                        className={"ion-input"}
                                                         type="number"
                                                         min={"0"}
                                                         value={imgShapeRaw[2]}

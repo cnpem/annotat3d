@@ -904,7 +904,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             });
     }
 
-
     fetchAllDebounced = debounce(this.fetchAll, 250);
 
     newAnnotation() {
@@ -1242,6 +1241,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             </div>
         );
     }
-};
+}
 
 export default CanvasContainer;

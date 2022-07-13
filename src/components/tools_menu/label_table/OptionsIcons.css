@@ -1,3 +1,21 @@
-ion-popover {
-    --width: 'max-content';
+/**
+Used this site as reference
+https://css-tricks.com/quick-css-trick-how-to-center-an-object-exactly-in-the-center/
+https://www.youtube.com/watch?v=ZCrQjk6PdK0&ab_channel=SimonGrimm
+ */
+
+/*
+Delete label component in OptionsIcons.tsx
+*/
+.ion-popover-delete::part(content) {
+    --width: "max-contet";
+    transform: translate(-90%) !important;
+}
+
+/*
+Edit label component in OptionsIcons.tsx
+*/
+.ion-popover-edit::part(content) {
+    --width: "max-contet";
+    transform: translate(-90%) !important;
 }

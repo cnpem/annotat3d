@@ -8,6 +8,14 @@ Component used for "Load Files" menu
 }
 
 /**
+Component used in ion-input in FileLoadDialog.tsx
+to center the text in Load Image option
+ */
+.ion-input {
+    text-align: center !important;
+}
+
+/**
 Component used for "Save Files" menu
  */
 .file-popover-save {
