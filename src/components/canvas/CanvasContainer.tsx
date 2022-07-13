@@ -922,6 +922,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray')
             .then((superpixelSlice) => {
                 this.canvas!!.setSuperpixelImage(superpixelSlice);
+            })
+            .catch(() => {
+                this.canvas!!.destroySuperpixelImage()
             });
     }
 
@@ -1213,9 +1216,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                                       this.canvas?.setPreviewVisibility(futureSightVisibility);
                                   }}>
                         <IonIcon icon={this.state.future_sight_on ? eye : eyeOff}/>
-                    </IonFabButton>
-                    <IonFabButton color="medium" title="resize: fit to window" onClick={() => this.canvas?.recenter()}>
-                        <IonIcon icon={expand}/>
                     </IonFabButton>
                 </IonFab>
 

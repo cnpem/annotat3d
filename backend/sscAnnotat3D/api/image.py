@@ -125,6 +125,24 @@ def crop_apply():
     }
     crop_img_info['imageShape'] =  {'x':crop_img.shape[2], 'y':crop_img.shape[1], 'z':crop_img.shape[0]}
 
+    #---
+    # superpixels
+    #---
+    img_superpixels = data_repo.get_image('superpixel')
+    if img_superpixels is not None:
+        print('Removing superpixel img from workspace.')
+        data_repo.delete_image(key='superpixel')
+
+    # ---
+    # label image
+    # ---
+    label_img = data_repo.get_image('label')
+    if label_img is not None:
+        # does numpy optimizes this?
+        print('Creating cropped label image.')
+        output_label_img = label_img[zlo:zhi, ylo:yhi, xlo:xhi]
+        data_repo.set_image('label', data=output_label_img)
+
     # ---
     # annotation 
     # ---
@@ -186,7 +204,7 @@ def crop_merge():
     # opening original image
     # ---
     
-    try: # bruno
+    try: 
         output_img, info = sscIO.io.read_volume(image_info['imageFullPath'], 'numpy',
                         shape=(imageFullShape['z'], imageFullShape['y'], imageFullShape['x']),
                         dtype=image_info['imageDtype'])
@@ -206,11 +224,19 @@ def crop_merge():
     ylo, yhi = cropShape['cropY']['lower'], cropShape['cropY']['upper']
     xlo, xhi = cropShape['cropX']['lower'], cropShape['cropX']['upper']
 
+    #---
+    # superpixels
+    #---
+    img_superpixels = data_repo.get_image('superpixel')
+    if img_superpixels is not None:
+        print('Removing superpixel img from workspace.')
+        data_repo.delete_image(key='superpixel')
+
+
     # ---
     # label image
     # ---
     label_img = data_repo.get_image('label')
-
     if label_img is not None:
         output_label_img = np.zeros_like(output_img)
         # does numpy optimizes this?
