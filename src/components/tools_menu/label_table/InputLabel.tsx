@@ -22,78 +22,9 @@ interface InputLabelProps {
     onNewLabelId: (id: number) => void;
 }
 
-interface WarningWindowInterface {
-    openWarningWindow: boolean;
-    onOpenWarningWindow: (flag: boolean) => void;
-
-    labelList: LabelInterface[];
-    onLabelList: (labels: LabelInterface[]) => void;
-    onNewLabelId: (id: number) => void;
-}
-
 interface LabelMergeListInterface {
     label: string,
     value: number,
-}
-
-/**
- * Component that shows a warning window when the user delete a label
- * @param {boolean} openWarningWindow - Variable that opens the Warning window
- * @param {(flag: boolean) => void} onOpenWarningWindow - Setter for openWarningWindow
- * @param {LabelInterface[]} labelList - A vector of objects that contains each element contains the label name, label id and label color
- * @param {(labels: LabelInterface[]) => void} onLabelList - Setter for labelList
- * @param {(id: number) => void} onNewLabelId - Setter of new label id
- */
-const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
-                                                             onOpenWarningWindow,
-                                                             labelList,
-                                                             onLabelList,
-                                                             onNewLabelId}) => {
-
-    const closeWarningWindow = () => {
-        onOpenWarningWindow(false);
-    }
-
-    const removeAllLabels = () => {
-        const newVec = labelList.filter(lab => lab.id === 0);
-        onLabelList(newVec);
-        onNewLabelId(0); // This value resets the id generator
-
-        sfetch("POST", "/close_annot", "").then(
-            () => {
-                dispatch('annotationChanged', null);
-            }).catch((error: ErrorInterface) => {
-                //TODO : need to implement an error component here
-                console.log("error to delete all labels\n");
-                console.log(error);
-        }).finally(() => {
-            closeWarningWindow();
-        });
-    }
-
-    return(
-        <IonAlert
-            isOpen={openWarningWindow}
-            onDidDismiss={closeWarningWindow}
-            header={"Deleting all labels"}
-            message={"Do you wish to delete all labels ?"}
-            buttons={[
-                {
-                    text: "No",
-                    id: "no-button",
-                    handler: () => {
-                        closeWarningWindow();
-                    }
-                },
-                {
-                    text: "Yes",
-                    id: "yes-button",
-                    handler: () => {
-                        removeAllLabels();
-                    }
-                }
-            ]}/>
-    )
 }
 
 /**
