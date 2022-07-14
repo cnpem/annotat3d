@@ -62,11 +62,6 @@ export interface OutputInterface {
 }
 
 /**
- * Export machine type
- */
-export type type_machine = "local" | "tepui";
-
-/**
  * Export network type
  */
 export type type_network = "u-net-2d" | "u-net-3d" | "v-net";
@@ -74,7 +69,12 @@ export type type_network = "u-net-2d" | "u-net-3d" | "v-net";
 /**
  * Export dtype for pm
  */
-export type dtype_pm = "16 bits" | "32 bits";
+export type dtype_pm = "16-bits" | "32-bits";
+
+/**
+ * Export gpu type for Settings menu.
+ */
+export type gpu_partition = "1-gpu" | "2-gpu" | "4-gpu";
 
 /**
  * Interface for the component output used in InterfaceComp.tsx
@@ -84,24 +84,8 @@ export const initialOutput: OutputInterface = {
     filePath: "",
     probabilityMap: false,
     label: false,
-    outputBits: "16 bits",
+    outputBits: "16-bits",
 }
-
-/**
- * Initial state for machine type in Settings.tsx
- */
-export const typeMachine: SelectInterface[] = [
-    {
-        key: 0,
-        value: "local",
-        label: "Local",
-    },
-    {
-        key: 1,
-        value: "tepui",
-        label: "Tepui",
-    }
-];
 
 /**
  * Partition type used in Settings.tsx
@@ -121,68 +105,6 @@ export const typePartition: SelectInterface[] = [
         key: 2,
         value: "4-gpu",
         label: "4 GPU",
-    }
-];
-
-/**
- * Type of CUDA devices used in Settings.tsx
- */
-export const typeCUDADevices: CudaDeviceGPU[] = [
-    {
-        key: 0,
-        value: "gpu-0",
-        label: "GPU 0",
-        isDisabled: false,
-        isChecked: true,
-    },
-    {
-        key: 1,
-        value: "gpu-1",
-        label: "GPU 1",
-        isDisabled: true,
-        isChecked: false,
-    },
-    {
-        key: 2,
-        value: "gpu-2",
-        label: "GPU 2",
-        isDisabled: true,
-        isChecked: false,
-    },
-    {
-        key: 3,
-        value: "gpu-3",
-        label: "GPU 3",
-        isDisabled: true,
-        isChecked: false,
-    },
-    {
-        key: 4,
-        value: "gpu-4",
-        label: "GPU 4",
-        isDisabled: true,
-        isChecked: false,
-    },
-    {
-        key: 5,
-        value: "gpu-5",
-        label: "GPU 5",
-        isDisabled: true,
-        isChecked: false,
-    },
-    {
-        key: 6,
-        value: "gpu-6",
-        label: "GPU 6",
-        isDisabled: true,
-        isChecked: false,
-    },
-    {
-        key: 7,
-        value: "gpu-7",
-        label: "GPU 7",
-        isDisabled: true,
-        isChecked: false,
     }
 ];
 

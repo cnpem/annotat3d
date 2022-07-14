@@ -1,164 +1,46 @@
 import {
-    BatchInference, CudaDeviceGPU,
+    BatchInference, gpu_partition,
     PatchesInterface,
-    type_machine, typeMachine,
     typePartition
 } from "./BatchInferenceInterfaces";
 import {
     IonAccordion,
-    IonAccordionGroup, IonCheckbox,
+    IonAccordionGroup,
     IonCol,
-    IonContent, IonGrid,
+    IonContent,
     IonInput,
     IonItem, IonItemDivider,
     IonLabel,
     IonList,
     IonRow, IonSelect, IonSelectOption
 } from "@ionic/react";
-import React, {Fragment} from "react";
-
-/**
- * Component to create the remove devices in TEPUI
- */
-const RemoteDevicesComp: React.FC = () => {
-    return (
-        <Fragment>
-            <IonLabel>Partition</IonLabel>
-            <IonSelect
-                interface={"popover"}>
-                {typePartition.map((type) => {
-                    return (
-                        <IonSelectOption
-                            key={type.key}
-                            value={type.value}>{type.label}</IonSelectOption>
-                    );
-                })}
-            </IonSelect>
-        </Fragment>
-    );
-}
-
-interface CudaDeviceInterface {
-    cudaDevices: CudaDeviceGPU[],
-    onCudaDevices: (index: number) => void,
-}
-
-/**
- * Function that creates the table with the gpu components
- * @param cudaDevices {CudaDeviceGPU[]} - vector of objects that contains all the CUDA devices
- * @param onCudaDevices {(index: number) => void} - setter for cudaDevices
- */
-const CudaDevicesComp: React.FC<CudaDeviceInterface> = ({cudaDevices, onCudaDevices}) => {
-    return (
-        <IonGrid>
-            {/*CUDA devices*/}
-            <IonLabel>CUDA devices</IonLabel>
-            <IonRow>
-                <IonCol>
-                    <IonItem disabled={cudaDevices[0].isDisabled}>
-                        <IonLabel>{cudaDevices[0].label}</IonLabel>
-                        <IonCheckbox
-                            checked={cudaDevices[0].isChecked}
-                            onIonChange={() => onCudaDevices(0)}/>
-                    </IonItem>
-                </IonCol>
-                <IonCol>
-                    <IonItem disabled={cudaDevices[1].isDisabled}>
-                        <IonLabel>{cudaDevices[1].label}</IonLabel>
-                        <IonCheckbox
-                            checked={cudaDevices[1].isChecked}
-                            onIonChange={() => onCudaDevices(1)}/>
-                    </IonItem>
-                </IonCol>
-                <IonCol>
-                    <IonItem disabled={cudaDevices[2].isDisabled}>
-                        <IonLabel>{cudaDevices[2].label}</IonLabel>
-                        <IonCheckbox
-                            checked={cudaDevices[2].isChecked}
-                            onIonChange={() => onCudaDevices(2)}/>
-                    </IonItem>
-                </IonCol>
-                <IonCol>
-                    <IonItem disabled={cudaDevices[3].isDisabled}>
-                        <IonLabel>{cudaDevices[3].label}</IonLabel>
-                        <IonCheckbox
-                            checked={cudaDevices[3].isChecked}
-                            onIonChange={() => onCudaDevices(3)}/>
-                    </IonItem>
-                </IonCol>
-            </IonRow>
-            <IonRow>
-                <IonCol>
-                    <IonItem disabled={cudaDevices[4].isDisabled}>
-                        <IonLabel>{cudaDevices[4].label}</IonLabel>
-                        <IonCheckbox
-                            checked={cudaDevices[4].isChecked}
-                            onIonChange={() => onCudaDevices(4)}/>
-                    </IonItem>
-                </IonCol>
-                <IonCol>
-                    <IonItem disabled={cudaDevices[5].isDisabled}>
-                        <IonLabel>{cudaDevices[5].label}</IonLabel>
-                        <IonCheckbox
-                            checked={cudaDevices[5].isChecked}
-                            onIonChange={() => onCudaDevices(5)}/>
-                    </IonItem>
-                </IonCol>
-                <IonCol>
-                    <IonItem disabled={cudaDevices[6].isDisabled}>
-                        <IonLabel>{cudaDevices[6].label}</IonLabel>
-                        <IonCheckbox
-                            checked={cudaDevices[6].isChecked}
-                            onIonChange={() => onCudaDevices(6)}/>
-                    </IonItem>
-                </IonCol>
-                <IonCol>
-                    <IonItem disabled={cudaDevices[7].isDisabled}>
-                        <IonLabel>{cudaDevices[7].label}</IonLabel>
-                        <IonCheckbox
-                            checked={cudaDevices[7].isChecked}
-                            onIonChange={() => onCudaDevices(7)}/>
-                    </IonItem>
-                </IonCol>
-            </IonRow>
-        </IonGrid>
-    );
-}
+import React from "react";
 
 interface SettingsInterface {
     patches: PatchesInterface,
     onPatches: (patches: PatchesInterface) => void,
 
-    machine: type_machine,
-    onMachine: (machine: type_machine) => void,
+    tepuiGPU: gpu_partition,
+    onTepuiGPU: (gpu: gpu_partition) => void,
 
     batch: BatchInference,
     onBatch: (batch: BatchInference) => void,
-
-    cudaDevices: CudaDeviceGPU[],
-    onCudaDevices: (index: number) => void,
 }
 
 /**
  * Component that create the settings menu
  * @param patches {PatchesInterface} - object that contains the patches in settings
  * @param onPatches {(patches: PatchesInterface) => void} - setter for patches
- * @param machine {type_machine} - variable that contains if the machine is local or remote (TEPUI)
- * @param onMachine {(machine: type_machine) => void} - setter for machine
  * @param batch {BatchInference} - object that contains the batch value
  * @param onBatch {(batch: BatchInference) => void} - setter for batch
- * @param cudaDevices {CudaDeviceGPU[]} - vector of objects that contains all the CUDA devices
- * @param onCudaDevices {(index: number) => void} - setter for cudaDevices
  */
 const Settings: React.FC<SettingsInterface> = ({
                                                    patches,
                                                    onPatches,
-                                                   machine,
-                                                   onMachine,
+                                                   tepuiGPU,
+                                                   onTepuiGPU,
                                                    batch,
-                                                   onBatch,
-                                                   cudaDevices,
-                                                   onCudaDevices
+                                                   onBatch
                                                }) => {
     return (
         <small>
@@ -171,11 +53,13 @@ const Settings: React.FC<SettingsInterface> = ({
                         </IonItem>
                         <IonList slot={"content"}>
                             <IonItem>
-                                <IonLabel>Machine</IonLabel>
+                                <IonLabel>Remote GPU's</IonLabel>
                                 <IonSelect
                                     interface={"popover"}
-                                    onIonChange={(e: CustomEvent) => onMachine(e.detail.value as type_machine)}>
-                                    {typeMachine.map((type) => {
+                                    value={tepuiGPU}
+                                    onIonChange={(e: CustomEvent) =>
+                                        onTepuiGPU(e.detail.value as gpu_partition)}>
+                                    {typePartition.map((type) => {
                                         return (
                                             <IonSelectOption
                                                 key={type.key}
@@ -183,10 +67,6 @@ const Settings: React.FC<SettingsInterface> = ({
                                         );
                                     })}
                                 </IonSelect>
-                            </IonItem>
-                            <IonItem>
-                                {(machine === "local") ? <CudaDevicesComp
-                                    cudaDevices={cudaDevices} onCudaDevices={onCudaDevices}/> : <RemoteDevicesComp/>}
                             </IonItem>
                             <IonItemDivider/>
                         </IonList>

@@ -15,11 +15,11 @@ import ErrorWindowComp from "../../file/ErrorWindowComp";
 import {useStorageState} from "react-storage-hooks";
 import InferenceComp from "./InferenceComp";
 import {
-    BatchInference,
-    CudaDeviceGPU, initialOutput,
+    BatchInference, gpu_partition,
+    initialOutput,
     initialPatches, OutputInterface,
     PatchesInterface,
-    type_machine, type_network, typeCUDADevices
+    type_network
 } from "./BatchInferenceInterfaces";
 import Settings from "./Settings";
 
@@ -28,6 +28,7 @@ type InputMenuChoicesType = typeof menuChoices[number];
 
 /**
  * Component that create the Batch Inference menu
+ * TODO : need to implement the back-end function for all scripts of this directory
  * @example <BatchInferenceComp/>
  */
 const BatchInferenceComp: React.FC = () => {
@@ -37,14 +38,14 @@ const BatchInferenceComp: React.FC = () => {
     const [patches, setPatches] = useStorageState<PatchesInterface>(sessionStorage, "patches", initialPatches)
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
-    const [machine, setMachine] = useState<type_machine>("local");
-    const [batch, setBatch] = useState<BatchInference>({value: 4, isDisabled: true});
-    //TODO : () => {return typeCUDADevices} this function works to return the initial value, maybe this is a good idea to see the gpu on the backend
-    const [cudaDevices, setCudaDevices] = useState<CudaDeviceGPU[]>(() => {
-        return typeCUDADevices
-    });
-    const [output, setOutput] = useState<OutputInterface>(initialOutput);
-    const [network, setNetwork] = useState<type_network>("u-net-2d");
+    const [batch, setBatch] = useStorageState<BatchInference>(sessionStorage, "batch", {value: 4, isDisabled: true});
+    const [output, setOutput] = useStorageState<OutputInterface>(sessionStorage, "outputBatchInference", initialOutput);
+    const [network, setNetwork] = useStorageState<type_network>(sessionStorage, "NetworkType", "u-net-2d");
+    const [tepuiGPU, setTepuiGPU] = useStorageState<gpu_partition>(sessionStorage, "tepuiGPU", "1-gpu");
+
+    const handleTepuiGPU = (gpu: gpu_partition) => {
+        setTepuiGPU(gpu);
+    }
 
     const handleNetwork = (net: type_network) => {
         setNetwork(net);
@@ -54,18 +55,8 @@ const BatchInferenceComp: React.FC = () => {
         setOutput(newOutput);
     }
 
-    const handleCudaDevices = (index: number) => {
-        const newList = cudaDevices.map(element => element.key === index
-            ? {...element, isChecked: !element.isChecked} : element);
-        setCudaDevices(newList);
-    }
-
     const handleBatch = (batch: BatchInference) => {
         setBatch(batch);
-    }
-
-    const handleMachine = (machine: type_machine) => {
-        setMachine(machine);
     }
 
     const handleErrorMsg = (msg: string) => {
@@ -89,12 +80,10 @@ const BatchInferenceComp: React.FC = () => {
                                   network={network}
                                   onNetwork={handleNetwork}/>, <Settings patches={patches}
                                                                          onPatches={handlePatches}
-                                                                         machine={machine}
-                                                                         onMachine={handleMachine}
                                                                          batch={batch}
-                                                                         onBatch={handleBatch}
-                                                                         cudaDevices={cudaDevices}
-                                                                         onCudaDevices={handleCudaDevices}/>];
+                                                                         tepuiGPU={tepuiGPU}
+                                                                         onTepuiGPU={handleTepuiGPU}
+                                                                         onBatch={handleBatch}/>];
 
     /**
      * Clean up popover dialog
@@ -140,7 +129,21 @@ const BatchInferenceComp: React.FC = () => {
                 {menuChoices.map(renderMenu)}
                 <IonButton
                     color={"tertiary"}
-                    slot={"end"}>
+                    slot={"end"}
+                    onClick={() => {
+                        console.log("============================== values ===================================\n");
+                        console.log("output\n");
+                        console.table(output);
+                        console.log("\npatches\n");
+                        console.table(patches);
+                        console.log("\nbatches\n");
+                        console.table(batch);
+                        console.log("\nNetwork\n");
+                        console.table(network);
+                        console.log("\ntepuiGPU\n");
+                        console.table(tepuiGPU);
+                        console.log("==========================================================================\n");
+                    }}>
                     Inference
                     <IonIcon
                         icon={checkbox}

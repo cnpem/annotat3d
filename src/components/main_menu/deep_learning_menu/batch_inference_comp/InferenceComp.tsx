@@ -525,6 +525,7 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
                                 <IonLabel>Network type</IonLabel>
                                 <IonSelect
                                     interface={"popover"}
+                                    value={network}
                                     onIonChange={(e: CustomEvent) =>
                                         onNetwork(e.detail.value as type_network)}>
                                     {typeNetworks.map((type) => {
@@ -648,7 +649,9 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
                             <IonItem>
                                 <IonLabel>Output Bits</IonLabel>
                                 <IonSelect
-                                    interface={"popover"} onIonChange={(e: CustomEvent) => onOutput({
+                                    interface={"popover"}
+                                    value={output.outputBits}
+                                    onIonChange={(e: CustomEvent) => onOutput({
                                     ...output,
                                     outputBits: e.detail.value as dtype_pm
                                 })}>
@@ -661,9 +664,6 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
                                     })}
                                 </IonSelect>
                             </IonItem>
-                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                                <IonButton size={"default"}>Browse</IonButton>
-                            </div>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
