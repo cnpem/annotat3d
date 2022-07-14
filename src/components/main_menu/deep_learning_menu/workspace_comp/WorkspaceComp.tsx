@@ -1,9 +1,11 @@
 import React, {useState} from "react";
 import {
+    IonAccordion,
+    IonAccordionGroup,
     IonButton,
     IonIcon,
     IonInput,
-    IonItem,
+    IonItem, IonItemDivider,
     IonLabel,
     IonList,
     IonPopover,
@@ -12,8 +14,14 @@ import {
 import ErrorWindowComp from "../../file/ErrorWindowComp";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
-import {construct} from "ionicons/icons";
+import {construct, folder} from "ionicons/icons";
 import "./Workspace.css";
+import {dispatch} from "../../../../utils/eventbus";
+
+interface WorkspaceInterface {
+    workspacePath: string,
+    folderName: string,
+}
 
 /**
  * Component that load or save a Workspace
@@ -27,10 +35,9 @@ const WorkspaceComp: React.FC = () => {
         event: undefined,
     });
 
+    const [userInput, setUserInput] = useState<WorkspaceInterface>({workspacePath: "", folderName: "workspace/"});
     const [showToast,] = useIonToast();
     const toastTime = 2000;
-
-    const [path, setPath] = useState<string>("");
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
 
@@ -44,13 +51,14 @@ const WorkspaceComp: React.FC = () => {
 
     const handleLoadWorkspace = () => {
         const params = {
-            workspace_path: path,
+            workspace_path: userInput.workspacePath + userInput.folderName,
         }
 
         sfetch("POST", "/load_workspace", JSON.stringify(params), "json").then(
             (workspace_path: string) => {
                 console.log("Loaded a Workspace in the path ", workspace_path);
-                showToast(`loaded a Workspace in the path "${path}"`, toastTime);
+                showToast(`loaded a Workspace in the path "${params.workspace_path}"`, toastTime);
+                dispatch("workspaceLoaded", false);
                 cleanUp();
             }
         ).catch((error: ErrorInterface) => {
@@ -62,13 +70,14 @@ const WorkspaceComp: React.FC = () => {
 
     const handleNewWorkspace = () => {
         const params = {
-            workspace_path: path,
+            workspace_path: userInput.workspacePath + userInput.folderName,
         }
 
         sfetch("POST", "/open_new_workspace", JSON.stringify(params), "json").then(
             (workspace_path: string) => {
                 console.log("Create a Workspace in the path ", workspace_path);
-                showToast(`Create a Workspace in the path "${path}"`, toastTime);
+                showToast(`Create a Workspace in the path "${params.workspace_path}"`, toastTime);
+                dispatch("workspaceLoaded", false);
                 cleanUp();
             }
         ).catch((errorMsg: ErrorInterface) => {
@@ -83,7 +92,7 @@ const WorkspaceComp: React.FC = () => {
      */
     const cleanUp = () => {
         setShowPopover({open: false, event: undefined});
-        setPath("");
+        setUserInput({workspacePath: "", folderName: "workspace/"});
         setShowErrorWindow(false);
         setErrorMsg("");
     };
@@ -95,17 +104,42 @@ const WorkspaceComp: React.FC = () => {
                 onDidDismiss={() => cleanUp()}
                 alignment={"center"}
                 className={"ion-workspace"}>
-                <IonList>
-                    {/* Header Path Text Input */}
-                    <IonItem slot={"header"}>
-                        <IonIcon slot={"start"} icon={construct}/>
-                        <IonLabel position="stacked">{"Workspace Path"}</IonLabel>
-                        <IonInput
-                            placeholder={"/path/to/Workspace"}
-                            value={path}
-                            onIonChange={(e: CustomEvent) => setPath(e.detail.value!)}/>
-                    </IonItem>
-                </IonList>
+                <IonAccordionGroup multiple={true}>
+                    <IonAccordion>
+                        {/* Header Path for workspace Input */}
+                        <IonItem slot={"header"}>
+                            <IonIcon slot={"start"} icon={construct}/>
+                            <IonLabel><small>Workspace Path</small></IonLabel>
+                        </IonItem>
+                        <IonList slot={"content"}>
+                            <IonInput
+                                placeholder={"/path/to/Workspace"}
+                                value={userInput.workspacePath}
+                                onIonChange={(e: CustomEvent) => setUserInput({
+                                    workspacePath: e.detail.value!,
+                                    folderName: userInput.folderName
+                                })}/>
+                            <IonItemDivider/>
+                        </IonList>
+                    </IonAccordion>
+                    <IonAccordion>
+                        {/* Header Path for folder name */}
+                        <IonItem slot={"header"}>
+                            <IonIcon slot={"start"} icon={folder}/>
+                            <IonLabel><small>Folder Name</small></IonLabel>
+                        </IonItem>
+                        <IonList slot={"content"}>
+                            <IonInput
+                                placeholder={"Folder Name"}
+                                value={userInput.folderName}
+                                onIonChange={(e: CustomEvent) => setUserInput({
+                                    workspacePath: userInput.workspacePath,
+                                    folderName: e.detail.value!
+                                })}/>
+                            <IonItemDivider/>
+                        </IonList>
+                    </IonAccordion>
+                </IonAccordionGroup>
                 {/* Create option */}
                 <IonButton color={"tertiary"} slot={"end"} onClick={handleNewWorkspace}>
                     New Workspace!

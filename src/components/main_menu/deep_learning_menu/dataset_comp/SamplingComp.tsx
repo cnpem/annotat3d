@@ -379,7 +379,7 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
             </IonButtons>
             {labelElement.element.fileName}
             <ErrorWindowComp
-                headerMsg={`Error trying to delete all files in ${labelElement.typeOperation} table`}
+                headerMsg={`Error trying to delete ${labelElement.element.fileName} files in ${labelElement.typeOperation} table`}
                 errorMsg={errorMsg}
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
@@ -394,8 +394,9 @@ interface SamplingCompInterface {
 }
 
 /**
- * TODO : need to implement the documentation here
- * Component that hold all the Sampling options
+ * Component used to create the sampling menu
+ * @param sampleElement {SamplingInterface} - A Sample object
+ * @param onSampling {(sample: SamplingInterface) => void} - Setter for sampleElement
  */
 const SamplingComp: React.FC<SamplingCompInterface> = ({sampleElement, onSampling}) => {
 

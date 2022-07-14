@@ -13,7 +13,8 @@ from imgaug import augmenters as iaa
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 from sscDeepsirius.utils import augmentation, dataset, sampling, image
-#from backend.sscDeepsiriusLocal.deepsirius.utils import augmentation, dataset, sampling, image -> local files
+
+# from backend.sscDeepsiriusLocal.deepsirius.utils import augmentation, dataset, sampling, image -> local files
 app = Blueprint('io', __name__)
 
 
@@ -676,3 +677,109 @@ def create_dataset():
         return error_status
 
     return jsonify({"datasetFilename": output.split("/")[-1]})
+
+
+@app.route("/open_inference_files/<file_id>", methods=["POST"])
+@cross_origin()
+def open_inference_files(file_id: str):
+    _debugger_print("new key", file_id)
+    try:
+        file_path = request.json["image_path"]
+    except:
+        return handle_exception("Error while trying to get the image path")
+
+    try:
+        file_dtype = request.json["image_dtype"]
+    except:
+        return handle_exception("Error while trying to get the image dtype")
+
+    file = file_path.split("/")[-1]
+    file_name, extension = os.path.splitext(file)
+
+    if (file == ""):
+        return handle_exception("Empty path isn't valid !")
+
+    raw_extensions = [".raw", ".b"]
+    tif_extensions = [".tif", ".tiff", ".npy", ".cbf"]
+
+    extensions = [*raw_extensions, *tif_extensions]
+
+    if extension not in extensions:
+        return handle_exception("The extension {} isn't supported !".format(extension))
+
+    error_msg = ""
+
+    try:
+        use_image_raw_parse = request.json["use_image_raw_parse"]
+        if (extension in tif_extensions or use_image_raw_parse):
+            start = time.process_time()
+            image, info = sscIO.io.read_volume(file_path, 'numpy')
+            end = time.process_time()
+            error_msg = "No such file or directory {}".format(file_path)
+
+            if (_convert_dtype_to_str(image.dtype) != file_dtype and (file_id == "image" or file_id == "label")):
+                image = image.astype(file_dtype)
+
+        else:
+            image_raw_shape = request.json["image_raw_shape"]
+            start = time.process_time()
+            image, info = sscIO.io.read_volume(file_path, 'numpy',
+                                               shape=(image_raw_shape[2], image_raw_shape[1], image_raw_shape[0]),
+                                               dtype=file_dtype)
+            end = time.process_time()
+            error_msg = "Unable to reshape the volume {} into shape {} and type {}. " \
+                        "Please change the dtype and shape and load the image again".format(file, request.json[
+                "image_raw_shape"], file_dtype)
+        image_shape = image.shape
+        image_dtype = _convert_dtype_to_str(image.dtype)
+    except:
+        return handle_exception(error_msg)
+
+    image_info = {"fileName": file_name + extension,
+                  "shape": image_shape,
+                  "type": image_dtype,
+                  "scan": info,
+                  "time": np.round(end - start, 2),
+                  "size": np.round(image.nbytes / 1000000, 2),
+                  "filePath": file_path}
+
+    data_repo.set_inference_data(key=file_id, data=image)
+
+    return jsonify(image_info)
+
+
+@app.route("/close_inference_file/<file_id>", methods=["POST"])
+@cross_origin()
+def close_inference_file(file_id: str):
+    """
+    Function that deletes a file in inference a menu using a key as string
+
+    Args:
+        file_id (str): string used as key to delete the file
+
+    Returns:
+        (str): Returns a string that contains the error or "success on delete the key i in Input Image inference"
+
+    """
+    try:
+        data_repo.del_inference_data(file_id)
+        return jsonify("success on delete the key {} in Input Image inference".format(file_id))
+    except Exception as e:
+        return handle_exception(str(e))
+
+
+@app.route("/close_all_files_dataset", methods=["POST"])
+@cross_origin()
+def close_all_inference_files():
+    """
+    Function that delete all the files in inference menu
+
+    Returns:
+        (str): Returns a string that contains the error or "Success to delete all data"
+
+    """
+    try:
+        data_repo.del_all_inference_data()
+        return jsonify("Success to delete all data")
+    except Exception as e:
+        return handle_exception(str(e))
