@@ -43,7 +43,7 @@ const peopleList: Person[] = [
         name: "Bruno Carlos",
         lattes: "https://www.linkedin.com/in/bruno-vasco-de-paula-carlos-711345231/",
         linkedin: "https://www.linkedin.com/in/bruno-vasco-711345231/",
-
+        github: "https://github.com/brnovasco"
     },
     {
         name: 'Victor Cesaroni',

@@ -101,6 +101,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                     imageDtype: image.imageDtype,
                     imageName: image.imageName,
                     imageExt: image.imageExt,
+                    imageFullPath: image.imageFullPath
                 }
 
                 setShowErrorWindow(false);
@@ -258,7 +259,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                 </IonItem>
                                 <IonList slot="content">
                                     <IonItem>
-                                        <IonLabel position="stacked">{"Superpixel Path"}</IonLabel>
+                                        <IonLabel position="stacked">{"Workspace Path"}</IonLabel>
                                         <IonInput
                                             placeholder={"/path/to/workspace"}
                                             value={pathFiles.workspacePath}

@@ -9,23 +9,29 @@ import {isEqual} from "lodash";
 //TODO: investigate if this is fixed, otherwise declare the types manually
 // @ts-ignore
 import { AlphaPicker, SliderPicker } from 'react-color';
+import CropMenu from "./CropMenu";
+import { ImageShapeInterface } from "./ImageShapeInterface";
 
 function rgbToHex(r: number, g: number, b: number) {
     const bin = (r << 16) | (g << 8) | b;
     return bin;
 }
 
-const SideMenuVis: React.FC = () => {
+interface SideMenuVisProps {
+    imageShape: ImageShapeInterface;
+}
 
-    const [activateMenuOp, setActivateMenuOp] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
+
+    const [lockVisCards, setLockVisCards] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
 
     const [contrast, setContrast] = useStorageState(sessionStorage, 'contrast', {
         lower: 10,
         upper: 90
     });
 
-    useEventBus("ActivateComponents", (activateMenuComps) => {
-        setActivateMenuOp(activateMenuComps);
+    useEventBus('LockComponents', (changeDisableVis) => {
+        setLockVisCards(changeDisableVis);
     })
 
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
@@ -45,12 +51,12 @@ const SideMenuVis: React.FC = () => {
     useEffect(() => {
         if (contrastRangeRef) {
             if (!isEqual(contrastRangeRef.current!.value, contrast)) {
+                // this is used to  reposition the slider markers to the last values set on contrast
                 setTimeout(() => {
                     contrastRangeRef.current!.value = contrast;
                 }, 20);
             }
         }
-
         //now I am just dispatch all events on mount
         //(however, I should change canvas container to store this state properly)
         //to use the useStorageState I should migrate canvas container to new format (react hooks)
@@ -66,22 +72,24 @@ const SideMenuVis: React.FC = () => {
 
     return(
         <React.Fragment>
-            <IonCard disabled={activateMenuOp}>
+            <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <IonRange ref={contrastRangeRef} pin={true} debounce={300}
-                        dualKnobs={true} onIonChange={ (e) => {
+                        dualKnobs={true} 
+                        onIonChange={ (e:CustomEvent) => {
                             if (e.detail.value) {
                                 const range = e.detail.value as any;
                                 setContrast(range);
                                 dispatch('contrastChanged', [range.lower/100, range.upper/100]);
                             }
-                        }}>
+                        }}
+                        >
                         <IonIcon slot='start' icon={sunny}></IonIcon>
                         <IonIcon slot='end' icon={moon}></IonIcon>
                     </IonRange>
                 </IonCardContent>
             </IonCard>
-            <IonCard disabled={activateMenuOp}>
+            <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Superpixel</IonLabel>
@@ -95,7 +103,7 @@ const SideMenuVis: React.FC = () => {
                     <div hidden={!showSuperpixel}>
                         <SliderPicker color={'#'+superpixelColor.toString(16)}
                             onChange={ (e: any) => {
-                                console.log(e);
+                                console.log('Superpixel SliderPicker e: ',e);
                                 const color = rgbToHex(e.rgb.r, e.rgb.g, e.rgb.b);
                                 dispatch('superpixelColorChanged', color);
                                 setSuperpixelColor(color);
@@ -104,7 +112,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard disabled={activateMenuOp}>
+            <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Label</IonLabel>
@@ -135,7 +143,7 @@ const SideMenuVis: React.FC = () => {
                 </IonCardContent>
             </IonCard>
 
-            <IonCard disabled={activateMenuOp}>
+            <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <IonItem>
                         <IonLabel>Show Annotations</IonLabel>
@@ -157,6 +165,7 @@ const SideMenuVis: React.FC = () => {
                     </div>
                 </IonCardContent>
             </IonCard>
+            <CropMenu imageShape={props.imageShape} disabled={lockVisCards} />
         </React.Fragment>
     );
 }

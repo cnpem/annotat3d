@@ -7,10 +7,11 @@ interface ModuleCardProps {
     disabled?: boolean;
     onPreview?: () => void;
     onApply?: () => void;
-    onPreprocess?: () => void;
+    onOther?: () => void;
     disabledPreview?: boolean;
     disabledApply?: boolean;
-    disabledPreprocess?: boolean;
+    disabledOther?: boolean;
+    OtherName?: string;
 }
 
 interface ModuleCardItemProps {
@@ -51,14 +52,16 @@ const ModuleCard: React.FC<ModuleCardProps> = (props: ModuleCardProps) => {
             </IonCardHeader>
             <IonCardContent>
                 { childrenArray }
-                <div style = { { "display": "flex", "justifyContent": "flex-end" } }>
+                <div style = { { "display": "flex", "justifyContent": "flex-end" } }>                 
                     <IonButton color="primary"
                         size="small"
-                        disabled={props.disabledPreprocess}
-                        hidden={props.onPreprocess === undefined}
-                        onClick={props.onPreprocess}>
-                        Preprocess
+                        disabled={props.disabledOther}
+                        hidden={props.onOther === undefined}
+                        onClick={props.onOther}>
+                        {props.OtherName}
                     </IonButton>
+                </div>
+                <div style = { { "display": "flex", "justifyContent": "flex-end" } }> 
                     <IonButton color="primary"
                         size="small"
                         disabled={props.disabledPreview}

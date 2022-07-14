@@ -6,3 +6,6 @@ body > #root > div {
   height: 100%;
 }
 
+ion-icon {
+  pointer-events: none;
+  }

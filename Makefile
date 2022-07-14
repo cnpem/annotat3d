@@ -36,13 +36,16 @@ install-all: install-backend install-frontend
 
 run-backend:
 	@echo "Running the backend application"
-	${PYTHON} backend/sscAnnotat3D/app.py
+	${PYTHON} backend/sscAnnotat3D/app.py  
 
 run-frontend:
 	@echo "Running the frontend application"
-	serve -s build --debug
+	yarn start	#serve -s build --debug
 
-run-app: install-backend run-frontend
+run-app: run-backend run-frontend 
+
+run-update-app:
+	install-backend run-app
 
 clean-backend:
 	rm -rf backend/build* backend/dist* *.egg-info

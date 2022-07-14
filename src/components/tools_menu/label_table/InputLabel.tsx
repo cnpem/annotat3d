@@ -4,15 +4,15 @@ import { LabelInterface } from "./LabelInterface";
 import {colorFromId} from '../../../utils/colormap';
 
 /*Icons import*/
-import {addOutline, trashOutline} from "ionicons/icons";
+import {addOutline} from "ionicons/icons";
 
 import './OptionsIcons.css';
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import {useEventBus} from "../../../utils/eventbus";
 import {useStorageState} from "react-storage-hooks";
-import ErrorWindowComp from "../../main_menu/file/ErrorWindowComp";
 import ErrorInterface from "../../main_menu/file/ErrorInterface";
+import ErrorWindowComp from "../../main_menu/file/ErrorWindowComp";
 
 interface InputLabelProps {
     colors: [number, number, number][];
@@ -22,78 +22,9 @@ interface InputLabelProps {
     onNewLabelId: (id: number) => void;
 }
 
-interface WarningWindowInterface {
-    openWarningWindow: boolean;
-    onOpenWarningWindow: (flag: boolean) => void;
-
-    labelList: LabelInterface[];
-    onLabelList: (labels: LabelInterface[]) => void;
-    onNewLabelId: (id: number) => void;
-}
-
 interface LabelMergeListInterface {
     label: string,
     value: number,
-}
-
-/**
- * Component that shows a warning window when the user delete a label
- * @param {boolean} openWarningWindow - Variable that opens the Warning window
- * @param {(flag: boolean) => void} onOpenWarningWindow - Setter for openWarningWindow
- * @param {LabelInterface[]} labelList - A vector of objects that contains each element contains the label name, label id and label color
- * @param {(labels: LabelInterface[]) => void} onLabelList - Setter for labelList
- * @param {(id: number) => void} onNewLabelId - Setter of new label id
- */
-const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
-                                                             onOpenWarningWindow,
-                                                             labelList,
-                                                             onLabelList,
-                                                             onNewLabelId}) => {
-
-    const closeWarningWindow = () => {
-        onOpenWarningWindow(false);
-    }
-
-    const removeAllLabels = () => {
-        const newVec = labelList.filter(lab => lab.id === 0);
-        onLabelList(newVec);
-        onNewLabelId(0); // This value resets the id generator
-
-        sfetch("POST", "/close_annot", "").then(
-            () => {
-                dispatch('annotationChanged', null);
-            }).catch((error: ErrorInterface) => {
-                //TODO : need to implement an error component here
-                console.log("error to delete all labels\n");
-                console.log(error);
-        }).finally(() => {
-            closeWarningWindow();
-        });
-    }
-
-    return(
-        <IonAlert
-            isOpen={openWarningWindow}
-            onDidDismiss={closeWarningWindow}
-            header={"Deleting all labels"}
-            message={"Do you wish to delete all labels ?"}
-            buttons={[
-                {
-                    text: "No",
-                    id: "no-button",
-                    handler: () => {
-                        closeWarningWindow();
-                    }
-                },
-                {
-                    text: "Yes",
-                    id: "yes-button",
-                    handler: () => {
-                        removeAllLabels();
-                    }
-                }
-            ]}/>
-    )
 }
 
 /**
@@ -104,28 +35,23 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     const [selectedLabels, setSelectedLabels] = useState<LabelMergeListInterface[]>([]);
-    const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
     const [showMergeMenu, setShowMergeMenu] = useState<boolean>(false);
     const [showError, setShowError] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
-    const [activateMenu, setActivateMenu] = useStorageState<boolean>(sessionStorage, "ActivateComponents", true);
+    const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
     const [ionToastActivateExtendOp, ] = useIonToast();
     const timeToast = 2000;
 
-    useEventBus("ActivateComponents", (activateAddLabelButton) => {
-        setActivateMenu(activateAddLabelButton);
+    useEventBus('LockComponents', (activateAddLabelButton: boolean) => {
+        setLockMenu(activateAddLabelButton);
     })
 
-    const handleShowWarningWindow = (flag: boolean) => {
-        setOpenWarningWindow(flag);
+    const handleErrorWindow = (flag: boolean) => {
+        setShowError(flag);
     }
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
-    }
-
-    const handleErrorWindow = (flag: boolean) => {
-        setShowError(flag);
     }
 
     const initSelectedLabels = () => {
@@ -183,11 +109,11 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     return(
         <div style={ {display: "flex", justifyContent: "flex-end"} }>
-            <IonButton size={"small"} onClick={extendLabel} disabled={activateMenu}>
+            <IonButton size={"small"} onClick={extendLabel} disabled={lockMenu}>
                 Extend
             </IonButton>
 
-            <IonButton size={"small"} onClick={initSelectedLabels} disabled={activateMenu}>
+            <IonButton size={"small"} onClick={initSelectedLabels} disabled={lockMenu}>
                 Merge
             </IonButton>
 
@@ -236,26 +162,10 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                     }
                 ]}/>
 
-            <IonButton size="small" onClick={addNewLabel} disabled={activateMenu}>
+            <IonButton size="small" onClick={addNewLabel} disabled={lockMenu}>
                 <IonIcon icon={addOutline} slot={"end"}/>
                 Add
             </IonButton>
-
-            <IonButton color="danger" size="small" slot={"end"}
-                       disabled={props.labelList.length <= 1}
-                       onClick={() => setOpenWarningWindow(true)}>
-                <IonIcon icon={trashOutline} slot={"end"}/>
-                Delete all
-            </IonButton>
-            {(openWarningWindow) ?
-                <WarningWindow
-                    openWarningWindow={openWarningWindow}
-                    onOpenWarningWindow={handleShowWarningWindow}
-                    labelList={props.labelList}
-                    onLabelList={props.onLabelList}
-                    onNewLabelId={props.onNewLabelId}/> :
-                <></>
-            }
 
             {/*Error window*/}
             <ErrorWindowComp
@@ -263,7 +173,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                 headerMsg={"Error trying to merge a label"}
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showError}
-                onErrorFlag={handleErrorWindow}/>
+                onErrorFlag={handleErrorWindow} />
         </div>
     );
 };

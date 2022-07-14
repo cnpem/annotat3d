@@ -1,9 +1,11 @@
+from tkinter.messagebox import NO
 import numpy as np
 
 # TODO : need to implement the docstring later
 
 __images = dict()
 __annotations = dict()
+__info = dict()
 __deep_model = dict()
 __dataset_data_module = dict()
 __dataset_label_module = dict()
@@ -65,6 +67,16 @@ def get_annotation(key='annotation'):
 
 def delete_annotation(key='annotation'):
     del __annotations[key]
+
+def set_info(key='image_info', data: dict = None):
+    if data is not None:
+        __info[key] = data
+
+def get_info(key='image_info'):
+    return __info.get(key)
+
+def delete_info(key):
+    del __info[key]
 
 
 def set_dataset_data(key='data-0', data: np.ndarray = None):

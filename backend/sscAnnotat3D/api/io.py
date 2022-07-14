@@ -4,6 +4,8 @@ import os.path
 import os
 import sscIO.io
 import numpy as np
+from sscAnnotat3D.repository import data_repo, module_repo
+from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 
 from flask import Blueprint, request, jsonify
 from werkzeug.exceptions import BadRequest
@@ -282,9 +284,15 @@ def open_image(image_id: str):
     except:
         return handle_exception(error_msg)
 
-    image_info = {"imageShape": image_shape, "imageExt": extension,
-                  "imageName": file_name, "imageDtype": image_dtype}
+    
     data_repo.set_image(key=image_id, data=image)
+
+    image_info = {"imageShape": {'x':image_shape[2], 'y':image_shape[1], 'z':image_shape[0]}, "imageExt": extension,
+                    "imageName": file_name, "imageDtype": image_dtype, "imageFullPath": image_path}
+
+    if image_id == 'image':
+        data_repo.set_info(data=image_info)
+
     return jsonify(image_info)
 
 
@@ -348,7 +356,7 @@ def save_image(image_id: str):
         return handle_exception(save_status["error_msg"])
 
     image_shape = image.shape
-    image_info = {"imageShape": image_shape, "imageExt": save_status["extension"],
+    image_info = {"imageShape": {'x':image_shape[2], 'y':image_shape[1], 'z':image_shape[0]}, "imageExt": save_status["extension"],
                   "imageName": save_status["file_name"], "imageDtype": image_dtype}
 
     return jsonify(image_info)
