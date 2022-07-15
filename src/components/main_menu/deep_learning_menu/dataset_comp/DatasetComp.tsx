@@ -4,7 +4,7 @@ import {
     IonAccordion,
     IonAccordionGroup,
     IonButton, IonIcon, IonInput, IonItem, IonItemDivider, IonLabel, IonList,
-    IonPopover, IonSegment, IonSegmentButton, SegmentChangeEventDetail, useIonToast
+    IonPopover, IonSegment, IonSegmentButton, IonToast, SegmentChangeEventDetail, useIonToast
 } from "@ionic/react";
 import ErrorWindowComp from "../../file/ErrorWindowComp";
 import SamplingComp from "./SamplingComp";
@@ -23,20 +23,40 @@ import ErrorInterface from "../../file/ErrorInterface";
 interface H5InputInterface {
     trigger: string,
     sample: SamplingInterface,
-    augmentation: AugmentationInterface[]
+    augmentation: AugmentationInterface[],
+    ionRangeVec: IonRangeElement[],
+    workspacePath: string,
+    onWorkspacePath: (workspace: string) => void,
 }
 
 interface BackendPayload {
     sample: SamplingInterface,
     augmentation: AugmentationInterface[],
+    ion_range_vec: IonRangeElement[],
     file_path: string
 }
 
-const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample, augmentation}) => {
+/**
+ * Component that creates the dataset loader menu
+ * @param trigger {string} - string to user as trigger
+ * @param sample {SamplingInterface} - object used as the sample element to send to backend
+ * @param augmentation {AugmentationInterface[]} - vector of objects for the augmentation parameters
+ * @param ionRangeVec {IonRangeElement[]} - vector of ion-range that contains all the values for the augmentation
+ * @param workspacePath {string} - string that contains the workspace path for the dataset
+ * @param onWorkspacePath {(workspace: string) => void} - setter for workspacePath
+ */
+const CreateDatasetH5: React.FC<H5InputInterface> = ({
+                                                         trigger,
+                                                         sample,
+                                                         augmentation,
+                                                         ionRangeVec,
+                                                         workspacePath,
+                                                         onWorkspacePath
+                                                     }) => {
 
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
-    const [workspacePath, setWorkspacePath] = useState<string>("");
     const [filePath, setFilePath] = useState<string>("");
     const [showToast] = useIonToast();
     const timeToast = 2000;
@@ -49,27 +69,31 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample, augmentat
         setShowErrorWindow(flag);
     }
 
-    //TODO : need to implement the function to feed the back-end
-    // I Think that i found the save_dataset option in this link https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
-    // Just need to find the line 312, 289
     const readFile = () => {
+        setShowLoadingComp(true);
+        let datasetPath: { datasetFilename: string } = {
+            datasetFilename: ""
+        };
         const params: BackendPayload = {
             sample: sample,
             augmentation: augmentation,
+            ion_range_vec: ionRangeVec,
             file_path: workspacePath + filePath
         };
-
-        //TODO : Maybe i'll need to dispatch the values from the ion-range later
         sfetch("POST", "/create_dataset", JSON.stringify(params), "json").then(
             (dataset_path: { datasetFilename: string }) => {
-                showToast(`success creating the dataset ${dataset_path.datasetFilename}`, timeToast);
+                datasetPath = dataset_path;
             }).catch((error: ErrorInterface) => {
             console.log("Error in create_dataset");
             console.log(error.error_msg);
             setErrorMsg(error.error_msg);
             setShowErrorWindow(true);
-        })
-
+        }).finally(() => {
+            setShowLoadingComp(false);
+            if (datasetPath.datasetFilename !== "") {
+                showToast(`success creating the dataset ${datasetPath.datasetFilename}`, timeToast);
+            }
+        });
     }
 
     return (
@@ -81,7 +105,7 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample, augmentat
             onDidDismiss={() => {
                 setFilePath("");
             }}>
-            <IonAccordionGroup multiple={true}>
+            <IonAccordionGroup>
                 {/*Load workspace menu*/}
                 <IonAccordion>
                     <IonItem slot={"header"}>
@@ -95,7 +119,7 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample, augmentat
                                 placeholder={"/path/to/workspace"}
                                 value={workspacePath}
                                 onIonChange={(e: CustomEvent) => {
-                                    setWorkspacePath(e.detail.value);
+                                    onWorkspacePath(e.detail.value);
                                 }}/>
                         </IonItem>
                         <IonItemDivider/>
@@ -135,6 +159,9 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({trigger, sample, augmentat
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <IonToast
+                isOpen={showLoadingComp}
+                message={"Creating the dataset. Please wait a little"}/>
         </IonPopover>
     );
 }
@@ -149,6 +176,7 @@ type InputMenuChoicesType = typeof menuChoices[number];
 const DatasetComp: React.FC = () => {
 
     const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, "DatasetMenu", "sampling");
+    const [workspaceName, setWorkspaceName] = useStorageState<string>(sessionStorage, "workspaceName", "");
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
     const [augmentationOpSelected, setAugmentationOpSelected] = useState<AugmentationInterface[]>(InitAugmentationOptions);
@@ -159,6 +187,10 @@ const DatasetComp: React.FC = () => {
         sampleSize: 100,
         patchSize: [256, 256, 1],
     });
+
+    const handleWorkspaceName = (workspace: string) => {
+        setWorkspaceName(workspace);
+    }
 
     const handleSampleElement = (sample: SamplingInterface) => {
         setSampleElement(sample);
@@ -202,7 +234,9 @@ const DatasetComp: React.FC = () => {
 
     const menus = [<SamplingComp
         sampleElement={sampleElement}
-        onSampling={handleSampleElement}/>, <AugmentationComp
+        onSampling={handleSampleElement}
+        workspacePath={workspaceName}
+        onWorkspacePath={handleWorkspaceName}/>, <AugmentationComp
         checkedVector={augmentationOpSelected}
         onCheckedVector={changeCheckedStatus}
         ionRangeVec={ionRangeVec}
@@ -248,8 +282,11 @@ const DatasetComp: React.FC = () => {
                         slot={"end"}/>
                     <CreateDatasetH5
                         augmentation={augmentationOpSelected}
+                        ionRangeVec={ionRangeVec}
                         sample={sampleElement}
-                        trigger={"open-h5-input"}/>
+                        trigger={"open-h5-input"}
+                        workspacePath={workspaceName}
+                        onWorkspacePath={handleWorkspaceName}/>
                 </IonButton>
             </IonPopover>
             {/*Error window*/}

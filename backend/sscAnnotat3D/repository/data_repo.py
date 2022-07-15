@@ -1,4 +1,3 @@
-from tkinter.messagebox import NO
 import numpy as np
 
 # TODO : need to implement the docstring later
@@ -11,27 +10,6 @@ __dataset_data_module = dict()
 __dataset_label_module = dict()
 __dataset_weight_module = dict()
 __inference_data = dict()
-__augment_checked_options = dict({
-    0: {"augmentationOption": "vertical-flip", "isChecked": True},
-    1: {"augmentationOption": "vertical-flip", "isChecked": True},
-    2: {"augmentationOption": "rotate-90-degrees", "isChecked": True},
-    3: {"augmentationOption": "rotate-less-90-degrees", "isChecked": True},
-    4: {"augmentationOption": "contrast", "isChecked": True},
-    5: {"augmentationOption": "linear-contrast", "isChecked": True},
-    6: {"augmentationOption": "dropout", "isChecked": True},
-    7: {"augmentationOption": "gaussian-blur", "isChecked": True},
-    8: {"augmentationOption": "average-blur", "isChecked": True},
-    9: {"augmentationOption": "additive-poisson-noise", "isChecked": True},
-    10: {"augmentationOption": "elastic-deformation", "isChecked": True}})
-__augment_ion_range = dict({
-    0: {"ionNameMenu": "Contrast-Gamma", "actualRangeVal": {"lower": 0.95, "upper": 1.55}},
-    1: {"ionNameMenu": "Linear Contrast-Gamma", "actualRangeVal": {"lower": 0.76, "upper": 1.24}},
-    2: {"ionNameMenu": "Dropout-Gamma", "actualRangeVal": {"lower": 0.06, "upper": 0.14}},
-    3: {"ionNameMenu": "Gaussian Blur-Sigma", "actualRangeVal": {"lower": 0.97, "upper": 2.13}},
-    4: {"ionNameMenu": "Average Blur-K", "actualRangeVal": {"lower": 4.30, "upper": 8.70}},
-    5: {"ionNameMenu": "Additive Poisson Noise-Scale", "actualRangeVal": {"lower": 6.00, "upper": 14.00}},
-    6: {"ionNameMenu": "Elastic Deformation-Alpha", "actualRangeVal": {"lower": 15.07, "upper": 35.03}},
-    7: {"ionNameMenu": "Elastic Deformation-Sigma", "actualRangeVal": {"lower": 1.57, "upper": 3.53}}})
 
 
 def set_deep_model(key='deep_learning', data: dict = None):
@@ -68,12 +46,15 @@ def get_annotation(key='annotation'):
 def delete_annotation(key='annotation'):
     del __annotations[key]
 
+
 def set_info(key='image_info', data: dict = None):
     if data is not None:
         __info[key] = data
 
+
 def get_info(key='image_info'):
     return __info.get(key)
+
 
 def delete_info(key):
     del __info[key]
@@ -140,20 +121,6 @@ def delete_dataset_weight(key='weight-0'):
 
 def delete_all_dataset_weight():
     __dataset_weight_module.clear()
-
-
-def set_augmentation_options(key: int = 0, data: dict = None):
-    if (data is not None):
-        __augment_checked_options[key] = data
-
-
-def set_augment_ion_range(key: int = 0, data: dict = None):
-    if (data is not None):
-        __augment_ion_range[key] = data
-
-
-def get_augment_ion_range(key: int = 0):
-    return __augment_ion_range.get(key, None)
 
 
 def set_inference_data(key="image-0", data: np.ndarray = None):

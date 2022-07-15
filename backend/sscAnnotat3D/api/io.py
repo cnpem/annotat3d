@@ -4,19 +4,17 @@ import os.path
 import os
 import sscIO.io
 import numpy as np
-from sscAnnotat3D.repository import data_repo, module_repo
-from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 
 from flask import Blueprint, request, jsonify
 from werkzeug.exceptions import BadRequest
 from flask_cors import cross_origin
-from imgaug import augmenters as iaa
 
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
-from sscDeepsirius.utils import augmentation, dataset, sampling, image
+from sscDeepsirius.utils.dataset import create_dataset_web
+from sscDeepsirius.utils.augmentation import augment_web
+from sscDeepsirius.utils import dataset
 
-# from backend.sscDeepsiriusLocal.deepsirius.utils import augmentation, dataset, sampling, image -> local files
 app = Blueprint('io', __name__)
 
 
@@ -284,11 +282,10 @@ def open_image(image_id: str):
     except:
         return handle_exception(error_msg)
 
-    
     data_repo.set_image(key=image_id, data=image)
 
-    image_info = {"imageShape": {'x':image_shape[2], 'y':image_shape[1], 'z':image_shape[0]}, "imageExt": extension,
-                    "imageName": file_name, "imageDtype": image_dtype, "imageFullPath": image_path}
+    image_info = {"imageShape": {'x': image_shape[2], 'y': image_shape[1], 'z': image_shape[0]}, "imageExt": extension,
+                  "imageName": file_name, "imageDtype": image_dtype, "imageFullPath": image_path}
 
     if image_id == 'image':
         data_repo.set_info(data=image_info)
@@ -356,7 +353,8 @@ def save_image(image_id: str):
         return handle_exception(save_status["error_msg"])
 
     image_shape = image.shape
-    image_info = {"imageShape": {'x':image_shape[2], 'y':image_shape[1], 'z':image_shape[0]}, "imageExt": save_status["extension"],
+    image_info = {"imageShape": {'x': image_shape[2], 'y': image_shape[1], 'z': image_shape[0]},
+                  "imageExt": save_status["extension"],
                   "imageName": save_status["file_name"], "imageDtype": image_dtype}
 
     return jsonify(image_info)
@@ -421,228 +419,118 @@ def load_workspace():
     return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
 
 
-def elastic_augmenter(params=None):
-    if params is None:
-        params = {}
-    alpha = params.get('alpha', (25.0, 50.0))
-    sigma = params.get('sigma', [4.0, 6.0])
-    return iaa.ElasticTransformation(alpha=alpha, name='elastic', sigma=sigma, mode='reflect').to_deterministic()
+def _augmenters_list(augmentation_vec: list = None, ion_range_vec: list = None):
+    """
+    Build-in function that formats the front-end data into the correct structure in the function augment_web
 
+    Args:
+        augmentation_vec (list): a list that contains all the elements to augment
+        ion_range_vec (list): a list that contains the value of ion-rage of some augment parameters
 
-def fliph_augmenter(params=None):
-    del params
-    return iaa.Fliplr(1.0, name='flip_horizontal').to_deterministic()
+    Returns:
+        (list): returns a list that contains the params to augment and the respective values
 
+    """
+    augmenters = []
 
-def flipv_augmenter(params=None):
-    del params
-    return iaa.Flipud(1.0, name='flip_vertical').to_deterministic()
+    # vertical-flip option
+    if (augmentation_vec[0]["isChecked"]):
+        augmenters.append("vertical-flip")
 
+    # horizontal-flip option
+    if (augmentation_vec[1]["isChecked"]):
+        augmenters.append("horizontal-flip")
 
-def contrast_augmenter(params=None):
-    if params is None:
-        params = {}
-    contrast = params.get('contrast', (0.1, 1.9))
-    return iaa.GammaContrast(contrast, name='contrast').to_deterministic()
+    # rotate-90-degrees option
+    if (augmentation_vec[2]["isChecked"]):
+        augmenters.append("rotate-90-degrees")
 
+    # rotate-less-90-degrees (rotate 270 degrees) option
+    if (augmentation_vec[3]["isChecked"]):
+        augmenters.append("rotate-less-90-degrees")
 
-def gaussian_augmenter(params=None):
-    if params is None:
-        params = {}
-    sigma = params.get('sigma', (0.25, 1.0))
-    return iaa.GaussianBlur(sigma=sigma, name='gaussian_blur').to_deterministic()
+    # contrast option
+    if (augmentation_vec[4]["isChecked"]):
+        # c_min, c_max = ion_range_vec[0]["ionRangeLimit"].values
+        c_lower, c_upper = ion_range_vec[0]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="contrast",
+                 contrast=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in contrast", augmentation_vec[-1])
 
+    # linear-contrast option
+    if (augmentation_vec[5]["isChecked"]):
+        c_lower, c_upper = ion_range_vec[1]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="linear-contrast",
+                 linearContrast=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in linear-contrast", augmentation_vec[-1])
 
-def average_augmenter(params=None):
-    if params is None:
-        params = {}
-    k = params.get('k', (1, 2))
-    return iaa.AverageBlur(k=k, name='average_blur').to_deterministic()
+    # dropout option
+    if (augmentation_vec[6]["isChecked"]):
+        c_lower, c_upper = ion_range_vec[2]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="dropout",
+                 dropout=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in dropout", augmentation_vec[-1])
 
+    # gaussian-blur option
+    if (augmentation_vec[7]["isChecked"]):
+        c_lower, c_upper = ion_range_vec[3]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="gaussian-blur",
+                 sigma=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in gaussian-blur", augmentation_vec[-1])
 
-def rot90_augmenter(params=None):
-    del params
-    return iaa.Rot90(1, name='rot90').to_deterministic()
+    # average-blur option
+    if (augmentation_vec[8]["isChecked"]):
+        c_lower, c_upper = ion_range_vec[4]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="average-blur",
+                 k=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in average-blur", augmentation_vec[-1])
 
+    # additive-poisson-noise option
+    if (augmentation_vec[9]["isChecked"]):
+        c_lower, c_upper = ion_range_vec[5]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="additive-poisson-noise",
+                 k=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in additive-poisson-noise", augmentation_vec[-1])
 
-def rot270_augmenter(params=None):
-    del params
-    return iaa.Rot90(3, name='rot270').to_deterministic()
+    # elastic-deformation option
+    if (augmentation_vec[10]["isChecked"]):
+        c_lower_alpha, c_upper_alpha = ion_range_vec[6]["actualRangeVal"].values()
+        c_lower_sigma, c_upper_sigma = ion_range_vec[7]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="elastic-deformation",
+                 alpha=(c_lower_alpha, c_upper_alpha),
+                 sigma=(c_lower_sigma, c_upper_sigma)))
+        _debugger_print("test for ion-range in elastic-deformation", augmentation_vec[-1])
 
-
-def linearContrast_augmenter(params=None):
-    if params is None:
-        params = {}
-    linearContrast = params.get('linearContrast', (0.4, 1.6))
-    return iaa.LinearContrast(linearContrast, name='linearContrast').to_deterministic()
-
-
-def dropout_augmenter(params=None):
-    if params is None:
-        params = {}
-    dropout = params.get('dropout', (0, 0.2))
-    if (dropout[0] == dropout[1]):
-        dropout = (dropout[0], dropout[0] + 0.001)
-    return iaa.Dropout(p=dropout, name='dropout').to_deterministic()
-
-
-def poisson_augmenter(params=None):
-    if params is None:
-        params = {}
-    scale = params.get('scale', (1, 2))
-    return iaa.AdditivePoissonNoise(scale, name='poisson_noise').to_deterministic()
-
-
-def _augm_constructors():
-    _constructors = {
-        'elastic': elastic_augmenter,
-        'flip_horizontal': fliph_augmenter,
-        'flip_vertical': flipv_augmenter,
-        'gaussian_blur': gaussian_augmenter,
-        'contrast': contrast_augmenter,
-        'average_blur': average_augmenter,
-        'rot90': rot90_augmenter,
-        'rot270': rot270_augmenter,
-        'linearContrast': linearContrast_augmenter,
-        'dropout': dropout_augmenter,
-        'poisson_noise': poisson_augmenter
-    }
-    return _constructors
-
-
-# TODO : change to z, y, x pattern everywhere ...
-def _create_dataset(imgs: list, labels: list, weights: list,
-                    output: str, nsamples: int, num_classes: int, size: tuple,
-                    offset: tuple):
-    logging.debug('uniform ...')
-    logging.debug(imgs)
-    logging.debug(labels)
-    logging.debug(weights)
-
-    weights = [None] * len(imgs)
-    imgs_props = [{}] * len(imgs)
-    labels_props = [{}] * len(labels)
-    weights_props = [{}] * len(weights)
-
-    logging.debug('imgs')
-    logging.debug(imgs)
-    logging.debug(labels)
-    logging.debug(weights)
-
-    logging.debug('props ....')
-    logging.debug(imgs_props)
-    logging.debug(labels_props)
-    logging.debug(weights_props)
-
-    if (not len(imgs) == len(labels) == len(weights) == len(imgs_props) == len(labels_props) == len(weights_props)):
-        return [], handle_exception(
-            "Number of image and labels mismatch.\n {} data images, {} label images, and {} weight images.".format(
-                len(imgs), len(labels), len(weights)))
-
-    try:
-        data = dataset.create_dataset(output, len(imgs), nsamples, size, num_classes=num_classes,
-                                      weight=(weights is not None))
-    except Exception as e:
-        return [], handle_exception(str(e))
-
-    zz = list(zip(imgs, labels, weights,
-                  imgs_props, labels_props, weights_props))
-
-    logging.debug(zz)
-    logging.debug(len(zz))
-
-    i = 0
-    for img_file, label_file, weight_file, \
-        img_props, label_props, weight_props in zip(imgs, labels, weights,
-                                                    imgs_props, labels_props, weights_props):
-
-        logging.debug('img_file:', img_file, img_props)
-        logging.debug('label_file:', label_file, label_props)
-        img = img_file
-        label = label_file
-        weight = weight_file
-        logging.debug('img: ', img)
-        logging.debug('label: ', label)
-
-        if (img.shape != label.shape):
-            return [], handle_exception(
-                "Image dimensions mismatch.\n{} -> {}\n{} -> {}\n".format(
-                    img_file, img.shape, label_file, label.shape))
-        lmin, lmax = label.min(), label.max()
-
-        if (lmin != 0 or lmax > num_classes - 1):
-            return [], handle_exception(
-                "Invalid label values. Labels in the range [{},{}]. Check if the image is correct or set the num_classes={}.".format(
-                    lmin, lmax, lmax + 1))
-
-        img_samples, coords = sampling.uniform_samples(image.zyx_to_xyz(img), size, nsamples, offset)
-        label_samples = sampling.get_samples(image.zyx_to_xyz(label), size, coords)
-
-        data['data'][i, ...] = img_samples
-        data['label'][i, ...] = label_samples
-
-        if weight is not None:
-            weight_samples = sampling.get_samples(image.zyx_to_xyz(weight), size, coords)
-            data['weight'][i, ...] = weight_samples
-        i += 1
-
-    try:
-        dataset.save_dataset(data)
-    except Exception as e:
-        return [], handle_exception(str(e))
-
-    return data, ""
-
-
-@app.route("/set_augment_ion_range", methods=["POST"])
-@cross_origin()
-def set_augment_ion_range():
-    try:
-        ion_range_id = request.json["ionRangeId"]
-        ion_name_menu = request.json["ionNameMenu"]
-        ion_range_name = request.json["ionRangeName"]
-        actual_range_val = request.json["actualRangeVal"]
-    except Exception as e:
-        return handle_exception(str(e))
-
-    new_data = {
-        "ionNameMenu": ion_name_menu + "-" + ion_range_name,
-        "actualRangeVal": {"lower": actual_range_val["lower"], "upper": actual_range_val["upper"]}}
-    data_repo.set_augment_ion_range(ion_range_id, new_data)
-
-    return jsonify("success on the dispatch")
-
-
-@app.route("/set_augment_list", methods=["POST"])
-@cross_origin()
-def set_augment_list():
-    try:
-        checked_op = request.json["checked_element"]
-    except Exception as e:
-        return handle_exception(str(e))
-
-    _debugger_print("Checked_op", checked_op)
-    new_augment_elem = dict({checked_op["checkedId"]: {"augmentationOption": checked_op["augmentationOption"],
-                                                       "isChecked": checked_op["isChecked"]}})
-    data_repo.set_augmentation_options(checked_op["checkedId"], new_augment_elem)
-    return jsonify({
-        "checkedId": checked_op["checkedId"],
-        "augmentationOption": checked_op["augmentationOption"],
-        "isChecked": checked_op["isChecked"]})
+    _debugger_print("augmenters param", augmenters)
+    return augmenters
 
 
 @app.route("/create_dataset", methods=["POST"])
 @cross_origin()
-# TODO : need to implement the documentation
-# TODO : need to implement the augmentation option into the dataset. For this, x can look into the file https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py line 479
-# TODO : don't forget to look in this link
-# https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_dataset_dialog.py
-# TODO : for the augmentation menu. I'll see .augment from tis script
 def create_dataset():
+    """
+    Function that creates the .h5 dataset
+
+    Notes:
+        This function is used in DatasetComp.tsx
+
+    Returns:
+        (dict): returns a dict that contains the dataset .h5 name. Otherwise, will return an error for the front-end
+
+    """
+
     try:
         output = request.json["file_path"]
         sample = request.json["sample"]
         augmentation_vec = request.json["augmentation"]
+        ion_range_vec = request.json["ion_range_vec"]
     except Exception as e:
         return handle_exception(str(e))
 
@@ -650,41 +538,35 @@ def create_dataset():
     num_classes = sample["nClasses"]
     nsamples = sample["sampleSize"]
     offset = (0, 0, 0)
-    _debugger_print("augmentation_vec", augmentation_vec)
-    _debugger_print("augmentation_vec type", type(augmentation_vec))
-
-    isChecked_vec = [isChecked_vec["isChecked"] for isChecked_vec in augmentation_vec]
-    _debugger_print("isChecked_vec", isChecked_vec)
-    checked_index = [i for i, val in enumerate(isChecked_vec) if val]
-    _debugger_print("checked_index", checked_index)
     logging.debug('size = {}, nsamples = {}'.format(size, sample["sampleSize"]))
+    augmenter_params = _augmenters_list(augmentation_vec, ion_range_vec)
 
     imgs = list(data_repo.get_all_dataset_data().values())
     labels = list(data_repo.get_all_dataset_label().values())
     weights = list(data_repo.get_all_dataset_weight().values())
 
-    data, error_status = _create_dataset(imgs, labels, weights,
-                                         output, nsamples, num_classes,
-                                         size, offset)
-
-    test = []
-    for x in checked_index:
-        print("augmentation option : {}".format(x))
-        test.append(x)
-
-    _debugger_print("Checked option", test)
-
-    try:
-        augmentation.augment(output, output, test)
-    except Exception as e:
-        _debugger_print("Eita, deu caô :(", "F")
-        _debugger_print("Error : ", str(e))
-        return handle_exception(str(e))
+    data, error_status = create_dataset_web(imgs, labels, weights,
+                                            output, nsamples, num_classes,
+                                            size, offset)
 
     if (not data):
-        return error_status
+        return handle_exception(error_status)
 
-    return jsonify({"datasetFilename": output.split("/")[-1]})
+    initial_output = output
+    splited_str = output.split("/")
+    dataset_name = splited_str[-1]
+    new_dataset_name = splited_str[-1].split(".")[0] + "_augment" + ".h5"
+    output = output.replace(dataset_name, new_dataset_name)
+
+    if (augmenter_params):
+        data, error_status = augment_web(output, initial_output, augmenter_params, data)
+
+    if (not data):
+        return handle_exception(error_status)
+
+    dataset.save_dataset(data)
+
+    return jsonify({"datasetFilename": initial_output.split("/")[-1]})
 
 
 @app.route("/open_inference_files/<file_id>", methods=["POST"])

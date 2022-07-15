@@ -7,7 +7,7 @@ import {
     IonItem,
     IonItemDivider,
     IonLabel,
-    IonList, IonPopover, IonRow, IonSelect, IonSelectOption
+    IonList, IonPopover, IonRow, IonSelect, IonSelectOption, IonToast
 } from "@ionic/react";
 import {addOutline, closeOutline, construct, image, trashOutline} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
@@ -37,9 +37,14 @@ interface MultiplesPath {
 interface AddNewFileInterface {
     idMenu: number,
     onIdMenu: (newId: number, type: type_operation) => void,
+
     onTableVec: (newFile: MultiplesPath, typeOperation: type_operation) => void,
+
     typeOperation: type_operation,
     trigger: string,
+
+    workspaceName: string,
+    onWorkspaceName: (workspace: string) => void
 }
 
 interface BackendPayload {
@@ -56,6 +61,8 @@ interface BackendPayload {
  * @param onTableVec {(newFile: MultiplesPath) => void} - setter used to create a new element
  * @param trigger {string} - string that contains the trigger to open the popup
  * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
+ * @param workspaceName {string} - workspace path string
+ * @param onWorkspaceName {(workspace: string) => void} - setter for workspaceName
  */
 const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        idMenu,
@@ -63,20 +70,22 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                                                        onTableVec,
                                                        typeOperation,
                                                        trigger,
+                                                       workspaceName,
+                                                       onWorkspaceName
                                                    }) => {
 
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
-    const [workspacePath, setWorkspacePath] = useState<string>("");
     const [filePath, setFilePath] = useState<string>("");
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     let pathFiles: MultiplesPath = {
         id: idMenu,
-        workspacePath: "",
+        workspacePath: workspaceName,
         file: InitFileStatus,
     };
 
-    const handleErrorMsg = (msg: string) => {
-        setErrorMsg(msg);
+    const handleErrorMsg = (workspace: string) => {
+        setErrorMsg(workspace);
     }
 
     const handleErrorWindow = (flag: boolean) => {
@@ -84,7 +93,8 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     }
 
     const readFile = () => {
-        pathFiles.workspacePath = workspacePath;
+        setShowLoadingComp(true);
+        pathFiles.workspacePath = workspaceName;
         pathFiles.file.filePath = filePath;
         const params: BackendPayload = {
             image_path: pathFiles.workspacePath + pathFiles.file.filePath,
@@ -100,13 +110,17 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 pathFiles.file = element
                 onTableVec(pathFiles, typeOperation);
                 pathFiles.id += 1;
+                onWorkspaceName(workspaceName);
 
             }).catch((error: ErrorInterface) => {
             console.log("error while trying to add an image")
             console.log(error.error_msg);
             setErrorMsg(error.error_msg);
             setShowErrorWindow(true);
-        })
+        }).finally(() => {
+            setShowLoadingComp(false);
+            setFilePath("");
+        });
     }
 
     return (
@@ -116,7 +130,6 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
             onDidDismiss={() => {
                 onIdMenu(pathFiles.id, typeOperation);
                 setFilePath("");
-                setWorkspacePath("");
             }}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
@@ -130,9 +143,9 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                             <IonLabel position="stacked">Workspace Path</IonLabel>
                             <IonInput
                                 placeholder={"/path/to/workspace"}
-                                value={workspacePath}
+                                value={workspaceName}
                                 onIonChange={(e: CustomEvent) => {
-                                    setWorkspacePath(e.detail.value);
+                                    onWorkspaceName(e.detail.value);
                                 }}/>
                         </IonItem>
                         <IonItemDivider/>
@@ -232,6 +245,9 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <IonToast
+                isOpen={showLoadingComp}
+                message={`Loading ${pathFiles.file.filePath} as ${typeOperation}. Please wait a little`}/>
         </IonPopover>
     );
 }
@@ -258,6 +274,7 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                                                                onTableList
                                                            }) => {
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
 
     const handleErrorMsg = (msg: string) => {
@@ -287,6 +304,7 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                         text: "Yes",
                         id: "yes-button",
                         handler: () => {
+                            setShowLoadingComp(true);
                             sfetch("POST", `/close_all_files_dataset/${typeOperation.toLowerCase()}`).then(() => {
                                 onTableList(typeOperation);
                                 onOpenWarningWindow(false);
@@ -295,7 +313,7 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                                 console.log(error.error_msg);
                                 setErrorMsg(error.error_msg);
                                 setShowErrorWindow(true);
-                            })
+                            }).finally(() => setShowLoadingComp(false));
                         }
                     }
                 ]}/>
@@ -305,6 +323,9 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <IonToast
+                isOpen={showLoadingComp}
+                message={`Deleting all ${typeOperation}. Please wait a little`}/>
         </Fragment>
     )
 }
@@ -322,6 +343,7 @@ interface DeleteMenuInterface {
 const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelElement}) => {
     const [showAlert, setShowAlert] = useState<boolean>(false);
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
 
     const handleErrorMsg = (msg: string) => {
@@ -362,6 +384,7 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                             text: "Yes",
                             id: "yes-button",
                             handler: () => {
+                                setShowLoadingComp(true);
                                 sfetch("POST", `/close_files_dataset/${labelElement.typeOperation.toLowerCase()}-${labelElement.id}`, "json").then(
                                     () => {
                                         removeLabelElement(labelElement);
@@ -372,7 +395,7 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                                     console.log("error msg : ", error.error_msg);
                                     setErrorMsg(error.error_msg);
                                     setShowErrorWindow(true);
-                                });
+                                }).finally(() => setShowLoadingComp(false));
                             }
                         }
                     ]}/>
@@ -384,6 +407,9 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <IonToast
+                isOpen={showLoadingComp}
+                message={`Deleting the ${labelElement.typeOperation} with name "${labelElement.element.fileName}. Please wait a little`}/>
         </IonItem>
     );
 }
@@ -391,14 +417,20 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
 interface SamplingCompInterface {
     sampleElement: SamplingInterface,
     onSampling: (sample: SamplingInterface) => void,
+
+    workspacePath: string,
+    onWorkspacePath: (workspace: string) => void
 }
 
 /**
- * Component used to create the sampling menu
- * @param sampleElement {SamplingInterface} - A Sample object
- * @param onSampling {(sample: SamplingInterface) => void} - Setter for sampleElement
+ * Component that creates the Sampling menu
+ * @param sampleElement {SamplingInterface} - sampleElement object
+ * @param onSampling {(sample: SamplingInterface) => void} - setter for sampleElement
+ * @param workspacePath {string} - workspace path string
+ * @param onWorkspacePath {(workspace: string) => void} - setter for workspacePath
+ * @constructor
  */
-const SamplingComp: React.FC<SamplingCompInterface> = ({sampleElement, onSampling}) => {
+const SamplingComp: React.FC<SamplingCompInterface> = ({sampleElement, onSampling, workspacePath, onWorkspacePath}) => {
 
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
     const [openDeleteAll, setOpenDeleteAll] = useState<boolean>(false);
@@ -680,7 +712,9 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({sampleElement, onSamplin
                                 onIdMenu={handleIdValues}
                                 onTableVec={handleDataTable}
                                 trigger={"data-menu"}
-                                typeOperation={"Data"}/>
+                                typeOperation={"Data"}
+                                workspaceName={workspacePath}
+                                onWorkspaceName={onWorkspacePath}/>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -736,7 +770,9 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({sampleElement, onSamplin
                                 onIdMenu={handleIdValues}
                                 onTableVec={handleLabelTable}
                                 trigger={"label-menu"}
-                                typeOperation={"Label"}/>
+                                typeOperation={"Label"}
+                                workspaceName={workspacePath}
+                                onWorkspaceName={onWorkspacePath}/>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>
@@ -792,7 +828,9 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({sampleElement, onSamplin
                                 onIdMenu={handleIdValues}
                                 onTableVec={handleWeightTable}
                                 trigger={"weight-menu"}
-                                typeOperation={"Weight"}/>
+                                typeOperation={"Weight"}
+                                workspaceName={workspacePath}
+                                onWorkspaceName={onWorkspacePath}/>
                             <IonItemDivider/>
                         </IonList>
                     </IonAccordion>

@@ -35,6 +35,7 @@ const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg,
             {(errorMsg) ?
                 <IonAlert
                     isOpen={errorFlag}
+                    backdropDismiss={false}
                     onDidDismiss={() => resetErrorMsg}
                     header={headerMsg}
                     message={errorMsg}
