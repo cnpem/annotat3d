@@ -1,11 +1,10 @@
 werkzeug==2.0.3 #there seems to be some bug on the newer versions that randomly causes 405 responses
-protobuf==3.20.* #this package is to use in the import from sscDeepsirius.controller.sampling_controller import SamplingController in io.py
 flask
 flask-cors
 jinja2
 sscIO
 sscPySpin
-sscDeepsirius
+sscDeepsirius>=0.14.0
 ssc-remotevis
 sentry-sdk
 opencv-python
