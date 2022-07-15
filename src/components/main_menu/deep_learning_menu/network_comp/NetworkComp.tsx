@@ -9,12 +9,12 @@ import {IonButton, IonContent, IonItem, IonLabel, IonList, IonPopover} from "@io
 const NetworkComp: React.FC = () => {
     return (
         <Fragment>
-            <IonButton id="nested-button">Click to open popover</IonButton>
+            <IonButton id="nested-button">Network</IonButton>
             <IonPopover trigger="nested-button" dismissOnSelect={false}>
                 <IonContent>
                     <IonList>
                         <IonItem button={true} detail={false}>
-                            <IonLabel>Option 1</IonLabel>
+                            <IonLabel>Option llll</IonLabel>
                         </IonItem>
                         <IonItem button={true} detail={false}>
                             <IonLabel>Option 2</IonLabel>
