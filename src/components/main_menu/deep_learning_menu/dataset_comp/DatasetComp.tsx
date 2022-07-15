@@ -232,15 +232,18 @@ const DatasetComp: React.FC = () => {
         );
     }
 
-    const menus = [<SamplingComp
-        sampleElement={sampleElement}
-        onSampling={handleSampleElement}
-        workspacePath={workspaceName}
-        onWorkspacePath={handleWorkspaceName}/>, <AugmentationComp
-        checkedVector={augmentationOpSelected}
-        onCheckedVector={changeCheckedStatus}
-        ionRangeVec={ionRangeVec}
-        onIonRangeVec={changeIonRangeVal}/>];
+    const menus = [
+        <SamplingComp
+            sampleElement={sampleElement}
+            onSampling={handleSampleElement}
+            workspacePath={workspaceName}
+            onWorkspacePath={handleWorkspaceName}/>, 
+        <AugmentationComp
+            checkedVector={augmentationOpSelected}
+            onCheckedVector={changeCheckedStatus}
+            ionRangeVec={ionRangeVec}
+            onIonRangeVec={changeIonRangeVal}/>
+        ];
 
     const renderMenu = (choice: InputMenuChoicesType, idx: number) => {
         return (
