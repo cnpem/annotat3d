@@ -62,11 +62,6 @@ export interface OutputInterface {
 }
 
 /**
- * Export network type
- */
-export type type_network = "u-net-2d" | "u-net-3d" | "v-net";
-
-/**
  * Export dtype for pm
  */
 export type dtype_pm = "16-bits" | "32-bits";
@@ -106,27 +101,6 @@ export const typePartition: SelectInterface[] = [
         value: "4-gpu",
         label: "4 GPU",
     }
-];
-
-/**
- * Type of networks used in InferenceComp.tsx
- */
-export const typeNetworks: SelectInterface[] = [
-    {
-        key: 0,
-        value: "u-net-2d",
-        label: "U-Net 2D",
-    },
-    {
-        key: 1,
-        value: "u-net-3d",
-        label: "U-Net 3D",
-    },
-    {
-        key: 2,
-        value: "v-net",
-        label: "V-Net",
-    },
 ];
 
 /**
