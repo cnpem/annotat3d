@@ -1,38 +1,13 @@
-import "./Network.css"
-import React, {Fragment, useState} from "react";
-import {IonButton, IonContent, IonIcon, IonItem, IonLabel, IonList, IonPopover, IonSegment, IonSegmentButton, SegmentChangeEventDetail} from "@ionic/react";
-import { useStorageState } from "react-storage-hooks";
-import { checkbox } from "ionicons/icons";
+import { IonAccordion, IonAccordionGroup, IonButton, IonContent, IonInput, IonItem, IonLabel, IonList } from "@ionic/react";
+import { useState } from "react";
+import ErrorWindowComp from "../../file/ErrorWindowComp";
 
-const menuChoices = ["network", "dataset", "settings", "board", "log"] as const;
-type InputMenuChoicesType = typeof menuChoices[number];
-
-/**
- * This component is just a test to see if I can create a nested popover
- * TODO : Need to change this component later
- * @constructor
- */
 const NetworkComp: React.FC = () => {
 
-    const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, "DatasetMenu", "network");
-    const [workspaceName, setWorkspaceName] = useStorageState<string>(sessionStorage, "workspaceName", "");
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
-    // const [augmentationOpSelected, setAugmentationOpSelected] = useState<AugmentationInterface[]>(InitAugmentationOptions);
-
-    // const [sampleElement, setSampleElement] = useStorageState<SamplingInterface>(sessionStorage, "sampleElement", {
-    //     nClasses: 2,
-    //     sampleSize: 100,
-    //     patchSize: [256, 256, 1],
-    // });
-
-    const handleWorkspaceName = (workspace: string) => {
-        setWorkspaceName(workspace);
-    }
-
-    // const handleSampleElement = (sample: SamplingInterface) => {
-    //     setSampleElement(sample);
-    // }
+    const [importNetworkPath, setImportNetworkPath] = useState<string>("NetworkPath.model.tar.gz");
+    const [importNetworkName, setImportNetworkName] = useState<string>("NetworkName");
 
     // const changeCheckedStatus = (index: number) => {
     //     const newCheckedVector = augmentationOpSelected.map(
@@ -50,88 +25,86 @@ const NetworkComp: React.FC = () => {
         setShowErrorWindow(flag);
     }
 
-    const selectMenuOp = (e: CustomEvent<SegmentChangeEventDetail>) => {
-        setMenuOp(e.detail.value as InputMenuChoicesType);
-    };
+    const readFile = (path: string) => {
+        console.log('NetworkComp Import Dataset readFile path:',path)
 
-    const renderSegmentButton = (choice: InputMenuChoicesType) => {
-        return (
-            <IonSegmentButton value={choice}>
-                <IonLabel>{choice}</IonLabel>
-            </IonSegmentButton>
-        );
+        // sfetch("POST", `???`, JSON.stringify(path), "json").then(
+        //     (element: TableElement) => {
+        //         console.log("Backend response");
+        //         console.table(element);
+        //         pathFiles.file = element
+        //         onTableVec(pathFiles);
+        //         pathFiles.id += 1;
+
+        //     }).catch((error: ErrorInterface) => {
+        //     console.log("error while trying to add an image")
+        //     console.log(error.error_msg);
+        //     setErrorMsg(error.error_msg);
+        //     setShowErrorWindow(true);
+        // })
     }
 
-    const menus = [
-        <div></div>,
-        <div></div>
-        // <SamplingComp
-        //     sampleElement={sampleElement}
-        //     onSampling={handleSampleElement}
-        //     workspacePath={workspaceName}
-        //     onWorkspacePath={handleWorkspaceName}/>, 
-        // <AugmentationComp
-        //     checkedVector={augmentationOpSelected}
-        //     onCheckedVector={changeCheckedStatus}
-        //     ionRangeVec={ionRangeVec}
-        //     onIonRangeVec={changeIonRangeVal}/>
-        ];
-
-    const renderMenu = (choice: InputMenuChoicesType, idx: number) => {
-        return (
-            <div hidden={menuOp !== choice}>{menus[idx]}</div>
-        );
-    }
-
-    /**
-     * Clean up popover dialog
-     */
-    const cleanUp = () => {
-        setShowErrorWindow(false);
-        setErrorMsg("");
-        // setAugmentationOpSelected(InitAugmentationOptions);
-        // setIonRangeVec(InitIonRangeVec);
-    };
+    // /**
+    //  * Clean up popover dialog
+    //  */
+    // const cleanUp = () => {
+    //     setShowErrorWindow(false);
+    //     setErrorMsg("");
+    // };
     return (
-        <Fragment>
-            {/* Function effect to open the popup */}
-            <IonItem button
-                     id={"open-menu-network"}>
-                Network
-            </IonItem>
-            <IonPopover
-                trigger={"open-menu-network"}
-                onDidDismiss={() => cleanUp()}
-                className={"file-popover-network"}>
-                <IonSegment value={menuOp} onIonChange={selectMenuOp}>
-                    {menuChoices.map(renderSegmentButton)}
-                </IonSegment>
-                {menuChoices.map(renderMenu)}
-                <IonButton
-                    id={"open-h5-input"}
-                    color={"tertiary"}
-                    slot={"end"}>
-                    OK
-                    <IonIcon
-                        icon={checkbox}
-                        slot={"end"}/>
-                    {/* <CreateDatasetH5
-                        augmentation={augmentationOpSelected}
-                        ionRangeVec={ionRangeVec}
-                        sample={sampleElement}
-                        trigger={"open-h5-input"}
-                        workspacePath={workspaceName}
-                        onWorkspacePath={handleWorkspaceName}/> */}
-                </IonButton>
-            </IonPopover>
+            <small>
+            <IonContent scrollEvents={true}>
+                <IonItem><IonLabel>NetworkComp.tsx says Hello!</IonLabel></IonItem>
+                <IonAccordionGroup multiple={true}> 
+                    <IonAccordion>
+                            <IonItem slot={"header"}>
+                                <IonLabel><small>Import Network</small></IonLabel>
+                            </IonItem>
+                            {/*Ion select option*/}
+                            <IonList slot={"content"}>
+                                {/* Import Network */}
+                                <IonItem>
+                                    <IonLabel position={"floating"}><small>Network Path</small></IonLabel>
+                                    <IonInput
+                                        value={importNetworkPath}
+                                        onIonChange={(e: CustomEvent) => {
+                                            setImportNetworkPath(e.detail.value as string);
+                                        }}
+                                    />
+                                </IonItem>
+                                <IonItem>
+                                    <IonLabel position={"floating"}><small>Network Name</small></IonLabel>
+                                    <IonInput
+                                        value={importNetworkName}
+                                        onIonChange={(e: CustomEvent) => {
+                                            setImportNetworkName(e.detail.value as string);
+                                        }}
+                                    />
+                                </IonItem>
+                                <IonItem>
+                                    <IonButton
+                                            slot={"end"}
+                                            size={"default"}
+                                            color={"tertiary"}
+                                            onClick={() => {
+                                                // console.log(workspacePath);
+                                                // console.log(filePath);
+                                                readFile(importNetworkPath);
+                                            }}>Import</IonButton>
+                                </IonItem>
+                            </IonList>
+                    </IonAccordion>
+                </IonAccordionGroup>
+            </IonContent>
+            
             {/*Error window*/}
-            {/* <ErrorWindowComp
+            <ErrorWindowComp
                 errorMsg={errorMsg}
                 headerMsg={"Error while loading the file"}
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
-                onErrorFlag={handleErrorWindow}/> */}
-        </Fragment>
+                onErrorFlag={handleErrorWindow}/>
+        </small>
     );
 }
 

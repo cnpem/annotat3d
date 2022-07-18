@@ -4,7 +4,7 @@ import {layersOutline, layersSharp} from "ionicons/icons";
 import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
 import WorkspaceComp from "./workspace_comp/WorkspaceComp";
 import DatasetDialog from "./dataset_comp/DatasetComp";
-import NetworkComp from "./network_comp/NetworkComp";
+import NetworkModuleComp from "./network_comp/NetworkModuleComp";
 import BatchInferenceComp from "./batch_inference_comp/BatchInferenceComp";
 
 /**
@@ -39,7 +39,7 @@ const DeepLearning: React.FC = () => {
                 <DatasetDialog/>
 
                 {/*Network menu*/}
-                <NetworkComp/>
+                <NetworkModuleComp/>
 
                 {/*Batch Inference menu*/}
                 <BatchInferenceComp/>

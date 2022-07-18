@@ -96,6 +96,12 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onI
     );
 }
 
+/**
+ * This commented section is a prototype implementation of a canvas element for previewing 
+ * augmentation images. 
+ * Although there is an implementation of this type in the legacy version of Annotat3D,
+ * it was decided that this wasn't necessary for the web version.
+ */
 // TODO : Create a component like this to create the canvas for this component
 // const CanvasPopupComp: React.FC<CanvasPopupInterface> = ({trigger}) => {
 //     const [sliceInfo, setSliceInfo] = useState<SliceInfoInterface>({axis: 'XY', slice: 0});
