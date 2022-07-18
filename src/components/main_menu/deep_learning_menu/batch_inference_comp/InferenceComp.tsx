@@ -20,7 +20,15 @@ import {
     TableElement,
     TableInterface,
 } from "../dataset_comp/DatasetInterfaces";
-import {dtype_pm, MultiplesPath, OutputInterface, SelectInterface, typePM} from "./BatchInferenceInterfaces";
+import {
+    dtype_pm,
+    extension_file,
+    MultiplesPath,
+    OutputInterface,
+    SelectInterface,
+    typeExt,
+    typePM
+} from "./BatchInferenceInterfaces";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
@@ -413,35 +421,19 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
     }
 
     const handleNewFile = (newFile: MultiplesPath) => {
-        if (newFile.id === 0) {
-            setInputImagesTable([{
-                id: newFile.id,
-                typeOperation: "Data",
-                element: {
-                    fileName: newFile.file.fileName,
-                    shape: newFile.file.shape,
-                    type: newFile.file.type,
-                    scan: newFile.file.scan,
-                    time: newFile.file.time,
-                    size: newFile.file.size,
-                    filePath: newFile.file.filePath
-                }
-            }]);
-        } else {
-            setInputImagesTable([...inputImagesTable, {
-                id: newFile.id,
-                typeOperation: "Data",
-                element: {
-                    fileName: newFile.file.fileName,
-                    shape: newFile.file.shape,
-                    type: newFile.file.type,
-                    scan: newFile.file.type,
-                    time: newFile.file.time,
-                    size: newFile.file.size,
-                    filePath: newFile.file.filePath
-                }
-            }]);
-        }
+        setInputImagesTable([...inputImagesTable, {
+            id: newFile.id,
+            typeOperation: "Data",
+            element: {
+                fileName: newFile.file.fileName,
+                shape: newFile.file.shape,
+                type: newFile.file.type,
+                scan: newFile.file.type,
+                time: newFile.file.time,
+                size: newFile.file.size,
+                filePath: newFile.file.filePath
+            }
+        }]);
         setIdTable(newFile.id + 1);
     }
 
@@ -607,26 +599,15 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
                         </IonItem>
                         {/*Ion select option*/}
                         <IonList slot={"content"}>
-                            {/*Workspace input*/}
+                            {/*Output Path*/}
                             <IonItem>
                                 <IonIcon slot={"start"} icon={construct}></IonIcon>
-                                <IonLabel position={"floating"}><small>Workspace Path</small></IonLabel>
+                                <IonLabel position={"floating"}><small>Output Path</small></IonLabel>
                                 <IonInput
-                                    value={output.workspacePath}
+                                    value={output.outputPath}
                                     onIonChange={(e: CustomEvent) => onOutput({
                                         ...output,
-                                        workspacePath: e.detail.value as string
-                                    })}/>
-                            </IonItem>
-                            {/*File path input*/}
-                            <IonItem>
-                                <IonIcon slot={"start"} icon={image}></IonIcon>
-                                <IonLabel position={"floating"}><small>File Path</small></IonLabel>
-                                <IonInput
-                                    value={output.filePath}
-                                    onIonChange={(e: CustomEvent) => onOutput({
-                                        ...output,
-                                        filePath: e.detail.value as string
+                                        outputPath: e.detail.value as string
                                     })}/>
                             </IonItem>
                             {/*Probability Map menu*/}
@@ -649,6 +630,7 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
                                         label: !output.label
                                     })}/>
                             </IonItem>
+                            {/*Output bits*/}
                             <IonItem>
                                 <IonLabel>Output Bits</IonLabel>
                                 <IonSelect
@@ -659,6 +641,25 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
                                         outputBits: e.detail.value as dtype_pm
                                     })}>
                                     {typePM.map((type) => {
+                                        return (
+                                            <IonSelectOption
+                                                key={type.key}
+                                                value={type.value}>{type.label}</IonSelectOption>
+                                        );
+                                    })}
+                                </IonSelect>
+                            </IonItem>
+                            {/*Output extension*/}
+                            <IonItem>
+                                <IonLabel>Output Extension</IonLabel>
+                                <IonSelect
+                                    interface={"popover"}
+                                    value={output.outputExt}
+                                    onIonChange={(e: CustomEvent) => onOutput({
+                                        ...output,
+                                        outputExt: e.detail.value as extension_file
+                                    })}>
+                                    {typeExt.map((type) => {
                                         return (
                                             <IonSelectOption
                                                 key={type.key}

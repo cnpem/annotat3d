@@ -46,10 +46,19 @@ const BatchInferenceComp: React.FC = () => {
     const [network, setNetwork] = useStorageState<string>(sessionStorage, "NetworkType", "");
     const [tepuiGPU, setTepuiGPU] = useStorageState<gpu_partition>(sessionStorage, "tepuiGPU", "1-gpu");
     const [networkOptions, setNetworkOption] = useStorageState<SelectInterface[]>(sessionStorage, "networkOptions", []);
+    const [isInferenceOpChecked, setIsInferenceOpChecked] = useStorageState<boolean>(sessionStorage, "isInferenceOpChecked", false);
 
     useEventBus("updateNetworkOptions", (newOptions: SelectInterface[]) => {
         setNetworkOption(newOptions);
-    })
+    });
+
+    useEventBus("workspaceLoaded", (isDisabled: boolean) => {
+        setDisableComp(isDisabled);
+    });
+
+    const handleIsInferenceChecked = (checked: boolean) => {
+        setIsInferenceOpChecked(checked);
+    }
 
     const handleTepuiGPU = (gpu: gpu_partition) => {
         setTepuiGPU(gpu);
@@ -79,10 +88,6 @@ const BatchInferenceComp: React.FC = () => {
         setPatches(patches);
     }
 
-    useEventBus("workspaceLoaded", (isDisabled: boolean) => {
-        setDisableComp(isDisabled);
-    });
-
     const menus = [<InferenceComp output={output}
                                   onOutput={handleOutput}
                                   network={network}
@@ -92,6 +97,8 @@ const BatchInferenceComp: React.FC = () => {
                                                                          batch={batch}
                                                                          tepuiGPU={tepuiGPU}
                                                                          onTepuiGPU={handleTepuiGPU}
+                                                                         isInferenceOpChecked={isInferenceOpChecked}
+                                                                         onIsInferenceOpChecked={handleIsInferenceChecked}
                                                                          onBatch={handleBatch}/>];
 
     /**
@@ -161,6 +168,8 @@ const BatchInferenceComp: React.FC = () => {
                         console.table(network);
                         console.log("\ntepuiGPU\n");
                         console.table(tepuiGPU);
+                        console.log("\nis inference checked\n");
+                        console.log(isInferenceOpChecked);
                         console.log("==========================================================================\n");
                     }}>
                     Inference

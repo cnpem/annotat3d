@@ -5,7 +5,7 @@ import {
 } from "./BatchInferenceInterfaces";
 import {
     IonAccordion,
-    IonAccordionGroup,
+    IonAccordionGroup, IonCheckbox,
     IonCol,
     IonContent,
     IonInput,
@@ -25,6 +25,9 @@ interface SettingsInterface {
 
     batch: BatchInference,
     onBatch: (batch: BatchInference) => void,
+
+    isInferenceOpChecked: boolean,
+    onIsInferenceOpChecked: (checked: boolean) => void
 }
 
 /**
@@ -33,6 +36,8 @@ interface SettingsInterface {
  * @param onPatches {(patches: PatchesInterface) => void} - setter for patches
  * @param batch {BatchInference} - object that contains the batch value
  * @param onBatch {(batch: BatchInference) => void} - setter for batch
+ * @param tepuiGPU {gpu_partition} - variable to set the numbers of gpu's to user into the cluster
+ * @param onTepuiGPU {(gpu: gpu_partition) => void} - setter for tepuiGPU
  */
 const Settings: React.FC<SettingsInterface> = ({
                                                    patches,
@@ -40,7 +45,9 @@ const Settings: React.FC<SettingsInterface> = ({
                                                    tepuiGPU,
                                                    onTepuiGPU,
                                                    batch,
-                                                   onBatch
+                                                   onBatch,
+                                                   isInferenceOpChecked,
+                                                   onIsInferenceOpChecked
                                                }) => {
     return (
         <small>
@@ -67,6 +74,12 @@ const Settings: React.FC<SettingsInterface> = ({
                                         );
                                     })}
                                 </IonSelect>
+                            </IonItem>
+                            <IonItem>
+                                <IonLabel>Inference Optimization</IonLabel>
+                                <IonCheckbox
+                                    checked={isInferenceOpChecked}
+                                    onIonChange={() => onIsInferenceOpChecked(!isInferenceOpChecked)}/>
                             </IonItem>
                             <IonItemDivider/>
                         </IonList>
