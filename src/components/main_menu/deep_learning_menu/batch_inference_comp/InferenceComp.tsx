@@ -20,7 +20,7 @@ import {
     TableElement,
     TableInterface,
 } from "../dataset_comp/DatasetInterfaces";
-import {dtype_pm, MultiplesPath, OutputInterface, type_network, typeNetworks, typePM} from "./BatchInferenceInterfaces";
+import {dtype_pm, MultiplesPath, OutputInterface, SelectInterface, typePM} from "./BatchInferenceInterfaces";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
@@ -378,18 +378,21 @@ interface InferenceInterface {
     output: OutputInterface,
     onOutput: (newOutput: OutputInterface) => void,
 
-    network: type_network,
-    onNetwork: (net: type_network) => void,
+    network: string,
+    onNetwork: (net: string) => void,
+
+    networkOptions: SelectInterface[]
 }
 
 /**
  * Element that create the Inference component
  * @param output {OutputInterface} - output object
  * @param onOutput {(newOutput: OutputInterface) => void} - setter for output
- * @param network {type_network} - variable that represents the network chosen by the user
+ * @param network {string} - variable that represents the network chosen by the user
  * @param onNetwork {net: type_network) => void} - setter for network
+ * @param networkOptions {SelectInterface[]} - vector of SelectInterface[] that contains all the .h5 file names on frozen menu in the created workspace directory
  */
-const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network, onNetwork}) => {
+const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network, onNetwork, networkOptions}) => {
     const [inputImagesTable, setInputImagesTable] = useStorageState<TableInterface[]>(sessionStorage, 'inputImagesTable', InitTables);
     const [idTable, setIdTable] = useStorageState<number>(sessionStorage, "idTable", 0);
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
@@ -527,8 +530,8 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
                                     interface={"popover"}
                                     value={network}
                                     onIonChange={(e: CustomEvent) =>
-                                        onNetwork(e.detail.value as type_network)}>
-                                    {typeNetworks.map((type) => {
+                                        onNetwork(e.detail.value as string)}>
+                                    {networkOptions.map((type) => {
                                         return (
                                             <IonSelectOption
                                                 key={type.key}
@@ -652,9 +655,9 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
                                     interface={"popover"}
                                     value={output.outputBits}
                                     onIonChange={(e: CustomEvent) => onOutput({
-                                    ...output,
-                                    outputBits: e.detail.value as dtype_pm
-                                })}>
+                                        ...output,
+                                        outputBits: e.detail.value as dtype_pm
+                                    })}>
                                     {typePM.map((type) => {
                                         return (
                                             <IonSelectOption

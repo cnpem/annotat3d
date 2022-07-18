@@ -38,7 +38,7 @@ interface BackendPayload {
 
 /**
  * Component that creates the dataset loader menu
- * @param trigger {string} - string to user as trigger
+ * @param trigger {string} - string to use as a trigger to open the menu to create the dataset .h5
  * @param sample {SamplingInterface} - object used as the sample element to send to backend
  * @param augmentation {AugmentationInterface[]} - vector of objects for the augmentation parameters
  * @param ionRangeVec {IonRangeElement[]} - vector of ion-range that contains all the values for the augmentation
