@@ -6,8 +6,8 @@ const NetworkComp: React.FC = () => {
 
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
-    const [importNetworkPath, setImportNetworkPath] = useState<string>("NetworkPath.model.tar.gz");
-    const [importNetworkName, setImportNetworkName] = useState<string>("NetworkName");
+    const [importNetworkPath, setImportNetworkPath] = useState<string>("");
+    const [importNetworkName, setImportNetworkName] = useState<string>("");
 
     // const changeCheckedStatus = (index: number) => {
     //     const newCheckedVector = augmentationOpSelected.map(
@@ -54,7 +54,6 @@ const NetworkComp: React.FC = () => {
     return (
             <small>
             <IonContent scrollEvents={true}>
-                <IonItem><IonLabel>NetworkComp.tsx says Hello!</IonLabel></IonItem>
                 <IonAccordionGroup multiple={true}> 
                     <IonAccordion>
                             <IonItem slot={"header"}>
@@ -64,24 +63,24 @@ const NetworkComp: React.FC = () => {
                             <IonList slot={"content"}>
                                 {/* Import Network */}
                                 <IonItem>
-                                    <IonLabel position={"floating"}><small>Network Path</small></IonLabel>
+                                    <IonLabel position={"fixed"}><small>Network Path</small></IonLabel>
                                     <IonInput
                                         value={importNetworkPath}
+                                        placeholder={"/Path/to/Network.model.tar.gz"}
                                         onIonChange={(e: CustomEvent) => {
                                             setImportNetworkPath(e.detail.value as string);
                                         }}
                                     />
                                 </IonItem>
                                 <IonItem>
-                                    <IonLabel position={"floating"}><small>Network Name</small></IonLabel>
+                                    <IonLabel position={"fixed"}><small>Network Name</small></IonLabel>
                                     <IonInput
                                         value={importNetworkName}
+                                        placeholder={"YourNetworkName"}
                                         onIonChange={(e: CustomEvent) => {
                                             setImportNetworkName(e.detail.value as string);
                                         }}
                                     />
-                                </IonItem>
-                                <IonItem>
                                     <IonButton
                                             slot={"end"}
                                             size={"default"}
