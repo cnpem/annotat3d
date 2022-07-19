@@ -2,7 +2,7 @@ from flask import Blueprint, request
 import numpy as np
 
 from sscAnnotat3D.repository import data_repo
-from sscAnnotat3D import utils, label
+from sscAnnotat3D import utils
 
 from sscPySpin.filters import filter_bm3d as spin_bm3d
 from sscPySpin.filters import non_local_means as spin_nlm

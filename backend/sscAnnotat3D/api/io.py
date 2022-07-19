@@ -674,29 +674,3 @@ def close_all_inference_files():
         return jsonify("Success to delete all data")
     except Exception as e:
         return handle_exception(str(e))
-
-
-@app.route("/get_frozen_data", methods=["POST"])
-@cross_origin()
-def get_frozen_data():
-    try:
-        deep_model = data_repo.get_deep_model()
-    except Exception as e:
-        return handle_exception(str(e))
-
-    try:
-        frozen_path = glob.glob(deep_model["deep_model_path"] + "frozen/*.h5")
-    except Exception as e:
-        return handle_exception(str(e))
-
-    meta_files = []
-
-    for i in range(0, len(frozen_path)):
-        file_name = frozen_path[i].split("/")[-1]
-        meta_files.append({
-            "key": i,
-            "value": file_name,
-            "label": file_name
-        })
-
-    return jsonify(meta_files)

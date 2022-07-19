@@ -40,7 +40,7 @@ interface TableElement {
  */
 export interface PatchesInterface {
     volumePadding: Array<number>,
-    patchBolder: Array<number>,
+    patchBorder: Array<number>,
 }
 
 /**
@@ -48,7 +48,7 @@ export interface PatchesInterface {
  */
 export const initialPatches: PatchesInterface = {
     volumePadding: [0, 0, 0],
-    patchBolder: [0, 0, 0],
+    patchBorder: [0, 0, 0],
 }
 
 /**

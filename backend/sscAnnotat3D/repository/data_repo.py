@@ -132,6 +132,10 @@ def get_inference_data(key="image-0"):
     return __inference_data[key]
 
 
+def get_all_inference_data():
+    return __inference_data.values()
+
+
 def del_inference_data(key="image-0"):
     del __inference_data[key]
 

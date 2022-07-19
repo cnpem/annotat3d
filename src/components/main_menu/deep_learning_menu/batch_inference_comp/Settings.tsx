@@ -155,13 +155,13 @@ const Settings: React.FC<SettingsInterface> = ({
                                                 type="number"
                                                 min={"0"}
                                                 max={"999"}
-                                                value={patches.patchBolder[0]}
+                                                value={patches.patchBorder[0]}
                                                 placeholder="X"
                                                 onIonChange={(e: CustomEvent) => {
                                                     if (e.detail.value <= 999) {
                                                         onPatches({
                                                             ...patches,
-                                                            patchBolder: [parseInt(e.detail.value!, 10), patches.patchBolder[1], patches.patchBolder[2]]
+                                                            patchBorder: [parseInt(e.detail.value!, 10), patches.patchBorder[1], patches.patchBorder[2]]
                                                         });
                                                     }
                                                 }}
@@ -170,13 +170,13 @@ const Settings: React.FC<SettingsInterface> = ({
                                                 type="number"
                                                 min={"0"}
                                                 max={"999"}
-                                                value={patches.patchBolder[1]}
+                                                value={patches.patchBorder[1]}
                                                 placeholder="Y"
                                                 onIonChange={(e: CustomEvent) => {
                                                     if (e.detail.value <= 999) {
                                                         onPatches({
                                                             ...patches,
-                                                            patchBolder: [patches.patchBolder[0], parseInt(e.detail.value!, 10), patches.patchBolder[2]]
+                                                            patchBorder: [patches.patchBorder[0], parseInt(e.detail.value!, 10), patches.patchBorder[2]]
                                                         });
                                                     }
                                                 }}
@@ -184,13 +184,13 @@ const Settings: React.FC<SettingsInterface> = ({
                                             <IonInput
                                                 type="number"
                                                 min={"0"}
-                                                value={patches.patchBolder[2]}
+                                                value={patches.patchBorder[2]}
                                                 placeholder="Z"
                                                 onIonChange={(e: CustomEvent) => {
                                                     if (e.detail.value <= 999) {
                                                         onPatches({
                                                             ...patches,
-                                                            patchBolder: [patches.patchBolder[0], patches.patchBolder[1], parseInt(e.detail.value!, 10)]
+                                                            patchBorder: [patches.patchBorder[0], patches.patchBorder[1], parseInt(e.detail.value!, 10)]
                                                         });
                                                     }
                                                 }}

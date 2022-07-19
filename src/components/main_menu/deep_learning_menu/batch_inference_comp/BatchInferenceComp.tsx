@@ -27,6 +27,15 @@ import ErrorInterface from "../../file/ErrorInterface";
 const menuChoices = ["Inference", "Settings"] as const;
 type InputMenuChoicesType = typeof menuChoices[number];
 
+interface InferenceBackPayload {
+    output: OutputInterface,
+    patches: PatchesInterface,
+    batch: BatchInference,
+    network: string,
+    tepuiGPU: gpu_partition,
+    isInferenceOpChecked: boolean
+}
+
 /**
  * Component that create the Batch Inference menu
  * TODO : need to implement the back-end function for all scripts of this directory
@@ -171,6 +180,26 @@ const BatchInferenceComp: React.FC = () => {
                         console.log("\nis inference checked\n");
                         console.log(isInferenceOpChecked);
                         console.log("==========================================================================\n");
+                        const payload: InferenceBackPayload = {
+                            output: output,
+                            patches: patches,
+                            batch: batch,
+                            network: network,
+                            tepuiGPU: tepuiGPU,
+                            isInferenceOpChecked: isInferenceOpChecked
+                        };
+
+                        sfetch("POST", "/run_inference", JSON.stringify(payload), "json").then(
+                            (bla: string) => {
+                                console.log("inference done");
+                                console.log(bla);
+                            }
+                        ).catch((error: ErrorInterface) => {
+                            //TODO : need to implement the error window here
+                            console.log("error in run_inference");
+                            console.log(error.error_msg);
+                        });
+
                     }}>
                     Inference
                     <IonIcon
