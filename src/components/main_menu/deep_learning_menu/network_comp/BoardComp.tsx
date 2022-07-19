@@ -23,14 +23,6 @@ const BoardComp: React.FC = () => {
         setShowErrorWindow(flag);
     }
 
-
-    /**
-     * Clean up popover dialog
-     */
-    const cleanUp = () => {
-        setShowErrorWindow(false);
-        setErrorMsg("");
-    };
     return (
         <Fragment>
             <IonItem>
