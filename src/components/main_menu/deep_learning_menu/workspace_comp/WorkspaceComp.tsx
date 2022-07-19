@@ -69,31 +69,23 @@ const WorkspaceComp: React.FC = () => {
     }
 
     const handleNewWorkspace = () => {
-        if (userInput.workspacePath !== "") {
-            const params = {
-                workspace_path: userInput.workspacePath + userInput.folderName,
-            }
-
-            sfetch("POST", "/open_new_workspace", JSON.stringify(params), "json").then(
-                (workspace_path: string) => {
-                    console.log("Create a Workspace in the path ", workspace_path);
-                    showToast(`Create a Workspace in the path "${params.workspace_path}"`, toastTime);
-                    dispatch("workspaceLoaded", false);
-                    cleanUp();
-                }
-            ).catch((errorMsg: ErrorInterface) => {
-                console.log("Error message while trying to open a new Workspace", errorMsg.error_msg);
-                setErrorMsg(errorMsg.error_msg);
-                setShowErrorWindow(true);
-            });
-        } 
-        else {
-            const error_msg = "Please specify a path for the new Workspace.";
-            console.log("Error message while trying to open a new Workspace", error_msg);
-            setErrorMsg(error_msg);
-            setShowErrorWindow(true);
-
+        const params = {
+            workspace_path: userInput.workspacePath + userInput.folderName,
+            workspace_root: userInput.workspacePath
         }
+
+        sfetch("POST", "/open_new_workspace", JSON.stringify(params), "json").then(
+            (workspace_path: string) => {
+                console.log("Create a Workspace in the path ", workspace_path);
+                showToast(`Create a Workspace in the path "${params.workspace_path}"`, toastTime);
+                dispatch("workspaceLoaded", false);
+                cleanUp();
+            }
+        ).catch((errorMsg: ErrorInterface) => {
+            console.log("Error message while trying to open a new Workspace", errorMsg.error_msg);
+            setErrorMsg(errorMsg.error_msg);
+            setShowErrorWindow(true);
+        });
     }
 
     /**

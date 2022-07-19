@@ -375,10 +375,11 @@ def open_new_workspace():
     """
     try:
         workspace_path = request.json["workspace_path"]
+        workspace_root = request.json["workspace_root"]
     except Exception as e:
         return handle_exception(str(e))
 
-    if (workspace_path == ""):
+    if (workspace_root == ""):
         return handle_exception("Empty path isn't valid !")
 
     deep_model = DeepLearningWorkspaceDialog()
