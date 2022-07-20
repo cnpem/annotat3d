@@ -96,7 +96,7 @@ export type gpu_partition = "1-gpu" | "2-gpu" | "4-gpu";
  */
 export const initialOutput: OutputInterface = {
     outputPath: "",
-    probabilityMap: false,
+    probabilityMap: true,
     label: false,
     outputBits: "16-bits",
     outputExt: ".raw"

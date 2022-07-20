@@ -10,6 +10,27 @@ __dataset_data_module = dict()
 __dataset_label_module = dict()
 __dataset_weight_module = dict()
 __inference_data = dict()
+__inference_info = dict()
+
+
+def set_inference_info(key='image-0', data: dict = None):
+    if data is not None:
+        __inference_info[key] = data
+
+
+def del_inference_info(key="image-0"):
+    del __inference_info[key]
+
+
+def del_all_inference_info():
+    __inference_info.clear()
+
+
+def get_inference_info(key="image-0"):
+    return __inference_info.get(key, None)
+
+def get_all_inference_info():
+    return __inference_info.values()
 
 
 def set_deep_model(key='deep_learning', data: dict = None):
