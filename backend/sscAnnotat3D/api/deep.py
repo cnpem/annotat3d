@@ -95,10 +95,11 @@ def run_inference():
     images_list = [x["filePath"] for x in images_list]
     images_props = [{} for _ in images_list]
     output_folder = output["outputPath"]
-    model_file = os.path.join(data_repo.get_deep_model()["deep_model_path"], "frozen", network + ".meta.h5")
+    model_file_h5 = os.path.join(data_repo.get_deep_model()["deep_model_path"], "frozen", network + ".meta.h5")
+    model_file = os.path.join(data_repo.get_deep_model()["deep_model_path"], "frozen", network)
     error_message = ""
     try:
-        metadata = dataset.load_metadata(model_file)
+        metadata = dataset.load_metadata(model_file_h5)
     except Exception as e:
         return handle_exception(str(e))
 
@@ -144,11 +145,18 @@ def run_inference():
                                                use_tensorrt=isInferenceOpChecked)
 
     inference_controller.load_graph(model_file, input_node + ":0", output_node + ":0")
+    _debugger_print("batch_size", batch_size)
+    _debugger_print("patch_size", patch_size)
+    _debugger_print("(batch_size, *patch_size)", (batch_size, *patch_size))
+    _debugger_print("border", border)
+    _debugger_print("padding", padding)
+    _debugger_print("num_classes", num_classes)
     # TODO : need to see why this's having problem running
-    # inference_controller.optimize_batch((batch_size, *patch_size),
-    #                                     border,
-    #                                     padding=padding,
-    #                                     num_classes=num_classes)
+    # It's seems that is some memory problem this issue. Think i'll need to test this branch in the HPC
+    inference_controller.optimize_batch((batch_size, *patch_size),
+                                        border,
+                                        padding=padding,
+                                        num_classes=num_classes)
 
     for image_file, image_props in zip(images_list, images_props):
         f, _ = os.path.splitext(os.path.basename(image_file))
