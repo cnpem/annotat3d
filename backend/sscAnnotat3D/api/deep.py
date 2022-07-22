@@ -16,8 +16,8 @@ import time
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
 from werkzeug.exceptions import BadRequest
-from sscDeepsirius.cython import standardize
 
+from sscDeepsirius.cython import standardize
 from sscAnnotat3D.repository import data_repo
 from sscDeepsirius.utils import dataset, image
 from sscDeepsirius.controller.inference_controller import InferenceController
@@ -78,6 +78,14 @@ def get_frozen_data():
 @app.route("/run_inference", methods=["POST"])
 @cross_origin()
 def run_inference():
+    """
+    Notes:
+        The inference is creating a bizarre error in inference_controller.inference
+        The error is using image.load to load the image and return the correct value
+
+    Returns:
+
+    """
     try:
         output = request.json["output"]
         patches = request.json["patches"]
@@ -91,9 +99,10 @@ def run_inference():
     _debugger_print("output", output)
 
     _depth_prob_map_dtype = {'16-bits': np.dtype('float16'), '32-bits': np.dtype('float32')}
-    images_list = [*data_repo.get_all_inference_info()]
-    images_list = [x["filePath"] for x in images_list]
-    images_props = [{} for _ in images_list]
+    images_list = [*data_repo.get_all_inference_data()]
+    images_props = [*data_repo.get_all_inference_info()]
+    images_list_name = [*data_repo.get_all_inference_info()]
+    images_list_name = [x["filePath"] for x in images_list_name]
     output_folder = output["outputPath"]
     model_file_h5 = os.path.join(data_repo.get_deep_model()["deep_model_path"], "frozen", network + ".meta.h5")
     model_file = os.path.join(data_repo.get_deep_model()["deep_model_path"], "frozen", network)
@@ -140,8 +149,9 @@ def run_inference():
     logging.debug('images_list: {}'.format(images_list))
     logging.debug('images_props: {}'.format(images_props))
 
+    # TODO : need to change here to place the correct number of gpus
     inference_controller = InferenceController("",
-                                               ",".join(tepuiGPU[0]),
+                                               ",".join(map(str, "0")),
                                                use_tensorrt=isInferenceOpChecked)
 
     inference_controller.load_graph(model_file, input_node + ":0", output_node + ":0")
@@ -153,17 +163,23 @@ def run_inference():
     _debugger_print("num_classes", num_classes)
     # TODO : need to see why this's having problem running
     # It's seems that is some memory problem this issue. Think i'll need to test this branch in the HPC
-    inference_controller.optimize_batch((batch_size, *patch_size),
-                                        border,
-                                        padding=padding,
-                                        num_classes=num_classes)
+    try:
+        inference_controller.optimize_batch((batch_size, *patch_size),
+                                            border,
+                                            padding=padding,
+                                            num_classes=num_classes)
+    except Exception:
+        pass
 
-    for image_file, image_props in zip(images_list, images_props):
-        f, _ = os.path.splitext(os.path.basename(image_file))
+    for image_file_name, image_file, image_props_file in zip(images_list_name, images_list, images_props):
+        f, _ = os.path.splitext(os.path.basename(image_file_name))
+        data = image_file
+        image_props = {
+            "shape": [image_props_file["shape"][0], image_props_file["shape"][1], image_props_file["shape"][2]],
+            "dtype": image_file.dtype}
 
         t1 = time.time()
         logging.debug('props: {}'.format(image_props))
-        data = image.read(image_file, **image_props)
         t2 = time.time()
         logging.debug('Read image: {}'.format(t2 - t1))
         t1 = time.time()
@@ -173,6 +189,12 @@ def run_inference():
         t2 = time.time()
         logging.debug('Rotate and cast image: {}'.format(t2 - t1))
         dtype = _depth_prob_map_dtype[output["outputBits"]]
+
+        _debugger_print("data", data)
+        _debugger_print("data type", type(data))
+        _debugger_print("data dtype", data.dtype)
+        _debugger_print("output_dtype", dtype)
+
         output_data = inference_controller.inference(data, output_dtype=dtype)
 
         image.save_inference(output_folder,
@@ -186,114 +208,3 @@ def run_inference():
                              ext=output["outputExt"])
 
     return jsonify("successes")
-
-
-"""
-input_node = metadata['input_node']
-output_node = metadata['output_node']
-
-model_file = os.path.join(deeplearning_workspace_dialog.__workspace__, 'frozen', self._frozen_file)
-
-if self._check_run_local():
-
-    self._inference_controller = InferenceController('',
-                                                     ','.join(map(str, self._active_gpus)),
-                                                     use_tensorrt=self.tensorrtCheckBox.isChecked())
-
-    self._inference_controller.load_graph(model_file, input_node + ':0', output_node + ':0')
-
-    # utils.pyqt_trace()
-
-    self._inference_controller.optimize_batch((batch_size, *patch_size),
-                                              border,
-                                              padding=padding,
-                                              num_classes=num_classes)
-
-else:  # tepui
-    if self._tepui_connection is None:
-        self._connect_tepui()
-
-images_list = self._image_list_component.files
-images_props = self._image_list_component.props
-
-logging.debug('images_list: {}'.format(images_list))
-logging.debug('images_props: {}'.format(images_props))
-
-image_bar = progressbar.get('infer_image')
-overall_bar = progressbar.get('infer_overall')
-
-overall_bar.set_max(len(images_list))
-
-ext = self.fileExtCombo.currentText()[-3:]
-
-import time
-try:
-    for image_file, image_props in zip(images_list, images_props):
-        f, _ = os.path.splitext(os.path.basename(image_file))
-
-        if self._check_run_local():
-
-            t1 = time.time()
-            logging.debug('props: {}'.format(image_props))
-            data = image.read(image_file, **image_props)
-            t2 = time.time()
-            logging.debug('Read image: {}'.format(t2 - t1))
-            t1 = time.time()
-            # optimize to avoid unecessary copy
-            logging.debug('{}'.format(data.shape))
-            data = sscDeepsirius.cython.standardize(data, mean, std, 64)
-            t2 = time.time()
-            logging.debug('Rotate and cast image: {}'.format(t2 - t1))
-            # data = self._pad(data, padding)
-            logging.debug('')
-            dtype = _depth_prob_map_dtype[self.probMapDtypeComboBox.currentText()]
-            output = self._inference_controller.inference(data, output_dtype=dtype, pbar=image_bar)
-
-            image.save_inference(output_folder,
-                                 f,
-                                 output,
-                                 num_classes,
-                                 image_props,
-                                 save_prob_map=self.probMapCheckBox.isChecked(),
-                                 save_label=self.labelCheckBox.isChecked(),
-                                 output_dtype=dtype,
-                                 ext=ext)
-
-        else:  # tepui
-            logging.debug('Run tepui for ... {}'.format(image_file))
-            log = remote_utils.PipeStream()
-            partition_info = _tepui_partitions[self.partitionComboBox.currentText()]
-            with remote_modules.slurm.slurm(self._tepui_connection,
-                                            partition_info['partition'],
-                                            ngpus=partition_info['num_gpus']):
-                with remote_modules.singularity.singularity(self._tepui_connection,
-                                                            _annotat3d_singularity_img_path,
-                                                            mount={'/ibira': '/ibira'}):
-                    logging.debug('run inference ...')
-                    remote_modules.deepsirius.inference(self._tepui_connection,
-                                                        model_file,
-                                                        image_file,
-                                                        output_folder,
-                                                        border,
-                                                        padding,
-                                                        partition_info['num_gpus'],
-                                                        ext=ext,
-                                                        out_stream=log)
-                    logging.debug('done ...')
-
-        overall_bar.inc()
-
-except Exception as e:
-    error_dialog = QtWidgets.QErrorMessage()
-    error_dialog.showMessage('Ops! We have an inference problem!')
-    logging.debug('{}'.format(str(e)))
-finally:
-    image_bar.reset()
-    overall_bar.reset()
-    if self._inference_controller is not None:
-        self._inference_controller.destroy()
-        self._inference_controller = None
-
-
-return run
-"""
