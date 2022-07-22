@@ -59,16 +59,6 @@ const NetworkModuleComp: React.FC = () => {
         <SettingsComp/>,
         <BoardComp/>,
         <LogComp/>
-        // <SamplingComp
-        //     sampleElement={sampleElement}
-        //     onSampling={handleSampleElement}
-        //     workspacePath={workspaceName}
-        //     onWorkspacePath={handleWorkspaceName}/>, 
-        // <AugmentationComp
-        //     checkedVector={augmentationOpSelected}
-        //     onCheckedVector={changeCheckedStatus}
-        //     ionRangeVec={ionRangeVec}
-        //     onIonRangeVec={changeIonRangeVal}/>
         ];
 
     const renderMenu = (choice: InputMenuChoicesType, idx: number) => {

@@ -1,3 +1,7 @@
+/* Custom monospace font for using in terminal-like display elements */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
+
 /**
 Component used for "Network" in "deep learning"
 This is the link used as reference to change this component
@@ -14,6 +18,13 @@ https://www.youtube.com/watch?v=ZCrQjk6PdK0
     --max-height: 92%;
     transform: translate(-50%, 3%) !important;
 
+}
+
+.display-textarea-terminal-like-dark {
+    --color: lightgray;
+    --background: black;
+    --padding-bottom: 10%;
+    font-family: 'Roboto Mono', monospace !important;
 }
 
 /**
