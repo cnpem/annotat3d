@@ -6,7 +6,7 @@ import {
     IonPopover,
     IonSegment,
     IonSegmentButton,
-    SegmentChangeEventDetail
+    SegmentChangeEventDetail, useIonToast
 } from "@ionic/react";
 import React, {Fragment, useState} from "react";
 import {useEventBus} from "../../../../utils/eventbus";
@@ -22,6 +22,7 @@ import {
 import Settings from "./Settings";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
+import DeepLoadingComp from "../Utils/DeepLoadingComp";
 
 const menuChoices = ["Inference", "Settings"] as const;
 type InputMenuChoicesType = typeof menuChoices[number];
@@ -35,7 +36,6 @@ interface InferenceBackPayload {
 
 /**
  * Component that create the Batch Inference menu
- * TODO : need to implement the back-end function for all scripts of this directory
  * TODO : need to change when the user creates the neural network model
  * TODO : for the Batch Inference button to open this menu. I'll need to change the way networkOptions and availableGpus are created
  * @example <BatchInferenceComp/>
@@ -45,13 +45,16 @@ const BatchInferenceComp: React.FC = () => {
     const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, "DatasetMenu", "Inference");
     const [disableComp, setDisableComp] = useStorageState<boolean>(sessionStorage, "workspaceLoaded", true);
     const [patches, setPatches] = useStorageState<PatchesInterface>(sessionStorage, "patches", initialPatches)
-    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
-    const [errorMsg, setErrorMsg] = useState<string>("");
     const [output, setOutput] = useStorageState<OutputInterface>(sessionStorage, "outputBatchInference", initialOutput);
     const [network, setNetwork] = useStorageState<string>(sessionStorage, "NetworkType", "");
     const [availableGpus, setAvailableGpus] = useStorageState<SelectInterface[]>(sessionStorage, "availableGpus", []);
     const [networkOptions, setNetworkOption] = useStorageState<SelectInterface[]>(sessionStorage, "networkOptions", []);
     const [isInferenceOpChecked, setIsInferenceOpChecked] = useStorageState<boolean>(sessionStorage, "isInferenceOpChecked", false);
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
+    const [showToast,] = useIonToast();
+    const toastTimer = 2000;
 
     useEventBus("updateNetworkOptions", (newOptions: SelectInterface[]) => {
         setNetworkOption(newOptions);
@@ -152,6 +155,7 @@ const BatchInferenceComp: React.FC = () => {
                     color={"tertiary"}
                     slot={"end"}
                     onClick={() => {
+                        setShowLoadingComp(true);
                         console.log("============================== values ===================================\n");
                         console.log("output\n");
                         console.table(output);
@@ -171,13 +175,13 @@ const BatchInferenceComp: React.FC = () => {
 
                         sfetch("POST", "/run_inference", JSON.stringify(payload), "json").then(
                             () => {
-                                console.log("inference done");
-                            }
-                        ).catch((error: ErrorInterface) => {
-                            //TODO : need to implement the error window here
+                                showToast("Inference Done !", toastTimer);
+                            }).catch((error: ErrorInterface) => {
                             console.log("error in run_inference");
                             console.log(error.error_msg);
-                        });
+                            setErrorMsg(error.error_msg);
+                            setShowErrorWindow(true);
+                        }).finally(() => setShowLoadingComp(false));
 
                     }}>
                     Inference
@@ -193,6 +197,9 @@ const BatchInferenceComp: React.FC = () => {
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={"Doing the inference"}/>
         </Fragment>
     );
 

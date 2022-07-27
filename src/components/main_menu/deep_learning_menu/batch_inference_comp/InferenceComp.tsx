@@ -34,6 +34,7 @@ import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
 import * as ReactBootStrap from "react-bootstrap";
 import "./Table.css";
+import DeepLoadingComp from "../Utils/DeepLoadingComp";
 
 interface WarningWindowInterface {
     openWarningWindow: boolean,
@@ -55,6 +56,7 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                                                            }) => {
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -83,6 +85,7 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                         text: "Yes",
                         id: "yes-button",
                         handler: () => {
+                            setShowLoadingComp(true);
                             sfetch("POST", `/close_all_files_dataset`).then(() => {
                                 onTableList();
                                 onOpenWarningWindow(false);
@@ -91,7 +94,7 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                                 console.log(error.error_msg);
                                 setErrorMsg(error.error_msg);
                                 setShowErrorWindow(true);
-                            })
+                            }).finally(() => setShowLoadingComp(false));
                         }
                     }
                 ]}/>
@@ -101,6 +104,9 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={"Deleting all inference images"}/>
         </Fragment>
     )
 }
@@ -137,6 +143,8 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     const [errorMsg, setErrorMsg] = useState<string>("");
     const [workspacePath, setWorkspacePath] = useState<string>("");
     const [filePath, setFilePath] = useState<string>("");
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
+
     let pathFiles: MultiplesPath = {
         id: idMenu,
         workspacePath: "",
@@ -152,6 +160,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     }
 
     const readFile = () => {
+        setShowLoadingComp(true);
         pathFiles.workspacePath = workspacePath;
         pathFiles.file.filePath = filePath;
         const params: BackendPayload = {
@@ -174,7 +183,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
             console.log(error.error_msg);
             setErrorMsg(error.error_msg);
             setShowErrorWindow(true);
-        })
+        }).finally(() => setShowLoadingComp(false));
     }
 
     return (
@@ -289,8 +298,6 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 size={"default"}
                 color={"tertiary"}
                 onClick={() => {
-                    console.log("path");
-                    console.table(pathFiles);
                     readFile();
                 }}>Load Image</IonButton>
             <ErrorWindowComp
@@ -299,6 +306,9 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={`Reading ${filePath}`}/>
         </IonPopover>
     );
 }
@@ -317,6 +327,7 @@ const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabel
     const [showAlert, setShowAlert] = useState<boolean>(false);
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -356,6 +367,7 @@ const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabel
                             text: "Yes",
                             id: "yes-button",
                             handler: () => {
+                                setShowLoadingComp(true);
                                 sfetch("POST", `/close_inference_file/image-${labelElement.id}`, "json").then(
                                     () => {
                                         removeLabelElement(labelElement);
@@ -366,7 +378,7 @@ const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabel
                                     console.log("error msg : ", error.error_msg);
                                     setErrorMsg(error.error_msg);
                                     setShowErrorWindow(true);
-                                });
+                                }).finally(() => setShowLoadingComp(false));
                             }
                         }
                     ]}/>
@@ -378,6 +390,9 @@ const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabel
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={`Deleting ${labelElement.element.fileName}`}/>
         </IonItem>
     );
 }

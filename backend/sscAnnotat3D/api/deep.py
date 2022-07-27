@@ -113,6 +113,9 @@ def run_inference():
     except Exception as e:
         return handle_exception(str(e))
 
+    if (output["outputPath"] == ""):
+        return handle_exception("Empty path isn't valid !")
+
     _depth_prob_map_dtype = {'16-bits': np.dtype('float16'), '32-bits': np.dtype('float32')}
     images_list = [*data_repo.get_all_inference_keys()]
     images_props = [*data_repo.get_all_inference_info()]
