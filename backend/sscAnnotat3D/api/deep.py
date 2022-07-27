@@ -16,6 +16,7 @@ import time
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
 from werkzeug.exceptions import BadRequest
+from tensorflow.python.client import device_lib
 
 from sscDeepsirius.cython import standardize
 from sscAnnotat3D.repository import data_repo
@@ -71,10 +72,7 @@ def get_frozen_data():
     return jsonify(meta_files)
 
 
-# For more references, i can see this script
-# https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/deeplearning/deeplearning_inference_dialog.py
-# Also, i need to see this link for Inference menu in ssc-DeeepSirius
-# https://gitlab.cnpem.br/GCC/segmentation/sscDeepsirius/-/blob/0.14.0/sscDeepsirius/controller/inference_controller.py
+# TODO : Need to document this function
 @app.route("/run_inference", methods=["POST"])
 @cross_origin()
 def run_inference():
@@ -89,17 +87,13 @@ def run_inference():
     try:
         output = request.json["output"]
         patches = request.json["patches"]
-        batch = request.json["batch"]
         network = request.json["network"]
-        tepuiGPU = request.json["tepuiGPU"]
         isInferenceOpChecked = request.json["isInferenceOpChecked"]
     except Exception as e:
         return handle_exception(str(e))
 
-    _debugger_print("output", output)
-
     _depth_prob_map_dtype = {'16-bits': np.dtype('float16'), '32-bits': np.dtype('float32')}
-    images_list = [*data_repo.get_all_inference_data()]
+    images_list = [*data_repo.get_all_inference_keys()]
     images_props = [*data_repo.get_all_inference_info()]
     images_list_name = [*data_repo.get_all_inference_info()]
     images_list_name = [x["filePath"] for x in images_list_name]
@@ -149,37 +143,35 @@ def run_inference():
     logging.debug('images_list: {}'.format(images_list))
     logging.debug('images_props: {}'.format(images_props))
 
-    # TODO : need to change here to place the correct number of gpus
+    local_device_protos = device_lib.list_local_devices()
+    list_devices = [x.name for x in local_device_protos if x.device_type == 'GPU']
+    gpus = []
+    for device in list_devices:
+        gpu_number = int(device.split(":")[-1])
+        gpus.append(gpu_number)
+
     inference_controller = InferenceController("",
-                                               ",".join(map(str, "0")),
+                                               ",".join(map(str, gpus)),
                                                use_tensorrt=isInferenceOpChecked)
 
     inference_controller.load_graph(model_file, input_node + ":0", output_node + ":0")
-    _debugger_print("batch_size", batch_size)
-    _debugger_print("patch_size", patch_size)
-    _debugger_print("(batch_size, *patch_size)", (batch_size, *patch_size))
-    _debugger_print("border", border)
-    _debugger_print("padding", padding)
-    _debugger_print("num_classes", num_classes)
-    # TODO : need to see why this's having problem running
-    # It's seems that is some memory problem this issue. Think i'll need to test this branch in the HPC
+
     try:
         inference_controller.optimize_batch((batch_size, *patch_size),
                                             border,
                                             padding=padding,
                                             num_classes=num_classes)
-    except Exception:
-        pass
+    except Exception as e:
+        return handle_exception(str(e))
 
     for image_file_name, image_file, image_props_file in zip(images_list_name, images_list, images_props):
         f, _ = os.path.splitext(os.path.basename(image_file_name))
-        data = image_file
+        data = data_repo.get_inference_data(image_file)
         image_props = {
             "shape": [image_props_file["shape"][0], image_props_file["shape"][1], image_props_file["shape"][2]],
-            "dtype": image_file.dtype}
+            "dtype": data.dtype}
 
         t1 = time.time()
-        logging.debug('props: {}'.format(image_props))
         t2 = time.time()
         logging.debug('Read image: {}'.format(t2 - t1))
         t1 = time.time()
@@ -190,21 +182,19 @@ def run_inference():
         logging.debug('Rotate and cast image: {}'.format(t2 - t1))
         dtype = _depth_prob_map_dtype[output["outputBits"]]
 
-        _debugger_print("data", data)
-        _debugger_print("data type", type(data))
-        _debugger_print("data dtype", data.dtype)
-        _debugger_print("output_dtype", dtype)
-
         output_data = inference_controller.inference(data, output_dtype=dtype)
 
-        image.save_inference(output_folder,
-                             f,
-                             output_data,
-                             num_classes,
-                             image_props,
-                             save_prob_map=output["probabilityMap"],
-                             save_label=output["label"],
-                             output_dtype=output["outputBits"],
-                             ext=output["outputExt"])
+        try:
+            image.save_inference(output_folder,
+                                 f,
+                                 output_data,
+                                 num_classes,
+                                 image_props,
+                                 save_prob_map=output["probabilityMap"],
+                                 save_label=output["label"],
+                                 output_dtype=dtype,
+                                 ext=output["outputExt"][1:])
+        except Exception as e:
+            return handle_exception(str(e))
 
     return jsonify("successes")

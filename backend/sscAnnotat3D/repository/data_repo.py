@@ -29,6 +29,7 @@ def del_all_inference_info():
 def get_inference_info(key="image-0"):
     return __inference_info.get(key, None)
 
+
 def get_all_inference_info():
     return __inference_info.values()
 
@@ -155,6 +156,10 @@ def get_inference_data(key="image-0"):
 
 def get_all_inference_data():
     return __inference_data.values()
+
+
+def get_all_inference_keys():
+    return __inference_data.keys()
 
 
 def del_inference_data(key="image-0"):

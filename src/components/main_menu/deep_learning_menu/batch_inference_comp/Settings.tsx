@@ -38,6 +38,8 @@ interface SettingsInterface {
  * @param onBatch {(batch: BatchInference) => void} - setter for batch
  * @param tepuiGPU {gpu_partition} - variable to set the numbers of gpu's to user into the cluster
  * @param onTepuiGPU {(gpu: gpu_partition) => void} - setter for tepuiGPU
+ * @param isInferenceOpChecked {boolean} - variable to use as a flog to activate the inference
+ * @param onIsInferenceOpChecked {(checked: boolean) => void} - setter for isInferenceOpChecked
  */
 const Settings: React.FC<SettingsInterface> = ({
                                                    patches,
