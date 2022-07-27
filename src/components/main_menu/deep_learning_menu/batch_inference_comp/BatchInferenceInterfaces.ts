@@ -60,14 +60,6 @@ export interface SelectInterface {
     label: string,
 }
 
-/**
- * Interface for BatchInference in Settings.tsx
- */
-export interface BatchInference {
-    value: number,
-    isDisabled: boolean,
-}
-
 export interface OutputInterface {
     outputPath: string,
     probabilityMap: boolean,
@@ -87,11 +79,6 @@ export type dtype_pm = "16-bits" | "32-bits";
 export type extension_file = ".raw" | ".tif";
 
 /**
- * Export gpu type for Settings menu.
- */
-export type gpu_partition = "1-gpu" | "2-gpu" | "4-gpu";
-
-/**
  * Interface for the component output used in InterfaceComp.tsx
  */
 export const initialOutput: OutputInterface = {
@@ -101,27 +88,6 @@ export const initialOutput: OutputInterface = {
     outputBits: "16-bits",
     outputExt: ".raw"
 }
-
-/**
- * Partition type used in Settings.tsx
- */
-export const typePartition: SelectInterface[] = [
-    {
-        key: 0,
-        value: "1-gpu",
-        label: "1 GPU",
-    },
-    {
-        key: 1,
-        value: "2-gpu",
-        label: "2 GPU",
-    },
-    {
-        key: 2,
-        value: "4-gpu",
-        label: "4 GPU",
-    }
-];
 
 /**
  * Types of possible pm for the output

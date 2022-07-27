@@ -44,6 +44,27 @@ def _debugger_print(msg: str, payload: any):
     print("-------------------------------------------------------------\n")
 
 
+@app.route("/get_available_gpus", methods=["POST"])
+@cross_origin()
+def get_available_gpus():
+    local_device_protos = device_lib.list_local_devices()
+    list_devices = [x.name for x in local_device_protos if x.device_type == 'GPU']
+    gpus = []
+    gpu_device_names = []
+    i = 0
+    for device in list_devices:
+        gpu_number = int(device.split(":")[-1])
+        gpus.append(gpu_number)
+        gpu_device_names.append({
+            "key": i,
+            "value": "GPU {}".format(gpu_number),
+            "label": device
+        })
+
+    data_repo.set_inference_gpus(gpus)
+    return jsonify(gpu_device_names)
+
+
 @app.route("/get_frozen_data", methods=["POST"])
 @cross_origin()
 def get_frozen_data():

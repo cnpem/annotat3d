@@ -15,7 +15,6 @@ import ErrorWindowComp from "../../file/ErrorWindowComp";
 import {useStorageState} from "react-storage-hooks";
 import InferenceComp from "./InferenceComp";
 import {
-    BatchInference, gpu_partition,
     initialOutput,
     initialPatches, OutputInterface,
     PatchesInterface, SelectInterface,
@@ -30,9 +29,7 @@ type InputMenuChoicesType = typeof menuChoices[number];
 interface InferenceBackPayload {
     output: OutputInterface,
     patches: PatchesInterface,
-    batch: BatchInference,
     network: string,
-    tepuiGPU: gpu_partition,
     isInferenceOpChecked: boolean
 }
 
@@ -40,7 +37,7 @@ interface InferenceBackPayload {
  * Component that create the Batch Inference menu
  * TODO : need to implement the back-end function for all scripts of this directory
  * TODO : need to change when the user creates the neural network model
- * TODO : for the Batch Inference button to open this menu. I'll need to change the way networkOptions is created
+ * TODO : for the Batch Inference button to open this menu. I'll need to change the way networkOptions and availableGpus are created
  * @example <BatchInferenceComp/>
  */
 const BatchInferenceComp: React.FC = () => {
@@ -50,10 +47,9 @@ const BatchInferenceComp: React.FC = () => {
     const [patches, setPatches] = useStorageState<PatchesInterface>(sessionStorage, "patches", initialPatches)
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
-    const [batch, setBatch] = useStorageState<BatchInference>(sessionStorage, "batch", {value: 4, isDisabled: true});
     const [output, setOutput] = useStorageState<OutputInterface>(sessionStorage, "outputBatchInference", initialOutput);
     const [network, setNetwork] = useStorageState<string>(sessionStorage, "NetworkType", "");
-    const [tepuiGPU, setTepuiGPU] = useStorageState<gpu_partition>(sessionStorage, "tepuiGPU", "1-gpu");
+    const [availableGpus, setAvailableGpus] = useStorageState<SelectInterface[]>(sessionStorage, "availableGpus", []);
     const [networkOptions, setNetworkOption] = useStorageState<SelectInterface[]>(sessionStorage, "networkOptions", []);
     const [isInferenceOpChecked, setIsInferenceOpChecked] = useStorageState<boolean>(sessionStorage, "isInferenceOpChecked", false);
 
@@ -61,16 +57,13 @@ const BatchInferenceComp: React.FC = () => {
         setNetworkOption(newOptions);
     });
 
-    useEventBus("workspaceLoaded", (isDisabled: boolean) => {
-        setDisableComp(isDisabled);
+    useEventBus("workspaceLoaded", (payload: {isDisabled: boolean, gpus: SelectInterface[]}) => {
+        setDisableComp(payload.isDisabled);
+        setAvailableGpus(payload.gpus);
     });
 
     const handleIsInferenceChecked = (checked: boolean) => {
         setIsInferenceOpChecked(checked);
-    }
-
-    const handleTepuiGPU = (gpu: gpu_partition) => {
-        setTepuiGPU(gpu);
     }
 
     const handleNetwork = (net: string) => {
@@ -79,10 +72,6 @@ const BatchInferenceComp: React.FC = () => {
 
     const handleOutput = (newOutput: OutputInterface) => {
         setOutput(newOutput);
-    }
-
-    const handleBatch = (batch: BatchInference) => {
-        setBatch(batch);
     }
 
     const handleErrorMsg = (msg: string) => {
@@ -103,12 +92,9 @@ const BatchInferenceComp: React.FC = () => {
                                   networkOptions={networkOptions}
                                   onNetwork={handleNetwork}/>, <Settings patches={patches}
                                                                          onPatches={handlePatches}
-                                                                         batch={batch}
-                                                                         tepuiGPU={tepuiGPU}
-                                                                         onTepuiGPU={handleTepuiGPU}
                                                                          isInferenceOpChecked={isInferenceOpChecked}
                                                                          onIsInferenceOpChecked={handleIsInferenceChecked}
-                                                                         onBatch={handleBatch}/>];
+                                                                         availableGpus={availableGpus}/>];
 
     /**
      * Clean up popover dialog
@@ -171,28 +157,21 @@ const BatchInferenceComp: React.FC = () => {
                         console.table(output);
                         console.log("\npatches\n");
                         console.table(patches);
-                        console.log("\nbatches\n");
-                        console.table(batch);
                         console.log("\nNetwork\n");
                         console.table(network);
-                        console.log("\ntepuiGPU\n");
-                        console.table(tepuiGPU);
                         console.log("\nis inference checked\n");
                         console.log(isInferenceOpChecked);
                         console.log("==========================================================================\n");
                         const payload: InferenceBackPayload = {
                             output: output,
                             patches: patches,
-                            batch: batch,
                             network: network,
-                            tepuiGPU: tepuiGPU,
                             isInferenceOpChecked: isInferenceOpChecked
                         };
 
                         sfetch("POST", "/run_inference", JSON.stringify(payload), "json").then(
-                            (bla: string) => {
+                            () => {
                                 console.log("inference done");
-                                console.log(bla);
                             }
                         ).catch((error: ErrorInterface) => {
                             //TODO : need to implement the error window here

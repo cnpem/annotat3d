@@ -1,7 +1,5 @@
 import {
-    BatchInference, gpu_partition,
-    PatchesInterface,
-    typePartition
+    PatchesInterface, SelectInterface
 } from "./BatchInferenceInterfaces";
 import {
     IonAccordion,
@@ -12,7 +10,7 @@ import {
     IonItem, IonItemDivider,
     IonLabel,
     IonList,
-    IonRow, IonSelect, IonSelectOption
+    IonRow
 } from "@ionic/react";
 import React from "react";
 
@@ -20,36 +18,26 @@ interface SettingsInterface {
     patches: PatchesInterface,
     onPatches: (patches: PatchesInterface) => void,
 
-    tepuiGPU: gpu_partition,
-    onTepuiGPU: (gpu: gpu_partition) => void,
-
-    batch: BatchInference,
-    onBatch: (batch: BatchInference) => void,
-
     isInferenceOpChecked: boolean,
-    onIsInferenceOpChecked: (checked: boolean) => void
+    onIsInferenceOpChecked: (checked: boolean) => void,
+
+    availableGpus: SelectInterface[]
 }
 
 /**
  * Component that create the settings menu
  * @param patches {PatchesInterface} - object that contains the patches in settings
  * @param onPatches {(patches: PatchesInterface) => void} - setter for patches
- * @param batch {BatchInference} - object that contains the batch value
- * @param onBatch {(batch: BatchInference) => void} - setter for batch
- * @param tepuiGPU {gpu_partition} - variable to set the numbers of gpu's to user into the cluster
- * @param onTepuiGPU {(gpu: gpu_partition) => void} - setter for tepuiGPU
  * @param isInferenceOpChecked {boolean} - variable to use as a flog to activate the inference
  * @param onIsInferenceOpChecked {(checked: boolean) => void} - setter for isInferenceOpChecked
+ * @param availableGpus {SelectInterface[]} - vector of SelectInterface that contains all the available gpus to use for inference
  */
 const Settings: React.FC<SettingsInterface> = ({
                                                    patches,
                                                    onPatches,
-                                                   tepuiGPU,
-                                                   onTepuiGPU,
-                                                   batch,
-                                                   onBatch,
                                                    isInferenceOpChecked,
-                                                   onIsInferenceOpChecked
+                                                   onIsInferenceOpChecked,
+                                                   availableGpus
                                                }) => {
     return (
         <small>
@@ -62,20 +50,15 @@ const Settings: React.FC<SettingsInterface> = ({
                         </IonItem>
                         <IonList slot={"content"}>
                             <IonItem>
-                                <IonLabel>Remote GPU's</IonLabel>
-                                <IonSelect
-                                    interface={"popover"}
-                                    value={tepuiGPU}
-                                    onIonChange={(e: CustomEvent) =>
-                                        onTepuiGPU(e.detail.value as gpu_partition)}>
-                                    {typePartition.map((type) => {
+                                <IonLabel>Available GPU's</IonLabel>
+                                <IonList>
+                                    {availableGpus.map((gpu) => {
                                         return (
-                                            <IonSelectOption
-                                                key={type.key}
-                                                value={type.value}>{type.label}</IonSelectOption>
+                                            <IonItem
+                                                key={gpu.key}>{gpu.value}</IonItem>
                                         );
                                     })}
-                                </IonSelect>
+                                </IonList>
                             </IonItem>
                             <IonItem>
                                 <IonLabel>Inference Optimization</IonLabel>
@@ -193,39 +176,6 @@ const Settings: React.FC<SettingsInterface> = ({
                                                         onPatches({
                                                             ...patches,
                                                             patchBorder: [patches.patchBorder[0], patches.patchBorder[1], parseInt(e.detail.value!, 10)]
-                                                        });
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-                                    </IonCol>
-                                </IonRow>
-                            </IonItem>
-                            <IonItemDivider/>
-                        </IonList>
-                    </IonAccordion>
-                    {/*Batch menu*/}
-                    <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Batch</small></IonLabel>
-                        </IonItem>
-                        <IonList slot={"content"}>
-                            <IonItem disabled={batch.isDisabled}>
-                                {/*Inference Batch menu*/}
-                                <IonRow>
-                                    <IonCol>
-                                        <IonLabel>Inference Batch Size</IonLabel>
-                                        <div style={{display: 'flex', justifyContent: 'flex-start'}}>
-                                            <IonInput
-                                                type="number"
-                                                max={"99"}
-                                                min={"0"}
-                                                value={batch.value}
-                                                onIonChange={(e: CustomEvent) => {
-                                                    if (e.detail.value <= 99) {
-                                                        onBatch({
-                                                            value: e.detail.value as number,
-                                                            isDisabled: batch.isDisabled
                                                         });
                                                     }
                                                 }}

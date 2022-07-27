@@ -149,8 +149,6 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({
                 size={"default"}
                 color={"tertiary"}
                 onClick={() => {
-                    console.log(workspacePath);
-                    console.log(filePath);
                     readFile();
                 }}>Save Dataset</IonButton>
             <ErrorWindowComp

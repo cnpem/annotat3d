@@ -11,6 +11,7 @@ __dataset_label_module = dict()
 __dataset_weight_module = dict()
 __inference_data = dict()
 __inference_info = dict()
+__inference_gpus = list()
 
 
 def set_inference_info(key='image-0', data: dict = None):
@@ -168,3 +169,12 @@ def del_inference_data(key="image-0"):
 
 def del_all_inference_data():
     __inference_data.clear()
+
+
+def set_inference_gpus(data: list = None):
+    if (data is not None):
+        __inference_gpus = data
+
+
+def get_inference_gpus():
+    return __inference_gpus
