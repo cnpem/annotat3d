@@ -28,6 +28,9 @@ const BoardComp: React.FC = () => {
             <IonItem>
                 <IonLabel>BoardComp.tsx says Hello!</IonLabel>
             </IonItem>
+            <IonItem class='item-display-tensorboard'>
+                <iframe className='display-tensorboard' title='unique' src="http://localhost:6006/"/>
+            </IonItem>
             {/*Error window*/}
             <ErrorWindowComp
                 errorMsg={errorMsg}

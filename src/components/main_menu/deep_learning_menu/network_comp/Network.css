@@ -27,6 +27,17 @@ https://www.youtube.com/watch?v=ZCrQjk6PdK0
     font-family: 'Roboto Mono', monospace !important;
 }
 
+.display-tensorboard {
+    width: 99%;
+    height: 99%;
+    transform: translate(0.5%, 1%) !important;
+}
+
+.item-display-tensorboard {
+    width: 100%;
+    --min-height: 600px;
+    border: none;
+}
 /**
 Component used in ion-popover in SamplingComp.tsx
  */
