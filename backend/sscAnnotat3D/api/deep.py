@@ -28,6 +28,16 @@ app = Blueprint('deep', __name__)
 
 @app.errorhandler(BadRequest)
 def handle_exception(error_msg: str):
+    """
+    Function to handle error exception and returns to the user
+
+    Args:
+        error_msg (str): variable that contains the error
+
+    Returns:
+        (tuple): This function returns a tuple that contains the error as a JSON and an int 400
+
+    """
     return jsonify({"error_msg": error_msg}), 400
 
 
@@ -35,10 +45,31 @@ app.register_error_handler(400, handle_exception)
 
 
 def _convert_dtype_to_str(img_dtype: np.dtype):
+    """
+    Build-in function to convert dtype to a str
+
+    Args:
+        img_dtype (np.dtype): np.dtype object that contains
+
+    Returns:
+        (str): returns the str version of the dtype
+
+    """
     return np.dtype(img_dtype).name
 
 
 def _debugger_print(msg: str, payload: any):
+    """
+    Build-in function to user as debugger
+
+    Args:
+        msg(str): string message to user in debugger
+        payload(any): a generic payload
+
+    Returns:
+        None
+
+    """
     print("\n----------------------------------------------------------")
     print("{} : {}".format(msg, payload))
     print("-------------------------------------------------------------\n")
@@ -47,6 +78,13 @@ def _debugger_print(msg: str, payload: any):
 @app.route("/get_available_gpus", methods=["POST"])
 @cross_origin()
 def get_available_gpus():
+    """
+    Function that verify all the available gpus for inference and show to the user
+
+    Returns:
+        (dict): returns a dict that contains all the gpus to use for inference
+
+    """
     local_device_protos = device_lib.list_local_devices()
     list_devices = [x.name for x in local_device_protos if x.device_type == 'GPU']
     gpus = []
@@ -68,6 +106,13 @@ def get_available_gpus():
 @app.route("/get_frozen_data", methods=["POST"])
 @cross_origin()
 def get_frozen_data():
+    """
+    Function that verify all the frozen data in frozen directory created in the workspace menu
+
+    Returns:
+        (dict): returns a dict with all the meta_files for the user to choose and use in inference
+
+    """
     try:
         deep_model = data_repo.get_deep_model()
     except Exception as e:
@@ -93,16 +138,14 @@ def get_frozen_data():
     return jsonify(meta_files)
 
 
-# TODO : Need to document this function
 @app.route("/run_inference", methods=["POST"])
 @cross_origin()
 def run_inference():
     """
-    Notes:
-        The inference is creating a bizarre error in inference_controller.inference
-        The error is using image.load to load the image and return the correct value
+    Function that run the inference
 
     Returns:
+        (str): returns a string "successes" if the operation occurs without any error and an exception otherwise
 
     """
     try:
@@ -167,12 +210,7 @@ def run_inference():
     logging.debug('images_list: {}'.format(images_list))
     logging.debug('images_props: {}'.format(images_props))
 
-    local_device_protos = device_lib.list_local_devices()
-    list_devices = [x.name for x in local_device_protos if x.device_type == 'GPU']
-    gpus = []
-    for device in list_devices:
-        gpu_number = int(device.split(":")[-1])
-        gpus.append(gpu_number)
+    gpus = data_repo.get_inference_gpus()
 
     inference_controller = InferenceController("",
                                                ",".join(map(str, gpus)),
@@ -185,8 +223,8 @@ def run_inference():
                                             border,
                                             padding=padding,
                                             num_classes=num_classes)
-    except Exception as e:
-        return handle_exception(str(e))
+    except:
+        return handle_exception("Not enough GPU memory to use in inference")
 
     for image_file_name, image_file, image_props_file in zip(images_list_name, images_list, images_props):
         f, _ = os.path.splitext(os.path.basename(image_file_name))
@@ -219,6 +257,6 @@ def run_inference():
                                  output_dtype=dtype,
                                  ext=output["outputExt"][1:])
         except Exception as e:
-            return handle_exception(str(e))
+            return handle_exception("Error to save the inference : {}".format(str(e)))
 
     return jsonify("successes")

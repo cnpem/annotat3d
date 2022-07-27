@@ -1,16 +1,61 @@
-import numpy as np
+"""
+This script is a local repository and contains functions such as save, load and delete this files
+saved on the backend
 
 # TODO : need to implement the docstring later
 
+"""
+
+import numpy as np
+
+"""
+dict that contains the loaded image, superpixel and label
+"""
 __images = dict()
+
+"""
+dict that contains the annotations and their respective coordinates
+"""
 __annotations = dict()
+
+"""
+dict that contains info about images and annotation to use in crop function
+"""
 __info = dict()
+
+"""
+dict that contains information about the path to the deep_model folder
+"""
 __deep_model = dict()
+
+"""
+dict that contains the saved data in dataset menu
+"""
 __dataset_data_module = dict()
+
+"""
+dict that contain saved label in dataset menu
+"""
 __dataset_label_module = dict()
+
+"""
+dict that contain saved weight in dataset menu
+"""
 __dataset_weight_module = dict()
+
+"""
+dict that contain saved data in batch_inference menu
+"""
 __inference_data = dict()
+
+"""
+dict that contain info about the saved data in batch_inference menu
+"""
 __inference_info = dict()
+
+"""
+list that contain the number of gpus to use in inference
+"""
 __inference_gpus = list()
 
 

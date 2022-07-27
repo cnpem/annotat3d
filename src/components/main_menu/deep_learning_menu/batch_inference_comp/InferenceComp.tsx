@@ -177,6 +177,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 pathFiles.file = element
                 onTableVec(pathFiles);
                 pathFiles.id += 1;
+                setFilePath("");
 
             }).catch((error: ErrorInterface) => {
             console.log("error while trying to add an image")
@@ -192,8 +193,6 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
             className={"add-menu"}
             onDidDismiss={() => {
                 onIdMenu(pathFiles.id);
-                setFilePath("");
-                setWorkspacePath("");
             }}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}

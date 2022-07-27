@@ -1,4 +1,3 @@
-import glob
 import time
 import logging
 import os.path

@@ -7,7 +7,7 @@ import {
     IonItem,
     IonItemDivider,
     IonLabel,
-    IonList, IonPopover, IonRow, IonSelect, IonSelectOption, IonToast
+    IonList, IonPopover, IonRow, IonSelect, IonSelectOption
 } from "@ionic/react";
 import {addOutline, closeOutline, construct, image, trashOutline} from "ionicons/icons";
 import {useStorageState} from "react-storage-hooks";
@@ -27,6 +27,7 @@ import "./Dataset.css";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
 import ErrorWindowComp from "../../file/ErrorWindowComp";
+import DeepLoadingComp from "../Utils/DeepLoadingComp";
 
 interface MultiplesPath {
     id: number,
@@ -111,16 +112,14 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 onTableVec(pathFiles, typeOperation);
                 pathFiles.id += 1;
                 onWorkspaceName(workspaceName);
+                setFilePath("");
 
             }).catch((error: ErrorInterface) => {
             console.log("error while trying to add an image")
             console.log(error.error_msg);
             setErrorMsg(error.error_msg);
             setShowErrorWindow(true);
-        }).finally(() => {
-            setShowLoadingComp(false);
-            setFilePath("");
-        });
+        }).finally(() => setShowLoadingComp(false));
     }
 
     return (
@@ -129,7 +128,6 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
             className={"add-menu"}
             onDidDismiss={() => {
                 onIdMenu(pathFiles.id, typeOperation);
-                setFilePath("");
             }}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
@@ -245,9 +243,9 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
-            <IonToast
-                isOpen={showLoadingComp}
-                message={`Loading ${pathFiles.file.filePath} as ${typeOperation}. Please wait a little`}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={`Reading ${pathFiles.file.fileName} as ${typeOperation}`}/>
         </IonPopover>
     );
 }
@@ -323,9 +321,9 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
-            <IonToast
-                isOpen={showLoadingComp}
-                message={`Deleting all ${typeOperation}. Please wait a little`}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={`Deleting all ${typeOperation}`}/>
         </Fragment>
     )
 }
@@ -407,9 +405,9 @@ const FileNameComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabelE
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
-            <IonToast
-                isOpen={showLoadingComp}
-                message={`Deleting the ${labelElement.typeOperation} with name "${labelElement.element.fileName}. Please wait a little`}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={`Deleting the ${labelElement.typeOperation} with name "${labelElement.element.fileName}.`}/>
         </IonItem>
     );
 }

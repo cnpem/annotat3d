@@ -184,7 +184,7 @@ const BatchInferenceComp: React.FC = () => {
                         }).finally(() => setShowLoadingComp(false));
 
                     }}>
-                    Inference
+                    Inference !
                     <IonIcon
                         icon={checkbox}
                         slot={"end"}/>
