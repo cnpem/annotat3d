@@ -193,7 +193,7 @@ const BatchInferenceComp: React.FC = () => {
             {/*Error window*/}
             <ErrorWindowComp
                 errorMsg={errorMsg}
-                headerMsg={"Error while loading the file"}
+                headerMsg={"Error while doing the inference"}
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
