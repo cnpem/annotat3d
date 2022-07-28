@@ -13,7 +13,7 @@ import {isEqual} from "lodash";
 import { trashOutline } from "ionicons/icons";
 import { sfetch } from "../../../utils/simplerequest";
 
-import ErrorInterface from "../../main_menu/file/ErrorInterface";
+import ErrorInterface from "../../main_menu/file/utils/ErrorInterface";
 
 interface LabelTableProps {
     colors: [number, number, number][];

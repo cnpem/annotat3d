@@ -1,15 +1,18 @@
-from flask import Blueprint, request, jsonify
+import pickle
 import numpy as np
+import logging
+
+from flask_cors import cross_origin
+from flask import Blueprint, request, jsonify
 
 from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmentationModule
 from sscPySpin import feature_extraction as spin_feat_extraction
 
-from flask_cors import cross_origin
-
 # TODO : We need to template sscIO for other superpixel types
 # TODO : In this actual stage, we're forcing superpixel to be 32 int type
+# TODO : Implement the error template for flask in this script
 
 app = Blueprint('superpixel_segmentation_module', __name__)
 
@@ -38,6 +41,12 @@ __default_classifier_params = {
     'knn_n_neighbors': 5,
     'adaboost_n_estimators': 200
 }
+
+
+def _debugger_print(msg: str, payload: any):
+    print("\n----------------------------------------------------------")
+    print("{} : {}".format(msg, payload))
+    print("-------------------------------------------------------------\n")
 
 
 def _convert_dtype_to_str(img_dtype: np.dtype):
@@ -152,7 +161,6 @@ def preprocess():
 @app.route('/superpixel_segmentation_module/preview', methods=['POST'])
 @cross_origin()
 def preview():
-
     segm_module = module_repo.get_module(key='superpixel_segmentation_module')
 
     annotations = module_repo.get_module('annotation').annotation
@@ -185,8 +193,9 @@ def preview():
 
 @app.route('/superpixel_segmentation_module/execute', methods=['POST'])
 @cross_origin()
+# TODO : need to make this function save .model for classification
+# TODO : Implement the documentation here
 def execute():
-
     segm_module = module_repo.get_module(key='superpixel_segmentation_module')
 
     annotations = module_repo.get_module('annotation').annotation
@@ -206,7 +215,32 @@ def execute():
 
     data_repo.set_image('label', label)
 
-    print(segm_module._feature_extraction_params)
-    print(segm_module._classifier_params)
+    _debugger_print("segm_module._feature_extraction_params", segm_module._feature_extraction_params)
+    _debugger_print("segm_module._classifier_params", segm_module._classifier_params)
+    model_complete = {
+        'version': segm_module._classifier_version,
+        'labels': np.unique(label),
+        'classifier_params': segm_module._classifier_params,
+        'superpixel_params': segm_module._superpixel_params,
+        'feature_extraction_params': segm_module._feature_extraction_params,
+        'classifier': segm_module._model,
+        'feat_selector': segm_module._feat_selector,
+        'feat_scaler': segm_module._feat_scaler
+    }
+    _debugger_print("model_complete", model_complete)
+    data_repo.set_model_complete("model_complete", model_complete)
+    path = "/home/borinmacedo/AnnotDocs/test.model"
+    try:
+        # IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
+        # not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
+        # data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
+        # besides being far more critical than classifier loading/saving.
+        with open(path, 'wb') as f:
+            pickle.dump(model_complete, f)
+    except Exception as e:
+        f.close()
+        raise Exception('Unable to save classification model! Error: %s' % str(e))
+    else:
+        logging.debug('Classifier saved successfully')
 
     return "success", 200

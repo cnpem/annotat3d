@@ -9,7 +9,7 @@ import {
     IonList, IonPopover, IonRow,
     IonSelect, IonSelectOption
 } from "@ionic/react";
-import ErrorWindowComp from "../../file/ErrorWindowComp";
+import ErrorWindowComp from "../../file/utils/ErrorWindowComp";
 import {useStorageState} from "react-storage-hooks";
 import {addOutline, closeOutline, construct, image, trashOutline} from "ionicons/icons";
 import {
@@ -31,7 +31,7 @@ import {
 } from "./BatchInferenceInterfaces";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import {sfetch} from "../../../../utils/simplerequest";
-import ErrorInterface from "../../file/ErrorInterface";
+import ErrorInterface from "../../file/utils/ErrorInterface";
 import * as ReactBootStrap from "react-bootstrap";
 import "./Table.css";
 import DeepLoadingComp from "../Utils/DeepLoadingComp";

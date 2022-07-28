@@ -11,8 +11,8 @@ import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import {useEventBus} from "../../../utils/eventbus";
 import {useStorageState} from "react-storage-hooks";
-import ErrorInterface from "../../main_menu/file/ErrorInterface";
-import ErrorWindowComp from "../../main_menu/file/ErrorWindowComp";
+import ErrorInterface from "../../main_menu/file/utils/ErrorInterface";
+import ErrorWindowComp from "../../main_menu/file/utils/ErrorWindowComp";
 
 interface InputLabelProps {
     colors: [number, number, number][];

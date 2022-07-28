@@ -6,7 +6,7 @@ import {
     IonButton, IonIcon, IonInput, IonItem, IonItemDivider, IonLabel, IonList,
     IonPopover, IonSegment, IonSegmentButton, SegmentChangeEventDetail, useIonToast
 } from "@ionic/react";
-import ErrorWindowComp from "../../file/ErrorWindowComp";
+import ErrorWindowComp from "../../file/utils/ErrorWindowComp";
 import SamplingComp from "./SamplingComp";
 import {useStorageState} from "react-storage-hooks";
 import {
@@ -18,7 +18,7 @@ import {
 import AugmentationComp from "./AugmentationComp";
 import {construct, image} from "ionicons/icons";
 import {sfetch} from "../../../../utils/simplerequest";
-import ErrorInterface from "../../file/ErrorInterface";
+import ErrorInterface from "../../file/utils/ErrorInterface";
 import DeepLoadingComp from "../Utils/DeepLoadingComp";
 
 interface H5InputInterface {

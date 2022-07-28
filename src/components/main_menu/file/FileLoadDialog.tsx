@@ -16,16 +16,24 @@ import {
     IonAccordionGroup, IonContent, IonToast
 } from "@ionic/react";
 import "./FileDialog.css"
-import {construct, create, extensionPuzzle, image, images, information} from "ionicons/icons";
+import {
+    barChart,
+    construct,
+    create,
+    extensionPuzzle,
+    image,
+    images,
+    information
+} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
-import ErrorWindowComp from "./ErrorWindowComp";
-import ImageInfoInterface from "./ImageInfoInterface";
-import ErrorInterface from "./ErrorInterface";
+import ErrorWindowComp from "./utils/ErrorWindowComp";
+import ImageInfoInterface from "./utils/ImageInfoInterface";
+import ErrorInterface from "./utils/ErrorInterface";
 import {LabelInterface} from "../../tools_menu/label_table/LabelInterface";
 import LoadingComponent from "../../tools_menu/LoadingComponent";
 import {useStorageState} from "react-storage-hooks";
-import {dtype_type, dtypeList, img_operation, multiplesPath, QueueToast} from "./FileLoadInterface";
+import {dtype_type, dtypeList, img_operation, multiplesPath, QueueToast} from "./utils/FileLoadInterface";
 
 /**
  * Load Image dialog
@@ -43,8 +51,9 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         imagePath: "",
         superpixelPath: "",
         labelPath: "",
-        annotPath: ""
-    })
+        annotPath: "",
+        classificationPath: ""
+    });
 
     const [openLoadingMenu, setOpenLoadingMenu] = useState<boolean>(false);
     const [showToast, setShowToast] = useState<boolean>(false);
@@ -230,8 +239,9 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             imagePath: pathFiles.imagePath, 
             superpixelPath: "",
             labelPath: "",
-            annotPath: ""
-        })
+            annotPath: "",
+            classificationPath: ""
+        });
         setDtype("uint16");
         setImageShapeRaw([null, null, null]);
         setXRange([0, -1]);
@@ -484,6 +494,26 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                             onIonChange={(e: CustomEvent) => setPathFiles({
                                                 ...pathFiles,
                                                 annotPath: e.detail.value!
+                                            })}/>
+                                    </IonItem>
+                                    <IonItemDivider/>
+                                </IonList>
+                            </IonAccordion>
+                            {/*Load classifier file option*/}
+                            <IonAccordion>
+                                <IonItem slot={"header"}>
+                                    <IonIcon slot={"start"} icon={barChart}/>
+                                    <IonLabel><small>Load Classifier</small></IonLabel>
+                                </IonItem>
+                                <IonList slot="content">
+                                    <IonItem>
+                                        <IonLabel position="stacked">Classifier Path</IonLabel>
+                                        <IonInput
+                                            placeholder={"/path/to/classifier.model"}
+                                            value={pathFiles.classificationPath}
+                                            onIonChange={(e: CustomEvent) => setPathFiles({
+                                                ...pathFiles,
+                                                classificationPath: e.detail.value!
                                             })}/>
                                     </IonItem>
                                     <IonItemDivider/>

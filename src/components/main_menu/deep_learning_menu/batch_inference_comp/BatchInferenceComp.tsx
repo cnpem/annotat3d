@@ -11,7 +11,7 @@ import {
 import React, {Fragment, useState} from "react";
 import {useEventBus} from "../../../../utils/eventbus";
 import {checkbox} from "ionicons/icons";
-import ErrorWindowComp from "../../file/ErrorWindowComp";
+import ErrorWindowComp from "../../file/utils/ErrorWindowComp";
 import {useStorageState} from "react-storage-hooks";
 import InferenceComp from "./InferenceComp";
 import {
@@ -21,7 +21,7 @@ import {
 } from "./BatchInferenceInterfaces";
 import Settings from "./Settings";
 import {sfetch} from "../../../../utils/simplerequest";
-import ErrorInterface from "../../file/ErrorInterface";
+import ErrorInterface from "../../file/utils/ErrorInterface";
 import DeepLoadingComp from "../Utils/DeepLoadingComp";
 
 const menuChoices = ["Inference", "Settings"] as const;

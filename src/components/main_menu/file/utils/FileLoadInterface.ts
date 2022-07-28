@@ -75,6 +75,7 @@ export interface multiplesPath {
     superpixelPath: string,
     labelPath: string,
     annotPath: string,
+    classificationPath: string
 }
 
 /**

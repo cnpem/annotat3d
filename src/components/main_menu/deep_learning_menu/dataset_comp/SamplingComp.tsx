@@ -25,8 +25,8 @@ import {
 import "./Tables.css";
 import "./Dataset.css";
 import {sfetch} from "../../../../utils/simplerequest";
-import ErrorInterface from "../../file/ErrorInterface";
-import ErrorWindowComp from "../../file/ErrorWindowComp";
+import ErrorInterface from "../../file/utils/ErrorInterface";
+import ErrorWindowComp from "../../file/utils/ErrorWindowComp";
 import DeepLoadingComp from "../Utils/DeepLoadingComp";
 
 interface MultiplesPath {

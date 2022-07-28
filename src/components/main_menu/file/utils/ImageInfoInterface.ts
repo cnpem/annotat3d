@@ -2,8 +2,8 @@
  * Interface for the image info
  */
 
-import { CropShapeInterface } from "../../tools_menu/CropInterface";
-import { ImageShapeInterface } from "../../tools_menu/ImageShapeInterface";
+import { CropShapeInterface } from "../../../tools_menu/CropInterface";
+import { ImageShapeInterface } from "../../../tools_menu/ImageShapeInterface";
 
 export default interface ImageInfoInterface{
     imageShape:ImageShapeInterface;

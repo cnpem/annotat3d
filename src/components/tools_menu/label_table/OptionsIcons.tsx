@@ -14,7 +14,7 @@ import {useStorageState} from "react-storage-hooks";
 import {defaultColormap} from "../../../utils/colormap";
 import {dispatch} from "../../../utils/eventbus";
 import {sfetch} from "../../../utils/simplerequest";
-import ErrorInterface from "../../main_menu/file/ErrorInterface";
+import ErrorInterface from "../../main_menu/file/utils/ErrorInterface";
 
 interface OptionsProps {
     label: LabelInterface;

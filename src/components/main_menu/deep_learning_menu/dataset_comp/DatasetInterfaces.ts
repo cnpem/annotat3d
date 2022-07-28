@@ -1,4 +1,4 @@
-import dataType from "../../file/Dtypes";
+import dataType from "../../file/utils/Dtypes";
 
 /**
  * This script contains all the interfaces for dataset_comp directory

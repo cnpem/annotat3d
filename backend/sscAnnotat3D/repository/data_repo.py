@@ -55,6 +55,11 @@ list that contain the number of gpus to use in inference
 """
 __inference_gpus = list()
 
+"""
+dict that contains the classifier information
+"""
+__model_complete = dict()
+
 
 def set_inference_info(key='image-0', data: dict = None):
     """
@@ -585,3 +590,18 @@ def get_inference_gpus():
 
     """
     return __inference_gpus
+
+
+def set_model_complete(key="model_complete", model: dict = None):
+    """
+    Function that set the classifier model in superpixel segmentation
+
+    Args:
+        key(str): string that represents the key to accesses the data. This key is always
+        model():
+
+    Returns:
+
+    """
+    if (model is not None):
+        __model_complete[key] = model

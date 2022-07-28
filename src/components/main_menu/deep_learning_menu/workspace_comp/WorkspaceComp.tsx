@@ -11,9 +11,9 @@ import {
     IonPopover,
     useIonToast
 } from "@ionic/react";
-import ErrorWindowComp from "../../file/ErrorWindowComp";
+import ErrorWindowComp from "../../file/utils/ErrorWindowComp";
 import {sfetch} from "../../../../utils/simplerequest";
-import ErrorInterface from "../../file/ErrorInterface";
+import ErrorInterface from "../../file/utils/ErrorInterface";
 import {construct, folder} from "ionicons/icons";
 import "./Workspace.css";
 import {dispatch} from "../../../../utils/eventbus";

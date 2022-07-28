@@ -14,15 +14,15 @@ import {
     IonAccordionGroup, IonContent, IonToast
 } from "@ionic/react";
 import "./FileDialog.css"
-import {construct, create, extensionPuzzle, image, images, information} from "ionicons/icons";
+import {barChart, construct, create, extensionPuzzle, image, images, information} from "ionicons/icons";
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch, useEventBus} from "../../../utils/eventbus";
-import ErrorWindowComp from "./ErrorWindowComp";
-import ImageInfoInterface from "./ImageInfoInterface";
-import ErrorInterface from "./ErrorInterface";
+import ErrorWindowComp from "./utils/ErrorWindowComp";
+import ImageInfoInterface from "./utils/ImageInfoInterface";
+import ErrorInterface from "./utils/ErrorInterface";
 import LoadingComponent from "../../tools_menu/LoadingComponent";
 import {useStorageState} from "react-storage-hooks";
-import {dtype_type, dtypeList, img_operation, multiplesPath, QueueToast} from "./FileLoadInterface";
+import {dtype_type, dtypeList, img_operation, multiplesPath, QueueToast} from "./utils/FileLoadInterface";
 
 /**
  * Save Image dialog
@@ -39,7 +39,8 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         imagePath: "",
         superpixelPath: "",
         labelPath: "",
-        annotPath: ""
+        annotPath: "",
+        classificationPath: ""
     });
 
     const [openLoadingMenu, setOpenLoadingMenu] = useState<boolean>(false);
@@ -66,6 +67,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             superpixelPath: setDefaultStringPath(loadedPaths.superpixelPath),
             labelPath: setDefaultStringPath(loadedPaths.labelPath),
             annotPath: setDefaultStringPath(loadedPaths.annotPath),
+            classificationPath: ""
         });
     })
 
@@ -366,6 +368,26 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                             onIonChange={(e: CustomEvent) => setPathFiles({
                                                 ...pathFiles,
                                                 annotPath: e.detail.value!
+                                            })}/>
+                                    </IonItem>
+                                    <IonItemDivider/>
+                                </IonList>
+                            </IonAccordion>
+                            {/*Save classifier file option*/}
+                            <IonAccordion>
+                                <IonItem slot={"header"}>
+                                    <IonIcon slot={"start"} icon={barChart}/>
+                                    <IonLabel><small>Save Classifier</small></IonLabel>
+                                </IonItem>
+                                <IonList slot="content">
+                                    <IonItem>
+                                        <IonLabel position="stacked">Classifier Path</IonLabel>
+                                        <IonInput
+                                            placeholder={"/path/to/classifier.model"}
+                                            value={pathFiles.classificationPath}
+                                            onIonChange={(e: CustomEvent) => setPathFiles({
+                                                ...pathFiles,
+                                                classificationPath: e.detail.value!
                                             })}/>
                                     </IonItem>
                                     <IonItemDivider/>
