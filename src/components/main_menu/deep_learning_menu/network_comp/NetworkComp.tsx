@@ -11,12 +11,10 @@ import {
     IonItem,
     IonLabel,
     IonList,
-    IonSelect,
-    IonSelectOption,
+    IonText,
     IonTextarea
 } from '@ionic/react'
 import { useState } from 'react'
-import { useEventBus } from '../../../../utils/eventbus'
 
 /**
  *
@@ -93,10 +91,9 @@ const NetworkComp: React.FC = () => {
                                 </IonCardTitle>
                             </IonCardHeader>
                             <IonCardContent>
-                                <IonTextarea
-                                    className={'display-textarea-terminal-like-dark'}
-                                    value={networkInfoText}
-                                />
+                                <IonTextarea className={'display-textarea-terminal-like-dark'}>
+                                    <IonText>{networkInfoText}</IonText>
+                                </IonTextarea>
                             </IonCardContent>
                         </IonCard>
                     </IonList>

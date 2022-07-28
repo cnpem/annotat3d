@@ -1,8 +1,7 @@
 import "./Network.css"
 import React, {Fragment, useState} from "react";
-import {IonButton, IonIcon, IonItem, IonLabel, IonPopover, IonSegment, IonSegmentButton, SegmentChangeEventDetail} from "@ionic/react";
+import {IonButton, IonItem, IonLabel, IonPopover, IonSegment, IonSegmentButton, IonToggle, SegmentChangeEventDetail} from "@ionic/react";
 import { useStorageState } from "react-storage-hooks";
-import { checkbox } from "ionicons/icons";
 import ErrorWindowComp from "../../file/ErrorWindowComp";
 import NetworkComp from "./NetworkComp";
 import DatasetComp from "./DatasetComp";
@@ -91,15 +90,45 @@ const NetworkModuleComp: React.FC = () => {
                     {menuChoices.map(renderSegmentButton)}
                 </IonSegment>
                 {menuChoices.map(renderMenu)}
+                <IonItem>
                 <IonButton
-                    id={"open-h5-input"}
-                    color={"tertiary"}
-                    slot={"end"}>
-                    OK
-                    <IonIcon
-                        icon={checkbox}
-                        slot={"end"}/>
-                </IonButton>
+                        id={"train"}
+                        color={"secondary"}
+                        size={'default'}
+                        // slot={"end"}
+                    >
+                        Train
+                    </IonButton>
+                    <IonButton
+                        id={"finetune"}
+                        color={"secondary"}
+                        size={'default'}
+                        // slot={"end"}
+                    >
+                        finetune
+                    </IonButton>
+                    <IonButton
+                        id={"export-network"}
+                        color={"tertiary"}
+                        size={'default'}
+                        // slot={"end"}
+                    >
+                        Export Network
+                    </IonButton>
+                    <IonButton
+                        id={"export-inference"}
+                        color={"tertiary"}
+                        size={'default'}
+                        // slot={"end"}
+                    >
+                        Export Inference
+                    </IonButton>
+                    <IonItem>
+                        <IonLabel>Host Mode</IonLabel>
+                        {/* make a state variable */}
+                        <IonToggle value={"toggleHostMode"}/>
+                    </IonItem>
+                </IonItem>
             </IonPopover>
             {/*Error window*/}
             <ErrorWindowComp

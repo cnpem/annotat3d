@@ -23,7 +23,6 @@ https://www.youtube.com/watch?v=ZCrQjk6PdK0
 .display-textarea-terminal-like-dark {
     --color: lightgray;
     --background: black;
-    --padding-bottom: 10%;
     font-family: 'Roboto Mono', monospace !important;
 }
 
