@@ -1,18 +1,16 @@
 import {
-    BatchInference, gpu_partition,
-    PatchesInterface,
-    typePartition
+    PatchesInterface, SelectInterface
 } from "./BatchInferenceInterfaces";
 import {
     IonAccordion,
-    IonAccordionGroup,
+    IonAccordionGroup, IonCheckbox,
     IonCol,
     IonContent,
     IonInput,
     IonItem, IonItemDivider,
     IonLabel,
     IonList,
-    IonRow, IonSelect, IonSelectOption
+    IonRow
 } from "@ionic/react";
 import React from "react";
 
@@ -20,27 +18,26 @@ interface SettingsInterface {
     patches: PatchesInterface,
     onPatches: (patches: PatchesInterface) => void,
 
-    tepuiGPU: gpu_partition,
-    onTepuiGPU: (gpu: gpu_partition) => void,
+    isInferenceOpChecked: boolean,
+    onIsInferenceOpChecked: (checked: boolean) => void,
 
-    batch: BatchInference,
-    onBatch: (batch: BatchInference) => void,
+    availableGpus: SelectInterface[]
 }
 
 /**
  * Component that create the settings menu
  * @param patches {PatchesInterface} - object that contains the patches in settings
  * @param onPatches {(patches: PatchesInterface) => void} - setter for patches
- * @param batch {BatchInference} - object that contains the batch value
- * @param onBatch {(batch: BatchInference) => void} - setter for batch
+ * @param isInferenceOpChecked {boolean} - variable to use as a flog to activate the inference
+ * @param onIsInferenceOpChecked {(checked: boolean) => void} - setter for isInferenceOpChecked
+ * @param availableGpus {SelectInterface[]} - vector of SelectInterface that contains all the available gpus to use for inference
  */
 const Settings: React.FC<SettingsInterface> = ({
                                                    patches,
                                                    onPatches,
-                                                   tepuiGPU,
-                                                   onTepuiGPU,
-                                                   batch,
-                                                   onBatch
+                                                   isInferenceOpChecked,
+                                                   onIsInferenceOpChecked,
+                                                   availableGpus
                                                }) => {
     return (
         <small>
@@ -53,20 +50,21 @@ const Settings: React.FC<SettingsInterface> = ({
                         </IonItem>
                         <IonList slot={"content"}>
                             <IonItem>
-                                <IonLabel>Remote GPU's</IonLabel>
-                                <IonSelect
-                                    interface={"popover"}
-                                    value={tepuiGPU}
-                                    onIonChange={(e: CustomEvent) =>
-                                        onTepuiGPU(e.detail.value as gpu_partition)}>
-                                    {typePartition.map((type) => {
+                                <IonLabel>Available GPU's</IonLabel>
+                                <IonList>
+                                    {availableGpus.map((gpu) => {
                                         return (
-                                            <IonSelectOption
-                                                key={type.key}
-                                                value={type.value}>{type.label}</IonSelectOption>
+                                            <IonItem
+                                                key={gpu.key}>{gpu.value}</IonItem>
                                         );
                                     })}
-                                </IonSelect>
+                                </IonList>
+                            </IonItem>
+                            <IonItem>
+                                <IonLabel>Inference Optimization</IonLabel>
+                                <IonCheckbox
+                                    checked={isInferenceOpChecked}
+                                    onIonChange={() => onIsInferenceOpChecked(!isInferenceOpChecked)}/>
                             </IonItem>
                             <IonItemDivider/>
                         </IonList>
@@ -142,13 +140,13 @@ const Settings: React.FC<SettingsInterface> = ({
                                                 type="number"
                                                 min={"0"}
                                                 max={"999"}
-                                                value={patches.patchBolder[0]}
+                                                value={patches.patchBorder[0]}
                                                 placeholder="X"
                                                 onIonChange={(e: CustomEvent) => {
                                                     if (e.detail.value <= 999) {
                                                         onPatches({
                                                             ...patches,
-                                                            patchBolder: [parseInt(e.detail.value!, 10), patches.patchBolder[1], patches.patchBolder[2]]
+                                                            patchBorder: [parseInt(e.detail.value!, 10), patches.patchBorder[1], patches.patchBorder[2]]
                                                         });
                                                     }
                                                 }}
@@ -157,13 +155,13 @@ const Settings: React.FC<SettingsInterface> = ({
                                                 type="number"
                                                 min={"0"}
                                                 max={"999"}
-                                                value={patches.patchBolder[1]}
+                                                value={patches.patchBorder[1]}
                                                 placeholder="Y"
                                                 onIonChange={(e: CustomEvent) => {
                                                     if (e.detail.value <= 999) {
                                                         onPatches({
                                                             ...patches,
-                                                            patchBolder: [patches.patchBolder[0], parseInt(e.detail.value!, 10), patches.patchBolder[2]]
+                                                            patchBorder: [patches.patchBorder[0], parseInt(e.detail.value!, 10), patches.patchBorder[2]]
                                                         });
                                                     }
                                                 }}
@@ -171,46 +169,13 @@ const Settings: React.FC<SettingsInterface> = ({
                                             <IonInput
                                                 type="number"
                                                 min={"0"}
-                                                value={patches.patchBolder[2]}
+                                                value={patches.patchBorder[2]}
                                                 placeholder="Z"
                                                 onIonChange={(e: CustomEvent) => {
                                                     if (e.detail.value <= 999) {
                                                         onPatches({
                                                             ...patches,
-                                                            patchBolder: [patches.patchBolder[0], patches.patchBolder[1], parseInt(e.detail.value!, 10)]
-                                                        });
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-                                    </IonCol>
-                                </IonRow>
-                            </IonItem>
-                            <IonItemDivider/>
-                        </IonList>
-                    </IonAccordion>
-                    {/*Batch menu*/}
-                    <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Batch</small></IonLabel>
-                        </IonItem>
-                        <IonList slot={"content"}>
-                            <IonItem disabled={batch.isDisabled}>
-                                {/*Inference Batch menu*/}
-                                <IonRow>
-                                    <IonCol>
-                                        <IonLabel>Inference Batch Size</IonLabel>
-                                        <div style={{display: 'flex', justifyContent: 'flex-start'}}>
-                                            <IonInput
-                                                type="number"
-                                                max={"99"}
-                                                min={"0"}
-                                                value={batch.value}
-                                                onIonChange={(e: CustomEvent) => {
-                                                    if (e.detail.value <= 99) {
-                                                        onBatch({
-                                                            value: e.detail.value as number,
-                                                            isDisabled: batch.isDisabled
+                                                            patchBorder: [patches.patchBorder[0], patches.patchBorder[1], parseInt(e.detail.value!, 10)]
                                                         });
                                                     }
                                                 }}

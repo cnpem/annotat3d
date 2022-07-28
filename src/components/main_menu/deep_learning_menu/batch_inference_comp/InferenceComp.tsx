@@ -20,12 +20,21 @@ import {
     TableElement,
     TableInterface,
 } from "../dataset_comp/DatasetInterfaces";
-import {dtype_pm, MultiplesPath, OutputInterface, type_network, typeNetworks, typePM} from "./BatchInferenceInterfaces";
+import {
+    dtype_pm,
+    extension_file,
+    MultiplesPath,
+    OutputInterface,
+    SelectInterface,
+    typeExt,
+    typePM
+} from "./BatchInferenceInterfaces";
 import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
 import * as ReactBootStrap from "react-bootstrap";
 import "./Table.css";
+import DeepLoadingComp from "../Utils/DeepLoadingComp";
 
 interface WarningWindowInterface {
     openWarningWindow: boolean,
@@ -47,6 +56,7 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                                                            }) => {
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -75,6 +85,7 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                         text: "Yes",
                         id: "yes-button",
                         handler: () => {
+                            setShowLoadingComp(true);
                             sfetch("POST", `/close_all_files_dataset`).then(() => {
                                 onTableList();
                                 onOpenWarningWindow(false);
@@ -83,7 +94,7 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                                 console.log(error.error_msg);
                                 setErrorMsg(error.error_msg);
                                 setShowErrorWindow(true);
-                            })
+                            }).finally(() => setShowLoadingComp(false));
                         }
                     }
                 ]}/>
@@ -93,6 +104,9 @@ const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={"Deleting all inference images"}/>
         </Fragment>
     )
 }
@@ -129,6 +143,8 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     const [errorMsg, setErrorMsg] = useState<string>("");
     const [workspacePath, setWorkspacePath] = useState<string>("");
     const [filePath, setFilePath] = useState<string>("");
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
+
     let pathFiles: MultiplesPath = {
         id: idMenu,
         workspacePath: "",
@@ -144,6 +160,7 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
     }
 
     const readFile = () => {
+        setShowLoadingComp(true);
         pathFiles.workspacePath = workspacePath;
         pathFiles.file.filePath = filePath;
         const params: BackendPayload = {
@@ -160,13 +177,14 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 pathFiles.file = element
                 onTableVec(pathFiles);
                 pathFiles.id += 1;
+                setFilePath("");
 
             }).catch((error: ErrorInterface) => {
             console.log("error while trying to add an image")
             console.log(error.error_msg);
             setErrorMsg(error.error_msg);
             setShowErrorWindow(true);
-        })
+        }).finally(() => setShowLoadingComp(false));
     }
 
     return (
@@ -175,8 +193,6 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
             className={"add-menu"}
             onDidDismiss={() => {
                 onIdMenu(pathFiles.id);
-                setFilePath("");
-                setWorkspacePath("");
             }}>
             <IonAccordionGroup multiple={true}>
                 {/*Load workspace menu*/}
@@ -281,8 +297,6 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 size={"default"}
                 color={"tertiary"}
                 onClick={() => {
-                    console.log("path");
-                    console.table(pathFiles);
                     readFile();
                 }}>Load Image</IonButton>
             <ErrorWindowComp
@@ -291,6 +305,9 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={`Reading ${filePath}`}/>
         </IonPopover>
     );
 }
@@ -309,6 +326,7 @@ const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabel
     const [showAlert, setShowAlert] = useState<boolean>(false);
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -348,6 +366,7 @@ const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabel
                             text: "Yes",
                             id: "yes-button",
                             handler: () => {
+                                setShowLoadingComp(true);
                                 sfetch("POST", `/close_inference_file/image-${labelElement.id}`, "json").then(
                                     () => {
                                         removeLabelElement(labelElement);
@@ -358,7 +377,7 @@ const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabel
                                     console.log("error msg : ", error.error_msg);
                                     setErrorMsg(error.error_msg);
                                     setShowErrorWindow(true);
-                                });
+                                }).finally(() => setShowLoadingComp(false));
                             }
                         }
                     ]}/>
@@ -370,6 +389,9 @@ const InputFileComp: React.FC<DeleteMenuInterface> = ({labelElement, removeLabel
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={`Deleting ${labelElement.element.fileName}`}/>
         </IonItem>
     );
 }
@@ -378,18 +400,21 @@ interface InferenceInterface {
     output: OutputInterface,
     onOutput: (newOutput: OutputInterface) => void,
 
-    network: type_network,
-    onNetwork: (net: type_network) => void,
+    network: string,
+    onNetwork: (net: string) => void,
+
+    networkOptions: SelectInterface[]
 }
 
 /**
  * Element that create the Inference component
  * @param output {OutputInterface} - output object
  * @param onOutput {(newOutput: OutputInterface) => void} - setter for output
- * @param network {type_network} - variable that represents the network chosen by the user
+ * @param network {string} - variable that represents the network chosen by the user
  * @param onNetwork {net: type_network) => void} - setter for network
+ * @param networkOptions {SelectInterface[]} - vector of SelectInterface[] that contains all the .h5 file names on frozen menu in the created workspace directory
  */
-const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network, onNetwork}) => {
+const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network, onNetwork, networkOptions}) => {
     const [inputImagesTable, setInputImagesTable] = useStorageState<TableInterface[]>(sessionStorage, 'inputImagesTable', InitTables);
     const [idTable, setIdTable] = useStorageState<number>(sessionStorage, "idTable", 0);
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
@@ -410,35 +435,19 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
     }
 
     const handleNewFile = (newFile: MultiplesPath) => {
-        if (newFile.id === 0) {
-            setInputImagesTable([{
-                id: newFile.id,
-                typeOperation: "Data",
-                element: {
-                    fileName: newFile.file.fileName,
-                    shape: newFile.file.shape,
-                    type: newFile.file.type,
-                    scan: newFile.file.scan,
-                    time: newFile.file.time,
-                    size: newFile.file.size,
-                    filePath: newFile.file.filePath
-                }
-            }]);
-        } else {
-            setInputImagesTable([...inputImagesTable, {
-                id: newFile.id,
-                typeOperation: "Data",
-                element: {
-                    fileName: newFile.file.fileName,
-                    shape: newFile.file.shape,
-                    type: newFile.file.type,
-                    scan: newFile.file.type,
-                    time: newFile.file.time,
-                    size: newFile.file.size,
-                    filePath: newFile.file.filePath
-                }
-            }]);
-        }
+        setInputImagesTable([...inputImagesTable, {
+            id: newFile.id,
+            typeOperation: "Data",
+            element: {
+                fileName: newFile.file.fileName,
+                shape: newFile.file.shape,
+                type: newFile.file.type,
+                scan: newFile.file.type,
+                time: newFile.file.time,
+                size: newFile.file.size,
+                filePath: newFile.file.filePath
+            }
+        }]);
         setIdTable(newFile.id + 1);
     }
 
@@ -527,8 +536,8 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
                                     interface={"popover"}
                                     value={network}
                                     onIonChange={(e: CustomEvent) =>
-                                        onNetwork(e.detail.value as type_network)}>
-                                    {typeNetworks.map((type) => {
+                                        onNetwork(e.detail.value as string)}>
+                                    {networkOptions.map((type) => {
                                         return (
                                             <IonSelectOption
                                                 key={type.key}
@@ -604,26 +613,15 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
                         </IonItem>
                         {/*Ion select option*/}
                         <IonList slot={"content"}>
-                            {/*Workspace input*/}
+                            {/*Output Path*/}
                             <IonItem>
                                 <IonIcon slot={"start"} icon={construct}></IonIcon>
-                                <IonLabel position={"floating"}><small>Workspace Path</small></IonLabel>
+                                <IonLabel position={"floating"}><small>Output Path</small></IonLabel>
                                 <IonInput
-                                    value={output.workspacePath}
+                                    value={output.outputPath}
                                     onIonChange={(e: CustomEvent) => onOutput({
                                         ...output,
-                                        workspacePath: e.detail.value as string
-                                    })}/>
-                            </IonItem>
-                            {/*File path input*/}
-                            <IonItem>
-                                <IonIcon slot={"start"} icon={image}></IonIcon>
-                                <IonLabel position={"floating"}><small>File Path</small></IonLabel>
-                                <IonInput
-                                    value={output.filePath}
-                                    onIonChange={(e: CustomEvent) => onOutput({
-                                        ...output,
-                                        filePath: e.detail.value as string
+                                        outputPath: e.detail.value as string
                                     })}/>
                             </IonItem>
                             {/*Probability Map menu*/}
@@ -646,16 +644,36 @@ const InferenceComp: React.FC<InferenceInterface> = ({output, onOutput, network,
                                         label: !output.label
                                     })}/>
                             </IonItem>
+                            {/*Output bits*/}
                             <IonItem>
                                 <IonLabel>Output Bits</IonLabel>
                                 <IonSelect
                                     interface={"popover"}
                                     value={output.outputBits}
                                     onIonChange={(e: CustomEvent) => onOutput({
-                                    ...output,
-                                    outputBits: e.detail.value as dtype_pm
-                                })}>
+                                        ...output,
+                                        outputBits: e.detail.value as dtype_pm
+                                    })}>
                                     {typePM.map((type) => {
+                                        return (
+                                            <IonSelectOption
+                                                key={type.key}
+                                                value={type.value}>{type.label}</IonSelectOption>
+                                        );
+                                    })}
+                                </IonSelect>
+                            </IonItem>
+                            {/*Output extension*/}
+                            <IonItem>
+                                <IonLabel>Output Extension</IonLabel>
+                                <IonSelect
+                                    interface={"popover"}
+                                    value={output.outputExt}
+                                    onIonChange={(e: CustomEvent) => onOutput({
+                                        ...output,
+                                        outputExt: e.detail.value as extension_file
+                                    })}>
+                                    {typeExt.map((type) => {
                                         return (
                                             <IonSelectOption
                                                 key={type.key}

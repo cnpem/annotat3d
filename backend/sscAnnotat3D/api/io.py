@@ -635,6 +635,7 @@ def open_inference_files(file_id: str):
                   "filePath": file_path}
 
     data_repo.set_inference_data(key=file_id, data=image)
+    data_repo.set_inference_info(key=file_id, data=image_info)
 
     return jsonify(image_info)
 
@@ -654,6 +655,7 @@ def close_inference_file(file_id: str):
     """
     try:
         data_repo.del_inference_data(file_id)
+        data_repo.del_inference_info(file_id)
         return jsonify("success on delete the key {} in Input Image inference".format(file_id))
     except Exception as e:
         return handle_exception(str(e))
@@ -671,6 +673,7 @@ def close_all_inference_files():
     """
     try:
         data_repo.del_all_inference_data()
+        data_repo.del_all_inference_info()
         return jsonify("Success to delete all data")
     except Exception as e:
         return handle_exception(str(e))

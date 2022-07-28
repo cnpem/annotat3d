@@ -4,7 +4,7 @@ import {
     IonAccordion,
     IonAccordionGroup,
     IonButton, IonIcon, IonInput, IonItem, IonItemDivider, IonLabel, IonList,
-    IonPopover, IonSegment, IonSegmentButton, IonToast, SegmentChangeEventDetail, useIonToast
+    IonPopover, IonSegment, IonSegmentButton, SegmentChangeEventDetail, useIonToast
 } from "@ionic/react";
 import ErrorWindowComp from "../../file/ErrorWindowComp";
 import SamplingComp from "./SamplingComp";
@@ -16,9 +16,10 @@ import {
     IonRangeElement, SamplingInterface
 } from "./DatasetInterfaces";
 import AugmentationComp from "./AugmentationComp";
-import {checkbox, construct, image} from "ionicons/icons";
+import {construct, image} from "ionicons/icons";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
+import DeepLoadingComp from "../Utils/DeepLoadingComp";
 
 interface H5InputInterface {
     trigger: string,
@@ -38,7 +39,7 @@ interface BackendPayload {
 
 /**
  * Component that creates the dataset loader menu
- * @param trigger {string} - string to user as trigger
+ * @param trigger {string} - string to use as a trigger to open the menu to create the dataset .h5
  * @param sample {SamplingInterface} - object used as the sample element to send to backend
  * @param augmentation {AugmentationInterface[]} - vector of objects for the augmentation parameters
  * @param ionRangeVec {IonRangeElement[]} - vector of ion-range that contains all the values for the augmentation
@@ -83,6 +84,7 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({
         sfetch("POST", "/create_dataset", JSON.stringify(params), "json").then(
             (dataset_path: { datasetFilename: string }) => {
                 datasetPath = dataset_path;
+                setFilePath("");
             }).catch((error: ErrorInterface) => {
             console.log("Error in create_dataset");
             console.log(error.error_msg);
@@ -101,10 +103,7 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({
             trigger={trigger}
             side={"top"}
             alignment={"center"}
-            className={"create-h5-popover"}
-            onDidDismiss={() => {
-                setFilePath("");
-            }}>
+            className={"create-h5-popover"}>
             <IonAccordionGroup>
                 {/*Load workspace menu*/}
                 <IonAccordion>
@@ -149,8 +148,6 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({
                 size={"default"}
                 color={"tertiary"}
                 onClick={() => {
-                    console.log(workspacePath);
-                    console.log(filePath);
                     readFile();
                 }}>Save Dataset</IonButton>
             <ErrorWindowComp
@@ -159,9 +156,9 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
-            <IonToast
-                isOpen={showLoadingComp}
-                message={"Creating the dataset. Please wait a little"}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={"Creating the dataset. Please wait a little"}/>
         </IonPopover>
     );
 }
@@ -279,10 +276,7 @@ const DatasetComp: React.FC = () => {
                     id={"open-h5-input"}
                     color={"tertiary"}
                     slot={"end"}>
-                    OK
-                    <IonIcon
-                        icon={checkbox}
-                        slot={"end"}/>
+                    Create dataset !
                     <CreateDatasetH5
                         augmentation={augmentationOpSelected}
                         ionRangeVec={ionRangeVec}

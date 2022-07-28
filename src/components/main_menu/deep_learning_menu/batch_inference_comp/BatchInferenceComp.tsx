@@ -6,7 +6,7 @@ import {
     IonPopover,
     IonSegment,
     IonSegmentButton,
-    SegmentChangeEventDetail
+    SegmentChangeEventDetail, useIonToast
 } from "@ionic/react";
 import React, {Fragment, useState} from "react";
 import {useEventBus} from "../../../../utils/eventbus";
@@ -15,20 +15,29 @@ import ErrorWindowComp from "../../file/ErrorWindowComp";
 import {useStorageState} from "react-storage-hooks";
 import InferenceComp from "./InferenceComp";
 import {
-    BatchInference, gpu_partition,
     initialOutput,
     initialPatches, OutputInterface,
-    PatchesInterface,
-    type_network
+    PatchesInterface, SelectInterface,
 } from "./BatchInferenceInterfaces";
 import Settings from "./Settings";
+import {sfetch} from "../../../../utils/simplerequest";
+import ErrorInterface from "../../file/ErrorInterface";
+import DeepLoadingComp from "../Utils/DeepLoadingComp";
 
 const menuChoices = ["Inference", "Settings"] as const;
 type InputMenuChoicesType = typeof menuChoices[number];
 
+interface InferenceBackPayload {
+    output: OutputInterface,
+    patches: PatchesInterface,
+    network: string,
+    isInferenceOpChecked: boolean
+}
+
 /**
  * Component that create the Batch Inference menu
- * TODO : need to implement the back-end function for all scripts of this directory
+ * TODO : need to change when the user creates the neural network model
+ * TODO : for the Batch Inference button to open this menu. I'll need to change the way networkOptions and availableGpus are created
  * @example <BatchInferenceComp/>
  */
 const BatchInferenceComp: React.FC = () => {
@@ -36,27 +45,36 @@ const BatchInferenceComp: React.FC = () => {
     const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, "DatasetMenu", "Inference");
     const [disableComp, setDisableComp] = useStorageState<boolean>(sessionStorage, "workspaceLoaded", true);
     const [patches, setPatches] = useStorageState<PatchesInterface>(sessionStorage, "patches", initialPatches)
+    const [output, setOutput] = useStorageState<OutputInterface>(sessionStorage, "outputBatchInference", initialOutput);
+    const [network, setNetwork] = useStorageState<string>(sessionStorage, "NetworkType", "");
+    const [availableGpus, setAvailableGpus] = useStorageState<SelectInterface[]>(sessionStorage, "availableGpus", []);
+    const [networkOptions, setNetworkOption] = useStorageState<SelectInterface[]>(sessionStorage, "networkOptions", []);
+    const [isInferenceOpChecked, setIsInferenceOpChecked] = useStorageState<boolean>(sessionStorage, "isInferenceOpChecked", false);
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
-    const [batch, setBatch] = useStorageState<BatchInference>(sessionStorage, "batch", {value: 4, isDisabled: true});
-    const [output, setOutput] = useStorageState<OutputInterface>(sessionStorage, "outputBatchInference", initialOutput);
-    const [network, setNetwork] = useStorageState<type_network>(sessionStorage, "NetworkType", "u-net-2d");
-    const [tepuiGPU, setTepuiGPU] = useStorageState<gpu_partition>(sessionStorage, "tepuiGPU", "1-gpu");
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
+    const [showToast,] = useIonToast();
+    const toastTimer = 2000;
 
-    const handleTepuiGPU = (gpu: gpu_partition) => {
-        setTepuiGPU(gpu);
+    useEventBus("updateNetworkOptions", (newOptions: SelectInterface[]) => {
+        setNetworkOption(newOptions);
+    });
+
+    useEventBus("workspaceLoaded", (payload: {isDisabled: boolean, gpus: SelectInterface[]}) => {
+        setDisableComp(payload.isDisabled);
+        setAvailableGpus(payload.gpus);
+    });
+
+    const handleIsInferenceChecked = (checked: boolean) => {
+        setIsInferenceOpChecked(checked);
     }
 
-    const handleNetwork = (net: type_network) => {
+    const handleNetwork = (net: string) => {
         setNetwork(net);
     }
 
     const handleOutput = (newOutput: OutputInterface) => {
         setOutput(newOutput);
-    }
-
-    const handleBatch = (batch: BatchInference) => {
-        setBatch(batch);
     }
 
     const handleErrorMsg = (msg: string) => {
@@ -71,19 +89,15 @@ const BatchInferenceComp: React.FC = () => {
         setPatches(patches);
     }
 
-    useEventBus("workspaceLoaded", (isDisabled: boolean) => {
-        setDisableComp(isDisabled);
-    });
-
     const menus = [<InferenceComp output={output}
                                   onOutput={handleOutput}
                                   network={network}
+                                  networkOptions={networkOptions}
                                   onNetwork={handleNetwork}/>, <Settings patches={patches}
                                                                          onPatches={handlePatches}
-                                                                         batch={batch}
-                                                                         tepuiGPU={tepuiGPU}
-                                                                         onTepuiGPU={handleTepuiGPU}
-                                                                         onBatch={handleBatch}/>];
+                                                                         isInferenceOpChecked={isInferenceOpChecked}
+                                                                         onIsInferenceOpChecked={handleIsInferenceChecked}
+                                                                         availableGpus={availableGpus}/>];
 
     /**
      * Clean up popover dialog
@@ -116,6 +130,16 @@ const BatchInferenceComp: React.FC = () => {
             {/*Button to open the Batch Inference menu*/}
             <IonItem button
                      disabled={disableComp}
+                     onClick={() => {
+                         sfetch("POST", "/get_frozen_data", "", "json").then((payload: SelectInterface[]) => {
+                             console.log(payload);
+                             setNetworkOption(payload);
+                             setNetwork(payload[0].value);
+                         }).catch((error: ErrorInterface) => {
+                             console.log("Error in get_frozen_data");
+                             console.log(error.error_msg);
+                         });
+                     }}
                      id={"open-batch-inference"}>
                 Batch Inference
             </IonItem>
@@ -131,20 +155,36 @@ const BatchInferenceComp: React.FC = () => {
                     color={"tertiary"}
                     slot={"end"}
                     onClick={() => {
+                        setShowLoadingComp(true);
                         console.log("============================== values ===================================\n");
                         console.log("output\n");
                         console.table(output);
                         console.log("\npatches\n");
                         console.table(patches);
-                        console.log("\nbatches\n");
-                        console.table(batch);
                         console.log("\nNetwork\n");
                         console.table(network);
-                        console.log("\ntepuiGPU\n");
-                        console.table(tepuiGPU);
+                        console.log("\nis inference checked\n");
+                        console.log(isInferenceOpChecked);
                         console.log("==========================================================================\n");
+                        const payload: InferenceBackPayload = {
+                            output: output,
+                            patches: patches,
+                            network: network,
+                            isInferenceOpChecked: isInferenceOpChecked
+                        };
+
+                        sfetch("POST", "/run_inference", JSON.stringify(payload), "json").then(
+                            () => {
+                                showToast("Inference Done !", toastTimer);
+                            }).catch((error: ErrorInterface) => {
+                            console.log("error in run_inference");
+                            console.log(error.error_msg);
+                            setErrorMsg(error.error_msg);
+                            setShowErrorWindow(true);
+                        }).finally(() => setShowLoadingComp(false));
+
                     }}>
-                    Inference
+                    Inference !
                     <IonIcon
                         icon={checkbox}
                         slot={"end"}/>
@@ -153,10 +193,13 @@ const BatchInferenceComp: React.FC = () => {
             {/*Error window*/}
             <ErrorWindowComp
                 errorMsg={errorMsg}
-                headerMsg={"Error while loading the file"}
+                headerMsg={"Error while doing the inference"}
                 onErrorMsg={handleErrorMsg}
                 errorFlag={showErrorWindow}
                 onErrorFlag={handleErrorWindow}/>
+            <DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={"Doing the inference"}/>
         </Fragment>
     );
 

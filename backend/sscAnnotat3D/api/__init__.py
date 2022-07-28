@@ -3,4 +3,4 @@ from . import superpixel
 from . import io
 from . import remotevis
 from . import image
-
+from . import deep
