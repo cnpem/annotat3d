@@ -592,16 +592,31 @@ def get_inference_gpus():
     return __inference_gpus
 
 
-def set_model_complete(key="model_complete", model: dict = None):
+def set_classification_model(key="model_complete", model: dict = None):
     """
     Function that set the classifier model in superpixel segmentation
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always
-        model():
+        key(str): string that represents the key to accesses the data. This key is always "model_complete"
+        model(str): dict that contains information about the classification model
 
     Returns:
+        None
 
     """
     if (model is not None):
         __model_complete[key] = model
+
+
+def get_classification_model(key="model_complete"):
+    """
+    Function that get the classifier model in superpixel segmentation
+
+    Args:
+        key(str): string that represents the key to accesses the data. This key is always "model_complete"
+
+    Returns:
+        (dict): returns a dict that contains information about the classification model
+
+    """
+    return __model_complete.get(key, None)

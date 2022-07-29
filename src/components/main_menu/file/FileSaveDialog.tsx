@@ -67,9 +67,9 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             superpixelPath: setDefaultStringPath(loadedPaths.superpixelPath),
             labelPath: setDefaultStringPath(loadedPaths.labelPath),
             annotPath: setDefaultStringPath(loadedPaths.annotPath),
-            classificationPath: ""
-        });
-    })
+            classificationPath: setDefaultStringPath(loadedPaths.classificationPath)
+        })
+    });
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -153,6 +153,34 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
 
     }
 
+    /**
+     * Function that Saves the classifier model .model file and send to the backend
+     */
+    const dispatchSaveClassifier = async () => {
+        const backendPayload: { classificationPath: string } = {
+            classificationPath: (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.classificationPath : pathFiles.classificationPath
+        }
+
+        let msgReturned = "";
+        let isError = false;
+
+        await sfetch("POST", "/save_classifier", JSON.stringify(backendPayload), "json")
+            .then((success: string) => {
+                msgReturned = `${pathFiles.classificationPath} saved as .model`;
+                console.log(success);
+            }).catch((error: ErrorInterface) => {
+                msgReturned = error.error_msg;
+                isError = true;
+                console.log("Error message while trying to save the classifier model", error.error_msg);
+                setHeaderErrorMsg(`error while saving the classifier model`);
+                setErrorMsg(error.error_msg);
+                setShowErrorWindow(true);
+            });
+
+        const returnedObj: QueueToast = {message: msgReturned, isError: isError};
+        return returnedObj;
+    }
+
     const handleLoadImageAction = async () => {
         /**
          * Dispatch for images, label and superpixel
@@ -162,16 +190,19 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
 
         let queueToast: QueueToast[] = [{
             message: "",
-            isError: false
+            isError: false //Image
         }, {
             message: "",
-            isError: false
+            isError: false //Superpixel
         }, {
             message: "",
-            isError: false
+            isError: false //Label
         }, {
             message: "",
-            isError: false
+            isError: false //Annotation
+        }, {
+            message: "",
+            isError: false //Classifier
         }];
 
         if (pathFiles.imagePath !== "") {
@@ -179,7 +210,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             const promise = handleSaveImageAction(imgPath, "image");
             await promise.then((item: QueueToast) => {
                 queueToast[0] = item;
-            })
+            });
         }
 
         if (pathFiles.superpixelPath !== "") {
@@ -187,7 +218,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             const promise = handleSaveImageAction(superpixelPath, "superpixel");
             await promise.then((item: QueueToast) => {
                 queueToast[1] = item;
-            })
+            });
         }
 
         if (pathFiles.labelPath !== "") {
@@ -195,20 +226,29 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             const promise = handleSaveImageAction(labelPath, "label");
             await promise.then((item: QueueToast) => {
                 queueToast[2] = item;
-            })
+            });
         }
 
         if (pathFiles.annotPath !== "") {
             const promise = dispatchSaveAnnot();
             await promise.then((item: QueueToast) => {
                 queueToast[3] = item;
-            })
+            });
+        }
+
+        if (pathFiles.classificationPath !== "") {
+            const promise = dispatchSaveClassifier();
+            await promise.then((item: QueueToast) => {
+                queueToast[4] = item;
+            });
         }
 
         let finalMsg = "";
-        const flagShowToast = ((!queueToast[0].isError && queueToast[0].message !== "") ||
+        const flagShowToast = (
+            (!queueToast[0].isError && queueToast[0].message !== "") ||
             (!queueToast[1].isError && queueToast[1].message !== "") ||
-            (!queueToast[2].isError && queueToast[2].message !== ""));
+            (!queueToast[2].isError && queueToast[2].message !== "") ||
+            (!queueToast[3].isError && queueToast[3].message !== ""));
 
         for (let i = 0; i < queueToast.length; i++) {
             if (queueToast[i].message !== "" && !queueToast[i].isError) {

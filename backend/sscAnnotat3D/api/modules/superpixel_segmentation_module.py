@@ -13,6 +13,7 @@ from sscPySpin import feature_extraction as spin_feat_extraction
 # TODO : We need to template sscIO for other superpixel types
 # TODO : In this actual stage, we're forcing superpixel to be 32 int type
 # TODO : Implement the error template for flask in this script
+from werkzeug.exceptions import BadRequest
 
 app = Blueprint('superpixel_segmentation_module', __name__)
 
@@ -89,6 +90,11 @@ def features_to_spin_features(feature):
         return spin_feat_extraction.SPINFilters.LBP
     else:
         raise f'Unknown feature: {feature.lower()}'
+
+
+@app.errorhandler(BadRequest)
+def handle_exception(error_msg: str):
+    return jsonify({"error_msg": error_msg}), 400
 
 
 @app.route('/superpixel_segmentation_module/create', methods=['POST', 'GET'])
@@ -193,7 +199,6 @@ def preview():
 
 @app.route('/superpixel_segmentation_module/execute', methods=['POST'])
 @cross_origin()
-# TODO : need to make this function save .model for classification
 # TODO : Implement the documentation here
 def execute():
     segm_module = module_repo.get_module(key='superpixel_segmentation_module')
@@ -228,13 +233,33 @@ def execute():
         'feat_scaler': segm_module._feat_scaler
     }
     _debugger_print("model_complete", model_complete)
-    data_repo.set_model_complete("model_complete", model_complete)
-    path = "/home/borinmacedo/AnnotDocs/test.model"
+    data_repo.set_classification_model("model_complete", model_complete)
+
+    return "success", 200
+
+
+@app.route('/save_classifier', methods=['POST'])
+@cross_origin()
+# TODO : Implement the documentation here
+def save_classifier():
     try:
-        # IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
-        # not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
-        # data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
-        # besides being far more critical than classifier loading/saving.
+        path = request.json["classificationPath"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    try:
+        model_complete = data_repo.get_classification_model("model_complete")
+
+    except Exception as e:
+        return handle_exception(str(e))
+
+    try:
+        """IMPORTANT NOTE (This notes is from ssc-Annotat3D-Legacy):
+        
+        since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
+        not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
+        data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
+        besides being far more critical than classifier loading/saving."""
         with open(path, 'wb') as f:
             pickle.dump(model_complete, f)
     except Exception as e:
@@ -243,4 +268,4 @@ def execute():
     else:
         logging.debug('Classifier saved successfully')
 
-    return "success", 200
+    return jsonify("success")
