@@ -5,8 +5,7 @@ import {
     IonCardContent,
     IonCardHeader,
     IonCardTitle,
-    IonContent,
-    
+    IonContent, 
     IonInput,
     IonItem,
     IonLabel,

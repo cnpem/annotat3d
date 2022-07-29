@@ -1,8 +1,8 @@
 werkzeug==2.0.3 #there seems to be some bug on the newer versions that randomly causes 405 responses
-flask
-flask-cors
-jinja2
-sscIO
+flask==2.0.3
+flask-cors==3.0.10
+jinja2==3.0.3
+sscIO>=0.2.1
 sscPySpin
 sscDeepsirius>=0.14.1
 ssc-remotevis

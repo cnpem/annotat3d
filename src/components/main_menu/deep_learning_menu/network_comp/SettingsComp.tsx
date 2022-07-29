@@ -19,13 +19,13 @@ import { useEventBus } from "../../../../utils/eventbus";
         {id: 8, label: '8 GPUs'}, 
     ];
 
-    useEventBus('workspaceLoaded', (isDisabled: boolean) => {
-        if (isDisabled) {
-            // sfetch here
-            console.log('workspaceLoaded > fetch max gpus');
-            setMaxGPUs(4);
-        };
-    });
+    // useEventBus('workspaceLoaded', (isDisabled: boolean) => {
+    //     if (isDisabled) {
+    //         // sfetch here
+    //         console.log('workspaceLoaded > fetch max gpus');
+    //         setMaxGPUs(4);
+    //     };
+    // });
 
     function selectOptionGPU(GPUval: {id: number, label: string}) {
         const isDisabled : boolean = (GPUval.id > maxGPUs); 

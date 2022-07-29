@@ -2,10 +2,7 @@ import { IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonContent, IonTe
 import { useState } from "react";
 
 const LogComp: React.FC = () => {
-    const [logText, setLogText] = useState<string>('');
-
-    setLogText('Set text here from backend. Who is the trigger?');
-
+    const [logText, setLogText] = useState<string>('Set text here from backend. Who is the trigger?');
 
     return (
         <small>

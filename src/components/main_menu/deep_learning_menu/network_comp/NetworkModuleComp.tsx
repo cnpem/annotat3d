@@ -2,7 +2,6 @@ import "./Network.css"
 import React, {Fragment, useState} from "react";
 import {IonButton, IonItem, IonLabel, IonPopover, IonSegment, IonSegmentButton, IonToggle, SegmentChangeEventDetail} from "@ionic/react";
 import { useStorageState } from "react-storage-hooks";
-import ErrorWindowComp from "../../file/ErrorWindowComp";
 import NetworkComp from "./NetworkComp";
 import DatasetComp from "./DatasetComp";
 import BoardComp from "./BoardComp";
@@ -20,25 +19,9 @@ type InputMenuChoicesType = typeof menuChoices[number];
 const NetworkModuleComp: React.FC = () => {
 
     const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, "DatasetMenu", "network");
-    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
-    const [errorMsg, setErrorMsg] = useState<string>("");
+    const [hostMode, setHostMode] = useState<boolean>(true);
 
 
-    // const changeCheckedStatus = (index: number) => {
-    //     const newCheckedVector = augmentationOpSelected.map(
-    //         element => element.checkedId === index
-    //             ? {...element, isChecked: !element.isChecked} : element
-    //     );
-    //     setAugmentationOpSelected(newCheckedVector);
-    // }
-
-    const handleErrorMsg = (msg: string) => {
-        setErrorMsg(msg);
-    }
-
-    const handleErrorWindow = (flag: boolean) => {
-        setShowErrorWindow(flag);
-    }
 
     const selectMenuOp = (e: CustomEvent<SegmentChangeEventDetail>) => {
         setMenuOp(e.detail.value as InputMenuChoicesType);
@@ -66,15 +49,6 @@ const NetworkModuleComp: React.FC = () => {
         );
     }
 
-    /**
-     * Clean up popover dialog
-     */
-    const cleanUp = () => {
-        setShowErrorWindow(false);
-        setErrorMsg("");
-        // setAugmentationOpSelected(InitAugmentationOptions);
-        // setIonRangeVec(InitIonRangeVec);
-    };
     return (
         <Fragment>
             {/* Function effect to open the popup */}
@@ -84,14 +58,13 @@ const NetworkModuleComp: React.FC = () => {
             </IonItem>
             <IonPopover
                 trigger={"open-menu-network"}
-                onDidDismiss={() => cleanUp()}
                 className={"file-popover-network"}>
                 <IonSegment value={menuOp} onIonChange={selectMenuOp}>
                     {menuChoices.map(renderSegmentButton)}
                 </IonSegment>
                 {menuChoices.map(renderMenu)}
                 <IonItem>
-                <IonButton
+                    <IonButton
                         id={"train"}
                         color={"secondary"}
                         size={'default'}
@@ -125,18 +98,11 @@ const NetworkModuleComp: React.FC = () => {
                     </IonButton>
                     <IonItem>
                         <IonLabel>Host Mode</IonLabel>
-                        {/* make a state variable */}
-                        <IonToggle value={"toggleHostMode"}/>
+                        <IonToggle checked={hostMode} onIonChange={e => setHostMode(e.detail.checked)} />
                     </IonItem>
                 </IonItem>
             </IonPopover>
-            {/*Error window*/}
-            <ErrorWindowComp
-                errorMsg={errorMsg}
-                headerMsg={"Error while loading the file"}
-                onErrorMsg={handleErrorMsg}
-                errorFlag={showErrorWindow}
-                onErrorFlag={handleErrorWindow}/>
+            {/*insert Error window here*/}
         </Fragment>
     );
 }
