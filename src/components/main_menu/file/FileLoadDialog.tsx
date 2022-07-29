@@ -132,7 +132,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
      */
     const dispatchOpenAnnot = async () => {
         const annotPath = {
-            annot_path: (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.annotPath : pathFiles.annotPath,
+            annot_path: (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + pathFiles.annotPath : pathFiles.annotPath,
         }
         let msgReturned = "";
         let isError = false;
@@ -159,6 +159,37 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
     }
 
+    /**
+     * Function that Loads the classifier model .model file and send to the backend
+     */
+    const dispatchLoadClassifier = async () => {
+        const backendPayload: { classificationPath: string } = {
+            classificationPath: (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + pathFiles.classificationPath : pathFiles.classificationPath
+        }
+
+        let msgReturned = "";
+        let isError = false;
+        console.log("sexo");
+        console.table(backendPayload);
+
+        await sfetch("POST", "/load_classifier", JSON.stringify(backendPayload), "json")
+            .then((success: string) => {
+                console.log("sexo 2");
+                msgReturned = `${pathFiles.classificationPath} loaded as .model`;
+                console.log(success);
+            }).catch((error: ErrorInterface) => {
+                msgReturned = error.error_msg;
+                isError = true;
+                console.log("Error message while trying to load the classifier model", error.error_msg);
+                setHeaderErrorMsg(`error while loading the classifier model`);
+                setErrorMsg(error.error_msg);
+                setShowErrorWindow(true);
+            });
+
+        const returnedObj: QueueToast = {message: msgReturned, isError: isError};
+        return returnedObj;
+    }
+
     const handleLoadImageAction = async () => {
         /**
          * Dispatch for images, label and superpixel
@@ -168,20 +199,23 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
         let queueToast: QueueToast[] = [{
             message: "",
-            isError: false
+            isError: false //Image
         }, {
             message: "",
-            isError: false
+            isError: false //Superpixel
         }, {
             message: "",
-            isError: false
+            isError: false //Label
         }, {
             message: "",
-            isError: false
+            isError: false //Annotation
+        }, {
+            message: "",
+            isError: false //Classifier
         }];
 
         if (pathFiles.imagePath !== "") {
-            const imgPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.imagePath : pathFiles.imagePath
+            const imgPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + pathFiles.imagePath : pathFiles.imagePath
             const promise = dispatchOpenImage(imgPath, "image");
             await promise.then((item: QueueToast) => {
                 queueToast[0] = item;
@@ -189,7 +223,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         }
 
         if (pathFiles.superpixelPath !== "") {
-            const superpixelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.superpixelPath : pathFiles.superpixelPath
+            const superpixelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + pathFiles.superpixelPath : pathFiles.superpixelPath
             const promise = dispatchOpenImage(superpixelPath, "superpixel");
             await promise.then((item: QueueToast) => {
                 queueToast[1] = item;
@@ -197,7 +231,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         }
 
         if (pathFiles.labelPath !== "") {
-            const labelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.labelPath : pathFiles.labelPath
+            const labelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + pathFiles.labelPath : pathFiles.labelPath
             const promise = dispatchOpenImage(labelPath, "label");
             await promise.then((item: QueueToast) => {
                 queueToast[2] = item;
@@ -211,10 +245,20 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
             })
         }
 
+        if (pathFiles.classificationPath !== "") {
+            const promise = dispatchLoadClassifier();
+            await promise.then((item: QueueToast) => {
+                queueToast[4] = item;
+            });
+        }
+
         let finalMsg = "";
-        const flagShowToast = ((!queueToast[0].isError && queueToast[0].message !== "") ||
+        const flagShowToast = (
+            (!queueToast[0].isError && queueToast[0].message !== "") ||
             (!queueToast[1].isError && queueToast[1].message !== "") ||
-            (!queueToast[2].isError && queueToast[2].message !== ""));
+            (!queueToast[2].isError && queueToast[2].message !== "") ||
+            (!queueToast[3].isError && queueToast[3].message !== "") ||
+            (!queueToast[4].isError && queueToast[4].message !== ""));
 
         for (let i = 0; i < queueToast.length; i++) {
             if (queueToast[i].message !== "" && !queueToast[i].isError) {
@@ -236,7 +280,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setShowPopover({open: false, event: undefined});
         setPathFiles({
             workspacePath: pathFiles.workspacePath,
-            imagePath: pathFiles.imagePath, 
+            imagePath: pathFiles.imagePath,
             superpixelPath: "",
             labelPath: "",
             annotPath: "",

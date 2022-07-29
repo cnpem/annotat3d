@@ -264,8 +264,36 @@ def save_classifier():
             pickle.dump(model_complete, f)
     except Exception as e:
         f.close()
-        raise Exception('Unable to save classification model! Error: %s' % str(e))
+        return handle_exception("Unable to save classification model! Error: {}".format(str(e)))
     else:
         logging.debug('Classifier saved successfully')
+
+    return jsonify("success")
+
+
+@app.route('/load_classifier', methods=['POST'])
+@cross_origin()
+# TODO : Implement the documentation here
+def load_classifier():
+    try:
+        path = request.json["classificationPath"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    try:
+        """IMPORTANT NOTE (This notes is from ssc-Annotat3D-Legacy):
+
+        since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
+        not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
+        data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
+        besides being far more critical than classifier loading/saving."""
+        with open(path, 'rb') as f:
+            classifier = pickle.load(f)
+    except Exception as e:
+        f.close()
+        return handle_exception("Unable to load classification model! Error: {}".format(str(e)))
+
+    _debugger_print("loaded classifier", classifier)
+    logging.debug('Classifier loaded successfully')
 
     return jsonify("success")

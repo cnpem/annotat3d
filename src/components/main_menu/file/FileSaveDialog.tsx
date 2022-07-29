@@ -129,7 +129,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
      */
     const dispatchSaveAnnot = async () => {
         const annotPath = {
-            annot_path: (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.annotPath : pathFiles.annotPath,
+            annot_path: (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + pathFiles.annotPath : pathFiles.annotPath,
         }
         let msgReturned = "";
         let isError = false;
@@ -158,7 +158,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
      */
     const dispatchSaveClassifier = async () => {
         const backendPayload: { classificationPath: string } = {
-            classificationPath: (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.classificationPath : pathFiles.classificationPath
+            classificationPath: (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + pathFiles.classificationPath : pathFiles.classificationPath
         }
 
         let msgReturned = "";
@@ -206,7 +206,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         }];
 
         if (pathFiles.imagePath !== "") {
-            const imgPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.imagePath : pathFiles.imagePath
+            const imgPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + pathFiles.imagePath : pathFiles.imagePath
             const promise = handleSaveImageAction(imgPath, "image");
             await promise.then((item: QueueToast) => {
                 queueToast[0] = item;
@@ -214,7 +214,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         }
 
         if (pathFiles.superpixelPath !== "") {
-            const superpixelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.superpixelPath : pathFiles.superpixelPath
+            const superpixelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + pathFiles.superpixelPath : pathFiles.superpixelPath
             const promise = handleSaveImageAction(superpixelPath, "superpixel");
             await promise.then((item: QueueToast) => {
                 queueToast[1] = item;
@@ -222,7 +222,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         }
 
         if (pathFiles.labelPath !== "") {
-            const labelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + "/" + pathFiles.labelPath : pathFiles.labelPath
+            const labelPath = (pathFiles.workspacePath !== "") ? pathFiles.workspacePath + pathFiles.labelPath : pathFiles.labelPath
             const promise = handleSaveImageAction(labelPath, "label");
             await promise.then((item: QueueToast) => {
                 queueToast[2] = item;
@@ -248,7 +248,8 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             (!queueToast[0].isError && queueToast[0].message !== "") ||
             (!queueToast[1].isError && queueToast[1].message !== "") ||
             (!queueToast[2].isError && queueToast[2].message !== "") ||
-            (!queueToast[3].isError && queueToast[3].message !== ""));
+            (!queueToast[3].isError && queueToast[3].message !== "") ||
+            (!queueToast[4].isError && queueToast[4].message !== ""));
 
         for (let i = 0; i < queueToast.length; i++) {
             if (queueToast[i].message !== "" && !queueToast[i].isError) {
