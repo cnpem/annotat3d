@@ -107,9 +107,15 @@ def create():
         img_superpixel = img_superpixel.astype("int32")
 
     feature_extraction_params = request.json['feature_extraction_params']
-    # Think this will solve some problems
-    classifier_params = request.json['classifier_params']
-    _debugger_print("classifier_params", classifier_params)
+    try:
+        classifier_params = request.json['classifier_params']
+        classifier_values = request.json["classifier_values"]
+        if (isinstance(classifier_values["value"], str)):
+            classifier_params[classifier_values["id"]] = eval(classifier_values["value"])
+        else:
+            classifier_params[classifier_values["id"]] = classifier_values["value"]
+    except:
+        return handle_exception("error trying to get the request in /superpixel_segmentation_module/create")
 
     if 'selected_supervoxel_feat_pooling' in feature_extraction_params:
         feature_extraction_params['selected_supervoxel_feat_pooling'] = [
