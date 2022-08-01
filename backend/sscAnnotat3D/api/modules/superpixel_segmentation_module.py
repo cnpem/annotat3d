@@ -111,9 +111,13 @@ def create():
         classifier_params = request.json['classifier_params']
         classifier_values = request.json["classifier_values"]
         if (isinstance(classifier_values["value"], str)):
-            classifier_params[classifier_values["id"]] = eval(classifier_values["value"])
+            value = eval(classifier_values["value"])
+        elif (isinstance(classifier_values["value"], list)):
+            value = (*classifier_values["value"],)
         else:
-            classifier_params[classifier_values["id"]] = classifier_values["value"]
+            value = classifier_values["value"]
+
+        classifier_params[classifier_values["id"]] = value
     except:
         return handle_exception("error trying to get the request in /superpixel_segmentation_module/create")
 
