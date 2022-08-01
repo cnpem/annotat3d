@@ -4,16 +4,17 @@ import logging
 
 from flask_cors import cross_origin
 from flask import Blueprint, request, jsonify
+from werkzeug.exceptions import BadRequest
 
 from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmentationModule
+# from sscAnnotat3D.modules.classifier_segmentation_module import ClassifierSegmentationModule
 from sscPySpin import feature_extraction as spin_feat_extraction
 
 # TODO : We need to template sscIO for other superpixel types
 # TODO : In this actual stage, we're forcing superpixel to be 32 int type
 # TODO : Implement the error template for flask in this script
-from werkzeug.exceptions import BadRequest
 
 app = Blueprint('superpixel_segmentation_module', __name__)
 
@@ -152,6 +153,7 @@ def create():
 
     try:
         feature_extraction_params = request.json['feature_extraction_params']
+        _debugger_print("feature_extraction_params", feature_extraction_params)
         classifier_params = request.json['classifier_params']
         classifier_values = request.json["classifier_values"]
         if (isinstance(classifier_values["value"], str)):
@@ -330,6 +332,8 @@ def save_classifier():
 @app.route('/load_classifier', methods=['POST'])
 @cross_origin()
 # TODO : Implement the documentation here
+# TODO : need to update the superpixel parameters when the user loads any .model
+# TODO : need to update all the rest of feats values when the user loads any .model
 def load_classifier():
     try:
         path = request.json["classificationPath"]
@@ -357,13 +361,15 @@ def load_classifier():
     segm_module.load_classifier(classifier)
     module_repo.set_module('superpixel_segmentation_module', segm_module)
 
+    _debugger_print("superpixel_params", classifier["superpixel_params"])
+    _debugger_print("feature_extraction_params", classifier["feature_extraction_params"])
+    _debugger_print("selected_features", classifier["feature_extraction_params"]["selected_features"])
+    _debugger_print("selected_features type", type(classifier["feature_extraction_params"]["selected_features"][0]))
+
     params_front = _default_classifier_front(classifier["classifier_params"])
-    _debugger_print("params_front", params_front)
     front_end_classifier = {
         "classifier": classifier["classifier_params"]["classifier_type"],
         "params": params_front
     }
-
-    _debugger_print("front_end_classifier", front_end_classifier)
 
     return jsonify(front_end_classifier)
