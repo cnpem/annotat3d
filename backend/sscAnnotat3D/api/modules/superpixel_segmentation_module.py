@@ -107,7 +107,9 @@ def create():
         img_superpixel = img_superpixel.astype("int32")
 
     feature_extraction_params = request.json['feature_extraction_params']
+    # Think this will solve some problems
     classifier_params = request.json['classifier_params']
+    _debugger_print("classifier_params", classifier_params)
 
     if 'selected_supervoxel_feat_pooling' in feature_extraction_params:
         feature_extraction_params['selected_supervoxel_feat_pooling'] = [
@@ -295,5 +297,10 @@ def load_classifier():
 
     _debugger_print("loaded classifier", classifier)
     logging.debug('Classifier loaded successfully')
+    img = data_repo.get_image('image')
+    img_superpixel = data_repo.get_image('superpixel')
+    segm_module = SuperpixelSegmentationModule(img, img_superpixel)
+    segm_module.load_classifier(classifier)
+    module_repo.set_module('superpixel_segmentation_module', segm_module)
 
     return jsonify("success")

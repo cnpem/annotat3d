@@ -169,13 +169,16 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
 
         let msgReturned = "";
         let isError = false;
-        console.log("sexo");
         console.table(backendPayload);
 
         await sfetch("POST", "/load_classifier", JSON.stringify(backendPayload), "json")
             .then((success: string) => {
-                console.log("sexo 2");
                 msgReturned = `${pathFiles.classificationPath} loaded as .model`;
+                // informs canvas that the superpixel image was deleted
+                dispatch('superpixelChanged', {});
+                // informs aboud annotation updates in the backend
+                dispatch('annotationChanged', null);
+                // deactivates crop preview mode on canvas
                 console.log(success);
             }).catch((error: ErrorInterface) => {
                 msgReturned = error.error_msg;

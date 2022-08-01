@@ -24,12 +24,10 @@ from .. import aux_functions as functions
 from .. import progressbar, utils
 from sscAnnotat3D import cython
 from .classifier_segmentation_module import ClassifierSegmentationModule
-# from annotat3D.widgets_parameters import SuperpixelSegmentationParamWidget
 
 
 # @decorate_all_methods(timecall(immediate=False))
 class SuperpixelSegmentationModule(ClassifierSegmentationModule):
-
     _module_name = "SuperpixelSegmentationModule"
 
     def __init__(self,
@@ -50,9 +48,6 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                             feature_extraction_params=str(self._feature_extraction_params),
                             classifier_params=str(self._classifier_params),
                             superpixel_params=str(self._superpixel_params))
-
-        # if not utils.headless_mode():
-            # utils.add_variable_console({'segmentation': self})
 
     def has_preprocess(self):
         return True
@@ -183,7 +178,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
         return preview_bounding_box
 
-    #bbox is a 6 valued tuple with z0, y0, x0, z1, y1, x1
+    # bbox is a 6 valued tuple with z0, y0, x0, z1, y1, x1
     def boundingbox_idx(self, bbox):
         z0, y0, x0, z1, y1, x1 = bbox
         return [slice(z0, z1 + 1), slice(y0, y1 + 1), slice(x0, x1 + 1)]
@@ -207,7 +202,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                     raise Exception(
                         'Unable to compute preview for axis %s because too much memory may be consumed (beyond the accepted limit of %d GB). Please preview only on XY axis for now.'
                         % ('XZ' if selected_axis == 1 else 'YZ', self._estimate_feature_extraction_memory_usage() /
-                           (1024.0**3)))
+                           (1024.0 ** 3)))
 
             mainbar = progressbar.get('main')
 
@@ -266,7 +261,6 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
             mainbar.inc()
             with sentry_sdk.start_span(op='Classify superpixels for preview'):
                 if classifier_trained:
-
                     pred = np.zeros(self._image.shape, dtype='uint16')
                     preview_superpixel_limits = spin_img.spin_min_max_region_id(preview_superpixels, True)
                     min_superpixel_label = preview_superpixel_limits['min']
@@ -510,7 +504,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         logging.debug("Predicting...")
         start = time.time()
 
-        #we pass global features, so min_superpixel_id is always 1
+        # we pass global features, so min_superpixel_id is always 1
         min_superpixel_id, max_superpixel_id = self._min_superpixel_label, self._max_superpixel_label
         superpixel_features = superpixel_features_global
 
@@ -550,7 +544,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         logging.info('Assigning superpixel labels to voxels')
         start = time.time()
         spin_seg.spin_label_from_classification(superpixels, pred, prediction, min_superpixel_id=min_superpixel_id)
-        #pred[...] = np.take(prediction, superpixels-min_superpixel_id)
+        # pred[...] = np.take(prediction, superpixels-min_superpixel_id)
         end = time.time()
         logging.info('After assignment')
 
@@ -631,7 +625,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         nsamples = len(self._training_superpixel_ids)
         if isinstance(superpixel_features, dict):
             nfeats = len(next(iter(
-                superpixel_features.values())))  #look how many chainned functions, this feel lispy as hell
+                superpixel_features.values())))  # look how many chainned functions, this feel lispy as hell
         else:
             nfeats = superpixel_features.shape[1]
 
@@ -790,9 +784,9 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
                 start = time.time()
                 image_crop = image[bbox_min[0]:bbox_max[0] + 1, bbox_min[1]:bbox_max[1] + 1,
-                                   bbox_min[2]:bbox_max[2] + 1]
+                             bbox_min[2]:bbox_max[2] + 1]
                 superpixels_crop = self._superpixels[bbox_min[0]:bbox_max[0] + 1, bbox_min[1]:bbox_max[1] + 1,
-                                                     bbox_min[2]:bbox_max[2] + 1]
+                                   bbox_min[2]:bbox_max[2] + 1]
                 end = time.time()
 
                 logging.info('**** Image cropping time: {}s'.format(end - start))
@@ -916,9 +910,9 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
                 start = time.time()
                 image_crop = image[bbox_min[0]:bbox_max[0] + 1, bbox_min[1]:bbox_max[1] + 1,
-                                   bbox_min[2]:bbox_max[2] + 1]
+                             bbox_min[2]:bbox_max[2] + 1]
                 superpixels_crop = self._superpixels[bbox_min[0]:bbox_max[0] + 1, bbox_min[1]:bbox_max[1] + 1,
-                                                     bbox_min[2]:bbox_max[2] + 1]
+                                   bbox_min[2]:bbox_max[2] + 1]
                 end = time.time()
 
                 logging.debug('\n\n**** Image cropping time {}s'.format(end - start))
@@ -984,3 +978,62 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                 logging.debug('**** Superpixel feature dict creation run time {}s'.format(end - start))
 
         return superpixel_features_dict
+
+    # TODO : don't forget to document this function
+    def load_classifier(self, model_complete):
+        try:
+            self._superpixel_params = model_complete['superpixel_params']
+            self._feature_extraction_params = model_complete['feature_extraction_params']
+            self._classifier_params = model_complete['classifier_params']
+
+        except Exception as e:
+            print("\n====================================================")
+            print('Invalid classifier file! Unable to load parameters! (Error: {})'.format(str(e)))
+            print("\n====================================================")
+            return 'Invalid classifier file! Unable to load parameters! (Error: {})'.format(str(e))
+        try:
+            self._feat_selector = model_complete['feat_selector']
+            self._default_feat_selector = self._feat_selector
+        except:
+            print("\n====================================================")
+            print('Invalid classifier file! Unable to load feature selection model!')
+            print("\n====================================================")
+            return 'Invalid classifier file! Unable to load feature selection model!'
+
+        try:
+            self._feat_scaler = model_complete['feat_scaler']
+            self._default_feat_scaler = self._feat_scaler
+        except:
+            print("\n====================================================")
+            print('Invalid classifier file! Unable to load feature scaling method')
+            print("\n====================================================")
+            return 'Invalid classifier file! Unable to load feature scaling method'
+
+        try:
+            labels = model_complete['labels']
+        except:
+            print("\n====================================================")
+            print('Invalid classifier file! Unable to load labels')
+            print("\n====================================================")
+            return 'Invalid classifier file! Unable to load labels'
+
+        classifier = self._classifier_params['classifier_type']
+
+        self._available_classifiers[classifier] = self._model
+
+        if classifier not in self._available_classifiers:
+            raise Exception('Invalid classifier type ' + classifier)
+
+        self._flag_classifier_loaded = True
+
+        if self._parent is not None:
+            self._parent.include_labels(labels)
+
+        logging.debug('Classifier loaded successfully')
+
+        functions.log_usage(op_type='load_classifier',
+                            feature_extraction_params=str(self._feature_extraction_params),
+                            classifier_params=str(self._classifier_params),
+                            superpixel_params=str(self._superpixel_params))
+
+        return ""
