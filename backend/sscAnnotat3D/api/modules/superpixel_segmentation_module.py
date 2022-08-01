@@ -44,6 +44,50 @@ __default_classifier_params = {
 }
 
 
+def _default_classifier_front(classifier_dict: dict = None):
+    if (classifier_dict["classifier_type"] == "rf"):
+        return [{
+            "id": 'rf_n_estimators',
+            "label": 'Random Forest N. Trees',
+            "value": classifier_dict["rf_n_estimators"],
+            "input": 'number'
+        }]
+
+    elif (classifier_dict["classifier_type"] == "svm"):
+        return [{
+            "id": 'svm_C',
+            "label": 'SVM C',
+            "value": classifier_dict["svm_C"],
+            "input": 'number'
+        }]
+
+    elif (classifier_dict["classifier_type"] == "mlp"):
+        return [{
+            "id": 'mlp_hidden_layer_sizes',
+            "label": 'N. hidden Neurons',
+            "value": [*classifier_dict["mlp_hidden_layer_sizes"]],
+            "input": 'text'
+        }]
+
+    elif (classifier_dict["classifier_type"] == "adaboost"):
+        return [{
+            "id": 'adaboost_n_estimators',
+            "label": 'N. classifiers',
+            "value": classifier_dict["adaboost_n_estimators"],
+            "input": 'number'
+        }]
+
+    elif (classifier_dict["classifier_type"] == "knn"):
+        return [{
+            "id": 'knn_n_neighbors',
+            "label": 'N. neighbors',
+            "value": classifier_dict["knn_n_neighbors"],
+            "input": 'number'
+        }]
+
+    return [{}]
+
+
 def _debugger_print(msg: str, payload: any):
     print("\n----------------------------------------------------------")
     print("{} : {}".format(msg, payload))
@@ -106,8 +150,8 @@ def create():
     if (_convert_dtype_to_str(img_superpixel.dtype) != "int32"):
         img_superpixel = img_superpixel.astype("int32")
 
-    feature_extraction_params = request.json['feature_extraction_params']
     try:
+        feature_extraction_params = request.json['feature_extraction_params']
         classifier_params = request.json['classifier_params']
         classifier_values = request.json["classifier_values"]
         if (isinstance(classifier_values["value"], str)):
@@ -313,4 +357,13 @@ def load_classifier():
     segm_module.load_classifier(classifier)
     module_repo.set_module('superpixel_segmentation_module', segm_module)
 
-    return jsonify("success")
+    params_front = _default_classifier_front(classifier["classifier_params"])
+    _debugger_print("params_front", params_front)
+    front_end_classifier = {
+        "classifier": classifier["classifier_params"]["classifier_type"],
+        "params": params_front
+    }
+
+    _debugger_print("front_end_classifier", front_end_classifier)
+
+    return jsonify(front_end_classifier)

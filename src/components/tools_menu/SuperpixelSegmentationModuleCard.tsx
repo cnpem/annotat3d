@@ -187,6 +187,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         thresholdSelection: 0.01
     });
 
+    const [prevClassParams, setPrevClassParams] = useStorageState<ClassifierParams>(sessionStorage, "superpixelPrevClassParams");
     const [classParams, setClassParams] = useStorageState<ClassifierParams>(sessionStorage, 'superpixelClassParams', {
         classifier: 'rf',
         params: defaultModelClassifierParams['rf']
@@ -218,6 +219,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
             });
     });
 
+    // useEffect to force the user to use preprocess if he changes the featParams
     useEffect(() => {
         console.log(prevFeatParams, featParams);
         console.log(isEqual(prevFeatParams, featParams));
@@ -225,14 +227,31 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         setHasPreprocessed(!hasChanged);
     }, [featParams, prevFeatParams, setHasPreprocessed]);
 
+    // useEffect to force the user to use preprocess if he changes the classParams
+    useEffect(() => {
+        console.log("change on classParams");
+        console.log(prevClassParams, classParams);
+        console.log(isEqual(prevClassParams, classParams));
+        const hasChanged = !isEqual(prevClassParams, classParams);
+        setHasPreprocessed(!hasChanged);
+    }, [classParams, prevClassParams, setHasPreprocessed]);
+
     useEventBus('superpixelChanged', () => {
         setDisabled(false);
         setHasPreprocessed(false);
         setPrevFeatParams(null);
+        setPrevClassParams(null);
     });
+
+    useEventBus("SetNewClassParams", (newClassifier: ClassifierParams) => {
+        console.table(newClassifier);
+        setClassParams(newClassifier);
+        setPrevClassParams(newClassifier);
+    })
 
     useEventBus('ImageLoaded', () => {
         setPrevFeatParams(null);
+        setPrevClassParams(null);
     });
 
     function getModuleBackendParams() {
@@ -307,6 +326,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         sfetch('POST', '/superpixel_segmentation_module/create', JSON.stringify(params))
             .then(() => {
                 setPrevFeatParams(featParams);
+                setPrevClassParams(classParams);
             })
             .catch(() => {
                 console.log('Fail on preprocess');

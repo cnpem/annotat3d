@@ -34,6 +34,19 @@ import {LabelInterface} from "../../tools_menu/label_table/LabelInterface";
 import LoadingComponent from "../../tools_menu/LoadingComponent";
 import {useStorageState} from "react-storage-hooks";
 import {dtype_type, dtypeList, img_operation, multiplesPath, QueueToast} from "./utils/FileLoadInterface";
+import {TextFieldTypes} from "@ionic/core";
+
+interface ModelClassifierParams {
+    id: string;
+    label: string;
+    value: any;
+    input: TextFieldTypes;
+}
+
+interface ClassifierParams {
+    classifier: string;
+    params: ModelClassifierParams[];
+}
 
 /**
  * Load Image dialog
@@ -172,14 +185,16 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         console.table(backendPayload);
 
         await sfetch("POST", "/load_classifier", JSON.stringify(backendPayload), "json")
-            .then((success: string) => {
+            .then((classifier: ClassifierParams) => {
                 msgReturned = `${pathFiles.classificationPath} loaded as .model`;
                 // informs canvas that the superpixel image was deleted
                 dispatch('superpixelChanged', {});
-                // informs aboud annotation updates in the backend
-                dispatch('annotationChanged', null);
+                // informs about annotation updates in the backend
                 // deactivates crop preview mode on canvas
-                console.log(success);
+                dispatch('annotationChanged', null);
+
+                // Sets the classifier parameters
+                dispatch("SetNewClassParams", classifier);
             }).catch((error: ErrorInterface) => {
                 msgReturned = error.error_msg;
                 isError = true;
