@@ -1,6 +1,6 @@
 import "./Network.css"
 import React, {Fragment, useState} from "react";
-import {IonButton, IonItem, IonLabel, IonPopover, IonSegment, IonSegmentButton, IonToggle, SegmentChangeEventDetail} from "@ionic/react";
+import {IonAccordion, IonAccordionGroup, IonButton, IonContent, IonInput, IonItem, IonItemDivider, IonLabel, IonList, IonPopover, IonSegment, IonSegmentButton, IonToggle, SegmentChangeEventDetail} from "@ionic/react";
 import { useStorageState } from "react-storage-hooks";
 import NetworkComp from "./NetworkComp";
 import DatasetComp from "./DatasetComp";
@@ -41,7 +41,11 @@ const NetworkModuleComp: React.FC = () => {
         <SettingsComp/>,
         <BoardComp/>,
         <LogComp/>
-        ];
+    ];
+
+    const handlerOnTrainButton = (e: CustomEvent) => {
+        console.log(e.detail.value);
+    };
 
     const renderMenu = (choice: InputMenuChoicesType, idx: number) => {
         return (
@@ -59,16 +63,20 @@ const NetworkModuleComp: React.FC = () => {
             <IonPopover
                 trigger={"open-menu-network"}
                 className={"file-popover-network"}>
+                <IonContent>
                 <IonSegment value={menuOp} onIonChange={selectMenuOp}>
                     {menuChoices.map(renderSegmentButton)}
                 </IonSegment>
                 {menuChoices.map(renderMenu)}
-                <IonItem>
+                <IonItem class='item-permanent-buttons-alignment-right'>
+                    <IonItem>
+                        <IonLabel>Host Mode</IonLabel>
+                        <IonToggle checked={hostMode} onIonChange={e => setHostMode(e.detail.checked)} />
+                    </IonItem>
                     <IonButton
                         id={"train"}
                         color={"secondary"}
                         size={'default'}
-                        // slot={"end"}
                     >
                         Train
                     </IonButton>
@@ -76,7 +84,6 @@ const NetworkModuleComp: React.FC = () => {
                         id={"finetune"}
                         color={"secondary"}
                         size={'default'}
-                        // slot={"end"}
                     >
                         finetune
                     </IonButton>
@@ -84,23 +91,35 @@ const NetworkModuleComp: React.FC = () => {
                         id={"export-network"}
                         color={"tertiary"}
                         size={'default'}
-                        // slot={"end"}
                     >
                         Export Network
                     </IonButton>
+                    <IonPopover
+                        trigger={'export-network'}
+                        side={'bottom'}
+                        alignment={'end'}>
+                        {/* className={"create-h5-popover"}> */}
+
+                        <IonLabel>Hello!</IonLabel>
+                    </IonPopover>
                     <IonButton
                         id={"export-inference"}
                         color={"tertiary"}
                         size={'default'}
-                        // slot={"end"}
+                        
                     >
                         Export Inference
                     </IonButton>
-                    <IonItem>
-                        <IonLabel>Host Mode</IonLabel>
-                        <IonToggle checked={hostMode} onIonChange={e => setHostMode(e.detail.checked)} />
-                    </IonItem>
+                    <IonPopover
+                        trigger={'export-inference'}
+                        side={'bottom'}
+                        alignment={'end'}>
+                        {/* className={"create-h5-popover"}> */}
+
+                        <IonLabel>Hello2!</IonLabel>
+                    </IonPopover>
                 </IonItem>
+                </IonContent>
             </IonPopover>
             {/*insert Error window here*/}
         </Fragment>

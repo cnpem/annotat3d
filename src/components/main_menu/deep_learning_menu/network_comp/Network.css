@@ -36,6 +36,10 @@ https://www.youtube.com/watch?v=ZCrQjk6PdK0
     width: 100%;
     --min-height: 600px;
 }
+
+.item-permanent-buttons-alignment-right {
+    float:right;
+}
 /**
 Component used in ion-popover in SamplingComp.tsx
  */
