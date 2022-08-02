@@ -34,7 +34,7 @@ const classifiers = [
     {id: 'adaboost', name: 'AdaBoost'}
 ];
 
-const defaultModelClassifierParams: Record<string, ModelClassifierParams[]> = {
+const InitDefaultModelClassifierParams: Record<string, ModelClassifierParams[]> = {
     'rf': [
         {id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number'}
     ],
@@ -179,6 +179,7 @@ interface FeatureParams {
 
 const SuperpixelSegmentationModuleCard: React.FC = () => {
 
+    const [defaultModelClassifierParams, setDefaultModelClassifierParams] = useStorageState(sessionStorage, "defaultModelClassifierParams", InitDefaultModelClassifierParams)
     const [prevFeatParams, setPrevFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelPrevFeatParams');
     const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelFeatParams', {
         pooling: defaultPooling,
@@ -244,10 +245,94 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     });
 
     useEventBus("SetNewClassParams", (newClassifier: ClassifierParams) => {
-        console.table(newClassifier);
+        let newDefaultModelClassifierParams: Record<string, ModelClassifierParams[]>;
+        if (newClassifier.classifier === "rf") {
+            newDefaultModelClassifierParams = {
+                'rf': newClassifier.params,
+                'svm': [
+                    {id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number'}
+                ],
+                'mlp': [
+                    {id: 'mlp_hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text'}
+                ],
+                'adaboost': [
+                    {id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number'}
+                ],
+                'knn': [
+                    {id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number'}
+                ]
+            }
+        } else if (newClassifier.classifier === "svm") {
+            newDefaultModelClassifierParams = {
+                'rf': [
+                    {id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number'}
+                ],
+                'svm': newClassifier.params,
+                'mlp': [
+                    {id: 'mlp_hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text'}
+                ],
+                'adaboost': [
+                    {id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number'}
+                ],
+                'knn': [
+                    {id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number'}
+                ]
+            }
+        } else if (newClassifier.classifier === "mlp") {
+            newDefaultModelClassifierParams = {
+                'rf': [
+                    {id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number'}
+                ],
+                'svm': [
+                    {id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number'}
+                ],
+                'mlp': newClassifier.params,
+                'adaboost': [
+                    {id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number'}
+                ],
+                'knn': [
+                    {id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number'}
+                ]
+            }
+        } else if (newClassifier.classifier === "adaboost") {
+            newDefaultModelClassifierParams = {
+                'rf': [
+                    {id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number'}
+                ],
+                'svm': [
+                    {id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number'}
+                ],
+                'mlp': [
+                    {id: 'mlp_hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text'}
+                ],
+                'adaboost': newClassifier.params,
+                'knn': [
+                    {id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number'}
+                ]
+            }
+        } else {
+            newDefaultModelClassifierParams = {
+                'rf': [
+                    {id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number'}
+                ],
+                'svm': [
+                    {id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number'}
+                ],
+                'mlp': [
+                    {id: 'mlp_hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text'}
+                ],
+                'adaboost': [
+                    {id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number'}
+                ],
+                'knn': newClassifier.params
+            }
+        }
+        console.log("newDefaultModelClassifierParams");
+        console.table(newDefaultModelClassifierParams);
+        setDefaultModelClassifierParams(newDefaultModelClassifierParams)
         setClassParams(newClassifier);
         setPrevClassParams(newClassifier);
-    })
+    });
 
     useEventBus('ImageLoaded', () => {
         setPrevFeatParams(null);
@@ -442,7 +527,8 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     return (
         <ModuleCard name="Superpixel Segmentation" disabled={disabled}
                     onApply={onApply} onPreview={onPreview} onOther={onPreprocess}
-                    disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed} disabledOther={hasPreprocessed}
+                    disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed}
+                    disabledOther={hasPreprocessed}
                     OtherName="Preprocess">
 
             <ModuleCardItem name="Superpixel Segmentation Parameters">
@@ -507,7 +593,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                                    onIonChange={(e) => {
                                        if (e.detail.value) {
                                            setClassParams({
-                                               ...classParams,
                                                classifier: e.detail.value,
                                                params: defaultModelClassifierParams[e.detail.value]
                                            });
