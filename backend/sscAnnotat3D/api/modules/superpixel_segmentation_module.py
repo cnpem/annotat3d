@@ -152,7 +152,6 @@ def create():
 
     try:
         feature_extraction_params = request.json['feature_extraction_params']
-        _debugger_print("feature_extraction_params", feature_extraction_params)
         classifier_params = request.json['classifier_params']
         classifier_values = request.json["classifier_values"]
         if (isinstance(classifier_values["value"], str)):
@@ -328,7 +327,14 @@ def load_classifier():
 
     module_repo.set_module('superpixel_segmentation_module', segm_module)
     data_repo.set_classification_model("model_complete", classifier)
-    _debugger_print("model_complete params", classifier["classifier_params"])
+    _debugger_print("classifier[\"feature_extraction_params\"]", classifier["feature_extraction_params"])
+    _debugger_print("superpixel_params", classifier["superpixel_params"])
+
+    # front_end_superpixel = {
+    #     "method": superpixel_params["method"],
+    #     "compactness": superpixel_params["compactness"],
+    #     "seedsSpacing": superpixel_params["seedsSpacing"],
+    # }
 
     params_front = _default_classifier_front(classifier["classifier_params"])
     front_end_classifier = {
@@ -336,4 +342,10 @@ def load_classifier():
         "params": params_front
     }
 
-    return jsonify(front_end_classifier)
+    front_end_payload = {
+        "superpixel_parameters": "",
+        "use_pixel_segmentation": classifier["superpixel_params"]["pixel_segmentation"],
+        "classifier_parameters": front_end_classifier
+    }
+
+    return jsonify(front_end_payload)

@@ -27,13 +27,19 @@ const SuperpixelModuleCard: React.FC = () => {
 
     useEventBus('LockComponents', (changeLockMenu) => {
         setLockMenu(changeLockMenu);
-    })
+    });
 
     useEventBus('recalcSuperpixel', (recalc) => {
         if (recalc) {
             onApply();
             dispatch('recalcSuperpixel', false);
         }
+    });
+
+    useEventBus("setSuperpixelParams", (superpixel: SuperpixelState) => {
+        console.log("superpixel dispatch");
+        console.table(superpixel);
+        setSuperpixelParams(superpixel);
     })
 
     function onApply() {
@@ -42,7 +48,8 @@ const SuperpixelModuleCard: React.FC = () => {
         const params = {
             superpixel_type: superpixelParams.method,
             seed_spacing: superpixelParams.seedsSpacing,
-            compactness: superpixelParams.compactness
+            compactness: superpixelParams.compactness,
+            use_pixel_segmentation: false
         };
         sfetch('POST', '/superpixel', JSON.stringify(params))
         .then(() => {

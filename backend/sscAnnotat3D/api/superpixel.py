@@ -13,7 +13,6 @@ app = Blueprint('superpixel', __name__)
 @app.route('/superpixel', methods=['POST', 'GET'])
 @cross_origin()
 def superpixel():
-
     img = data_repo.get_image(key='image')
 
     img_superpixel, num_superpixels = superpixels.superpixel_extraction(
@@ -23,6 +22,10 @@ def superpixel():
         compactness=request.json['compactness'])
 
     data_repo.set_image(key='superpixel', data=img_superpixel)
+    data_repo.set_superpixel_state("compactness", compactness=request.json['compactness'])
+    data_repo.set_superpixel_state("seedsSpacing", compactness=request.json['seedsSpacing'])
+    data_repo.set_superpixel_state("method", compactness=request.json['superpixel_type'])
+    data_repo.set_superpixel_state("use_pixel_segmentation", compactness=request.json['use_pixel_segmentation'])
 
     return "success", 200
 
@@ -30,7 +33,6 @@ def superpixel():
 @app.route('/get_superpixel_slice', methods=['POST', 'GET'])
 @cross_origin()
 def get_superpixel_slice():
-
     img_superpixels = data_repo.get_image('superpixel')
 
     if img_superpixels is None:
@@ -44,13 +46,8 @@ def get_superpixel_slice():
     slice_superpixels = superpixels.superpixel_slice_borders(
         slice_superpixels)
 
-    # print(np.mean(slice_superpixels), np.std(slice_superpixels),
-          # slice_superpixels.shape)
-
     compressed_slice_superpixels = zlib.compress(
         utils.toNpyBytes(slice_superpixels))
 
     return send_file(io.BytesIO(compressed_slice_superpixels),
                      "application/gzip")
-
-

@@ -60,6 +60,42 @@ dict that contains the classifier information
 """
 __model_complete = dict()
 
+"""
+dict that holds the superpixel_type, seed_spacing and compactness used as the user choosed
+"""
+__superpixel_state = {
+    "compactness": 1000,
+    "seedsSpacing": 4,
+    "method": "waterpixels",
+    "use_pixel_segmentation": False
+}
+
+
+def set_superpixel_state(key: str = "", data: any = None):
+    """
+    Setter function for superpixel_state using a key and a data
+
+    Args:
+        key (str): key for the data
+        data (any): data using a key as reference. This data can be a str or int
+
+    Returns:
+        None
+
+    """
+    __superpixel_state[key] = data
+
+
+def get_superpixel_state():
+    """
+    Getter function for superpixel_state
+
+    Returns:
+        (dict): returns a dict that contains the superpixel type, seed_spacing and compactness
+
+    """
+    return __superpixel_state
+
 
 def set_inference_info(key='image-0', data: dict = None):
     """

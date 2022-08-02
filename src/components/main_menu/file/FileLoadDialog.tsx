@@ -48,6 +48,18 @@ interface ClassifierParams {
     params: ModelClassifierParams[];
 }
 
+interface SuperpixelState {
+    compactness: number;
+    seedsSpacing: number;
+    method: string;
+}
+
+interface BackEndLoadClassifier {
+    superpixel_parameters: SuperpixelState,
+    use_pixel_segmentation: boolean,
+    classifier_parameters: ClassifierParams
+}
+
 /**
  * Load Image dialog
  * @param {string} name - Name of the submenu to open this window
@@ -185,16 +197,19 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         console.table(backendPayload);
 
         await sfetch("POST", "/load_classifier", JSON.stringify(backendPayload), "json")
-            .then((classifier: ClassifierParams) => {
+            .then((frontPayload: BackEndLoadClassifier) => {
                 msgReturned = `${pathFiles.classificationPath} loaded as .model`;
                 // informs canvas that the superpixel image was deleted
                 dispatch('superpixelChanged', {});
+
                 // informs about annotation updates in the backend
                 // deactivates crop preview mode on canvas
                 dispatch('annotationChanged', null);
 
                 // Sets the classifier parameters
-                dispatch("SetNewClassParams", classifier);
+                dispatch("setNewClassParams", frontPayload.classifier_parameters);
+
+                dispatch("setSuperpixelParams", frontPayload.superpixel_parameters);
             }).catch((error: ErrorInterface) => {
                 msgReturned = error.error_msg;
                 isError = true;

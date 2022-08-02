@@ -244,7 +244,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         setPrevClassParams(null);
     });
 
-    useEventBus("SetNewClassParams", (newClassifier: ClassifierParams) => {
+    useEventBus("setNewClassParams", (newClassifier: ClassifierParams) => {
         let newDefaultModelClassifierParams: Record<string, ModelClassifierParams[]>;
         if (newClassifier.classifier === "rf") {
             newDefaultModelClassifierParams = {
@@ -327,9 +327,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 'knn': newClassifier.params
             }
         }
-        console.log("newDefaultModelClassifierParams");
-        console.table(newDefaultModelClassifierParams);
-        setDefaultModelClassifierParams(newDefaultModelClassifierParams)
+        setDefaultModelClassifierParams(newDefaultModelClassifierParams);
         setClassParams(newClassifier);
         setPrevClassParams(newClassifier);
     });
