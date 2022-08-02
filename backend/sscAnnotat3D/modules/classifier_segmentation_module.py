@@ -426,6 +426,11 @@ class ClassifierSegmentationModule(SegmentationModule):
         logging.debug('\n\n***Classifier type: {}'.format(type(self._model)))
         logging.debug('Changing classifier to {}'.format(classifier.upper()))
 
+    def _debugger_print(self, msg: str, payload: any):
+        print("\n----------------------------------------------------------")
+        print("{} : {}".format(msg, payload))
+        print("-------------------------------------------------------------\n")
+
     def save_classifier(self, path):
         labels = np.unique(self._training_labels)
         model_complete = {
@@ -438,6 +443,8 @@ class ClassifierSegmentationModule(SegmentationModule):
             'feat_selector': self._feat_selector,
             'feat_scaler': self._feat_scaler
         }
+
+        self._debugger_print("model_complete", model_complete)
 
         # joblib.dump(model_complete,  path)
 
@@ -459,12 +466,11 @@ class ClassifierSegmentationModule(SegmentationModule):
     def load_classifier(self, path):
 
         try:
-            # model_complete = joblib.load(path)
 
-            # IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
-            # not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
-            # data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
-            # besides being far more critical than classifier loading/saving.
+            """IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
+            not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
+            data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
+            besides being far more critical than classifier loading/saving."""
             with open(path, 'rb') as f:
                 model_complete = pickle.load(f)
 
@@ -473,21 +479,21 @@ class ClassifierSegmentationModule(SegmentationModule):
             error_msg = 'Invalid classifier file! Unable to load classification model! Error: %s.\n\n' % str(e)
             error_msg += ('IMPORTANT NOTE: since Annotat3D version 0.3.7, classifiers saved with previous versions '
                           'of the software are no longer fully supported and may fail to load.')
-            raise Exception(error_msg)
+            return False, error_msg, {}
 
         logging.debug('After deserializing classifier file')
 
         try:
             classifier_version = model_complete['version']
         except Exception as e:
-            raise Exception('Invalid classifier file! Unable to load classification model! Error: %s' % str(e))
+            return False, 'Invalid classifier file! Unable to load classification model! Error: %s' % str(e), {}
         else:
             if classifier_version != self._classifier_version:
-                raise Exception('Invalid classifier file! Classifier version does not match current model!')
+                return False, 'Invalid classifier file! Classifier version does not match current model!', {}
         try:
             self._model = model_complete['classifier']
         except Exception as e:
-            raise Exception('Invalid classifier file! Unable to load classification model! Error: %s' % str(e))
+            return False, 'Invalid classifier file! Unable to load classification model! Error: %s' % str(e), {}
 
         try:
             self._superpixel_params = model_complete['superpixel_params']
@@ -495,31 +501,31 @@ class ClassifierSegmentationModule(SegmentationModule):
             self._classifier_params = model_complete['classifier_params']
 
         except Exception as e:
-            raise Exception('Invalid classifier file! Unable to load parameters! (Error: %s)' % str(e))
+            return False, 'Invalid classifier file! Unable to load parameters! (Error: %s)' % str(e), {}
 
         try:
             self._feat_selector = model_complete['feat_selector']
             self._default_feat_selector = self._feat_selector
         except:
-            raise Exception('Invalid classifier file! Unable to load feature selection model!')
+            return False, 'Invalid classifier file! Unable to load feature selection model!', {}
 
         try:
             self._feat_scaler = model_complete['feat_scaler']
             self._default_feat_scaler = self._feat_scaler
         except:
-            raise Exception('Invalid classifier file! Unable to load feature scaling method')
+            return False, 'Invalid classifier file! Unable to load feature scaling method', {}
 
         try:
             labels = model_complete['labels']
         except:
-            raise Exception('Invalid classifier file! Unable to load labels')
+            return False, 'Invalid classifier file! Unable to load labels', {}
 
         classifier = self._classifier_params['classifier_type']
 
         self._available_classifiers[classifier] = self._model
 
         if classifier not in self._available_classifiers:
-            raise Exception('Invalid classifier type ' + classifier)
+            return False, 'Invalid classifier type ' + classifier, {}
 
         self._flag_classifier_loaded = True
 
@@ -532,7 +538,22 @@ class ClassifierSegmentationModule(SegmentationModule):
                             feature_extraction_params=str(self._feature_extraction_params),
                             classifier_params=str(self._classifier_params),
                             superpixel_params=str(self._superpixel_params))
-        return True
+
+        labels = np.unique(self._training_labels)
+        model_complete = {
+            'version': self._classifier_version,
+            'labels': labels,
+            'classifier_params': self._classifier_params,
+            'superpixel_params': self._superpixel_params,
+            'feature_extraction_params': self._feature_extraction_params,
+            'classifier': self._model,
+            'feat_selector': self._feat_selector,
+            'feat_scaler': self._feat_scaler
+        }
+
+        self._debugger_print("model_complete loaded", model_complete)
+
+        return True, "", model_complete
 
     def _load_training_data_v1_1(self, training_data):
         version = training_data['version']
@@ -540,7 +561,7 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         if version != '1.1':
             raise 'This seems to be an older version of training data file (file version: %s, current version %s). Superpixel estimation and classification parameters were not stored in the file. Please set them according to the original specifications, otherwise classification results may differ.' % (
-            version, newest_version)
+                version, newest_version)
             return False
 
         try:

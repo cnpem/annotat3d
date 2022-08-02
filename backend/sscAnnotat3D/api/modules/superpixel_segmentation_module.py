@@ -318,31 +318,17 @@ def load_classifier():
     except Exception as e:
         return handle_exception(str(e))
 
-    try:
-        """IMPORTANT NOTE (This notes is from ssc-Annotat3D-Legacy):
-
-        since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
-        not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
-        data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
-        besides being far more critical than classifier loading/saving."""
-        with open(path, 'rb') as f:
-            classifier = pickle.load(f)
-    except Exception as e:
-        f.close()
-        return handle_exception("Unable to load classification model! Error: {}".format(str(e)))
-
-    _debugger_print("loaded classifier", classifier)
-    logging.debug('Classifier loaded successfully')
     img = data_repo.get_image('image')
     img_superpixel = data_repo.get_image('superpixel')
     segm_module = SuperpixelSegmentationModule(img, img_superpixel)
-    segm_module.load_classifier(path)
-    module_repo.set_module('superpixel_segmentation_module', segm_module)
+    resp, msg, classifier = segm_module.load_classifier(path)
 
-    _debugger_print("superpixel_params", classifier["superpixel_params"])
-    _debugger_print("feature_extraction_params", classifier["feature_extraction_params"])
-    _debugger_print("selected_features", classifier["feature_extraction_params"]["selected_features"])
-    _debugger_print("selected_features type", type(classifier["feature_extraction_params"]["selected_features"][0]))
+    if (not resp):
+        return handle_exception(msg)
+
+    module_repo.set_module('superpixel_segmentation_module', segm_module)
+    data_repo.set_classification_model("model_complete", classifier)
+    _debugger_print("model_complete params", classifier["classifier_params"])
 
     params_front = _default_classifier_front(classifier["classifier_params"])
     front_end_classifier = {
