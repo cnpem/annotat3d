@@ -980,60 +980,10 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         return superpixel_features_dict
 
     # TODO : don't forget to document this function
-    def load_classifier(self, model_complete):
-        try:
-            self._superpixel_params = model_complete['superpixel_params']
-            self._feature_extraction_params = model_complete['feature_extraction_params']
-            self._classifier_params = model_complete['classifier_params']
+    def load_classifier(self, path: str = ""):
+        resp, msg, model_complete = ClassifierSegmentationModule.load_classifier(self, path)
+        return resp, msg, model_complete
 
-        except Exception as e:
-            print("\n====================================================")
-            print('Invalid classifier file! Unable to load parameters! (Error: {})'.format(str(e)))
-            print("\n====================================================")
-            return 'Invalid classifier file! Unable to load parameters! (Error: {})'.format(str(e))
-        try:
-            self._feat_selector = model_complete['feat_selector']
-            self._default_feat_selector = self._feat_selector
-        except:
-            print("\n====================================================")
-            print('Invalid classifier file! Unable to load feature selection model!')
-            print("\n====================================================")
-            return 'Invalid classifier file! Unable to load feature selection model!'
-
-        try:
-            self._feat_scaler = model_complete['feat_scaler']
-            self._default_feat_scaler = self._feat_scaler
-        except:
-            print("\n====================================================")
-            print('Invalid classifier file! Unable to load feature scaling method')
-            print("\n====================================================")
-            return 'Invalid classifier file! Unable to load feature scaling method'
-
-        try:
-            labels = model_complete['labels']
-        except:
-            print("\n====================================================")
-            print('Invalid classifier file! Unable to load labels')
-            print("\n====================================================")
-            return 'Invalid classifier file! Unable to load labels'
-
-        classifier = self._classifier_params['classifier_type']
-
-        self._available_classifiers[classifier] = self._model
-
-        if classifier not in self._available_classifiers:
-            raise Exception('Invalid classifier type ' + classifier)
-
-        self._flag_classifier_loaded = True
-
-        if self._parent is not None:
-            self._parent.include_labels(labels)
-
-        logging.debug('Classifier loaded successfully')
-
-        functions.log_usage(op_type='load_classifier',
-                            feature_extraction_params=str(self._feature_extraction_params),
-                            classifier_params=str(self._classifier_params),
-                            superpixel_params=str(self._superpixel_params))
-
-        return ""
+    def save_classifier(self, path: str = ""):
+        resp, msg, model_complete = ClassifierSegmentationModule.save_classifier(self, path)
+        return resp, msg, model_complete

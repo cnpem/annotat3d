@@ -9,7 +9,6 @@ from werkzeug.exceptions import BadRequest
 from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmentationModule
-# from sscAnnotat3D.modules.classifier_segmentation_module import ClassifierSegmentationModule
 from sscPySpin import feature_extraction as spin_feat_extraction
 
 # TODO : We need to template sscIO for other superpixel types
@@ -278,22 +277,7 @@ def execute():
 
     data_repo.set_image('label', label)
 
-    _debugger_print("segm_module._feature_extraction_params", segm_module._feature_extraction_params)
-    _debugger_print("segm_module._classifier_params", segm_module._classifier_params)
-    model_complete = {
-        'version': segm_module._classifier_version,
-        'labels': np.unique(label),
-        'classifier_params': segm_module._classifier_params,
-        'superpixel_params': segm_module._superpixel_params,
-        'feature_extraction_params': segm_module._feature_extraction_params,
-        'classifier': segm_module._model,
-        'feat_selector': segm_module._feat_selector,
-        'feat_scaler': segm_module._feat_scaler
-    }
-    _debugger_print("model_complete", model_complete)
-    data_repo.set_classification_model("model_complete", model_complete)
-
-    return "success", 200
+    return jsonify("success")
 
 
 @app.route('/save_classifier', methods=['POST'])
@@ -306,27 +290,21 @@ def save_classifier():
         return handle_exception(str(e))
 
     try:
-        model_complete = data_repo.get_classification_model("model_complete")
-
+        segm_module = module_repo.get_module(key='superpixel_segmentation_module')
     except Exception as e:
         return handle_exception(str(e))
 
-    try:
-        """IMPORTANT NOTE (This notes is from ssc-Annotat3D-Legacy):
-        
-        since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
-        not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
-        data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
-        besides being far more critical than classifier loading/saving."""
-        with open(path, 'wb') as f:
-            pickle.dump(model_complete, f)
-    except Exception as e:
-        f.close()
-        return handle_exception("Unable to save classification model! Error: {}".format(str(e)))
-    else:
-        logging.debug('Classifier saved successfully')
+    if (segm_module is None):
+        return handle_exception("Please, load a classifier first !")
 
-    return jsonify("success")
+    resp, msg, model_complete = segm_module.save_classifier(path)
+
+    if (not resp):
+        return handle_exception(msg)
+
+    data_repo.set_classification_model("model_complete", model_complete)
+
+    return jsonify("sucsses")
 
 
 @app.route('/load_classifier', methods=['POST'])
@@ -358,7 +336,7 @@ def load_classifier():
     img = data_repo.get_image('image')
     img_superpixel = data_repo.get_image('superpixel')
     segm_module = SuperpixelSegmentationModule(img, img_superpixel)
-    segm_module.load_classifier(classifier)
+    segm_module.load_classifier(path)
     module_repo.set_module('superpixel_segmentation_module', segm_module)
 
     _debugger_print("superpixel_params", classifier["superpixel_params"])

@@ -39,6 +39,7 @@ from sklearn.utils import assert_all_finite, parallel_backend
 from .. import aux_functions as functions
 from .. import utils
 from .segmentation_module import SegmentationModule
+
 # from .widgets_parameters import SuperpixelSegmentationParamWidget
 
 __rapids_support__ = utils.rapids_support()
@@ -49,18 +50,18 @@ if __rapids_support__:
     from cuml import ensemble as cuensemble
     from cuml import svm as cusvm
 
-__svc_params__ = {'C': [10**i for i in range(-5, 6)]}
-__rfc_params__ = {'n_estimators': [10**i for i in range(1, 3)]}
+__svc_params__ = {'C': [10 ** i for i in range(-5, 6)]}
+__rfc_params__ = {'n_estimators': [10 ** i for i in range(1, 3)]}
 __mlp_params__ = {
-    'hidden_layer_sizes': [(100, ), (
+    'hidden_layer_sizes': [(100,), (
         50,
         10,
     ), (30, 20, 10)]
 }
 __knn_params__ = {'n_neighbors': [1, 3, 5, 7]}
-__adaboost_params__ = {'n_estimators': [10**i for i in range(1, 3)]}
+__adaboost_params__ = {'n_estimators': [10 ** i for i in range(1, 3)]}
 
-__max_mem_usage__ = int(512 * 1024**3)
+__max_mem_usage__ = int(512 * 1024 ** 3)
 __max_available_mem_usage_percentage__ = 0.8
 
 
@@ -155,13 +156,13 @@ class ClassifierSegmentationModule(SegmentationModule):
                              spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_GAUSS,
                              spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_DIFF_OF_GAUSS,
                              spin_feat_extraction.SPINFilters.MEMBRANE_PROJECTIONS)
-        selected_supervoxel_feat_pooling = (spin_feat_extraction.SPINSupervoxelPooling.MEAN, )
+        selected_supervoxel_feat_pooling = (spin_feat_extraction.SPINSupervoxelPooling.MEAN,)
 
         default_waterpixels_compactness = 10.0 if self._image.dtype == 'uint8' else 10000.0
         default_n_estimators = 200
         default_svm_C = 1.0
         default_grid_search = False
-        default_mlp_hidden = (100, )
+        default_mlp_hidden = (100,)
         default_knn_k = 1
 
         self._superpixel_params = {
@@ -265,7 +266,7 @@ class ClassifierSegmentationModule(SegmentationModule):
     def _extract_features_for_training(self, annotations, features, **kwargs):
         pass
 
-    #does not implement load label capability
+    # does not implement load label capability
     def load_label(self, label):
         pass
 
@@ -321,7 +322,7 @@ class ClassifierSegmentationModule(SegmentationModule):
                                                                           self._training_features,
                                                                           self._feat_scaler.mean_,
                                                                           self._feat_scaler.scale_)
-                    #self._training_features = self._feat_scaler.fit_transform(self._training_features_raw)
+                    # self._training_features = self._feat_scaler.fit_transform(self._training_features_raw)
                     logging.debug('training labels raw: {}'.format(self._training_labels_raw))
                     self._training_labels = np.array(self._training_labels_raw)
             send = time.time()
@@ -449,11 +450,11 @@ class ClassifierSegmentationModule(SegmentationModule):
                 pickle.dump(model_complete, f)
         except Exception as e:
             f.close()
-            raise Exception('Unable to save classification model! Error: %s' % str(e))
+            return False, 'Unable to save classification model! Error: %s' % str(e), {}
         else:
             logging.debug('Classifier saved successfully')
 
-        return True
+        return True, "", model_complete
 
     def load_classifier(self, path):
 
@@ -538,7 +539,8 @@ class ClassifierSegmentationModule(SegmentationModule):
         newest_version = self._training_data_version
 
         if version != '1.1':
-            raise 'This seems to be an older version of training data file (file version: %s, current version %s). Superpixel estimation and classification parameters were not stored in the file. Please set them according to the original specifications, otherwise classification results may differ.' % (version, newest_version)
+            raise 'This seems to be an older version of training data file (file version: %s, current version %s). Superpixel estimation and classification parameters were not stored in the file. Please set them according to the original specifications, otherwise classification results may differ.' % (
+            version, newest_version)
             return False
 
         try:
@@ -627,7 +629,6 @@ class ClassifierSegmentationModule(SegmentationModule):
         self._training_labels = []
         self._training_labels_raw = []
 
-
         if len(self._loaded_training_superpixel_features) > 0 and force_reset_loaded_data:
             self._loaded_training_superpixel_features = []
             self._loaded_training_superpixel_labels = []
@@ -698,8 +699,9 @@ class ClassifierSegmentationModule(SegmentationModule):
 
     def save_training_data(self, path):
         if not (
-            (len(self._loaded_training_superpixel_labels) != 0 and len(self._loaded_training_superpixel_labels) != 0) or
-            (len(self._training_labels_raw) != 0 and len(self._training_features_raw) != 0)):
+                (len(self._loaded_training_superpixel_labels) != 0 and len(
+                    self._loaded_training_superpixel_labels) != 0) or
+                (len(self._training_labels_raw) != 0 and len(self._training_features_raw) != 0)):
             raise Exception('Please train the classifier before trying to save training data')
         # Updating training data with loaded data for saving
         labels = np.array([*self._training_labels_raw, *self._loaded_training_superpixel_labels])
@@ -880,7 +882,7 @@ class ClassifierSegmentationModule(SegmentationModule):
         return params
 
     # def get_classifier_parameters_widget(self, window):
-        # return SuperpixelSegmentationParamWidget(window)
+    # return SuperpixelSegmentationParamWidget(window)
 
     def get_classifier(self):
         return self._classifier_params['classifier_type']
@@ -1008,7 +1010,7 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         if _annotations is not None and _classif_params is not None:
             if _classif_params['image_info']['shape'] == self._image.shape and _classif_params['image_info'][
-                    'dtype'] == self._image.dtype:
+                'dtype'] == self._image.dtype:
                 valid_data = 2
             else:
                 valid_data = 1
