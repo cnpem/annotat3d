@@ -333,11 +333,17 @@ def load_classifier():
     _debugger_print("classifier[\"feature_extraction_params\"]", classifier["feature_extraction_params"])
     _debugger_print("superpixel_params", classifier["superpixel_params"])
 
-    # front_end_superpixel = {
-    #     "method": superpixel_params["method"],
-    #     "compactness": superpixel_params["compactness"],
-    #     "seedsSpacing": superpixel_params["seedsSpacing"],
-    # }
+
+    try:
+        superpixel_state = data_repo.get_superpixel_state()
+    except:
+        return handle_exception("Unable to get superpixel_state")
+
+    front_end_superpixel = {
+        "method": superpixel_state["method"],
+        "compactness": superpixel_state["compactness"],
+        "seedsSpacing": superpixel_state["seedsSpacing"],
+    }
 
     params_front = _default_classifier_front(classifier["classifier_params"])
     front_end_classifier = {
@@ -346,7 +352,7 @@ def load_classifier():
     }
 
     front_end_payload = {
-        "superpixel_parameters": "",
+        "superpixel_parameters": front_end_superpixel,
         "use_pixel_segmentation": classifier["superpixel_params"]["pixel_segmentation"],
         "classifier_parameters": front_end_classifier
     }

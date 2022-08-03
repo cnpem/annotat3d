@@ -209,7 +209,11 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 // Sets the classifier parameters
                 dispatch("setNewClassParams", frontPayload.classifier_parameters);
 
-                dispatch("setSuperpixelParams", frontPayload.superpixel_parameters);
+                if (frontPayload.use_pixel_segmentation) {
+                    // This function just dispatch to update the superpixel parameters if the user save to use the superpixel segmentation instead of pixel segmentation
+                    dispatch("setSuperpixelParams", frontPayload.superpixel_parameters);
+                }
+
             }).catch((error: ErrorInterface) => {
                 msgReturned = error.error_msg;
                 isError = true;
