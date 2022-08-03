@@ -984,6 +984,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         resp, msg, model_complete = ClassifierSegmentationModule.load_classifier(self, path)
         return resp, msg, model_complete
 
-    def save_classifier(self, path: str = "", superpixel_state: dict = None):
-        resp, msg, model_complete = ClassifierSegmentationModule.save_classifier(self, path, superpixel_state)
+    def save_classifier(self, path: str = "", superpixel_state: dict = None, feature_extraction_params: dict = None):
+        resp, msg, model_complete = ClassifierSegmentationModule.save_classifier(self, path, superpixel_state,
+                                                                                 feature_extraction_params)
         return resp, msg, model_complete

@@ -144,6 +144,8 @@ class ClassifierSegmentationModule(SegmentationModule):
                              spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_DIFF_OF_GAUSS,
                              spin_feat_extraction.SPINFilters.MEMBRANE_PROJECTIONS)
         selected_supervoxel_feat_pooling = (spin_feat_extraction.SPINSupervoxelPooling.MEAN,)
+        selected_features_front = ['fft_gauss', 'fft_dog', 'membrane_projections', 'none']
+        selected_supervoxel_feat_pooling_front = ['mean']
 
         default_waterpixels_compactness = 10.0 if self._image.dtype == 'uint8' else 10000.0
         default_n_estimators = 200
@@ -167,6 +169,13 @@ class ClassifierSegmentationModule(SegmentationModule):
             'selected_supervoxel_feat_pooling': selected_supervoxel_feat_pooling,
             'feat_selection_enabled': True,
             'feat_selection_clf_n_estimators': 50,
+            'feat_selection_method_threshold': 0.01
+        }
+        self._feature_extraction_params_front = {
+            'sigmas': [1, 2, 4, 8],
+            'selected_features': selected_features_front,
+            'selected_supervoxel_feat_pooling': selected_supervoxel_feat_pooling_front,
+            'feat_selection_enabled': True,
             'feat_selection_method_threshold': 0.01
         }
         self._classifier_params = {
@@ -417,9 +426,10 @@ class ClassifierSegmentationModule(SegmentationModule):
         print("\n----------------------------------------------------------")
         print("{} : {}".format(msg, payload))
         print("-------------------------------------------------------------\n")
-
-    def save_classifier(self, path: str = "", superpixel_state: dict = None):
+    # TODO : need to document this function later
+    def save_classifier(self, path: str = "", superpixel_state: dict = None, feature_extraction_params: dict = None):
         labels = np.unique(self._training_labels)
+        self._feature_extraction_params_front = feature_extraction_params
         self._feature_extraction_params["superpixel_type"] = superpixel_state["method"]
         self._feature_extraction_params["pixel_segmentation"] = superpixel_state["use_pixel_segmentation"]
         self._feature_extraction_params["waterpixels_compactness"] = float(superpixel_state["compactness"])
@@ -433,7 +443,8 @@ class ClassifierSegmentationModule(SegmentationModule):
             'feature_extraction_params': self._feature_extraction_params,
             'classifier': self._model,
             'feat_selector': self._feat_selector,
-            'feat_scaler': self._feat_scaler
+            'feat_scaler': self._feat_scaler,
+            'feature_extraction_params_front': self._feature_extraction_params_front
         }
 
         self._debugger_print("model_complete", model_complete)
@@ -441,10 +452,10 @@ class ClassifierSegmentationModule(SegmentationModule):
         # joblib.dump(model_complete,  path)
 
         try:
-            # IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
-            # not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
-            # data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
-            # besides being far more critical than classifier loading/saving.
+            """IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
+            not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
+            data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
+            besides being far more critical than classifier loading/saving."""
             with open(path, 'wb') as f:
                 pickle.dump(model_complete, f)
         except Exception as e:
@@ -540,7 +551,8 @@ class ClassifierSegmentationModule(SegmentationModule):
             'feature_extraction_params': self._feature_extraction_params,
             'classifier': self._model,
             'feat_selector': self._feat_selector,
-            'feat_scaler': self._feat_scaler
+            'feat_scaler': self._feat_scaler,
+            'feature_extraction_params_front': self._feature_extraction_params_front
         }
 
         self._debugger_print("model_complete loaded", model_complete)

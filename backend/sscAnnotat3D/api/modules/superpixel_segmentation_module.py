@@ -150,6 +150,10 @@ def create():
 
     try:
         feature_extraction_params = request.json['feature_extraction_params']
+        _debugger_print("feature_extraction_params", feature_extraction_params)
+        data_repo.set_feature_extraction_params(key="feature_extraction_params",
+                                                data=feature_extraction_params.copy())
+
         classifier_params = request.json['classifier_params']
         classifier_values = request.json["classifier_values"]
         if (isinstance(classifier_values["value"], str)):
@@ -299,14 +303,20 @@ def save_classifier():
     except:
         return handle_exception("Unable to get superpixel_state")
 
-    resp, msg, model_complete = segm_module.save_classifier(path, superpixel_state)
+    try:
+        feature_extraction_params = data_repo.get_feature_extraction_params("feature_extraction_params")
+        _debugger_print("feature_extraction_params on save", feature_extraction_params)
+    except Exception as e:
+        return handle_exception(str(e))
+
+    resp, msg, model_complete = segm_module.save_classifier(path, superpixel_state, feature_extraction_params)
 
     if (not resp):
         return handle_exception(msg)
 
     data_repo.set_classification_model("model_complete", model_complete)
 
-    return jsonify("sucsses")
+    return jsonify("successes")
 
 
 @app.route('/load_classifier', methods=['POST'])
@@ -333,11 +343,16 @@ def load_classifier():
     _debugger_print("classifier[\"feature_extraction_params\"]", classifier["feature_extraction_params"])
     _debugger_print("superpixel_params", classifier["superpixel_params"])
 
-
     try:
         superpixel_state = data_repo.get_superpixel_state()
     except:
         return handle_exception("Unable to get superpixel_state")
+
+    try:
+        feature_extraction_params = data_repo.get_feature_extraction_params()
+        _debugger_print("feature_extraction_params", feature_extraction_params)
+    except Exception:
+        return handle_exception("Unable to get feature_extraction_params")
 
     front_end_superpixel = {
         "method": superpixel_state["method"],

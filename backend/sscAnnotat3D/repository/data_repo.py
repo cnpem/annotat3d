@@ -61,7 +61,7 @@ dict that contains the classifier information
 __model_complete = dict()
 
 """
-dict that holds the superpixel_type, seed_spacing and compactness used as the user choosed
+dict that holds the superpixel_type, seed_spacing and compactness chosen by the user
 """
 __superpixel_state = {
     "compactness": 1000,
@@ -69,6 +69,37 @@ __superpixel_state = {
     "method": "waterpixels",
     "use_pixel_segmentation": False
 }
+
+"""
+dict that holds the feature_extraction_params chosen by the user
+"""
+__feature_extraction_params = dict()
+
+
+def set_feature_extraction_params(key: str = "", data: dict = None):
+    """
+
+    Args:
+        key:
+        data:
+
+    Returns:
+
+    """
+    if (data is not None):
+        __feature_extraction_params[key] = data
+
+
+def get_feature_extraction_params(key: str = ""):
+    """
+
+    Args:
+        key:
+
+    Returns:
+
+    """
+    return __feature_extraction_params[key]
 
 
 def set_superpixel_state(key: str = "", data: any = None):
