@@ -1,11 +1,11 @@
-from flask import Blueprint, request, send_file
 import io
 import zlib
 
+from flask import Blueprint, request, send_file, jsonify
+from flask_cors import cross_origin
+
 from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import superpixels, utils
-
-from flask_cors import cross_origin
 
 app = Blueprint('superpixel', __name__)
 
@@ -22,12 +22,12 @@ def superpixel():
         compactness=request.json['compactness'])
 
     data_repo.set_image(key='superpixel', data=img_superpixel)
-    data_repo.set_superpixel_state("compactness", compactness=request.json['compactness'])
-    data_repo.set_superpixel_state("seedsSpacing", compactness=request.json['seedsSpacing'])
-    data_repo.set_superpixel_state("method", compactness=request.json['superpixel_type'])
-    data_repo.set_superpixel_state("use_pixel_segmentation", compactness=request.json['use_pixel_segmentation'])
+    data_repo.set_superpixel_state("compactness", request.json['compactness'])
+    data_repo.set_superpixel_state("seedsSpacing", request.json['seed_spacing'])
+    data_repo.set_superpixel_state("method", request.json['superpixel_type'])
+    data_repo.set_superpixel_state("use_pixel_segmentation", request.json['use_pixel_segmentation'])
 
-    return "success", 200
+    return jsonify("success")
 
 
 @app.route('/get_superpixel_slice', methods=['POST', 'GET'])

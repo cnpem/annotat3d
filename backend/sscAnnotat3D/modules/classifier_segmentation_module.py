@@ -6,47 +6,34 @@
 # -----------------------------------------------------------------------------
 # vispy: gallery 2
 
-import gc
-import json
 import logging
 import math
-import multiprocessing as mp
 import os.path
 import pickle
 import shutil
 import time
-from abc import ABC, abstractmethod
-from operator import itemgetter
-from pathlib import Path
 
 import joblib
-# from sklearn.utils import parallel_backend # future fix for sklearn 0.20.x
 import numpy as np
 import psutil
-import scipy as sp
 import sentry_sdk
 import sscPySpin.classification as spin_class
 import sscPySpin.feature_extraction as spin_feat_extraction
-import sscPySpin.image as spin_img
-import sscPySpin.segmentation as spin_seg
 from sklearn import ensemble, model_selection, neighbors, neural_network, svm
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils import assert_all_finite, parallel_backend
+from sklearn.utils import parallel_backend
+from abc import abstractmethod
+from pathlib import Path
 
 from .. import aux_functions as functions
 from .. import utils
 from .segmentation_module import SegmentationModule
 
-# from .widgets_parameters import SuperpixelSegmentationParamWidget
-
 __rapids_support__ = utils.rapids_support()
 
 if __rapids_support__:
-    import cuml
-    # from cuml.dask import ensemble as cuensemble
     from cuml import ensemble as cuensemble
     from cuml import svm as cusvm
 
@@ -431,8 +418,13 @@ class ClassifierSegmentationModule(SegmentationModule):
         print("{} : {}".format(msg, payload))
         print("-------------------------------------------------------------\n")
 
-    def save_classifier(self, path):
+    def save_classifier(self, path: str = "", superpixel_state: dict = None):
         labels = np.unique(self._training_labels)
+        self._feature_extraction_params["superpixel_type"] = superpixel_state["method"]
+        self._feature_extraction_params["pixel_segmentation"] = superpixel_state["use_pixel_segmentation"]
+        self._feature_extraction_params["waterpixels_compactness"] = float(superpixel_state["compactness"])
+        self._feature_extraction_params["waterpixels_seed_spacing"] = superpixel_state["seedsSpacing"]
+
         model_complete = {
             'version': self._classifier_version,
             'labels': labels,

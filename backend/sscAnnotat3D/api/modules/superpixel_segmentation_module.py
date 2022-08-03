@@ -1,9 +1,7 @@
-import pickle
 import numpy as np
-import logging
 
-from flask_cors import cross_origin
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin
 from werkzeug.exceptions import BadRequest
 
 from sscAnnotat3D import utils
@@ -296,7 +294,12 @@ def save_classifier():
     if (segm_module is None):
         return handle_exception("Please, load a classifier first !")
 
-    resp, msg, model_complete = segm_module.save_classifier(path)
+    try:
+        superpixel_state = data_repo.get_superpixel_state()
+    except:
+        return handle_exception("Unable to get superpixel_state")
+
+    resp, msg, model_complete = segm_module.save_classifier(path, superpixel_state)
 
     if (not resp):
         return handle_exception(msg)
