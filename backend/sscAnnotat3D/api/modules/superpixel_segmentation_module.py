@@ -41,7 +41,119 @@ __default_classifier_params = {
     'adaboost_n_estimators': 200
 }
 
+__default_features_front = [
+    {
+        "active": False,
+        "id": 'fft_gauss',
+        "name": 'FFT Gauss',
+        "type": 'Smoothing',
+        "description": 'Filters structures (smoothing) of the specified gaussian filtering in fourier space. Promotes smoothing without worrying about edges.'
+    },
+    {
+        "active": False,
+        "id": 'average',
+        "name": 'Average',
+        "type": 'Smoothing',
+        "description": 'It is a method of "smoothing" images by reducing the amount of intensity variation inside a window (Noise removal)'
+    },
+    {
+        "active": False,
+        "id": 'median',
+        "name": 'Median',
+        "type": 'Smoothing',
+        "description": 'It makes the target pixel intensity equal to the median value in the running window (Noise removal)'
+    },
+    {
+        "active": False,
+        "id": 'sobel',
+        "name": 'Sobel',
+        "type": 'Edge detection',
+        "description": 'It creates an image emphasizing edges because it performs a 2-D spatial gradient measurement on an image and so emphasizes regions of high spatial frequency that correspond to edges.'
+    },
+    {
+        "active": False,
+        "id": 'fft_dog',
+        "name": 'FFT Difference Of Gaussians',
+        "type": 'Edge detection',
+        "description": 'Calculates two gaussian blur images from the original image and subtracts one from the other. It is used to detect edges in the image.'
+    },
+    {
+        "active": False,
+        "id": 'fft_gabor',
+        "name": 'FFT Gabor',
+        "type": 'Edge detection,Texture detection',
+        "description": 'It determines if there is any specific frequency content in the image in specific directions in a localized region around the point or region of analysis. In the spatial domain, it is a Gaussian kernel function modulated by a sinusoidal plane wave. It is one of the most suitable option for texture segmentation and boundary detection'
+    },
+    {
+        "active": False,
+        "id": 'variance',
+        "name": 'Variance',
+        "type": 'Texture detection',
+        "description": 'It is a statistical measure of the amount of variation inside the window. This determines how uniform or not that filtering window is (important for assessing homogeneity and texture)'
+    },
+    {
+        "active": False,
+        "id": 'lbp',
+        "name": 'Local Binary Pattern',
+        "type": 'Texture detection',
+        "description": 'It is a texture operator that tries to capture how are the neighborhoods allocated. It labels the pixels of an image by thresholding the neighborhood of each pixel and considers the result as a binary number.'
+    },
+    {
+        "active": False,
+        "id": 'membrane_projections',
+        "name": 'Membrane Projections',
+        "type": 'Membrane Detection',
+        "description": 'Enhances membrane-like structures of the image through directional filtering.'
+    },
+    {
+        "active": False,
+        "id": 'minimum',
+        "name": 'Minimum',
+        "type": 'Color Identification',
+        "description": 'It replaces the value of the pixel with the value of the darkest pixel inside the filtering window'
+    },
+    {
+        "active": False,
+        "id": 'maximum',
+        "name": 'Maximum',
+        "type": 'Color Identification',
+        "description": 'It replaces the value of the pixel with the value of the lightest pixel inside the filtering window'
+    },
+    {
+        "active": False,
+        "id": 'none',
+        "name": 'None (Original Image)',
+        "type": 'Identity',
+        "description": 'Used to guarantee the preservation of some characteristics of the original image.'
+    }
+]
 
+
+# TODO : Don't forget to document this function
+def _default_features_front(features: dict = None):
+    # This loop resets the dict to make for easily to create the front-end component
+    for default_feature_front in __default_features_front:
+        default_feature_front["active"] = False
+
+    for feature_name in features["selected_features"]:
+        exit_loop = False
+        i = 0
+        default_features_len = len(__default_features_front)
+        while (i < default_features_len and not exit_loop):
+            default_features = __default_features_front[i]
+
+            if (feature_name == default_features["id"]):
+                default_features["active"] = True
+                exit_loop = True
+
+            i += 1
+
+    for default_feature_front in __default_features_front:
+        if (default_feature_front["active"]):
+            _debugger_print("{} is activate".format(default_feature_front["id"]), default_feature_front)
+
+
+# TODO : Don't forget to document this function
 def _default_classifier_front(classifier_dict: dict = None):
     if (classifier_dict["classifier_type"] == "rf"):
         return [{
@@ -348,12 +460,6 @@ def load_classifier():
     except:
         return handle_exception("Unable to get superpixel_state")
 
-    try:
-        feature_extraction_params = data_repo.get_feature_extraction_params()
-        _debugger_print("feature_extraction_params", feature_extraction_params)
-    except Exception:
-        return handle_exception("Unable to get feature_extraction_params")
-
     front_end_superpixel = {
         "method": superpixel_state["method"],
         "compactness": superpixel_state["compactness"],
@@ -364,6 +470,16 @@ def load_classifier():
     front_end_classifier = {
         "classifier": classifier["classifier_params"]["classifier_type"],
         "params": params_front
+    }
+
+    chosen_features = classifier["feature_extraction_params_front"]
+    _default_features_front(chosen_features)
+
+    feature_extraction_params = {
+        "pooling": "",
+        "feats": __default_features_front,
+        "multiscale": "",
+        "thresholdSelection": ""
     }
 
     front_end_payload = {

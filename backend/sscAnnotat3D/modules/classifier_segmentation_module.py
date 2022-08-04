@@ -426,6 +426,7 @@ class ClassifierSegmentationModule(SegmentationModule):
         print("\n----------------------------------------------------------")
         print("{} : {}".format(msg, payload))
         print("-------------------------------------------------------------\n")
+
     # TODO : need to document this function later
     def save_classifier(self, path: str = "", superpixel_state: dict = None, feature_extraction_params: dict = None):
         labels = np.unique(self._training_labels)
@@ -534,6 +535,11 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         if self._parent is not None:
             self._parent.include_labels(labels)
+
+        try:
+            self._feature_extraction_params_front = model_complete["feature_extraction_params_front"]
+        except:
+            return False, "Invalid classifier file! Unable to load feature_extraction_params_front", {}
 
         logging.debug('Classifier loaded successfully')
 
