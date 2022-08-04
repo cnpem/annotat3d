@@ -518,7 +518,8 @@ def load_classifier():
         "pooling": __default_pooling,
         "feats": __default_features_front,
         "multiscale": chosen_features["sigmas"],
-        "thresholdSelection": chosen_features["feat_selection_method_threshold"]
+        "thresholdSelection": chosen_features["feat_selection_method_threshold"] if chosen_features[
+            "feat_selection_enabled"] else None
     }
 
     front_end_payload = {

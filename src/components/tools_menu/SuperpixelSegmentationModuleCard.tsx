@@ -197,6 +197,9 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         setPrevClassParams(null);
     });
 
+    // TODO : If the superpixel is strange, just do the following command
+    // 'feat_selection_enabled': featParams.thresholdSelection !== null,
+    // 'feat_selection_method_threshold': featParams.thresholdSelection
     function getModuleBackendParams() {
         const params = {
             classifier_params: {
@@ -215,7 +218,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 'selected_supervoxel_feat_pooling': featParams?.pooling
                     .filter(p => p.active)
                     .map(p => p.id),
-                'feat_selection_enabled': featParams.thresholdSelection !== null,
+                'feat_selection_enabled': featParams.thresholdSelection !== undefined,
                 'feat_selection_method_threshold': featParams.thresholdSelection
             }
         };
