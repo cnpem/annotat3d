@@ -5,12 +5,7 @@ import {dispatch, useEventBus} from '../../utils/eventbus';
 import {useStorageState} from 'react-storage-hooks';
 import LoadingComponent from "./LoadingComponent";
 import {useState} from "react";
-
-interface SuperpixelState {
-    compactness: number;
-    seedsSpacing: number;
-    method: string;
-}
+import {SuperpixelState} from "./SuperpixelSegInterface";
 
 const SuperpixelModuleCard: React.FC = () => {
 

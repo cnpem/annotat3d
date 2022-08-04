@@ -34,31 +34,7 @@ import {LabelInterface} from "../../tools_menu/label_table/LabelInterface";
 import LoadingComponent from "../../tools_menu/LoadingComponent";
 import {useStorageState} from "react-storage-hooks";
 import {dtype_type, dtypeList, img_operation, multiplesPath, QueueToast} from "./utils/FileLoadInterface";
-import {TextFieldTypes} from "@ionic/core";
-
-interface ModelClassifierParams {
-    id: string;
-    label: string;
-    value: any;
-    input: TextFieldTypes;
-}
-
-interface ClassifierParams {
-    classifier: string;
-    params: ModelClassifierParams[];
-}
-
-interface SuperpixelState {
-    compactness: number;
-    seedsSpacing: number;
-    method: string;
-}
-
-interface BackEndLoadClassifier {
-    superpixel_parameters: SuperpixelState,
-    use_pixel_segmentation: boolean,
-    classifier_parameters: ClassifierParams
-}
+import {BackEndLoadClassifier, FeatureParams} from "../../tools_menu/SuperpixelSegInterface";
 
 /**
  * Load Image dialog
@@ -195,7 +171,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         let msgReturned = "";
         let isError = false;
         console.table(backendPayload);
-
+        // TODO : need to make just one dispatch later here
         await sfetch("POST", "/load_classifier", JSON.stringify(backendPayload), "json")
             .then((frontPayload: BackEndLoadClassifier) => {
                 msgReturned = `${pathFiles.classificationPath} loaded as .model`;
@@ -207,12 +183,17 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 dispatch('annotationChanged', null);
 
                 // Sets the classifier parameters
-                dispatch("setNewClassParams", frontPayload.classifier_parameters);
+                dispatch("setNewClassParams", frontPayload);
 
-                if (frontPayload.use_pixel_segmentation) {
-                    // This function just dispatch to update the superpixel parameters if the user save to use the superpixel segmentation instead of pixel segmentation
-                    dispatch("setSuperpixelParams", frontPayload.superpixel_parameters);
-                }
+                //This function just dispatch to update the superpixel parameters if the user save to use the superpixel segmentation instead of pixel segmentation
+                // TODO : need to see why this function is not working
+                dispatch("setSuperpixelParams", frontPayload.superpixel_parameters);
+
+                // TODO : need to update this function to work with pixel segmentation menu
+                // if (frontPayload.use_pixel_segmentation) {
+                //     // This function just dispatch to update the superpixel parameters if the user save to use the superpixel segmentation instead of pixel segmentation
+                //     dispatch("setSuperpixelParams", frontPayload.superpixel_parameters);
+                // }
 
             }).catch((error: ErrorInterface) => {
                 msgReturned = error.error_msg;

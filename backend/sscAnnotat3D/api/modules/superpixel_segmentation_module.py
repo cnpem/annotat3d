@@ -485,7 +485,8 @@ def load_classifier():
     front_end_payload = {
         "superpixel_parameters": front_end_superpixel,
         "use_pixel_segmentation": classifier["superpixel_params"]["pixel_segmentation"],
-        "classifier_parameters": front_end_classifier
+        "classifier_parameters": front_end_classifier,
+        "feature_extraction_params": feature_extraction_params
     }
 
     return jsonify(front_end_payload)

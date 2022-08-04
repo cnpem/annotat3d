@@ -1,4 +1,3 @@
-import {TextFieldTypes} from '@ionic/core';
 import {
     IonItem,
     IonLabel,
@@ -25,157 +24,15 @@ import {useEventBus, dispatch} from '../../utils/eventbus';
 import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem} from './ModuleCard';
 import LoadingComponent from "./LoadingComponent";
-
-const classifiers = [
-    {id: 'rf', name: 'Random Forest'},
-    {id: 'svm', name: 'Linear SVM'},
-    {id: 'mlp', name: 'Multi Layer Perceptron'},
-    {id: 'knn', name: 'KNearest Neighbors'},
-    {id: 'adaboost', name: 'AdaBoost'}
-];
-
-const InitDefaultModelClassifierParams: Record<string, ModelClassifierParams[]> = {
-    'rf': [
-        {id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number'}
-    ],
-    'svm': [
-        {id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number'}
-    ],
-    'mlp': [
-        {id: 'mlp_hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text'}
-    ],
-    'adaboost': [
-        {id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number'}
-    ],
-    'knn': [
-        {id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number'}
-    ]
-}
-
-const defaultFeatures: Feature[] = [
-    {
-        active: true,
-        id: 'fft_gauss',
-        name: 'FFT Gauss',
-        type: 'Smoothing',
-        description: 'Filters structures (smoothing) of the specified gaussian filtering in fourier space. Promotes smoothing without worrying about edges.'
-    },
-    {
-        id: 'average',
-        name: 'Average',
-        type: 'Smoothing',
-        description: 'It is a method of "smoothing" images by reducing the amount of intensity variation inside a window (Noise removal)'
-    },
-    {
-        id: 'median',
-        name: 'Median',
-        type: 'Smoothing',
-        description: 'It makes the target pixel intensity equal to the median value in the running window (Noise removal)'
-    },
-    {
-        id: 'sobel',
-        name: 'Sobel',
-        type: 'Edge detection',
-        description: 'It creates an image emphasizing edges because it performs a 2-D spatial gradient measurement on an image and so emphasizes regions of high spatial frequency that correspond to edges.'
-    },
-    {
-        active: true,
-        id: 'fft_dog',
-        name: 'FFT Difference Of Gaussians',
-        type: 'Edge detection',
-        description: 'Calculates two gaussian blur images from the original image and subtracts one from the other. It is used to detect edges in the image.'
-    },
-    {
-        id: 'fft_gabor',
-        name: 'FFT Gabor',
-        type: 'Edge detection,Texture detection',
-        description: 'It determines if there is any specific frequency content in the image in specific directions in a localized region around the point or region of analysis. In the spatial domain, it is a Gaussian kernel function modulated by a sinusoidal plane wave. It is one of the most suitable option for texture segmentation and boundary detection'
-    },
-    {
-        id: 'variance',
-        name: 'Variance',
-        type: 'Texture detection',
-        description: 'It is a statistical measure of the amount of variation inside the window. This determines how uniform or not that filtering window is (important for assessing homogeneity and texture)'
-    },
-    {
-        id: 'lbp',
-        name: 'Local Binary Pattern',
-        type: 'Texture detection',
-        description: 'It is a texture operator that tries to capture how are the neighborhoods allocated. It labels the pixels of an image by thresholding the neighborhood of each pixel and considers the result as a binary number.'
-    },
-    {
-        active: true,
-        id: 'membrane_projections',
-        name: 'Membrane Projections',
-        type: 'Membrane Detection',
-        description: 'Enhances membrane-like structures of the image through directional filtering.'
-    },
-    {
-        id: 'minimum',
-        name: 'Minimum',
-        type: 'Color Identification',
-        description: 'It replaces the value of the pixel with the value of the darkest pixel inside the filtering window'
-    },
-    {
-        id: 'maximum',
-        name: 'Maximum',
-        type: 'Color Identification',
-        description: 'It replaces the value of the pixel with the value of the lightest pixel inside the filtering window'
-    },
-    {
-        active: true,
-        id: 'none',
-        name: 'None (Original Image)',
-        type: 'Identity',
-        description: 'Used to guarantee the preservation of some characteristics of the original image.'
-    }
-];
-
-interface ModelClassifierParams {
-    id: string;
-    label: string;
-    value: any;
-    input: TextFieldTypes;
-}
-
-const defaultMultiscale = [1, 2, 4, 8];
-
-const defaultPooling: Pooling[] = [
-    {id: 'min', name: 'Minimum', active: false},
-    {id: 'max', name: 'Maximum', active: false},
-    {id: 'mean', name: 'Mean', active: true}
-]
-
-interface Pooling {
-    id: string;
-    name: string;
-    active: boolean;
-}
-
-interface Feature {
-    id: string;
-    name: string;
-    type: string;
-    description: string;
-    active?: boolean;
-}
-
-interface Classifier {
-    id: string;
-    name: string;
-}
-
-interface ClassifierParams {
-    classifier: string;
-    params: ModelClassifierParams[];
-}
-
-interface FeatureParams {
-    pooling: Pooling[];
-    feats: Feature[];
-    multiscale: number[];
-    thresholdSelection?: number;
-}
+import {
+    BackEndLoadClassifier,
+    Classifier,
+    ClassifierParams, classifiers,
+    defaultFeatures,
+    defaultMultiscale,
+    defaultPooling, Feature,
+    FeatureParams, InitDefaultModelClassifierParams, ModelClassifierParams, Pooling
+} from "./SuperpixelSegInterface";
 
 const SuperpixelSegmentationModuleCard: React.FC = () => {
 
@@ -244,11 +101,12 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         setPrevClassParams(null);
     });
 
-    useEventBus("setNewClassParams", (newClassifier: ClassifierParams) => {
+    useEventBus("setNewClassParams", (newClassifier: BackEndLoadClassifier) => {
+        console.table(featParams.feats);
         let newDefaultModelClassifierParams: Record<string, ModelClassifierParams[]>;
-        if (newClassifier.classifier === "rf") {
+        if (newClassifier.classifier_parameters.classifier === "rf") {
             newDefaultModelClassifierParams = {
-                'rf': newClassifier.params,
+                'rf': newClassifier.classifier_parameters.params,
                 'svm': [
                     {id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number'}
                 ],
@@ -262,12 +120,12 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                     {id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number'}
                 ]
             }
-        } else if (newClassifier.classifier === "svm") {
+        } else if (newClassifier.classifier_parameters.classifier === "svm") {
             newDefaultModelClassifierParams = {
                 'rf': [
                     {id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number'}
                 ],
-                'svm': newClassifier.params,
+                'svm': newClassifier.classifier_parameters.params,
                 'mlp': [
                     {id: 'mlp_hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text'}
                 ],
@@ -278,7 +136,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                     {id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number'}
                 ]
             }
-        } else if (newClassifier.classifier === "mlp") {
+        } else if (newClassifier.classifier_parameters.classifier === "mlp") {
             newDefaultModelClassifierParams = {
                 'rf': [
                     {id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number'}
@@ -286,7 +144,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 'svm': [
                     {id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number'}
                 ],
-                'mlp': newClassifier.params,
+                'mlp': newClassifier.classifier_parameters.params,
                 'adaboost': [
                     {id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number'}
                 ],
@@ -294,7 +152,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                     {id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number'}
                 ]
             }
-        } else if (newClassifier.classifier === "adaboost") {
+        } else if (newClassifier.classifier_parameters.classifier === "adaboost") {
             newDefaultModelClassifierParams = {
                 'rf': [
                     {id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number'}
@@ -305,7 +163,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 'mlp': [
                     {id: 'mlp_hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text'}
                 ],
-                'adaboost': newClassifier.params,
+                'adaboost': newClassifier.classifier_parameters.params,
                 'knn': [
                     {id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number'}
                 ]
@@ -324,12 +182,12 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 'adaboost': [
                     {id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number'}
                 ],
-                'knn': newClassifier.params
+                'knn': newClassifier.classifier_parameters.params
             }
         }
         setDefaultModelClassifierParams(newDefaultModelClassifierParams);
-        setClassParams(newClassifier);
-        setPrevClassParams(newClassifier);
+        setClassParams(newClassifier.classifier_parameters);
+        setPrevClassParams(newClassifier.classifier_parameters);
     });
 
     useEventBus('ImageLoaded', () => {
