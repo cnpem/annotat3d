@@ -9,7 +9,7 @@ import {SuperpixelState} from "./SuperpixelSegInterface";
 
 const SuperpixelModuleCard: React.FC = () => {
 
-    const [superpixelParams, setSuperpixelParams] = useStorageState<SuperpixelState>(localStorage, 'superpixelParams', {
+    const [superpixelParams, setSuperpixelParams] = useStorageState<SuperpixelState>(sessionStorage, 'superpixelParams', {
         compactness: 1000,
         seedsSpacing: 4,
         method: 'waterpixels'

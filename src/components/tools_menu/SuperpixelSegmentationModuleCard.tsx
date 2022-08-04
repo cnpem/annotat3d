@@ -188,6 +188,8 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         setDefaultModelClassifierParams(newDefaultModelClassifierParams);
         setClassParams(newClassifier.classifier_parameters);
         setPrevClassParams(newClassifier.classifier_parameters);
+        setFeatParams(newClassifier.feature_extraction_params);
+        setPrevFeatParams(newClassifier.feature_extraction_params);
     });
 
     useEventBus('ImageLoaded', () => {

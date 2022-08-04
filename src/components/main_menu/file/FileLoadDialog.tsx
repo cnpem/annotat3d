@@ -34,7 +34,7 @@ import {LabelInterface} from "../../tools_menu/label_table/LabelInterface";
 import LoadingComponent from "../../tools_menu/LoadingComponent";
 import {useStorageState} from "react-storage-hooks";
 import {dtype_type, dtypeList, img_operation, multiplesPath, QueueToast} from "./utils/FileLoadInterface";
-import {BackEndLoadClassifier, FeatureParams} from "../../tools_menu/SuperpixelSegInterface";
+import {BackEndLoadClassifier} from "../../tools_menu/SuperpixelSegInterface";
 
 /**
  * Load Image dialog

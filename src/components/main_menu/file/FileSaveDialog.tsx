@@ -96,7 +96,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         await sfetch("POST", "/save_image/" + saveImgOp, JSON.stringify(params), "json").then(
             (image: ImageInfoInterface) => {
                 const imgName = imgPath.split("/");
-                msgReturned = `${imgName[imgName.length - 1]} loaded as ${saveImgOp}`;
+                msgReturned = `${imgName[imgName.length - 1]} saved as ${saveImgOp}`;
 
                 const info: ImageInfoInterface = {
                     imageShape: image.imageShape,

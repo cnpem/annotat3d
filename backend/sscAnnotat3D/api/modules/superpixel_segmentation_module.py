@@ -128,6 +128,49 @@ __default_features_front = [
     }
 ]
 
+__default_pooling = [
+    {
+        "id": 'min',
+        "name": 'Minimum',
+        "active": False
+    },
+    {
+        "id": 'max',
+        "name": 'Maximum',
+        "active": False
+    },
+    {
+        "id": 'mean',
+        "name": 'Mean',
+        "active": True
+    }
+]
+
+
+def _default_pooling_front(pooling: dict = None):
+    # This loop resets the dict to make for easily to create the front-end component
+    for pool in __default_pooling:
+        pool["active"] = False
+
+    _debugger_print("selected_supervoxel", pooling["selected_supervoxel_feat_pooling"])
+
+    for pooling_name in pooling["selected_supervoxel_feat_pooling"]:
+        exit_loop = False
+        i = 0
+        default_pooling_name = len(__default_pooling)
+        while (i < default_pooling_name and not exit_loop):
+            default_features = __default_pooling[i]
+
+            if (pooling_name == default_features["id"]):
+                default_features["active"] = True
+                exit_loop = True
+
+            i += 1
+
+    for pool in __default_pooling:
+        if (pool["active"]):
+            _debugger_print("{} is activate".format(pool["id"]), pool)
+
 
 # TODO : Don't forget to document this function
 def _default_features_front(features: dict = None):
@@ -147,10 +190,6 @@ def _default_features_front(features: dict = None):
                 exit_loop = True
 
             i += 1
-
-    for default_feature_front in __default_features_front:
-        if (default_feature_front["active"]):
-            _debugger_print("{} is activate".format(default_feature_front["id"]), default_feature_front)
 
 
 # TODO : Don't forget to document this function
@@ -452,8 +491,6 @@ def load_classifier():
 
     module_repo.set_module('superpixel_segmentation_module', segm_module)
     data_repo.set_classification_model("model_complete", classifier)
-    _debugger_print("classifier[\"feature_extraction_params\"]", classifier["feature_extraction_params"])
-    _debugger_print("superpixel_params", classifier["superpixel_params"])
 
     try:
         superpixel_state = data_repo.get_superpixel_state()
@@ -473,13 +510,15 @@ def load_classifier():
     }
 
     chosen_features = classifier["feature_extraction_params_front"]
+    _debugger_print("chosen_features", chosen_features)
     _default_features_front(chosen_features)
+    _default_pooling_front(chosen_features)
 
     feature_extraction_params = {
-        "pooling": "",
+        "pooling": __default_pooling,
         "feats": __default_features_front,
-        "multiscale": "",
-        "thresholdSelection": ""
+        "multiscale": chosen_features["sigmas"],
+        "thresholdSelection": chosen_features["feat_selection_method_threshold"]
     }
 
     front_end_payload = {
