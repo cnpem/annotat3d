@@ -14,6 +14,7 @@ import {
     IonTextarea
 } from '@ionic/react'
 import { useState } from 'react'
+import { sfetch } from '../../../../utils/simplerequest'
 
 /**
  *
@@ -25,20 +26,24 @@ const NetworkComp: React.FC = () => {
 
     const [networkInfoText, setNetworkInfoText] = useState<string>('')
 
-    const readFile = (path: string) => {
-        console.log('NetworkComp Import Dataset readFile path:', path)
-        setNetworkInfoText(
-            'This is the:\nNetwork Info. Blablalbalbal_break\nblalbalbal blalalbla break\nladfbmdafbmadmbf: msndvuian 10'
-        )
+    const onClickImportNetwork = () => {
+        console.log('I clicked:')
+        // setNetworkInfoText('this is temporary');
+        const newNetworkInputInfo = {
+            path: importNetworkPath,
+            name: importNetworkName
+        }
 
-        // sfetch('POST', `???`, JSON.stringify(path), 'json').then(
-        //     () => {
-        //     // dispatches
-        //     }).catch((error: ErrorInterface) => {
-        //     console.log('error while trying to add an image')
-        //     console.log(error.error_msg);
-        //     setErrorMsg(error.error_msg);
-        //     setShowErrorWindow(true);
+        sfetch('POST', `/import_network`, JSON.stringify(newNetworkInputInfo), 'json')
+        .then((networkdisplayInfo: string) => {
+            setNetworkInfoText(networkdisplayInfo);
+            // dispatches
+        })
+        // .catch((error: ErrorInterface) => {
+            // console.log('error while trying to add an image')
+            // console.log(error.error_msg);
+            // setErrorMsg(error.error_msg);
+            // setShowErrorWindow(true);
         // })
     }
 
@@ -76,9 +81,7 @@ const NetworkComp: React.FC = () => {
                                 slot={'end'}
                                 size={'default'}
                                 color={'tertiary'}
-                                onClick={() => {
-                                    readFile(importNetworkPath)
-                                }}
+                                onClick={onClickImportNetwork}
                             >
                                 Import Network
                             </IonButton>

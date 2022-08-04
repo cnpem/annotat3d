@@ -1,14 +1,16 @@
-import "./Network.css"
-import React, {Fragment, useState} from "react";
-import {IonAccordion, IonAccordionGroup, IonButton, IonContent, IonInput, IonItem, IonItemDivider, IonLabel, IonList, IonPopover, IonSegment, IonSegmentButton, IonToggle, SegmentChangeEventDetail} from "@ionic/react";
-import { useStorageState } from "react-storage-hooks";
-import NetworkComp from "./NetworkComp";
-import DatasetComp from "./DatasetComp";
-import BoardComp from "./BoardComp";
-import SettingsComp from "./SettingsComp";
-import LogComp from "./LogComp";
+import './Network.css'
+import React, {Fragment, useState} from 'react';
+import {IonButton, IonContent, IonItem, IonLabel, IonPopover, IonSegment, IonSegmentButton, IonToggle, SegmentChangeEventDetail} from '@ionic/react';
+import { useStorageState } from 'react-storage-hooks';
+import NetworkComp from './NetworkComp';
+import DatasetComp from './DatasetComp';
+import BoardComp from './BoardComp';
+import SettingsComp from './SettingsComp';
+import LogComp from './LogComp';
 
-const menuChoices = ["network", "dataset", "settings", "board", "log"] as const;
+import {sfetch} from "../../../../utils/simplerequest";
+
+const menuChoices = ['network', 'dataset', 'settings', 'board', 'log'] as const;
 type InputMenuChoicesType = typeof menuChoices[number];
 
 /**
@@ -18,7 +20,7 @@ type InputMenuChoicesType = typeof menuChoices[number];
  */
 const NetworkModuleComp: React.FC = () => {
 
-    const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, "DatasetMenu", "network");
+    const [menuOp, setMenuOp] = useStorageState<InputMenuChoicesType>(sessionStorage, 'DatasetMenu', 'network');
     const [hostMode, setHostMode] = useState<boolean>(true);
 
 
@@ -43,8 +45,18 @@ const NetworkModuleComp: React.FC = () => {
         <LogComp/>
     ];
 
-    const handlerOnTrainButton = (e: CustomEvent) => {
-        console.log(e.detail.value);
+    const handlerOnTrainButton = () => {
+        console.log('did i managed to get here?');
+        sfetch("POST", "/train", JSON.stringify(''), "json").then(
+            (msg: string) => {
+                console.log(msg)
+            }
+        );
+    };
+
+    const handlerOnFinetuneButton = () => {
+        // console.log(e.detail.value);
+        console.log('lets finetune?!')
     };
 
     const renderMenu = (choice: InputMenuChoicesType, idx: number) => {
@@ -57,12 +69,12 @@ const NetworkModuleComp: React.FC = () => {
         <Fragment>
             {/* Function effect to open the popup */}
             <IonItem button
-                     id={"open-menu-network"}>
+                     id={'open-menu-network'}>
                 Network
             </IonItem>
             <IonPopover
-                trigger={"open-menu-network"}
-                className={"file-popover-network"}>
+                trigger={'open-menu-network'}
+                className={'file-popover-network'}>
                 <IonContent>
                 <IonSegment value={menuOp} onIonChange={selectMenuOp}>
                     {menuChoices.map(renderSegmentButton)}
@@ -74,37 +86,38 @@ const NetworkModuleComp: React.FC = () => {
                         <IonToggle checked={hostMode} onIonChange={e => setHostMode(e.detail.checked)} />
                     </IonItem>
                     <IonButton
-                        id={"train"}
-                        color={"secondary"}
+                        color={'secondary'}
                         size={'default'}
+                        onClick={handlerOnTrainButton}
                     >
                         Train
                     </IonButton>
                     <IonButton
                         id={"finetune"}
-                        color={"secondary"}
+                        color={'secondary'}
                         size={'default'}
+                        onClick={handlerOnFinetuneButton}
                     >
                         finetune
                     </IonButton>
                     <IonButton
-                        id={"export-network"}
-                        color={"tertiary"}
+                        id={'export-network-popover'}
+                        color={'tertiary'}
                         size={'default'}
                     >
                         Export Network
                     </IonButton>
                     <IonPopover
-                        trigger={'export-network'}
+                        trigger={'export-network-popover'}
                         side={'bottom'}
+                        // className={'create-h5-popover'}
                         alignment={'end'}>
-                        {/* className={"create-h5-popover"}> */}
 
                         <IonLabel>Hello!</IonLabel>
                     </IonPopover>
                     <IonButton
-                        id={"export-inference"}
-                        color={"tertiary"}
+                        id={'export-inference'}
+                        color={'tertiary'}
                         size={'default'}
                         
                     >
@@ -114,7 +127,7 @@ const NetworkModuleComp: React.FC = () => {
                         trigger={'export-inference'}
                         side={'bottom'}
                         alignment={'end'}>
-                        {/* className={"create-h5-popover"}> */}
+                        {/* className={'create-h5-popover'}> */}
 
                         <IonLabel>Hello2!</IonLabel>
                     </IonPopover>
@@ -132,7 +145,7 @@ export default NetworkModuleComp
 // Example using ErrorInterface with sfetch if needed
 // ---
 // sfetch().catch((error: ErrorInterface) => 
-//    {console.log("Error in create_dataset");
+//    {console.log('Error in create_dataset');
 //     console.log(error.error_msg);
 //     setErrorMsg(error.error_msg);
 //     setShowErrorWindow(true);

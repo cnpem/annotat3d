@@ -1,5 +1,7 @@
 import os
 
+# TODO: implement the functionalities of deeplearning_workspace_dialog using functions in api/deep.py  
+# - the same way the other models are implemented.
 # TODO: move to global __init__.py when sscAnnotat3D becomes a package
 __ui_path__ = os.path.join(os.path.dirname(__file__), '..', 'ui')
 
@@ -21,6 +23,3 @@ _tepui_partitions = {
 }
 
 from .deeplearning_workspace_dialog import DeepLearningWorkspaceDialog
-"""from .deeplearning_dataset_dialog import DeepLearningDatasetDialog
-from .deeplearning_network_dialog import DeepLearningNetworkDialog
-from .deeplearning_inference_dialog import DeepLearningInferenceDialog"""

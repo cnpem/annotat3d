@@ -1,6 +1,6 @@
 """
 
-This script contains some back-end functions to deep learning module
+This script contains some back-end functions for the deep learning module
 
 @author : Gabriel Borin Macedo (gabriel.macedo@lnls.br or borinmacedo@gmail.com)
 
@@ -22,6 +22,7 @@ from sscDeepsirius.cython import standardize
 from sscAnnotat3D.repository import data_repo
 from sscDeepsirius.utils import dataset, image
 from sscDeepsirius.controller.inference_controller import InferenceController
+from sscDeepsirius.controller.host_network_controller import HostNetworkController as NetworkController
 
 app = Blueprint('deep', __name__)
 
@@ -260,3 +261,50 @@ def run_inference():
             return handle_exception("Error to save the inference : {}".format(str(e)))
 
     return jsonify("successes")
+
+# ---
+# Functions for the Network module
+# ---
+
+@app.route("/train", methods=["POST"])
+@cross_origin()
+def train():
+    """
+    Request for training from the frontend
+    """
+    msg = 'hello from the othersiiiiiiiide...'
+
+    return jsonify(msg)
+
+
+
+@app.route("/import_network", methods=["POST"])
+@cross_origin()
+def import_network():
+    """
+    Request for training from the frontend
+    """
+    importNetworkPath = request.json['path']
+    importNetworkName = request.json['name']
+
+    # try get the workspace path
+    try:
+        workspacePath = data_repo.get_deep_model(key='deep_learning')
+    except Exception as e:
+        return handle_exception('Error trying to get the workspace path. Not found. : {}'.format(str(e)))
+
+
+    # try open file
+
+    # check if name doesnt already exists
+
+    # get actual info from?
+    # is it here? _dataset_info_runnable
+    # maybe here? _data_info
+
+    NTctrl = NetworkController(workspacePath, streaming_mode=True)
+    NTctrl.import_model(importNetworkPath, importNetworkName)
+
+    info = 'hello from the othersiiiiiiiide... \npath: '+importNetworkPath+' \nname: '+importNetworkName
+
+    return jsonify(info)
