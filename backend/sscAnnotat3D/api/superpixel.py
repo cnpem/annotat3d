@@ -10,6 +10,12 @@ from sscAnnotat3D import superpixels, utils
 app = Blueprint('superpixel', __name__)
 
 
+def _debugger_print(msg: str, payload: any):
+    print("\n----------------------------------------------------------")
+    print("{} : {}".format(msg, payload))
+    print("-------------------------------------------------------------\n")
+
+
 @app.route('/superpixel', methods=['POST', 'GET'])
 @cross_origin()
 def superpixel():

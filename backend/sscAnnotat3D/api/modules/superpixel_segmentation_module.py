@@ -451,7 +451,6 @@ def save_classifier():
 
     try:
         feature_extraction_params = data_repo.get_feature_extraction_params("feature_extraction_params")
-        _debugger_print("feature_extraction_params on save", feature_extraction_params)
     except Exception as e:
         return handle_exception(str(e))
 
@@ -487,15 +486,12 @@ def load_classifier():
     module_repo.set_module('superpixel_segmentation_module', segm_module)
     data_repo.set_classification_model("model_complete", classifier)
 
-    try:
-        superpixel_state = data_repo.get_superpixel_state()
-    except:
-        return handle_exception("Unable to get superpixel_state")
+    superpixel_state = classifier["superpixel_params"]
 
     front_end_superpixel = {
-        "method": superpixel_state["method"],
-        "compactness": superpixel_state["compactness"],
-        "seedsSpacing": superpixel_state["seedsSpacing"],
+        "method": superpixel_state["superpixel_type"],
+        "compactness": superpixel_state["waterpixels_compactness"],
+        "seedsSpacing": superpixel_state["waterpixels_seed_spacing"],
     }
 
     params_front = _default_classifier_front(classifier["classifier_params"])
@@ -516,12 +512,6 @@ def load_classifier():
             "feat_selection_enabled"] else None
     }
 
-    _debugger_print("Print of feature_extraction_params", "==============================================")
-    _debugger_print("pooling", __default_pooling)
-    _debugger_print("feats", __default_features_front)
-    _debugger_print("multiscale", chosen_features["sigmas"])
-    _debugger_print("thresholdSelection", feature_extraction_params["thresholdSelection"])
-
     front_end_payload = {
         "superpixel_parameters": front_end_superpixel,
         "use_pixel_segmentation": classifier["superpixel_params"]["pixel_segmentation"],
@@ -531,8 +521,5 @@ def load_classifier():
 
     _debugger_print("Print of front_end_payload", "==============================================")
     _debugger_print("superpixel_parameters", front_end_superpixel)
-    _debugger_print("use_pixel_segmentation", front_end_payload["use_pixel_segmentation"])
-    _debugger_print("classifier_parameters", front_end_classifier)
-    _debugger_print("feature_extraction_params", feature_extraction_params)
 
     return jsonify(front_end_payload)

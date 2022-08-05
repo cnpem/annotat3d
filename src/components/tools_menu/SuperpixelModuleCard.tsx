@@ -47,15 +47,15 @@ const SuperpixelModuleCard: React.FC = () => {
             use_pixel_segmentation: false
         };
         sfetch('POST', '/superpixel', JSON.stringify(params))
-        .then(() => {
-            dispatch('superpixelChanged', {});
-            dispatch('superpixelParams', params);
-        })
-        .finally(() => {
-            setLockMenu(false);
-            setShowLoadingComp(false);
-            showToast("Superpixel successfully applied !", timeToast);
-        });
+            .then(() => {
+                dispatch('superpixelChanged', {});
+                dispatch('superpixelParams', params);
+            })
+            .finally(() => {
+                setLockMenu(false);
+                setShowLoadingComp(false);
+                showToast("Superpixel successfully applied !", timeToast);
+            });
     }
 
     return (
@@ -65,8 +65,10 @@ const SuperpixelModuleCard: React.FC = () => {
                 <IonItem>
                     <IonLabel position="floating">method</IonLabel>
                     <IonSelect interface="popover"
-                        value={ superpixelParams.method }
-                        onIonChange={ (e) => { setSuperpixelParams({...superpixelParams, method: e.detail.value}); }  }>
+                               value={superpixelParams.method}
+                               onIonChange={(e) => {
+                                   setSuperpixelParams({...superpixelParams, method: e.detail.value});
+                               }}>
                         <IonSelectOption>waterpixels</IonSelectOption>
                         <IonSelectOption value="waterpixels3d">waterpixels 3D</IonSelectOption>
                         <IonSelectOption disabled>slic</IonSelectOption>
@@ -75,20 +77,24 @@ const SuperpixelModuleCard: React.FC = () => {
                 <IonItem>
                     <IonLabel position="floating">seeds distance</IonLabel>
                     <IonInput min={2} max={32} type="number"
-                        value={ superpixelParams.seedsSpacing }
-                        onIonChange={ (e) => { setSuperpixelParams({ ...superpixelParams, seedsSpacing: +e.detail.value! })  } }>
+                              value={superpixelParams.seedsSpacing}
+                              onIonChange={(e) => {
+                                  setSuperpixelParams({...superpixelParams, seedsSpacing: +e.detail.value!})
+                              }}>
                     </IonInput>
                 </IonItem>
                 <IonItem>
                     <IonLabel position="floating">compactness</IonLabel>
                     <IonInput min={1} max={99999} type="number"
-                        value={ superpixelParams.compactness }
-                        onIonChange = { (e) => { setSuperpixelParams({ ...superpixelParams, compactness: +e.detail.value!  }) } }>
+                              value={superpixelParams.compactness}
+                              onIonChange={(e) => {
+                                  setSuperpixelParams({...superpixelParams, compactness: +e.detail.value!})
+                              }}>
                     </IonInput>
                 </IonItem>
                 <LoadingComponent
-                        openLoadingWindow={showLoadingComp}
-                        loadingText={"Generating superpixel"}/>
+                    openLoadingWindow={showLoadingComp}
+                    loadingText={"Generating superpixel"}/>
             </ModuleCardItem>
         </ModuleCard>
 

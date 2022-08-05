@@ -430,11 +430,10 @@ class ClassifierSegmentationModule(SegmentationModule):
     # TODO : need to document this function later
     def save_classifier(self, path: str = "", superpixel_state: dict = None, feature_extraction_params: dict = None):
         labels = np.unique(self._training_labels)
-        self._feature_extraction_params_front = feature_extraction_params
-        self._feature_extraction_params["superpixel_type"] = superpixel_state["method"]
-        self._feature_extraction_params["pixel_segmentation"] = superpixel_state["use_pixel_segmentation"]
-        self._feature_extraction_params["waterpixels_compactness"] = float(superpixel_state["compactness"])
-        self._feature_extraction_params["waterpixels_seed_spacing"] = superpixel_state["seedsSpacing"]
+        self._superpixel_params["superpixel_type"] = superpixel_state["method"]
+        self._superpixel_params["pixel_segmentation"] = superpixel_state["use_pixel_segmentation"]
+        self._superpixel_params["waterpixels_compactness"] = float(superpixel_state["compactness"])
+        self._superpixel_params["waterpixels_seed_spacing"] = superpixel_state["seedsSpacing"]
 
         model_complete = {
             'version': self._classifier_version,
@@ -467,7 +466,7 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         return True, "", model_complete
 
-    def load_classifier(self, path):
+    def load_classifier(self, path: str = ""):
 
         try:
 
