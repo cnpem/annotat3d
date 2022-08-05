@@ -147,12 +147,11 @@ __default_pooling = [
 ]
 
 
+# TODO : Don't forget to document this function
 def _default_pooling_front(pooling: dict = None):
     # This loop resets the dict to make for easily to create the front-end component
     for pool in __default_pooling:
         pool["active"] = False
-
-    _debugger_print("selected_supervoxel", pooling["selected_supervoxel_feat_pooling"])
 
     for pooling_name in pooling["selected_supervoxel_feat_pooling"]:
         exit_loop = False
@@ -166,10 +165,6 @@ def _default_pooling_front(pooling: dict = None):
                 exit_loop = True
 
             i += 1
-
-    for pool in __default_pooling:
-        if (pool["active"]):
-            _debugger_print("{} is activate".format(pool["id"]), pool)
 
 
 # TODO : Don't forget to document this function
@@ -510,7 +505,6 @@ def load_classifier():
     }
 
     chosen_features = classifier["feature_extraction_params_front"]
-    _debugger_print("chosen_features", chosen_features)
     _default_features_front(chosen_features)
     _default_pooling_front(chosen_features)
 
@@ -522,11 +516,23 @@ def load_classifier():
             "feat_selection_enabled"] else None
     }
 
+    _debugger_print("Print of feature_extraction_params", "==============================================")
+    _debugger_print("pooling", __default_pooling)
+    _debugger_print("feats", __default_features_front)
+    _debugger_print("multiscale", chosen_features["sigmas"])
+    _debugger_print("thresholdSelection", feature_extraction_params["thresholdSelection"])
+
     front_end_payload = {
         "superpixel_parameters": front_end_superpixel,
         "use_pixel_segmentation": classifier["superpixel_params"]["pixel_segmentation"],
         "classifier_parameters": front_end_classifier,
         "feature_extraction_params": feature_extraction_params
     }
+
+    _debugger_print("Print of front_end_payload", "==============================================")
+    _debugger_print("superpixel_parameters", front_end_superpixel)
+    _debugger_print("use_pixel_segmentation", front_end_payload["use_pixel_segmentation"])
+    _debugger_print("classifier_parameters", front_end_classifier)
+    _debugger_print("feature_extraction_params", feature_extraction_params)
 
     return jsonify(front_end_payload)
