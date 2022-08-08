@@ -156,8 +156,10 @@ export interface FeatureParams {
 export interface SuperpixelState {
     compactness: number;
     seedsSpacing: number;
-    method: string;
+    method: superpixel_type;
 }
+
+export type superpixel_type = "waterpixels" | "waterpixels3d"
 
 export interface BackEndLoadClassifier {
     superpixel_parameters: SuperpixelState,
