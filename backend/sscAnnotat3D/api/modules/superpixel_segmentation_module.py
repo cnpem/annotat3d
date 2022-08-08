@@ -163,6 +163,7 @@ def _default_pooling_front(pooling: dict = None):
             if (pooling_name == default_features["id"]):
                 default_features["active"] = True
                 exit_loop = True
+                __default_pooling[i] = default_features
 
             i += 1
 
@@ -183,6 +184,7 @@ def _default_features_front(features: dict = None):
             if (feature_name == default_features["id"]):
                 default_features["active"] = True
                 exit_loop = True
+                __default_features_front[i] = default_features
 
             i += 1
 

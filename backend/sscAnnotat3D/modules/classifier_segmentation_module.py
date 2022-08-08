@@ -434,6 +434,7 @@ class ClassifierSegmentationModule(SegmentationModule):
         self._superpixel_params["pixel_segmentation"] = superpixel_state["use_pixel_segmentation"]
         self._superpixel_params["waterpixels_compactness"] = float(superpixel_state["compactness"])
         self._superpixel_params["waterpixels_seed_spacing"] = superpixel_state["seedsSpacing"]
+        self._feature_extraction_params_front = feature_extraction_params
 
         model_complete = {
             'version': self._classifier_version,
@@ -446,10 +447,6 @@ class ClassifierSegmentationModule(SegmentationModule):
             'feat_scaler': self._feat_scaler,
             'feature_extraction_params_front': self._feature_extraction_params_front
         }
-
-        self._debugger_print("model_complete", model_complete)
-
-        # joblib.dump(model_complete,  path)
 
         try:
             """IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does

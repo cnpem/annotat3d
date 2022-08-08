@@ -81,9 +81,13 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     useEffect(() => {
         console.log(prevFeatParams, featParams);
         console.log(isEqual(prevFeatParams, featParams));
+        if (prevFeatParams !== null && !isEqual(prevFeatParams, featParams)) {
+            setFeatParams(prevFeatParams);
+            setPrevFeatParams(null);
+        }
         const hasChanged = !isEqual(prevFeatParams, featParams);
         setHasPreprocessed(!hasChanged);
-    }, [featParams, prevFeatParams, setHasPreprocessed]);
+    }, [setPrevFeatParams, setFeatParams, featParams, prevFeatParams, setHasPreprocessed]);
 
     // useEffect to force the user to use preprocess if he changes the classParams
     useEffect(() => {
@@ -188,6 +192,9 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         setDefaultModelClassifierParams(newDefaultModelClassifierParams);
         setClassParams(newClassifier.classifier_parameters);
         setPrevClassParams(newClassifier.classifier_parameters);
+
+        console.table(newClassifier.feature_extraction_params);
+
         setFeatParams(newClassifier.feature_extraction_params);
         setPrevFeatParams(newClassifier.feature_extraction_params);
     });
