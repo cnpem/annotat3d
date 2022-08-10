@@ -25,25 +25,16 @@ import {sfetch} from '../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem} from './ModuleCard';
 import LoadingComponent from "./LoadingComponent";
 import {
-    BackEndLoadClassifier,
-    Classifier,
-    ClassifierParams, classifiers,
-    defaultFeatures,
-    defaultMultiscale,
-    defaultPooling, Feature,
-    FeatureParams, InitDefaultModelClassifierParams, ModelClassifierParams, Pooling
+    BackEndLoadClassifier, Classifier,
+    ClassifierParams, classifiers, Feature,
+    FeatureParams, InitDefaultModelClassifierParams, initialParamsValues, ModelClassifierParams, Pooling
 } from "./SuperpixelSegInterface";
 
 const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     const [defaultModelClassifierParams, setDefaultModelClassifierParams] = useStorageState(sessionStorage, "defaultModelClassifierParams", InitDefaultModelClassifierParams)
     const [prevFeatParams, setPrevFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelPrevFeatParams');
-    const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelFeatParams', {
-        pooling: defaultPooling,
-        feats: defaultFeatures,
-        multiscale: defaultMultiscale,
-        thresholdSelection: 0.01
-    });
+    const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelFeatParams', initialParamsValues);
 
     const [prevClassParams, setPrevClassParams] = useStorageState<ClassifierParams>(sessionStorage, "superpixelPrevClassParams");
     const [classParams, setClassParams] = useStorageState<ClassifierParams>(sessionStorage, 'superpixelClassParams', {
@@ -79,21 +70,12 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
     // useEffect to force the user to use preprocess if he changes the featParams
     useEffect(() => {
-        console.log(prevFeatParams, featParams);
-        console.log(isEqual(prevFeatParams, featParams));
-        if (prevFeatParams !== null && !isEqual(prevFeatParams, featParams)) {
-            setFeatParams(prevFeatParams);
-            setPrevFeatParams(null);
-        }
         const hasChanged = !isEqual(prevFeatParams, featParams);
         setHasPreprocessed(!hasChanged);
-    }, [setPrevFeatParams, setFeatParams, featParams, prevFeatParams, setHasPreprocessed]);
+    }, [featParams, prevFeatParams, setHasPreprocessed]);
 
     // useEffect to force the user to use preprocess if he changes the classParams
     useEffect(() => {
-        console.log("change on classParams");
-        console.log(prevClassParams, classParams);
-        console.log(isEqual(prevClassParams, classParams));
         const hasChanged = !isEqual(prevClassParams, classParams);
         setHasPreprocessed(!hasChanged);
     }, [classParams, prevClassParams, setHasPreprocessed]);
@@ -204,9 +186,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         setPrevClassParams(null);
     });
 
-    // TODO : If the superpixel is strange, just do the following command
-    // 'feat_selection_enabled': featParams.thresholdSelection !== null,
-    // 'feat_selection_method_threshold': featParams.thresholdSelection
     function getModuleBackendParams() {
         const params = {
             classifier_params: {

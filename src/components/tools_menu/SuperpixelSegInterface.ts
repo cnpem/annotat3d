@@ -37,6 +37,7 @@ export const defaultFeatures: Feature[] = [
         description: 'Filters structures (smoothing) of the specified gaussian filtering in fourier space. Promotes smoothing without worrying about edges.'
     },
     {
+        active: false,
         id: 'average',
         name: 'Average',
         type: 'Smoothing',
@@ -49,6 +50,7 @@ export const defaultFeatures: Feature[] = [
         description: 'It makes the target pixel intensity equal to the median value in the running window (Noise removal)'
     },
     {
+        active: false,
         id: 'sobel',
         name: 'Sobel',
         type: 'Edge detection',
@@ -62,18 +64,21 @@ export const defaultFeatures: Feature[] = [
         description: 'Calculates two gaussian blur images from the original image and subtracts one from the other. It is used to detect edges in the image.'
     },
     {
+        active: false,
         id: 'fft_gabor',
         name: 'FFT Gabor',
         type: 'Edge detection,Texture detection',
         description: 'It determines if there is any specific frequency content in the image in specific directions in a localized region around the point or region of analysis. In the spatial domain, it is a Gaussian kernel function modulated by a sinusoidal plane wave. It is one of the most suitable option for texture segmentation and boundary detection'
     },
     {
+        active: false,
         id: 'variance',
         name: 'Variance',
         type: 'Texture detection',
         description: 'It is a statistical measure of the amount of variation inside the window. This determines how uniform or not that filtering window is (important for assessing homogeneity and texture)'
     },
     {
+        active: false,
         id: 'lbp',
         name: 'Local Binary Pattern',
         type: 'Texture detection',
@@ -87,12 +92,14 @@ export const defaultFeatures: Feature[] = [
         description: 'Enhances membrane-like structures of the image through directional filtering.'
     },
     {
+        active: false,
         id: 'minimum',
         name: 'Minimum',
         type: 'Color Identification',
         description: 'It replaces the value of the pixel with the value of the darkest pixel inside the filtering window'
     },
     {
+        active: false,
         id: 'maximum',
         name: 'Maximum',
         type: 'Color Identification',
@@ -157,6 +164,13 @@ export interface SuperpixelState {
     compactness: number;
     seedsSpacing: number;
     method: superpixel_type;
+}
+
+export const initialParamsValues: FeatureParams = {
+    pooling: defaultPooling,
+    feats: defaultFeatures,
+    multiscale: defaultMultiscale,
+    thresholdSelection: 0.01
 }
 
 export type superpixel_type = "waterpixels" | "waterpixels3d"
