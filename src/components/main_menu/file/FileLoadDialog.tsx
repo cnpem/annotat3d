@@ -31,10 +31,10 @@ import ErrorWindowComp from "./utils/ErrorWindowComp";
 import ImageInfoInterface from "./utils/ImageInfoInterface";
 import ErrorInterface from "./utils/ErrorInterface";
 import {LabelInterface} from "../../tools_menu/label_table/LabelInterface";
-import LoadingComponent from "../../tools_menu/LoadingComponent";
+import LoadingComponent from "../../tools_menu/utils/LoadingComponent";
 import {useStorageState} from "react-storage-hooks";
 import {dtype_type, dtypeList, img_operation, multiplesPath, QueueToast} from "./utils/FileLoadInterface";
-import {BackEndLoadClassifier} from "../../tools_menu/SuperpixelSegInterface";
+import {BackEndLoadClassifier} from "../../tools_menu/module_menu/SuperpixelSegInterface";
 
 /**
  * Load Image dialog

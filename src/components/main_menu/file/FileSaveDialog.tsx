@@ -20,7 +20,7 @@ import {dispatch, useEventBus} from "../../../utils/eventbus";
 import ErrorWindowComp from "./utils/ErrorWindowComp";
 import ImageInfoInterface from "./utils/ImageInfoInterface";
 import ErrorInterface from "./utils/ErrorInterface";
-import LoadingComponent from "../../tools_menu/LoadingComponent";
+import LoadingComponent from "../../tools_menu/utils/LoadingComponent";
 import {useStorageState} from "react-storage-hooks";
 import {dtype_type, dtypeList, img_operation, multiplesPath, QueueToast} from "./utils/FileLoadInterface";
 

@@ -2,7 +2,7 @@ import {IonCard, IonCardContent, IonCardHeader, IonIcon, IonLabel, IonSegment, I
 import React, {Fragment} from "react";
 import {useStorageState} from "react-storage-hooks";
 import { ImageShapeInterface } from "./ImageShapeInterface";
-import ProcessingMenu from "./ProcessingMenu";
+import ProcessingMenu from "./module_menu/ProcessingMenu";
 import SideMenuAnnot from "./SideMenuAnnot";
 import SideMenuVis from "./SideMenuVis";
 import SlicesMenu from "./SlicesMenu";

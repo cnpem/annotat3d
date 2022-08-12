@@ -1,9 +1,9 @@
 import {IonItem, IonLabel, IonInput, IonSelect, IonSelectOption, useIonToast} from '@ionic/react';
-import {sfetch} from '../../utils/simplerequest';
+import {sfetch} from '../../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem} from './ModuleCard';
-import {dispatch, useEventBus} from '../../utils/eventbus';
+import {dispatch, useEventBus} from '../../../utils/eventbus';
 import {useStorageState} from 'react-storage-hooks';
-import LoadingComponent from "./LoadingComponent";
+import LoadingComponent from "../utils/LoadingComponent";
 import {useState} from "react";
 import {superpixel_type, SuperpixelState} from "./SuperpixelSegInterface";
 

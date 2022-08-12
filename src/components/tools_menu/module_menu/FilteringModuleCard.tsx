@@ -1,9 +1,9 @@
 import {IonInput, IonItem, IonLabel, IonRadio, IonRadioGroup, IonToggle, useIonToast} from "@ionic/react";
 import {useState} from "react";
 import {useStorageState} from "react-storage-hooks";
-import {currentEventValue, dispatch} from "../../utils/eventbus";
-import {sfetch} from "../../utils/simplerequest";
-import LoadingComponent from "./LoadingComponent";
+import {currentEventValue, dispatch} from "../../../utils/eventbus";
+import {sfetch} from "../../../utils/simplerequest";
+import LoadingComponent from "../utils/LoadingComponent";
 import {ModuleCard, ModuleCardItem} from "./ModuleCard";
 
 function onApplyThen(info : {slice: number, axis: string}) {

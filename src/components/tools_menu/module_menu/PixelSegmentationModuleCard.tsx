@@ -4,10 +4,10 @@ import { informationCircleOutline } from 'ionicons/icons';
 import {isEqual} from 'lodash';
 import {Fragment, useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
-import {currentEventValue, useEventBus} from '../../utils/eventbus';
-import {dispatch} from '../../utils/eventbus';
-import {sfetch} from '../../utils/simplerequest';
-import LoadingComponent from './LoadingComponent';
+import {currentEventValue, useEventBus} from '../../../utils/eventbus';
+import {dispatch} from '../../../utils/eventbus';
+import {sfetch} from '../../../utils/simplerequest';
+import LoadingComponent from '../utils/LoadingComponent';
 import {ModuleCard, ModuleCardItem } from './ModuleCard';
 
 const classifiers = [

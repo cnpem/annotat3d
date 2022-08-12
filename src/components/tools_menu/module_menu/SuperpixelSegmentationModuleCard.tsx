@@ -19,11 +19,11 @@ import {informationCircleOutline} from 'ionicons/icons';
 import {isEqual} from 'lodash';
 import {Fragment, useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
-import {currentEventValue} from '../../utils/eventbus';
-import {useEventBus, dispatch} from '../../utils/eventbus';
-import {sfetch} from '../../utils/simplerequest';
+import {currentEventValue} from '../../../utils/eventbus';
+import {useEventBus, dispatch} from '../../../utils/eventbus';
+import {sfetch} from '../../../utils/simplerequest';
 import {ModuleCard, ModuleCardItem} from './ModuleCard';
-import LoadingComponent from "./LoadingComponent";
+import LoadingComponent from "../utils/LoadingComponent";
 import {
     BackEndLoadClassifier, Classifier,
     ClassifierParams, classifiers, Feature,
