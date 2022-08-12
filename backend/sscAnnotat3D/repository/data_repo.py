@@ -4,6 +4,7 @@ saved on the backend
 """
 
 import numpy as np
+from collections import deque
 
 """
 dict that contains the loaded image, superpixel and label
@@ -54,6 +55,11 @@ __inference_info = dict()
 list that contain the number of gpus to use in inference
 """
 __inference_gpus = list()
+
+"""
+list of log messages
+"""
+__log_messages = deque()
 
 
 def set_inference_info(key='image-0', data: dict = None):
@@ -585,3 +591,12 @@ def get_inference_gpus():
 
     """
     return __inference_gpus
+
+def set_log_message(message : str):
+    __log_messages.append(message)
+
+def get_last_log_message():
+    if len(__log_messages) != 0:
+        return __log_messages.pop()
+    else:
+        return

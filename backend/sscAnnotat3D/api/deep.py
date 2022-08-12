@@ -8,6 +8,7 @@ TODO : Don't forget to document the functions
 
 """
 import glob
+from tkinter.messagebox import NO
 import numpy as np
 import os
 import logging
@@ -20,7 +21,7 @@ from tensorflow.python.client import device_lib
 
 from sscDeepsirius.cython import standardize
 from sscAnnotat3D.repository import data_repo
-from sscDeepsirius.utils import dataset, image
+from sscDeepsirius.utils import dataset, image#, gpuu
 from sscDeepsirius.controller.inference_controller import InferenceController
 from sscDeepsirius.controller.host_network_controller import HostNetworkController as NetworkController
 
@@ -289,22 +290,103 @@ def import_network():
 
     # try get the workspace path
     try:
-        workspacePath = data_repo.get_deep_model(key='deep_learning')
+        deepModel = data_repo.get_deep_model(key='deep_learning')
+        workspacePath = deepModel['deep_model_path']
     except Exception as e:
         return handle_exception('Error trying to get the workspace path. Not found. : {}'.format(str(e)))
 
-
-    # try open file
+    # try network controller
+    try:
+        NTctrl = NetworkController(workspacePath, streaming_mode=True)
+    except Exception as e:
+        return handle_exception('Error trying to get Network controller object. : {}'.format(str(e)))
 
     # check if name doesnt already exists
+    if importNetworkName in NTctrl.network_models:
+        return handle_exception('Network Name {} already exists. Please create another name. {}'.format(importNetworkName))
+    
+    # try import model
+    try:
+        NTctrl.import_model(importNetworkPath, importNetworkName)
+    except Exception as e:
+        return handle_exception('Error trying to import model. : {} workspascePath is {}'.format(str(e), workspacePath))
 
     # get actual info from?
     # is it here? _dataset_info_runnable
     # maybe here? _data_info
 
-    NTctrl = NetworkController(workspacePath, streaming_mode=True)
-    NTctrl.import_model(importNetworkPath, importNetworkName)
+    info = 'New network \n'+'Imported from path: '+importNetworkPath+'\n'+'New Name: '+importNetworkName
 
-    info = 'hello from the othersiiiiiiiide... \npath: '+importNetworkPath+' \nname: '+importNetworkName
+    print(glob.glob(workspacePath+'*'))
 
     return jsonify(info)
+
+
+# todo: 
+
+@app.route("/import_dataset", methods=["POST"])
+@cross_origin()
+def import_dataset():
+    """
+    Request for training from the frontend
+    """
+    importNetworkPath = request.json['path']
+    importNetworkName = request.json['name']
+
+    # try get the workspace path
+    try:
+        deepModel = data_repo.get_deep_model(key='deep_learning')
+        workspacePath = deepModel['deep_model_path']
+    except Exception as e:
+        return handle_exception('Error trying to get the workspace path. Not found. : {}'.format(str(e)))
+
+    # try network controller
+    try:
+        NTctrl = NetworkController(workspacePath, streaming_mode=True)
+    except Exception as e:
+        return handle_exception('Error trying to get Network controller object. : {}'.format(str(e)))
+
+    # check if name doesnt already exists
+    if importNetworkName in NTctrl.network_models:
+        return handle_exception('Network Name {} already exists. Please create another name. {}'.format(importNetworkName))
+    
+    # try import model
+    try:
+        NTctrl.import_model(importNetworkPath, importNetworkName)
+    except Exception as e:
+        return handle_exception('Error trying to import model. : {} workspascePath is {}'.format(str(e), workspacePath))
+
+    # get actual info from?
+    # is it here? _dataset_info_runnable
+    # maybe here? _data_info
+
+    info = 'New network \n'+'Imported from path: '+importNetworkPath+'\n'+'New Name: '+importNetworkName
+
+    print(glob.glob(workspacePath+'*'))
+
+    return jsonify(info)
+
+@app.route("/dummy_training/<repeats>", methods=["POST"])
+@cross_origin()
+def training(repeats):
+    """
+    Request for training from the frontend
+    """
+    nreps = repeats
+
+    for n in range(nreps):
+        data_repo.set_log_message('message '+str(n))
+
+    return 'done training'
+
+@app.route("/read_log", methods=["POST"])
+@cross_origin()
+def read_log():
+    """
+    Request for training from the frontend
+    """
+    msg = data_repo.get_last_log_message()
+    if msg == None:
+        return
+    
+    return msg

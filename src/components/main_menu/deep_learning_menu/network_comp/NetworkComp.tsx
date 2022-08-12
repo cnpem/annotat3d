@@ -56,11 +56,11 @@ const NetworkComp: React.FC = () => {
                         {/* Import Network */}
                         <IonItem>
                             <IonLabel position={'fixed'}>
-                                <small>Network Path</small>
+                                <small>New Network Path</small>
                             </IonLabel>
                             <IonInput
                                 value={importNetworkPath}
-                                placeholder={'/Path/to/Network.model.tar.gz'}
+                                placeholder={'/Absolute/Path/to/New/Network.model.tar.gz'}
                                 onIonChange={(e: CustomEvent) => {
                                     setImportNetworkPath(e.detail.value as string)
                                 }}
@@ -68,11 +68,11 @@ const NetworkComp: React.FC = () => {
                         </IonItem>
                         <IonItem>
                             <IonLabel position={'fixed'}>
-                                <small>Network Name</small>
+                                <small>New Network Name</small>
                             </IonLabel>
                             <IonInput
                                 value={importNetworkName}
-                                placeholder={'YourNetworkName'}
+                                placeholder={'NewNetworkName'}
                                 onIonChange={(e: CustomEvent) => {
                                     setImportNetworkName(e.detail.value as string)
                                 }}

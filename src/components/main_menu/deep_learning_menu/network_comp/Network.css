@@ -38,7 +38,7 @@ https://www.youtube.com/watch?v=ZCrQjk6PdK0
 }
 
 .item-permanent-buttons-alignment-right {
-    float:right;
+    float: right !important;
 }
 /**
 Component used in ion-popover in SamplingComp.tsx
