@@ -105,7 +105,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     });
 
     useEventBus("setNewClassParams", (newClassifier: BackEndLoadClassifier) => {
-        console.table(featParams.feats);
         let newDefaultModelClassifierParams: Record<string, ModelClassifierParams[]>;
         if (newClassifier.classifier_parameters.classifier === "rf") {
             newDefaultModelClassifierParams = {
@@ -242,7 +241,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 setDisabled(false);
                 showToast(toastMessages.onApply, timeToast);
             }).catch(() => {
-                console.log("error in apply")
+            console.log("error in apply")
         });
     }
 
@@ -418,7 +417,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                                       if (e.detail.value) {
                                           const value = stringToNumberArray(e.detail.value);
                                           if (!isEqual(featParams.multiscale, value)) {
-                                              setFeatParams({...featParams, multiscale: value});
+                                              setFeatParams({
+                                                  ...featParams,
+                                                  multiscale: value
+                                              });
                                           }
                                       }
                                   }}>
@@ -479,9 +481,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                                 })
 
                                 if (!isEqual(newParams, classParams.params)) {
-                                    setClassParams(
-                                        {...classParams, params: newParams}
-                                    );
+                                    setClassParams({
+                                        ...classParams,
+                                        params: newParams
+                                    });
                                 }
                             });
                         })
