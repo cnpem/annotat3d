@@ -87,6 +87,23 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         setPrevClassParams(null);
     });
 
+    /**
+     * This EventBus forces FeatParams to update. For some reason, this component is having trouble
+     * to update featParams and prevFeatParams.
+     * The value 17 is the maximum checkbox and input the user can place on this menu
+     * TODO : If we have time, we can implement a less criminal way to update this state
+     */
+    useEventBus("updateFeatParams", (payloadParams: { newParams: FeatureParams, index: number }) => {
+        if (payloadParams.index < 17) {
+            setFeatParams(payloadParams.newParams);
+            setPrevFeatParams(null);
+            dispatch("updateFeatParams", {
+                ...payloadParams,
+                index: payloadParams.index + 1
+            });
+        }
+    });
+
     useEventBus("setNewClassParams", (newClassifier: BackEndLoadClassifier) => {
         console.table(featParams.feats);
         let newDefaultModelClassifierParams: Record<string, ModelClassifierParams[]>;
@@ -177,8 +194,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
         console.table(newClassifier.feature_extraction_params);
 
-        setFeatParams(newClassifier.feature_extraction_params);
-        setPrevFeatParams(newClassifier.feature_extraction_params);
+        dispatch("updateFeatParams", {
+            newParams: newClassifier.feature_extraction_params,
+            index: 0
+        });
     });
 
     useEventBus('ImageLoaded', () => {
@@ -219,12 +238,12 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         sfetch('POST', 'superpixel_segmentation_module/execute', '')
             .then(() => {
                 dispatch('labelChanged', '');
-            })!
-            .finally(() => {
-                setDisabled(false);
                 setShowLoadingCompSpS(false);
+                setDisabled(false);
                 showToast(toastMessages.onApply, timeToast);
-            });
+            }).catch(() => {
+                console.log("error in apply")
+        });
     }
 
     function onPreview() {

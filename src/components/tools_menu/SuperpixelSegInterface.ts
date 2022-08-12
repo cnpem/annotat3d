@@ -44,6 +44,7 @@ export const defaultFeatures: Feature[] = [
         description: 'It is a method of "smoothing" images by reducing the amount of intensity variation inside a window (Noise removal)'
     },
     {
+        active: false,
         id: 'median',
         name: 'Median',
         type: 'Smoothing',
