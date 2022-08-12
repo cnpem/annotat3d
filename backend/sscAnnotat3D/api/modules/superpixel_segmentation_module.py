@@ -290,6 +290,16 @@ def handle_exception(error_msg: str):
 @app.route('/superpixel_segmentation_module/create', methods=['POST', 'GET'])
 @cross_origin()
 def create():
+    """
+    Function that creates the process on the image
+
+    Notes:
+        This function is used on preprocess on SuperpixelSegmentationModuleCard.tsx
+
+    Returns:
+        (str): returns a string "successes" if everything goes well and an error otherwise
+
+    """
     img = data_repo.get_image('image')
     img_superpixel = data_repo.get_image('superpixel')
 
@@ -298,7 +308,6 @@ def create():
 
     try:
         feature_extraction_params = request.json['feature_extraction_params']
-        _debugger_print("feature_extraction_params", feature_extraction_params)
         data_repo.set_feature_extraction_params(key="feature_extraction_params",
                                                 data=feature_extraction_params.copy())
 
@@ -364,6 +373,14 @@ def create():
 @app.route('/superpixel_segmentation_module/preprocess', methods=['POST'])
 @cross_origin()
 def preprocess():
+    """
+    Notes:
+        This function isn't being called anywhere Annotat3D
+
+    Returns:
+        (str): returns a string "successes" if everything goes well and an error otherwise
+
+    """
     segm_module = module_repo.get_module(key='superpixel_segmentation_module')
     segm_module.preprocess()
 
@@ -373,6 +390,13 @@ def preprocess():
 @app.route('/superpixel_segmentation_module/preview', methods=['POST'])
 @cross_origin()
 def preview():
+    """
+    Function that creates the classifier preview in one slice of image
+
+    Returns:
+        (str): returns a string "successes" if everything goes well and an error otherwise
+
+    """
     segm_module = module_repo.get_module(key='superpixel_segmentation_module')
 
     annotations = module_repo.get_module('annotation').annotation
@@ -407,6 +431,16 @@ def preview():
 @cross_origin()
 # TODO : Implement the documentation here
 def execute():
+    """
+    Function that apply to all slices of an image
+
+    Notes:
+        This function is used on apply in SuperpixelSegmentationModuleCard.tsx
+
+    Returns:
+        (str): returns a string "successes" if everything goes well and an error otherwise
+
+    """
     segm_module = module_repo.get_module(key='superpixel_segmentation_module')
 
     annotations = module_repo.get_module('annotation').annotation
@@ -431,8 +465,17 @@ def execute():
 
 @app.route('/save_classifier', methods=['POST'])
 @cross_origin()
-# TODO : Implement the documentation here
 def save_classifier():
+    """
+    Function that saves the classifier in a .model file
+
+    Notes:
+        This function is used in FileSaveDialog.tsx
+
+    Returns:
+        (str): returns a string "successes" if everything goes well and an error otherwise
+
+    """
     try:
         path = request.json["classificationPath"]
     except Exception as e:
@@ -468,10 +511,14 @@ def save_classifier():
 
 @app.route('/load_classifier', methods=['POST'])
 @cross_origin()
-# TODO : Implement the documentation here
-# TODO : need to update the superpixel parameters when the user loads any .model
-# TODO : need to update all the rest of feats values when the user loads any .model
 def load_classifier():
+    """
+    Function that loads a classifier .model and update the back-end and front-end components
+
+    Returns:
+        (dict): Returns a dict that contains information to dispatch and update the front-end classifier
+
+    """
     try:
         path = request.json["classificationPath"]
     except Exception as e:
@@ -520,8 +567,5 @@ def load_classifier():
         "classifier_parameters": front_end_classifier,
         "feature_extraction_params": feature_extraction_params
     }
-
-    _debugger_print("Print of front_end_payload", "==============================================")
-    _debugger_print("superpixel_parameters", front_end_superpixel)
 
     return jsonify(front_end_payload)

@@ -182,17 +182,17 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 // deactivates crop preview mode on canvas
                 dispatch('annotationChanged', null);
 
-                //This function just dispatch to update the superpixel parameters if the user save to use the superpixel segmentation instead of pixel segmentation
-                dispatch("setSuperpixelParams", frontPayload.superpixel_parameters);
-
-                // Sets the classifier parameters
-                dispatch("setNewClassParams", frontPayload);
-
                 // TODO : need to update this function to work with pixel segmentation menu
-                // if (frontPayload.use_pixel_segmentation) {
-                //     // This function just dispatch to update the superpixel parameters if the user save to use the superpixel segmentation instead of pixel segmentation
-                //     dispatch("setSuperpixelParams", frontPayload.superpixel_parameters);
-                // }
+                if (frontPayload.use_pixel_segmentation) {
+                    // This function just dispatch to update the superpixel parameters if the user save to use the superpixel segmentation instead of pixel segmentation
+                    dispatch("setPixelParams", frontPayload.superpixel_parameters);
+                } else {
+                    // Sets the classifier parameters
+                    dispatch("setNewClassParams", frontPayload);
+
+                    //This function just dispatch to update the superpixel parameters if the user save to use the superpixel segmentation instead of pixel segmentation
+                    dispatch("setSuperpixelParams", frontPayload.superpixel_parameters);
+                }
 
             }).catch((error: ErrorInterface) => {
                 msgReturned = error.error_msg;

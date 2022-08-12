@@ -19,6 +19,13 @@ def _debugger_print(msg: str, payload: any):
 @app.route('/superpixel', methods=['POST', 'GET'])
 @cross_origin()
 def superpixel():
+    """
+    Function that creates the superpixel
+
+    Returns:
+        (str): returns a string "successes" if everything goes well and an error otherwise
+
+    """
     img = data_repo.get_image(key='image')
 
     img_superpixel, num_superpixels = superpixels.superpixel_extraction(
@@ -27,7 +34,10 @@ def superpixel():
         seed_spacing=request.json['seed_spacing'],
         compactness=request.json['compactness'])
 
+    # saves the superpixel img into the backend
     data_repo.set_image(key='superpixel', data=img_superpixel)
+
+    # This set_superpixel_state is just to save
     data_repo.set_superpixel_state("compactness", request.json['compactness'])
     data_repo.set_superpixel_state("seedsSpacing", request.json['seed_spacing'])
     data_repo.set_superpixel_state("method", request.json['superpixel_type'])
@@ -39,6 +49,13 @@ def superpixel():
 @app.route('/get_superpixel_slice', methods=['POST', 'GET'])
 @cross_origin()
 def get_superpixel_slice():
+    """
+    This function gets the superpixel slice value
+
+    Returns:
+        (flask.send_file): returns the superpixel value to canvas
+
+    """
     img_superpixels = data_repo.get_image('superpixel')
 
     if img_superpixels is None:

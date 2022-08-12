@@ -456,7 +456,10 @@ class ClassifierSegmentationModule(SegmentationModule):
             with open(path, 'wb') as f:
                 pickle.dump(model_complete, f)
         except Exception as e:
-            f.close()
+            try:
+                f.close()
+            except:
+                pass
             return False, 'Unable to save classification model! Error: %s' % str(e), {}
         else:
             logging.debug('Classifier saved successfully')
@@ -475,7 +478,10 @@ class ClassifierSegmentationModule(SegmentationModule):
                 model_complete = pickle.load(f)
 
         except Exception as e:
-            f.close()
+            try:
+                f.close()
+            except:
+                pass
             error_msg = 'Invalid classifier file! Unable to load classification model! Error: %s.\n\n' % str(e)
             error_msg += ('IMPORTANT NOTE: since Annotat3D version 0.3.7, classifiers saved with previous versions '
                           'of the software are no longer fully supported and may fail to load.')
