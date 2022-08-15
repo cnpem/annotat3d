@@ -2,14 +2,18 @@ import {IonCard, IonItem, IonLabel, IonList} from "@ionic/react";
 import {Fragment, useEffect} from "react";
 import {useStorageState} from "react-storage-hooks";
 import {dispatch, useEventBus} from "../../../utils/eventbus";
-import {BM3DFilteringModuleCard, GaussianFilteringModuleCard, NonLocalMeansFilteringModuleCard} from "./FilteringModuleCard";
+import {
+    BM3DFilteringModuleCard,
+    GaussianFilteringModuleCard,
+    NonLocalMeansFilteringModuleCard
+} from "./FilteringModuleCard";
 import GroupSelect from "./GroupSelect";
 import PixelSegmentationModuleCard from "./PixelSegmentationModuleCard";
 import SuperpixelModuleCard from "./SuperpixelModuleCard";
 import SuperpixelSegmentationModuleCard from "./SuperpixelSegmentationModuleCard";
 
 const moduleOptions = [
-    {id: "superpixel", label: 'Superpixel Segmentation' },
+    {id: "superpixel", label: 'Superpixel Segmentation'},
     {id: "pixel", label: "Pixel Segmentation"},
     {
         id: "filter", label: "Smoothing", options: [
@@ -31,12 +35,16 @@ const canvas: Record<string, 'drawing' | 'imaging'> = {
 
 const ProcessingMenu: React.FC = () => {
 
-    const [curModule, setCurModule] = useStorageState<string>(localStorage, 'curModule', 'superpixel');
+    const [curModule, setCurModule] = useStorageState<string>(sessionStorage, 'curModule', 'superpixel');
     const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
 
     useEventBus('LockComponents', (changeLockMenu) => {
         setLockMenu(changeLockMenu);
-    })
+    });
+
+    useEventBus("changeCurModule", (newModule: string) => {
+        setCurModule(newModule);
+    });
 
     useEffect(() => {
         dispatch('canvasModeChanged', canvas[curModule]);
@@ -48,9 +56,9 @@ const ProcessingMenu: React.FC = () => {
                 <IonItem color="primary">
                     <IonLabel>Module</IonLabel>
                     <GroupSelect value={curModule} id="module-select" options={moduleOptions}
-                        onChange={(option)  => {
-                            setCurModule(option.id);
-                        }}/>
+                                 onChange={(option) => {
+                                     setCurModule(option.id);
+                                 }}/>
                 </IonItem>
             </IonCard>
             <IonList hidden={curModule !== "superpixel"}>

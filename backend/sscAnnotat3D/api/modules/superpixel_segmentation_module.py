@@ -7,6 +7,7 @@ from werkzeug.exceptions import BadRequest
 from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmentationModule
+from sscAnnotat3D.modules.pixel_segmentation_module import PixelSegmentationModule
 from sscPySpin import feature_extraction as spin_feat_extraction
 
 # TODO : We need to template sscIO for other superpixel types
@@ -535,6 +536,7 @@ def load_classifier():
     data_repo.set_classification_model("model_complete", classifier)
 
     superpixel_state = classifier["superpixel_params"]
+    _debugger_print("superpixel_state", superpixel_state)
 
     front_end_superpixel = {
         "method": superpixel_state["superpixel_type"],
@@ -550,7 +552,14 @@ def load_classifier():
 
     chosen_features = classifier["feature_extraction_params_front"]
     _default_features_front(chosen_features)
-    _default_pooling_front(chosen_features)
+
+    if (not superpixel_state["pixel_segmentation"]):
+        _default_pooling_front(chosen_features)
+        module_repo.set_module('superpixel_segmentation_module', segm_module)
+
+    else:
+        segm_module = PixelSegmentationModule(img)
+        module_repo.set_module('pixel_segmentation_module', segm_module)
 
     feature_extraction_params = {
         "pooling": __default_pooling,

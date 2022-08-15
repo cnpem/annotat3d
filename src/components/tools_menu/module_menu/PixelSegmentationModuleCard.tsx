@@ -89,7 +89,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         if (payloadParams.index < 17) {
             setFeatParams(payloadParams.newParams);
             setPrevFeatParams(null);
-            dispatch("updateFeatParams", {
+            dispatch("updateFeatParamsPixel", {
                 ...payloadParams,
                 index: payloadParams.index + 1
             });

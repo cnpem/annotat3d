@@ -185,8 +185,12 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 // TODO : need to update this function to work with pixel segmentation menu
                 if (frontPayload.use_pixel_segmentation) {
                     // This function just dispatch to update the superpixel parameters if the user save to use the superpixel segmentation instead of pixel segmentation
-                    dispatch("setNewClassParamsPixel", frontPayload.superpixel_parameters);
+                    dispatch("setNewClassParamsPixel", frontPayload);
+                    dispatch("changeCurModule", "pixel");
                 } else {
+
+                    dispatch("changeCurModule", "superpixel");
+
                     // Sets the classifier parameters
                     dispatch("setNewClassParams", frontPayload);
 
