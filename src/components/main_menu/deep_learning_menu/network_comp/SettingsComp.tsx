@@ -37,65 +37,54 @@ import { useEventBus } from "../../../../utils/eventbus";
     return (
         <small>
             <IonContent>
-                <IonList>
-                    <IonItem slot={'header'}>
-                        <IonLabel>
-                            <small>Hardware Settings</small>
-                        </IonLabel>
-                    </IonItem>
-                    {/*Ion select option*/}
-                    <IonList slot={'content'}>
-                        {/* Select Dataset */}
-                        <IonItem disabled={false} >
-                            <IonLabel>
-                                <small>Select Hardware Mode</small>
-                            </IonLabel>
-                            <IonSelect
-                                interface='popover'
-                                value={curMachineMode}
-                                onIonChange={(e) => {
-                                    console.log(
-                                        'Network ... SettingsComp: Mode changed',
-                                        e.detail.value
-                                    )
-                                    setCurMachineMode(e.detail.value)
-                                }}
-                            >
-                                <IonSelectOption value='local'>Local</IonSelectOption>
-                                <IonSelectOption value='tepui' disabled={false}>Tepui</IonSelectOption>
-                            </IonSelect>
-                        </IonItem>
-                        <IonItem>
-                            <IonLabel>
-                                <small>Selected GPUs</small>
-                            </IonLabel>
-                            <IonSelect
-                                interface='popover'
-                                value={curGPUModeVal}
-                                onIonChange={(e) => {
-                                    console.log(
-                                        'Network ... GPU Mode changed',
-                                        e.detail.value
-                                    )
-                                    setCurGPUModeVal(e.detail.value)
-                                }}
-                            >
-                                { listGPUoptions.map(selectOptionGPU) }
-                            </IonSelect>
-                        </IonItem>
-                        <IonItem>
-                            <IonLabel position={'fixed'}>
-                                <small>Cache Path</small>
-                            </IonLabel>
-                            <IonInput
-                                value={cachePath}
-                                onIonChange={(e: CustomEvent) => {
-                                    setCachePath(e.detail.value as string)
-                                }}
-                            />
-                        </IonItem>
-                    </IonList>
-                </IonList>
+                <IonItem>
+                    <IonLabel>
+                        <small>Select Hardware Mode</small>
+                    </IonLabel>
+                    <IonSelect
+                        interface='popover'
+                        value={curMachineMode}
+                        onIonChange={(e) => {
+                            console.log(
+                                'Network ... SettingsComp: Mode changed',
+                                e.detail.value
+                            )
+                            setCurMachineMode(e.detail.value)
+                        }}
+                    >
+                        <IonSelectOption value='local'>Local</IonSelectOption>
+                        <IonSelectOption value='tepui' disabled={false}>Tepui</IonSelectOption>
+                    </IonSelect>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>
+                        <small>Selected GPUs</small>
+                    </IonLabel>
+                    <IonSelect
+                        interface='popover'
+                        value={curGPUModeVal}
+                        onIonChange={(e) => {
+                            console.log(
+                                'Network ... GPU Mode changed',
+                                e.detail.value
+                            )
+                            setCurGPUModeVal(e.detail.value)
+                        }}
+                    >
+                        { listGPUoptions.map(selectOptionGPU) }
+                    </IonSelect>
+                </IonItem>
+                <IonItem>
+                    <IonLabel position={'fixed'}>
+                        <small>Cache Path</small>
+                    </IonLabel>
+                    <IonInput
+                        value={cachePath}
+                        onIonChange={(e: CustomEvent) => {
+                            setCachePath(e.detail.value as string)
+                        }}
+                    />
+                </IonItem>
             </IonContent>
         </small>
     )

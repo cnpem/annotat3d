@@ -10,6 +10,7 @@ import {
     IonItem,
     IonLabel,
     IonList,
+    IonRow,
     IonText,
     IonTextarea
 } from '@ionic/react'
@@ -50,56 +51,50 @@ const NetworkComp: React.FC = () => {
     return (
         <small>
             <IonContent>
-                <IonList>
-                    {/*Ion select option*/}
-                    <IonList slot={'content'}>
-                        {/* Import Network */}
-                        <IonItem>
-                            <IonLabel position={'fixed'}>
-                                <small>New Network Path</small>
-                            </IonLabel>
-                            <IonInput
-                                value={importNetworkPath}
-                                placeholder={'/Absolute/Path/to/New/Network.model.tar.gz'}
-                                onIonChange={(e: CustomEvent) => {
-                                    setImportNetworkPath(e.detail.value as string)
-                                }}
-                            />
-                        </IonItem>
-                        <IonItem>
-                            <IonLabel position={'fixed'}>
-                                <small>New Network Name</small>
-                            </IonLabel>
-                            <IonInput
-                                value={importNetworkName}
-                                placeholder={'NewNetworkName'}
-                                onIonChange={(e: CustomEvent) => {
-                                    setImportNetworkName(e.detail.value as string)
-                                }}
-                            />
-                            <IonButton
-                                slot={'end'}
-                                size={'default'}
-                                color={'tertiary'}
-                                onClick={onClickImportNetwork}
-                            >
-                                Import Network
-                            </IonButton>
-                        </IonItem>
-                        <IonCard>
-                            <IonCardHeader>
-                                <IonCardTitle>
-                                    <small>Network Info</small>
-                                </IonCardTitle>
-                            </IonCardHeader>
-                            <IonCardContent>
-                                <IonTextarea className={'display-textarea-terminal-like-dark'}>
-                                    <IonText>{networkInfoText}</IonText>
-                                </IonTextarea>
-                            </IonCardContent>
-                        </IonCard>
-                    </IonList>
-                </IonList>
+                <IonItem>
+                    <IonLabel position={'fixed'}>
+                        <small>New Network Path</small>
+                    </IonLabel>
+                    <IonInput
+                        value={importNetworkPath}
+                        placeholder={'/Absolute/Path/to/New/Network.model.tar.gz'}
+                        onIonChange={(e: CustomEvent) => {
+                            setImportNetworkPath(e.detail.value as string)
+                        }}
+                    />
+                </IonItem>
+                <IonItem>
+                    <IonLabel position={'fixed'}>
+                        <small>New Network Name</small>
+                    </IonLabel>
+                    <IonInput
+                        value={importNetworkName}
+                        placeholder={'NewNetworkName'}
+                        onIonChange={(e: CustomEvent) => {
+                            setImportNetworkName(e.detail.value as string)
+                        }}
+                    />
+                    <IonButton
+                        slot={'end'}
+                        size={'default'}
+                        color={'tertiary'}
+                        onClick={onClickImportNetwork}
+                    >
+                        Import Network
+                    </IonButton>
+                </IonItem>
+                <IonRow>
+                    <IonCard className={'card-display-terminal'}>
+                        <IonCardHeader>
+                            <IonCardTitle>
+                                <small>Network Info</small>
+                            </IonCardTitle>
+                        </IonCardHeader>
+                        <IonCardContent>
+                            {networkInfoText}
+                        </IonCardContent>
+                    </IonCard>
+                </IonRow>
             </IonContent>
         </small>
     )

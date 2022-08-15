@@ -57,7 +57,7 @@ list that contain the number of gpus to use in inference
 __inference_gpus = list()
 
 """
-list of log messages
+list of log messages implemented as a FIFO queue
 """
 __log_messages = deque()
 
@@ -593,10 +593,12 @@ def get_inference_gpus():
     return __inference_gpus
 
 def set_log_message(message : str):
+    print('setting a messsage: ')
+    print(message)
     __log_messages.append(message)
 
 def get_last_log_message():
     if len(__log_messages) != 0:
-        return __log_messages.pop()
+        return __log_messages.popleft()
     else:
         return

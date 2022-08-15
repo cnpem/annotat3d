@@ -13,6 +13,7 @@ import numpy as np
 import os
 import logging
 import time
+import sentry_sdk
 
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
@@ -267,17 +268,6 @@ def run_inference():
 # Functions for the Network module
 # ---
 
-@app.route("/train", methods=["POST"])
-@cross_origin()
-def train():
-    """
-    Request for training from the frontend
-    """
-    msg = 'hello from the othersiiiiiiiide...'
-
-    return jsonify(msg)
-
-
 
 @app.route("/import_network", methods=["POST"])
 @cross_origin()
@@ -338,13 +328,13 @@ def import_dataset():
         deepModel = data_repo.get_deep_model(key='deep_learning')
         workspacePath = deepModel['deep_model_path']
     except Exception as e:
-        return handle_exception('Error trying to get the workspace path. Not found. : {}'.format(str(e)))
+        return handle_exception('Error: Unable to get the workspace path. Not found. : {}'.format(str(e)))
 
     # try network controller
     try:
         NTctrl = NetworkController(workspacePath, streaming_mode=True)
     except Exception as e:
-        return handle_exception('Error trying to get Network controller object. : {}'.format(str(e)))
+        return handle_exception('Error: Unable to get Network controller object. : {}'.format(str(e)))
 
     # check if name doesnt already exists
     if importNetworkName in NTctrl.network_models:
@@ -354,7 +344,7 @@ def import_dataset():
     try:
         NTctrl.import_model(importNetworkPath, importNetworkName)
     except Exception as e:
-        return handle_exception('Error trying to import model. : {} workspascePath is {}'.format(str(e), workspacePath))
+        return handle_exception('Error: Unable to import model. : {} workspascePath is {}'.format(str(e), workspacePath))
 
     # get actual info from?
     # is it here? _dataset_info_runnable
@@ -366,18 +356,96 @@ def import_dataset():
 
     return jsonify(info)
 
-@app.route("/dummy_training/<repeats>", methods=["POST"])
-@cross_origin()
-def training(repeats):
-    """
-    Request for training from the frontend
-    """
-    nreps = repeats
+def log_msg(msg):
+    data_repo.set_log_message(msg)
 
-    for n in range(nreps):
-        data_repo.set_log_message('message '+str(n))
+def run_training(params):
+    _loss = {
+        'Cross Entropy': 'CrossEntropy',
+        'Dice': 'Dice',
+        'Cross Entropy + Dice': 'DicePlusXEnt',
+    }
+    
+    log_msg('loss ->')
+    log_msg('{}'.format(_loss))
 
-    return 'done training'
+    num_gpus = params['num_gpus']
+    loss_type = params['loss_type']
+    optimiser = params['optimiser']
+    cuda_devices = ','.join(map(str, num_gpus))
+    batch_size = params['']
+    max_iter = params['']
+    learning_rate = params['learning_rate']
+
+    run_mode = 'local' # fixed
+
+    # try get the workspace path
+    try:
+        deepModel = data_repo.get_deep_model(key='deep_learning')
+        workspacePath = deepModel['deep_model_path']
+    except Exception as e:
+        return handle_exception('Error: Unable to get the workspace path. Not found. : {}'.format(str(e)))
+
+    # try network controller
+    try:
+        NTctrl = NetworkController(workspacePath, streaming_mode=True)
+    except Exception as e:
+        return handle_exception('Error: Unable to get Network controller object. : {}'.format(str(e)))
+
+    try:
+        network_instance = NTctrl.get_network_instance()
+    except Exception as e:
+        return handle_exception('Error: Unable to get Network instance. : {}'.format(str(e)))
+
+    try:
+        dataset_file = None
+    except Exception as e:
+        return handle_exception('Error: Unable to get Dataset file. : {}'.format(str(e)))
+
+
+    if run_mode == 'local':
+        network_instance, log = NTctrl.train(network_instance,
+                                                dataset_file,
+                                                num_gpus=num_gpus,
+                                                cuda_devices=cuda_devices,
+                                                batch_size=batch_size,
+                                                max_iter=max_iter,
+                                                lr=learning_rate,
+                                                loss_type=loss_type,
+                                                optimiser=optimiser,
+                                                **self._custom_params_value())
+    else:  #tepui
+        msg = 'mode not available'
+        # log = remote_utils.PipeStream()
+        # partition_info = _tepui_partitions[self.partitionComboBox.currentText()]
+        # with remote_modules.slurm.slurm(self._tepui_connection,
+        #                                 partition_info['partition'],
+        #                                 ngpus=partition_info['num_gpus']):
+        #     with remote_modules.singularity.singularity(self._tepui_connection,
+        #                                                 _annotat3d_singularity_img_path,
+        #                                                 mount={'/ibira': '/ibira'}):
+        #         remote_modules.deepsirius.train(self._tepui_connection,
+        #                                         self._workspace,
+        #                                         self.networkModelsComboBox.currentText(),
+        #                                         self._dataset_file,
+        #                                         batch_size=self.batchSizeSpinBox.value(),
+        #                                         max_iter=self.maxIterSpinBox.value(),
+        #                                         lr=self.learnRateSpinBox.value(),
+        #                                         loss_type=loss_type,
+        #                                         optimiser=optimiser,
+        #                                         num_gpus=partition_info['num_gpus'],
+        #                                         custom_param_values=self._custom_params_value(),
+        #                                         out_stream=log,
+        #                                         run_async=True)
+        # print(type(log))
+        # log = remote_utils.pipe_iter(log.pipe_recv)
+        # print(type(log))
+
+        # (c, workspace, network, dataset_file, partition, batch_size,
+        # max_iter, lr, loss_type, optimiser, ngpus,
+        # custom_param_values, **kwargs):
+
+    return log
 
 @app.route("/read_log", methods=["POST"])
 @cross_origin()
@@ -385,8 +453,32 @@ def read_log():
     """
     Request for training from the frontend
     """
+    print('on read log ')
     msg = data_repo.get_last_log_message()
     if msg == None:
-        return
+        return ''
     
     return msg
+
+@app.route("/train", methods=["POST"])
+@cross_origin()
+def training():
+    """
+    Request for training from the frontend
+    """
+    log_msg('Creating network instance ...\n')
+
+    nreps = 10
+    
+    # understand this and keep going
+    # sentry_transaction = sentry_sdk.start_transaction(name='Training', op='deeplearning')
+    # sentry_transaction.__enter__()
+
+    for n in range(nreps):
+        print('this is the fake training still', n)
+        log_msg('message '+str(n))
+
+    log_msg('done training')
+    
+    return 'done training'
+
