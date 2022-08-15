@@ -322,12 +322,13 @@ def preview():
     try:
         label = segm_module.preview(annotations, [slice_num], axis_dim)
     except Exception as e:
-        import traceback
-        stack_trace = traceback.format_exc()
-        return jsonify({
-            'error': 'Failure on Pixel Segmentation Preview',
-            'error_msg': stack_trace
-        }), 500
+        dict_tuple_values = [*annotations.values()]
+        unique_ids = set()
+        for id in dict_tuple_values[0]:
+            unique_ids.add(id)
+        if (len(unique_ids) < 2):
+            return handle_exception("unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
+        return handle_exception("unable to preview! {}".format(str(e)))
     data_repo.set_image('label', label)
 
     return "success", 200
@@ -346,14 +347,13 @@ def execute():
     try:
         label = segm_module.execute(annotations)
     except Exception as e:
-        import traceback
-        stack_trace = traceback.format_exc()
-        return jsonify({
-            'error': 'Failure on Pixel Segmentation Apply',
-            'error_msg': stack_trace
-        }), 500
-
-    # print(label.mean(), label.shape)
+        dict_tuple_values = [*annotations.values()]
+        unique_ids = set()
+        for id in dict_tuple_values[0]:
+            unique_ids.add(id)
+        if (len(unique_ids) < 2):
+            return handle_exception("unable to apply!. Please, Please, at least create one label and background annotation and try again the preprocess.")
+        return handle_exception("unable to apply! {}".format(str(e)))
 
     data_repo.set_image('label', label)
 

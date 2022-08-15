@@ -18,7 +18,7 @@ import {
 } from '@ionic/react';
 import {informationCircleOutline} from 'ionicons/icons';
 import {isEqual} from 'lodash';
-import {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
 import {currentEventValue, useEventBus} from '../../../utils/eventbus';
 import {dispatch} from '../../../utils/eventbus';
@@ -33,6 +33,8 @@ import {
     InitDefaultModelClassifierParams,
     initialParamsValues, ModelClassifierParams
 } from "./SuperpixelSegInterface";
+import ErrorInterface from "../../main_menu/file/utils/ErrorInterface";
+import ErrorWindowComp from "../../main_menu/file/utils/ErrorWindowComp";
 
 const PixelSegmentationModuleCard: React.FC = () => {
 
@@ -55,6 +57,11 @@ const PixelSegmentationModuleCard: React.FC = () => {
 
     const [showToast] = useIonToast();
     const timeToast = 2000;
+
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
+    const [headerErrorMsg, setHeaderErrorMsg] = useState<string>("");
+
     const toastMessages = {
         onPreprocess: "Preprocess done!",
         onPreview: "Preview done!",
@@ -65,6 +72,14 @@ const PixelSegmentationModuleCard: React.FC = () => {
         onPreprocess: "Preprocessing",
         onPreview: "Preparing preview",
         onApply: "Applying"
+    }
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
     }
 
     // useEffect to force the user to use preprocess if he changes the featParams
@@ -232,12 +247,16 @@ const PixelSegmentationModuleCard: React.FC = () => {
                 showToast(toastMessages.onApply, timeToast);
                 dispatch("useSuperpixelModule", false);
             })
-            .catch(error => {
-                present({
-                    header: error.error,
-                    message: error.error_msg
-                });
-            });
+            .catch((error: ErrorInterface) => {
+                setDisabled(false);
+                console.log("error in pixel_segmentation_module apply");
+                console.log(error.error_msg);
+                setShowErrorWindow(true);
+                setHeaderErrorMsg(`error on apply in pixel segmentation menu`);
+                setErrorMsg(error.error_msg);
+                setHasPreprocessed(false);
+                setShowLoadingCompPS(false);
+            })
     }
 
     function onPreview() {
@@ -255,17 +274,20 @@ const PixelSegmentationModuleCard: React.FC = () => {
         sfetch('POST', '/pixel_segmentation_module/preview', JSON.stringify(curSlice))
             .then(() => {
                 dispatch('labelChanged', '');
-            })
-            .catch((error) => {
-                present({
-                    header: error.error,
-                    message: error.error_msg
-                });
-            })
-            .finally(() => {
                 setDisabled(false);
                 setShowLoadingCompPS(false);
+                setHasPreprocessed(true);
                 showToast(toastMessages.onPreview, timeToast);
+            })
+            .catch((error: ErrorInterface) => {
+                setDisabled(false);
+                console.log("error in pixel_segmentation_module preview");
+                console.log(error.error_msg);
+                setShowErrorWindow(true);
+                setHeaderErrorMsg(`error on preview in pixel segmentation menu`);
+                setErrorMsg(error.error_msg);
+                setHasPreprocessed(false);
+                setShowLoadingCompPS(false);
             });
     }
 
@@ -281,15 +303,20 @@ const PixelSegmentationModuleCard: React.FC = () => {
                 setPrevFeatParams(featParams);
                 setPrevClassParams(classParams);
                 showToast(toastMessages.onPreprocess, timeToast);
-            })
-            .catch(() => {
-                console.log('Fail on preprocess');
-                setHasPreprocessed(false);
-            })
-            .finally(() => {
+                setHasPreprocessed(true);
                 setDisabled(false);
                 setShowLoadingCompPS(false);
-            });
+            })
+            .catch((error: ErrorInterface) => {
+                setDisabled(false);
+                console.log("error in pixel_segmentation_module preprocess");
+                console.log(error.error_msg);
+                setShowErrorWindow(true);
+                setHeaderErrorMsg(`error on preprocess in pixel segmentation menu`);
+                setErrorMsg(error.error_msg);
+                setHasPreprocessed(false);
+                setShowLoadingCompPS(false);
+            })
     }
 
     function renderSelectOptionClassifier(classifier: Classifier) {
@@ -474,6 +501,13 @@ const PixelSegmentationModuleCard: React.FC = () => {
                     </Fragment>
                 </ModuleCardItem>
             </ModuleCardItem>
+            {/*Error window*/}
+            <ErrorWindowComp
+                errorMsg={errorMsg}
+                headerMsg={headerErrorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
             <LoadingComponent
                 openLoadingWindow={showLoadingCompPS}
                 loadingText={loadingMsg}/>
