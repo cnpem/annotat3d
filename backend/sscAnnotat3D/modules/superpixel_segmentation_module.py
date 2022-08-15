@@ -981,10 +981,32 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
     # TODO : don't forget to document this function
     def load_classifier(self, path: str = ""):
+        """
+        Function that load the classifier as .model extension
+
+        Args:
+            path (str): string to load the classifier
+
+        Returns:
+            (bool, str, dict): returns a tuple that contains in this order : a boolean with the response, a str with the error msg if the boolean is False and a dict that contains the information to update the front-end component
+
+        """
         resp, msg, model_complete = ClassifierSegmentationModule.load_classifier(self, path)
         return resp, msg, model_complete
 
     def save_classifier(self, path: str = "", superpixel_state: dict = None, feature_extraction_params: dict = None):
+        """
+        Function that save the classifier as .model extension
+
+        Args:
+            path (str): string to save the classifier
+            superpixel_state (dict): dict that contains information about the superpixel
+            feature_extraction_params (dict): dict that contains the feature_extraction_params chosen by the user
+
+        Returns:
+            (bool, str, dict): returns a tuple that contains in this order : a boolean with the response, a str with the error msg if the boolean is False and a dict that contains the information to update the front-end component
+
+        """
         resp, msg, model_complete = ClassifierSegmentationModule.save_classifier(self, path, superpixel_state,
                                                                                  feature_extraction_params)
         return resp, msg, model_complete

@@ -126,8 +126,17 @@ def handle_exception(error_msg: str):
     return jsonify({"error_msg": error_msg}), 400
 
 
-# TODO : Don't forget to document this function
 def _default_features_front(features: dict = None):
+    """
+    Build-in function that creates the front-end features
+
+    Args:
+        features (dict): a dict that contains the raw features
+
+    Returns:
+        None
+
+    """
     # This loop resets the dict to make for easily to create the front-end component
     for default_feature_front in __default_features_front:
         default_feature_front["active"] = False
@@ -146,9 +155,17 @@ def _default_features_front(features: dict = None):
 
             i += 1
 
-
-# TODO : Don't forget to document this function
 def _default_classifier_front(classifier_dict: dict = None):
+    """
+    Build-in function that creates the front-end classifier
+
+    Args:
+        classifier_dict (dict): a dict that contains the raw pooling
+
+    Returns:
+        (dict): returns a dict with the correct front-end template
+
+    """
     if (classifier_dict["classifier_type"] == "rf"):
         return [{
             "id": 'rf_n_estimators',
@@ -389,7 +406,6 @@ def execute():
 
 @app.route('/save_classifier_pixel', methods=['POST'])
 @cross_origin()
-# TODO : Don't forge to document this function
 def save_classifier_pixel():
     """
     Function that saves the classifier in a .model file

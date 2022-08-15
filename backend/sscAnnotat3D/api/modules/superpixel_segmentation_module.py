@@ -12,7 +12,6 @@ from sscPySpin import feature_extraction as spin_feat_extraction
 
 # TODO : We need to template sscIO for other superpixel types
 # TODO : In this actual stage, we're forcing superpixel to be 32 int type
-# TODO : Implement the error template for flask in this script
 
 app = Blueprint('superpixel_segmentation_module', __name__)
 
@@ -148,8 +147,17 @@ __default_pooling = [
 ]
 
 
-# TODO : Don't forget to document this function
 def _default_pooling_front(pooling: dict = None):
+    """
+    Build-in function that creates the front-end pooling
+
+    Args:
+        pooling (dict): a dict that contains the raw pooling
+
+    Returns:
+        None
+
+    """
     # This loop resets the dict to make for easily to create the front-end component
     for pool in __default_pooling:
         pool["active"] = False
@@ -169,8 +177,17 @@ def _default_pooling_front(pooling: dict = None):
             i += 1
 
 
-# TODO : Don't forget to document this function
 def _default_features_front(features: dict = None):
+    """
+    Build-in function that creates the front-end features
+
+    Args:
+        features (dict): a dict that contains the raw features
+
+    Returns:
+        None
+
+    """
     # This loop resets the dict to make for easily to create the front-end component
     for default_feature_front in __default_features_front:
         default_feature_front["active"] = False
@@ -190,8 +207,17 @@ def _default_features_front(features: dict = None):
             i += 1
 
 
-# TODO : Don't forget to document this function
 def _default_classifier_front(classifier_dict: dict = None):
+    """
+    Build-in function that creates the front-end classifier
+
+    Args:
+        classifier_dict (dict): a dict that contains the raw pooling
+
+    Returns:
+        (dict): returns a dict with the correct front-end template
+
+    """
     if (classifier_dict["classifier_type"] == "rf"):
         return [{
             "id": 'rf_n_estimators',
