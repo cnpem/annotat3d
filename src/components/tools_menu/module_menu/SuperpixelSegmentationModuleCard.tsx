@@ -17,7 +17,7 @@ import {
 } from '@ionic/react';
 import {informationCircleOutline} from 'ionicons/icons';
 import {isEqual} from 'lodash';
-import {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useEffect, useState} from 'react';
 import {useStorageState} from 'react-storage-hooks';
 import {currentEventValue} from '../../../utils/eventbus';
 import {useEventBus, dispatch} from '../../../utils/eventbus';
@@ -29,6 +29,8 @@ import {
     ClassifierParams, classifiers, Feature,
     FeatureParams, InitDefaultModelClassifierParams, initialParamsValues, ModelClassifierParams, Pooling
 } from "./SuperpixelSegInterface";
+import ErrorInterface from "../../main_menu/file/utils/ErrorInterface";
+import ErrorWindowComp from "../../main_menu/file/utils/ErrorWindowComp";
 
 const SuperpixelSegmentationModuleCard: React.FC = () => {
 
@@ -47,6 +49,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     const [showLoadingCompSpS, setShowLoadingCompSpS] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(true);
 
+    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string>("");
+    const [headerErrorMsg, setHeaderErrorMsg] = useState<string>("");
+
     const [showToast] = useIonToast();
     const timeToast = 2000;
     const toastMessages = {
@@ -59,6 +65,14 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         onPreprocess: "Preprocessing",
         onPreview: "Preparing preview",
         onApply: "Applying"
+    }
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
     }
 
     useEffect(() => {
@@ -241,9 +255,17 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 setDisabled(false);
                 showToast(toastMessages.onApply, timeToast);
                 dispatch("useSuperpixelModule", true);
-            }).catch(() => {
-            console.log("error in apply")
-        });
+            })
+            .catch((error: ErrorInterface) => {
+                setDisabled(false);
+                console.log("error in superpixel_segmentation_module apply");
+                console.log(error.error_msg);
+                setShowErrorWindow(true);
+                setHeaderErrorMsg(`error on apply in superpixel segmentation menu`);
+                setErrorMsg(error.error_msg);
+                setHasPreprocessed(false);
+                setShowLoadingCompSpS(false);
+            });
     }
 
     function onPreview() {
@@ -259,12 +281,21 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice))
             .then(() => {
                 dispatch('labelChanged', '');
-            })
-            .finally(() => {
                 setDisabled(false);
                 setShowLoadingCompSpS(false);
+                setHasPreprocessed(true);
                 showToast(toastMessages.onPreview, timeToast);
-            });
+            })
+            .catch((error: ErrorInterface) => {
+                setDisabled(false);
+                console.log("error in superpixel_segmentation_module preview");
+                console.log(error.error_msg);
+                setShowErrorWindow(true);
+                setHeaderErrorMsg(`error on preview in superpixel segmentation menu`);
+                setErrorMsg(error.error_msg);
+                setHasPreprocessed(false);
+                setShowLoadingCompSpS(false);
+            })
     }
 
     function onPreprocess() {
@@ -279,13 +310,18 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 setPrevFeatParams(featParams);
                 setPrevClassParams(classParams);
                 showToast(toastMessages.onPreprocess, timeToast);
-            })
-            .catch(() => {
-                console.log('Fail on preprocess');
-                setHasPreprocessed(false);
-            })
-            .finally(() => {
+                setHasPreprocessed(true);
                 setDisabled(false);
+                setShowLoadingCompSpS(false);
+            })
+            .catch((error: ErrorInterface) => {
+                setDisabled(false);
+                console.log("error in superpixel_segmentation_module preprocess");
+                console.log(error.error_msg);
+                setShowErrorWindow(true);
+                setHeaderErrorMsg(`error on preprocess in superpixel segmentation menu`);
+                setErrorMsg(error.error_msg);
+                setHasPreprocessed(false);
                 setShowLoadingCompSpS(false);
             });
     }
@@ -493,6 +529,13 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                     </Fragment>
                 </ModuleCardItem>
             </ModuleCardItem>
+            {/*Error window*/}
+            <ErrorWindowComp
+                errorMsg={errorMsg}
+                headerMsg={headerErrorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
             <LoadingComponent
                 openLoadingWindow={showLoadingCompSpS}
                 loadingText={loadingMsg}/>

@@ -304,6 +304,20 @@ def create():
     img = data_repo.get_image('image')
     img_superpixel = data_repo.get_image('superpixel')
 
+    annotations = module_repo.get_module('annotation').annotation
+    if (annotations == {}):
+        return handle_exception(
+            "unable to apply!. Please, at least create one label and background annotation and try again the preprocess.")
+
+    dict_tuple_values = [*annotations.values()]
+    unique_ids = set()
+    for tuple_values in dict_tuple_values:
+        id, _ = tuple_values
+        unique_ids.add(id)
+    if (len(unique_ids) <= 1):
+        return handle_exception(
+            "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
+
     if (_convert_dtype_to_str(img_superpixel.dtype) != "int32"):
         img_superpixel = img_superpixel.astype("int32")
 
@@ -401,6 +415,9 @@ def preview():
     segm_module = module_repo.get_module(key='superpixel_segmentation_module')
 
     annotations = module_repo.get_module('annotation').annotation
+    if (annotations == {}):
+        return handle_exception(
+            "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
 
     slice_num = request.json['slice']
     axis = request.json['axis']
@@ -415,13 +432,16 @@ def preview():
 
     try:
         label = segm_module.preview(annotations, [slice_num], axis_dim)
-    except:
-        import traceback
-        stack_trace = traceback.format_exc()
-        return jsonify({
-            'error': 'Failure on Superpixel Segmentation Preview',
-            'error_msg': stack_trace
-        }), 500
+    except Exception as e:
+        dict_tuple_values = [*annotations.values()]
+        unique_ids = set()
+        for tuple_values in dict_tuple_values:
+            id, _ = tuple_values
+            unique_ids.add(id)
+        if (len(unique_ids) <= 1):
+            return handle_exception(
+                "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
+        return handle_exception("unable to preview! {}".format(str(e)))
 
     data_repo.set_image('label', label)
 
@@ -444,6 +464,9 @@ def execute():
     segm_module = module_repo.get_module(key='superpixel_segmentation_module')
 
     annotations = module_repo.get_module('annotation').annotation
+    if (annotations == {}):
+        return handle_exception(
+            "unable to apply!. Please, at least create one label and background annotation and try again the preprocess.")
 
     if segm_module is None:
         return "Not a valid segmentation module", 400
@@ -451,12 +474,15 @@ def execute():
     try:
         label = segm_module.execute(annotations)
     except Exception as e:
-        import traceback
-        stack_trace = traceback.format_exc()
-        return jsonify({
-            'error': 'Failure on Superpixel Segmentation Apply',
-            'error_msg': stack_trace
-        }), 500
+        dict_tuple_values = [*annotations.values()]
+        unique_ids = set()
+        for tuple_values in dict_tuple_values:
+            id, _ = tuple_values
+            unique_ids.add(id)
+        if (len(unique_ids) <= 1):
+            return handle_exception(
+                "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
+        return handle_exception("unable to preview! {}".format(str(e)))
 
     data_repo.set_image('label', label)
 

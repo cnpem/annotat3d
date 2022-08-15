@@ -6,7 +6,6 @@ import {
     IonSelect,
     IonSelectOption,
     IonCheckbox,
-    useIonAlert,
     IonButton,
     IonIcon,
     IonCard,
@@ -37,9 +36,6 @@ import ErrorInterface from "../../main_menu/file/utils/ErrorInterface";
 import ErrorWindowComp from "../../main_menu/file/utils/ErrorWindowComp";
 
 const PixelSegmentationModuleCard: React.FC = () => {
-
-    const [present] = useIonAlert();
-
     const [defaultModelClassifierParams, setDefaultModelClassifierParams] = useStorageState(sessionStorage, "defaultModelClassifierParams", InitDefaultModelClassifierParams)
     const [prevFeatParams, setPrevFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelPrevFeatParams');
     const [featParams, setFeatParams] = useStorageState<FeatureParams>(sessionStorage, 'superpixelFeatParams', initialParamsValues);
@@ -256,7 +252,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
                 setErrorMsg(error.error_msg);
                 setHasPreprocessed(false);
                 setShowLoadingCompPS(false);
-            })
+            });
     }
 
     function onPreview() {

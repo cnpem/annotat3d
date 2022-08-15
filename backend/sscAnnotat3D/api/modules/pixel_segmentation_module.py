@@ -232,6 +232,20 @@ def features_to_spin_features(feature):
 def create():
     img = data_repo.get_image('image')
 
+    annotations = module_repo.get_module('annotation').annotation
+    if (annotations == {}):
+        return handle_exception(
+            "unable to apply!. Please, at least create one label and background annotation and try again the preprocess.")
+
+    dict_tuple_values = [*annotations.values()]
+    unique_ids = set()
+    for tuple_values in dict_tuple_values:
+        id, _ = tuple_values
+        unique_ids.add(id)
+    if (len(unique_ids) <= 1):
+        return handle_exception(
+            "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
+
     try:
         feature_extraction_params = request.json['feature_extraction_params']
         data_repo.set_feature_extraction_params(key="feature_extraction_params",
@@ -307,6 +321,9 @@ def preview():
     segm_module = module_repo.get_module(key='pixel_segmentation_module')
 
     annotations = module_repo.get_module('annotation').annotation
+    if (annotations == {}):
+        return handle_exception(
+            "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
 
     slice_num = request.json['slice']
     axis = request.json['axis']
@@ -324,10 +341,12 @@ def preview():
     except Exception as e:
         dict_tuple_values = [*annotations.values()]
         unique_ids = set()
-        for id in dict_tuple_values[0]:
+        for tuple_values in dict_tuple_values:
+            id, _ = tuple_values
             unique_ids.add(id)
-        if (len(unique_ids) < 2):
-            return handle_exception("unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
+        if (len(unique_ids) <= 1):
+            return handle_exception(
+                "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
         return handle_exception("unable to preview! {}".format(str(e)))
     data_repo.set_image('label', label)
 
@@ -340,6 +359,9 @@ def execute():
     segm_module = module_repo.get_module(key='pixel_segmentation_module')
 
     annotations = module_repo.get_module('annotation').annotation
+    if (annotations == {}):
+        return handle_exception(
+            "unable to apply!. Please, at least create one label and background annotation and try again the preprocess.")
 
     if segm_module is None:
         return "Not a valid segmentation module", 400
@@ -349,11 +371,13 @@ def execute():
     except Exception as e:
         dict_tuple_values = [*annotations.values()]
         unique_ids = set()
-        for id in dict_tuple_values[0]:
+        for tuple_values in dict_tuple_values:
+            id, _ = tuple_values
             unique_ids.add(id)
-        if (len(unique_ids) < 2):
-            return handle_exception("unable to apply!. Please, Please, at least create one label and background annotation and try again the preprocess.")
-        return handle_exception("unable to apply! {}".format(str(e)))
+        if (len(unique_ids) <= 1):
+            return handle_exception(
+                "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
+        return handle_exception("unable to preview! {}".format(str(e)))
 
     data_repo.set_image('label', label)
 
@@ -394,7 +418,6 @@ def save_classifier_pixel():
     try:
         superpixel_state = data_repo.get_superpixel_state()
         superpixel_state["use_pixel_segmentation"] = True
-        _debugger_print("superpixel_state", superpixel_state)
     except:
         return handle_exception("Unable to get superpixel_state")
 
