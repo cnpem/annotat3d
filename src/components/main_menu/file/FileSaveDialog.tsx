@@ -49,6 +49,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     const toastTime = 10000;
     const [dtype, setDtype] = useState<dtype_type>("uint16");
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
+    const [useSuperpixelModule, setUseSuperpixelModule] = useStorageState<boolean>(sessionStorage, "useSuperpixelModule", true)
     const [errorMsg, setErrorMsg] = useState<string>("");
     const [headerErrorMsg, setHeaderErrorMsg] = useState<string>("");
 
@@ -69,6 +70,10 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             annotPath: setDefaultStringPath(loadedPaths.annotPath),
             classificationPath: setDefaultStringPath(loadedPaths.classificationPath)
         })
+    });
+
+    useEventBus("useSuperpixelModule", (flag: boolean) => {
+        setUseSuperpixelModule(flag);
     });
 
     const handleErrorMsg = (msg: string) => {
@@ -164,8 +169,21 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
         let msgReturned = "";
         let isError = false;
 
-        await sfetch("POST", "/save_classifier", JSON.stringify(backendPayload), "json")
-            .then((success: string) => {
+        if (useSuperpixelModule) {
+            await sfetch("POST", "/save_classifier", JSON.stringify(backendPayload), "json")
+                .then((success: string) => {
+                    msgReturned = `${pathFiles.classificationPath} saved as .model`;
+                    console.log(success);
+                }).catch((error: ErrorInterface) => {
+                    msgReturned = error.error_msg;
+                    isError = true;
+                    console.log("Error message while trying to save the classifier model", error.error_msg);
+                    setHeaderErrorMsg(`error while saving the classifier model`);
+                    setErrorMsg(error.error_msg);
+                    setShowErrorWindow(true);
+                });
+        } else {
+            await sfetch("POST", "/save_classifier_pixel", JSON.stringify(backendPayload), "json").then((success: string) => {
                 msgReturned = `${pathFiles.classificationPath} saved as .model`;
                 console.log(success);
             }).catch((error: ErrorInterface) => {
@@ -176,6 +194,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                 setErrorMsg(error.error_msg);
                 setShowErrorWindow(true);
             });
+        }
 
         const returnedObj: QueueToast = {message: msgReturned, isError: isError};
         return returnedObj;

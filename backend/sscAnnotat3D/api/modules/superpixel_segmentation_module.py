@@ -345,7 +345,7 @@ def create():
     print(classifier_params)
 
     if img is None or img_superpixel is None:
-        return 'Needs a valid image and superpixel to create module.', 400
+        return handle_exception('Needs a valid image and superpixel to create module.')
 
     segm_module = SuperpixelSegmentationModule(img, img_superpixel)
 
@@ -429,7 +429,6 @@ def preview():
 
 @app.route('/superpixel_segmentation_module/execute', methods=['POST'])
 @cross_origin()
-# TODO : Implement the documentation here
 def execute():
     """
     Function that apply to all slices of an image

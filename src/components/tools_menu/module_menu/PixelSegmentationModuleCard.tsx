@@ -69,8 +69,6 @@ const PixelSegmentationModuleCard: React.FC = () => {
 
     // useEffect to force the user to use preprocess if he changes the featParams
     useEffect(() => {
-        console.log(prevFeatParams, featParams);
-        console.log(isEqual(prevFeatParams, featParams));
         const hasChanged = !isEqual(prevFeatParams, featParams);
         setHasPreprocessed(!hasChanged);
     }, [featParams, prevFeatParams, setHasPreprocessed]);
@@ -80,11 +78,6 @@ const PixelSegmentationModuleCard: React.FC = () => {
         const hasChanged = !isEqual(prevClassParams, classParams);
         setHasPreprocessed(!hasChanged);
     }, [classParams, prevClassParams, setHasPreprocessed]);
-
-    useEventBus('ImageLoaded', () => {
-        setPrevClassParams(null);
-        setPrevFeatParams(null);
-    });
 
     /**
      * This EventBus forces FeatParams to update. For some reason, this component is having trouble
@@ -103,7 +96,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         }
     });
 
-    useEventBus("setNewClassParams", (newClassifier: BackEndLoadClassifier) => {
+    useEventBus("setNewClassParamsPixel", (newClassifier: BackEndLoadClassifier) => {
         let newDefaultModelClassifierParams: Record<string, ModelClassifierParams[]>;
         if (newClassifier.classifier_parameters.classifier === "rf") {
             newDefaultModelClassifierParams = {
@@ -192,12 +185,16 @@ const PixelSegmentationModuleCard: React.FC = () => {
 
         console.table(newClassifier.feature_extraction_params);
 
-        dispatch("updateFeatParams", {
+        dispatch("updateFeatParamsPixel", {
             newParams: newClassifier.feature_extraction_params,
             index: 0
         });
     });
 
+    useEventBus('ImageLoaded', () => {
+        setPrevFeatParams(null);
+        setPrevClassParams(null);
+    });
 
     function getModuleBackendParams() {
         const params = {
@@ -205,12 +202,16 @@ const PixelSegmentationModuleCard: React.FC = () => {
                 classifier_type: classParams.classifier,
                 grid_search: false
             },
+            classifier_values: {
+                id: classParams.params[0].id,
+                value: classParams.params[0].value
+            },
             feature_extraction_params: {
                 'sigmas': featParams.multiscale,
                 'selected_features': featParams.feats!
                     .filter(p => p.active)
                     .map(p => p.id),
-                'feat_selection_enabled': featParams.thresholdSelection !== null,
+                'feat_selection_enabled': featParams.thresholdSelection !== undefined,
                 'feat_selection_method_threshold': featParams.thresholdSelection
             }
         };
@@ -226,17 +227,16 @@ const PixelSegmentationModuleCard: React.FC = () => {
         sfetch('POST', 'pixel_segmentation_module/execute', '')
             .then(() => {
                 dispatch('labelChanged', '');
+                setDisabled(false);
+                setShowLoadingCompPS(false);
+                showToast(toastMessages.onApply, timeToast);
+                dispatch("useSuperpixelModule", false);
             })
             .catch(error => {
                 present({
                     header: error.error,
                     message: error.error_msg
                 });
-            })
-            .finally(() => {
-                setDisabled(false);
-                setShowLoadingCompPS(false);
-                showToast(toastMessages.onApply, timeToast);
             });
     }
 
@@ -392,7 +392,10 @@ const PixelSegmentationModuleCard: React.FC = () => {
                                       if (e.detail.value) {
                                           const value = stringToNumberArray(e.detail.value);
                                           if (!isEqual(featParams.multiscale, value)) {
-                                              setFeatParams({...featParams, multiscale: value});
+                                              setFeatParams({
+                                                  ...featParams,
+                                                  multiscale: value
+                                              });
                                           }
                                       }
                                   }}>
@@ -406,7 +409,10 @@ const PixelSegmentationModuleCard: React.FC = () => {
                         <IonCheckbox checked={featParams.thresholdSelection !== undefined}
                                      onIonChange={(e) => {
                                          const value = e.detail.checked ? 0.01 : undefined;
-                                         setFeatParams({...featParams, thresholdSelection: value});
+                                         setFeatParams({
+                                             ...featParams,
+                                             thresholdSelection: value
+                                         });
                                      }}/>
                     </IonItem>
                     <IonItem>

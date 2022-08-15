@@ -240,6 +240,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 setShowLoadingCompSpS(false);
                 setDisabled(false);
                 showToast(toastMessages.onApply, timeToast);
+                dispatch("useSuperpixelModule", true);
             }).catch(() => {
             console.log("error in apply")
         });
@@ -277,6 +278,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
             .then(() => {
                 setPrevFeatParams(featParams);
                 setPrevClassParams(classParams);
+                showToast(toastMessages.onPreprocess, timeToast);
             })
             .catch(() => {
                 console.log('Fail on preprocess');
@@ -285,7 +287,6 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
             .finally(() => {
                 setDisabled(false);
                 setShowLoadingCompSpS(false);
-                showToast(toastMessages.onPreprocess, timeToast);
             });
     }
 
