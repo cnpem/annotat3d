@@ -4,16 +4,16 @@ import {IonRow, IonCol, IonLabel, useIonToast, IonButton, IonIcon, IonAlert} fro
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
 import {LabelInterface} from './LabelInterface';
-import {colorFromId, defaultColormap} from '../../../utils/colormap';
-import {dispatch, useEventBus, currentEventValue} from '../../../utils/eventbus';
+import {colorFromId, defaultColormap} from '../../../../utils/colormap';
+import {dispatch, useEventBus, currentEventValue} from '../../../../utils/eventbus';
 
 import './LabelTable.css';
 import {useStorageState} from "react-storage-hooks";
 import {isEqual} from "lodash";
 import { trashOutline } from "ionicons/icons";
-import { sfetch } from "../../../utils/simplerequest";
+import { sfetch } from "../../../../utils/simplerequest";
 
-import ErrorInterface from "../../main_menu/file/utils/ErrorInterface";
+import ErrorInterface from "../../../main_menu/file/utils/ErrorInterface";
 
 interface LabelTableProps {
     colors: [number, number, number][];

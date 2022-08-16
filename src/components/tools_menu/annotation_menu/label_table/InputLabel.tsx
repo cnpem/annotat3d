@@ -1,18 +1,18 @@
 import React, {useState} from "react";
 import {IonAlert, IonButton, IonIcon, useIonToast} from "@ionic/react";
 import { LabelInterface } from "./LabelInterface";
-import {colorFromId} from '../../../utils/colormap';
+import {colorFromId} from '../../../../utils/colormap';
 
 /*Icons import*/
 import {addOutline} from "ionicons/icons";
 
 import './OptionsIcons.css';
-import {sfetch} from "../../../utils/simplerequest";
-import {dispatch} from "../../../utils/eventbus";
-import {useEventBus} from "../../../utils/eventbus";
+import {sfetch} from "../../../../utils/simplerequest";
+import {dispatch} from "../../../../utils/eventbus";
+import {useEventBus} from "../../../../utils/eventbus";
 import {useStorageState} from "react-storage-hooks";
-import ErrorInterface from "../../main_menu/file/utils/ErrorInterface";
-import ErrorWindowComp from "../../main_menu/file/utils/ErrorWindowComp";
+import ErrorInterface from "../../../main_menu/file/utils/ErrorInterface";
+import ErrorWindowComp from "../../../main_menu/file/utils/ErrorWindowComp";
 
 interface InputLabelProps {
     colors: [number, number, number][];

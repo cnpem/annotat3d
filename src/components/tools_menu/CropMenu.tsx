@@ -211,7 +211,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
             dispatch('superpixelChanged', {});
             // updates label image updated in the backend
             dispatch('labelChanged','');
-            // informs aboud annotation updates in the backend
+            // informs aboud annotation_menu updates in the backend
             dispatch('annotationChanged', null);
             // deactivates crop preview mode on canvas
             dispatch('cropPreviewMode', false); 

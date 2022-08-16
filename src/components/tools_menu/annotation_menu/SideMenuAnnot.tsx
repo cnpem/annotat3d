@@ -1,8 +1,8 @@
 import React from "react";
 import {IonCard, IonCardContent} from "@ionic/react";
 import LabelTable from "./label_table/LabelTable";
-import {defaultColormap} from '../../utils/colormap';
-import AnnotationCard from "./annotation/AnnotationCard";
+import {defaultColormap} from '../../../utils/colormap';
+import AnnotationCard from "./AnnotationCard";
 
 /**
  * Component that creates the lateral bar menu

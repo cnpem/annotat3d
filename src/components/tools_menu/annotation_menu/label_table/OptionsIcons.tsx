@@ -11,10 +11,10 @@ import {LabelInterface} from './LabelInterface';
 // @ts-ignore
 import {ChromePicker} from "react-color";
 import {useStorageState} from "react-storage-hooks";
-import {defaultColormap} from "../../../utils/colormap";
-import {dispatch} from "../../../utils/eventbus";
-import {sfetch} from "../../../utils/simplerequest";
-import ErrorInterface from "../../main_menu/file/utils/ErrorInterface";
+import {defaultColormap} from "../../../../utils/colormap";
+import {dispatch} from "../../../../utils/eventbus";
+import {sfetch} from "../../../../utils/simplerequest";
+import ErrorInterface from "../../../main_menu/file/utils/ErrorInterface";
 
 interface OptionsProps {
     label: LabelInterface;

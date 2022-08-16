@@ -908,7 +908,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     newAnnotation() {
         sfetch('POST', '/new_annot/annotation');
-        console.log("new annotation, hue");
+        console.log("new annotation_menu, hue");
     }
 
     getSuperpixelSlice() {

@@ -21,7 +21,7 @@ const MenuFabButton: React.FC<MenuButtonProps> = ({value, buttonsList, onChange,
                                              || buttonsList[0]);
     return (
         <div>
-            <IonFabButton disabled={disabled} color='dark' title={"annotation mode: "+selected.id}>
+            <IonFabButton disabled={disabled} color='dark' title={"annotation_menu mode: "+selected.id}>
                 <IonIcon size="large" icon={selected.logo}/>
             </IonFabButton>
             <IonFabList side={ openSide }>

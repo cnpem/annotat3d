@@ -130,7 +130,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
     }
 
     /**
-     * Function that Saves the annotation .pkl file and send to the backend
+     * Function that Saves the annotation_menu .pkl file and send to the backend
      */
     const dispatchSaveAnnot = async () => {
         const annotPath = {
@@ -413,7 +413,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
-                            {/* Save annotation file option */}
+                            {/* Save annotation_menu file option */}
                             <IonAccordion>
                                 <IonItem slot={"header"}>
                                     <IonIcon slot={"start"} icon={create}/>

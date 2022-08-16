@@ -30,7 +30,7 @@ import {dispatch} from "../../../utils/eventbus";
 import ErrorWindowComp from "./utils/ErrorWindowComp";
 import ImageInfoInterface from "./utils/ImageInfoInterface";
 import ErrorInterface from "./utils/ErrorInterface";
-import {LabelInterface} from "../../tools_menu/label_table/LabelInterface";
+import {LabelInterface} from "../../tools_menu/annotation_menu/label_table/LabelInterface";
 import LoadingComponent from "../../tools_menu/utils/LoadingComponent";
 import {useStorageState} from "react-storage-hooks";
 import {dtype_type, dtypeList, img_operation, multiplesPath, QueueToast} from "./utils/FileLoadInterface";
@@ -129,7 +129,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
     }
 
     /**
-     * Function that reads the annotation .pkl file and send to the backend
+     * Function that reads the annotation_menu .pkl file and send to the backend
      */
     const dispatchOpenAnnot = async () => {
         const annotPath = {
@@ -178,7 +178,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 // informs canvas that the superpixel image was deleted
                 dispatch('superpixelChanged', {});
 
-                // informs about annotation updates in the backend
+                // informs about annotation_menu updates in the backend
                 // deactivates crop preview mode on canvas
                 dispatch('annotationChanged', null);
 
@@ -544,7 +544,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItemDivider/>
                                 </IonList>
                             </IonAccordion>
-                            {/* Load annotation file option */}
+                            {/* Load annotation_menu file option */}
                             <IonAccordion>
                                 <IonItem slot={"header"}>
                                     <IonIcon slot={"start"} icon={create}/>
