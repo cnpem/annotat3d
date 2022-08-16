@@ -1,7 +1,7 @@
 import React, {useEffect, useRef} from "react";
 import {IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonItem} from "@ionic/react";
 import {moon, sunny} from "ionicons/icons";
-import {dispatch, useEventBus} from "../../utils/eventbus";
+import {dispatch, useEventBus} from "../../../utils/eventbus";
 import { useStorageState } from 'react-storage-hooks';
 import {isEqual} from "lodash";
 
@@ -10,7 +10,7 @@ import {isEqual} from "lodash";
 // @ts-ignore
 import { AlphaPicker, SliderPicker } from 'react-color';
 import CropMenu from "./CropMenu";
-import { ImageShapeInterface } from "./ImageShapeInterface";
+import { ImageShapeInterface } from "../utils/ImageShapeInterface";
 
 function rgbToHex(r: number, g: number, b: number) {
     const bin = (r << 16) | (g << 8) | b;

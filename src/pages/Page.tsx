@@ -12,7 +12,7 @@ import CanvasContainer from '../components/canvas/CanvasContainer';
 import {build} from "ionicons/icons";
 
 import { dispatch, useEventBus } from '../utils/eventbus';
-import { SliceInfoInterface } from "../components/tools_menu/SliceInfoInterface";
+import { SliceInfoInterface } from "../components/tools_menu/utils/SliceInfoInterface";
 import { sfetch } from "../utils/simplerequest";
 
 /**

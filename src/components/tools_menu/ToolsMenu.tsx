@@ -1,10 +1,10 @@
 import {IonCard, IonCardContent, IonCardHeader, IonIcon, IonLabel, IonSegment, IonSegmentButton, SegmentChangeEventDetail} from "@ionic/react";
 import React, {Fragment} from "react";
 import {useStorageState} from "react-storage-hooks";
-import { ImageShapeInterface } from "./ImageShapeInterface";
+import { ImageShapeInterface } from "./utils/ImageShapeInterface";
 import ProcessingMenu from "./module_menu/ProcessingMenu";
 import SideMenuAnnot from "./annotation_menu/SideMenuAnnot";
-import SideMenuVis from "./SideMenuVis";
+import SideMenuVis from "./vis_menu/SideMenuVis";
 import SlicesMenu from "./SlicesMenu";
 
 import {eyeOutline, brushOutline, colorWandOutline} from "ionicons/icons";

@@ -4,10 +4,10 @@ import {IonButton, IonButtons, IonIcon,
 } from "@ionic/react";
 import {albumsOutline} from "ionicons/icons";
 
-import {ImageShapeInterface} from './ImageShapeInterface';
+import {ImageShapeInterface} from './utils/ImageShapeInterface';
 
 import {dispatch, useEventBus} from '../../utils/eventbus';
-import {SliceInfoInterface} from "./SliceInfoInterface";
+import {SliceInfoInterface} from "./utils/SliceInfoInterface";
 import {useStorageState} from "react-storage-hooks";
 import {Fragment, useEffect} from "react";
 

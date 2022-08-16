@@ -8,11 +8,11 @@ import { useStorageState } from 'react-storage-hooks';
 // @ts-ignore
 import { SliderPicker } from 'react-color';
 
-import { dispatch } from '../../utils/eventbus';
-import { sfetch } from '../../utils/simplerequest';
-import ImageInfoInterface from '../main_menu/file/utils/ImageInfoInterface';
-import { CropAxisInterface, CropShapeInterface } from './CropInterface';
-import { ImageShapeInterface } from './ImageShapeInterface';
+import { dispatch } from '../../../utils/eventbus';
+import { sfetch } from '../../../utils/simplerequest';
+import ImageInfoInterface from '../../main_menu/file/utils/ImageInfoInterface';
+import { CropAxisInterface, CropShapeInterface } from '../utils/CropInterface';
+import { ImageShapeInterface } from '../utils/ImageShapeInterface';
 
 interface CropMenuProps {
     imageShape: ImageShapeInterface;
