@@ -8,6 +8,9 @@ TODO : Don't forget to document the functions
 
 """
 import glob
+from mimetypes import init
+from pkgutil import extend_path
+from re import T
 from tkinter.messagebox import NO
 import numpy as np
 import os
@@ -22,12 +25,72 @@ from tensorflow.python.client import device_lib
 
 from sscDeepsirius.cython import standardize
 from sscAnnotat3D.repository import data_repo
-from sscDeepsirius.utils import dataset, image#, gpuu
+from sscDeepsirius.utils import dataset, image#, gpu
 from sscDeepsirius.controller.inference_controller import InferenceController
 from sscDeepsirius.controller.host_network_controller import HostNetworkController as NetworkController
 
 app = Blueprint('deep', __name__)
 
+def init_logger(init_msg : str = '\nStarting message logger queue.\n'):
+    data_repo.init_logger(init_msg)
+
+def log_msg(msg):
+    data_repo.set_log_message(msg)
+
+def get_msg():
+    return data_repo.dequeue_log_message()
+class activeNet:
+    def __init__(self):
+        self._is_running = False
+        self._discard_network_instances = False
+
+        self._data_info = None
+        self._data = None
+
+        self._tensorboard_server = None
+        self._frozen_model = None
+        self._dataset_file = None
+
+        self._workspacePath = None
+        self._model
+
+        self._network_controller = None
+        self._tepui_connection = None
+
+        self._gpus = None
+        self._custom_params_ui = {}
+
+        self._network_instance = None
+        self._network_instance_name = None
+
+        self._log_thread = None
+        self._sentry_transaction = None
+
+        self._networkModel = None
+
+    def set_network_controller(self):
+        try: 
+            self._networkModel = data_repo.get_deep_model(key='deep_learning')
+            self._workspacePath = self._model['deep_model_path']
+        except Exception as e:
+            return handle_exception('Error trying to get the workspace path. Not found. : {}'.format(str(e)))
+
+        # try network controller
+        try:
+            self._network_controller = NetworkController(self._workspacePath, streaming_mode=True)
+        except Exception as e:
+            return handle_exception('Error trying to get Network controller object. : {}'.format(str(e)))
+
+    def start_server(self):
+        init_logger('Starting training server.')
+        self._tensorboard_server = self._network_controller.start_tensorboard(self._networkModel)
+        log_msg('Tensorboard: {}'.format(self._tensorboard_server))
+        url = self._tensorboard_server
+        log_msg('Running on {}'.format(url))
+
+    
+
+# thisNet = # import from 
 
 @app.errorhandler(BadRequest)
 def handle_exception(error_msg: str):
@@ -312,52 +375,35 @@ def import_network():
     return jsonify(info)
 
 
-# todo: 
-
 @app.route("/import_dataset", methods=["POST"])
 @cross_origin()
 def import_dataset():
     """
     Request for training from the frontend
     """
-    importNetworkPath = request.json['path']
-    importNetworkName = request.json['name']
+    global thisNet
 
-    # try get the workspace path
-    try:
-        deepModel = data_repo.get_deep_model(key='deep_learning')
-        workspacePath = deepModel['deep_model_path']
-    except Exception as e:
-        return handle_exception('Error: Unable to get the workspace path. Not found. : {}'.format(str(e)))
-
+    importDatasetPath = request.json['path']
+    
     # try network controller
     try:
-        NTctrl = NetworkController(workspacePath, streaming_mode=True)
+        data = dataset.load_dataset(importDatasetPath)
     except Exception as e:
-        return handle_exception('Error: Unable to get Network controller object. : {}'.format(str(e)))
+        return handle_exception('Error: Unable to load dataset. : {}'.format(str(e)))
 
-    # check if name doesnt already exists
-    if importNetworkName in NTctrl.network_models:
-        return handle_exception('Network Name {} already exists. Please create another name. {}'.format(importNetworkName))
-    
-    # try import model
     try:
-        NTctrl.import_model(importNetworkPath, importNetworkName)
+        dataList = data['data']
+        labelList = data['data']
     except Exception as e:
-        return handle_exception('Error: Unable to import model. : {} workspascePath is {}'.format(str(e), workspacePath))
+        return handle_exception('Error: Unable to import labeled data. : {} \nFrom path: {}'.format(str(e), importDatasetPath))
 
     # get actual info from?
     # is it here? _dataset_info_runnable
     # maybe here? _data_info
 
-    info = 'New network \n'+'Imported from path: '+importNetworkPath+'\n'+'New Name: '+importNetworkName
-
-    print(glob.glob(workspacePath+'*'))
+    info = 'Importing dataset from: '+importDatasetPath+'\n'+'here goes nothing: '+str(type(dataList))+str(type(dataList[0]))
 
     return jsonify(info)
-
-def log_msg(msg):
-    data_repo.set_log_message(msg)
 
 def run_training(params):
     _loss = {
@@ -412,38 +458,9 @@ def run_training(params):
                                                 max_iter=max_iter,
                                                 lr=learning_rate,
                                                 loss_type=loss_type,
-                                                optimiser=optimiser,
-                                                **self._custom_params_value())
+                                                optimiser=optimiser)
     else:  #tepui
-        msg = 'mode not available'
-        # log = remote_utils.PipeStream()
-        # partition_info = _tepui_partitions[self.partitionComboBox.currentText()]
-        # with remote_modules.slurm.slurm(self._tepui_connection,
-        #                                 partition_info['partition'],
-        #                                 ngpus=partition_info['num_gpus']):
-        #     with remote_modules.singularity.singularity(self._tepui_connection,
-        #                                                 _annotat3d_singularity_img_path,
-        #                                                 mount={'/ibira': '/ibira'}):
-        #         remote_modules.deepsirius.train(self._tepui_connection,
-        #                                         self._workspace,
-        #                                         self.networkModelsComboBox.currentText(),
-        #                                         self._dataset_file,
-        #                                         batch_size=self.batchSizeSpinBox.value(),
-        #                                         max_iter=self.maxIterSpinBox.value(),
-        #                                         lr=self.learnRateSpinBox.value(),
-        #                                         loss_type=loss_type,
-        #                                         optimiser=optimiser,
-        #                                         num_gpus=partition_info['num_gpus'],
-        #                                         custom_param_values=self._custom_params_value(),
-        #                                         out_stream=log,
-        #                                         run_async=True)
-        # print(type(log))
-        # log = remote_utils.pipe_iter(log.pipe_recv)
-        # print(type(log))
-
-        # (c, workspace, network, dataset_file, partition, batch_size,
-        # max_iter, lr, loss_type, optimiser, ngpus,
-        # custom_param_values, **kwargs):
+        log = 'remote (tepui) mode not available'
 
     return log
 
@@ -454,31 +471,31 @@ def read_log():
     Request for training from the frontend
     """
     print('on read log ')
-    msg = data_repo.get_last_log_message()
+    msg = get_msg()
     if msg == None:
+        print('empty msg')
         return ''
     
     return msg
 
 @app.route("/train", methods=["POST"])
 @cross_origin()
-def training():
+def train():
     """
     Request for training from the frontend
     """
-    log_msg('Creating network instance ...\n')
 
-    nreps = 10
+    init_logger()
+
+    nreps = 5
     
     # understand this and keep going
     # sentry_transaction = sentry_sdk.start_transaction(name='Training', op='deeplearning')
     # sentry_transaction.__enter__()
 
     for n in range(nreps):
-        print('this is the fake training still', n)
         log_msg('message '+str(n))
-
+        
     log_msg('done training')
-    
     return 'done training'
 

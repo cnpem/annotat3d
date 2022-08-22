@@ -1,5 +1,6 @@
 import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonContent, IonInput, IonItem, IonLabel, IonList, IonRow, IonTextarea } from "@ionic/react";
 import {  useState } from "react";
+import { sfetch } from "../../../../utils/simplerequest";
 
 /**
  *
@@ -10,21 +11,16 @@ import {  useState } from "react";
 
     const [datasetInfoText, setDatasetInfoText] = useState<string>('')
 
-    const loadDataset = (datasetInfo: string) => {
-        console.log('NetworkComp Import Dataset readFile path:', datasetInfo)
-        setDatasetInfoText(
-            'This is the:\nNetwork Info. Blablalbalbal_break\nblalbalbal blalalbla break\nladfbmdafbmadmbf: msndvuian 10'
-        )
+    const onClickImportDataset = () => {
+        console.log('NetworkComp Import Dataset readFile path:', importDatasetPath)
 
-        // sfetch('POST', `???`, JSON.stringify(path), 'json').then(
-        //     () => {
-        //     // dispatches
-        //     }).catch((error: ErrorInterface) => {
-        //     console.log('error while trying to add an image')
-        //     console.log(error.error_msg);
-        //     setErrorMsg(error.error_msg);
-        //     setShowErrorWindow(true);
-        // })
+        const args = {'path': '/home/brunocarlos_lnls/work/images/dataset_augmented.h5'};
+        
+        sfetch('POST', `/import_dataset`, JSON.stringify(args), 'json')
+        .then((info: string) => {
+            setDatasetInfoText(info);
+            // dispatches
+        })
     }
 
     return (
@@ -36,7 +32,7 @@ import {  useState } from "react";
                     </IonLabel>
                     <IonInput
                         value={importDatasetPath}
-                        placeholder={'/path/to/dataset.h5'}
+                        placeholder={'absolute/path/to/dataset.h5'}
                         onIonChange={(e: CustomEvent) => {
                             setImportDatasetPath(e.detail.value as string)
                         }}
@@ -45,9 +41,7 @@ import {  useState } from "react";
                         slot={'end'}
                         size={'default'}
                         color={'tertiary'}
-                        onClick={() => {
-                            loadDataset(importDatasetPath)
-                        }}
+                        onClick={onClickImportDataset}
                     >
                         Load Dataset
                     </IonButton>

@@ -12,7 +12,7 @@ const TrainingComp: React.FC = () => {
     const [logMode, setLogMode] = useState<boolean>(false);
     const [hostMode, setHostMode] = useState<boolean>(true);
 
-    const timer : number = 1000;
+    const refreshInterval : number = 600 /** in ms */; 
 
 
     /** Updates the logText variable using fetch to a backend function if logMode is active. */
@@ -34,7 +34,7 @@ const TrainingComp: React.FC = () => {
         }
 
         if (logMode) {
-            const interval = setInterval(() => handlerOnLogMode(), timer);
+            const interval = setInterval(() => handlerOnLogMode(), refreshInterval);
             console.log('TrainingComp: updating log.');
             return () => {
                 clearInterval(interval);
@@ -45,7 +45,7 @@ const TrainingComp: React.FC = () => {
 
     const handlerOnTrainButton = () => {
         setLogMode(true)
-        sfetch("POST", '/dummy_training', JSON.stringify(''), 'text')
+        sfetch("POST", '/train', JSON.stringify(''), 'text')
         .then(
             (msg: string) => {
                 console.log(msg);

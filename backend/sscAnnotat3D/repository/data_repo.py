@@ -592,12 +592,18 @@ def get_inference_gpus():
     """
     return __inference_gpus
 
+def init_logger(init_message : str):
+    print(init_message)
+    __log_messages.clear()
+    __log_messages.append(init_message)
+
 def set_log_message(message : str):
-    print('setting a messsage: ')
+    print('queue messsage: ')
     print(message)
     __log_messages.append(message)
 
-def get_last_log_message():
+def dequeue_log_message():
+    print('dequeue message')
     if len(__log_messages) != 0:
         return __log_messages.popleft()
     else:
