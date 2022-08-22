@@ -18,6 +18,12 @@ from werkzeug.exceptions import BadRequest
 app = Blueprint('annotation', __name__)
 
 
+def _debugger_print(msg: str, payload: any):
+    print("\n----------------------------------------------------------")
+    print("{} : {}".format(msg, payload))
+    print("-------------------------------------------------------------\n")
+
+
 @app.errorhandler(BadRequest)
 def handle_exception(error_msg: str):
     """
@@ -126,7 +132,7 @@ def open_annot():
     annotation = set()
     for label in annot_module.get_annotation().values():
 
-        if(label[0] not in annotation):
+        if (label[0] not in annotation):
             annotation.add(label[0])
             label_list.append({
                 "labelName": "Label {}".format(label[0]) if label[0] > 0 else "Background",
@@ -185,7 +191,6 @@ def save_annot():
 @app.route("/draw", methods=["POST"])
 @cross_origin()
 def draw():
-
     slice_num = request.json["slice"]
     axis = request.json["axis"]
     size = request.json["size"]
@@ -216,7 +221,6 @@ def draw():
 @app.route("/get_annot_slice", methods=["POST"])
 @cross_origin()
 def get_annot_slice():
-
     slice_num = request.json["slice"]
     axis = request.json["axis"]
     axis_dim = utils.get_axis_num(axis)
@@ -224,7 +228,7 @@ def get_annot_slice():
 
     annot_module = module_repo.get_module('annotation')
 
-    if(annot_module != None):
+    if (annot_module != None):
         img_slice = annot_module.annotation_image[slice_range]
 
         img_slice = zlib.compress(utils.toNpyBytes(img_slice))
@@ -242,10 +246,10 @@ def undo_annot():
 
     return 'success', 200
 
+
 @app.route("/delete_label_annot", methods=["POST"])
 @cross_origin()
 def delete_label_annot():
-
     try:
         label_id = request.json["label_id"]
     except Exception as e:
@@ -259,10 +263,17 @@ def delete_label_annot():
 
     return "success", 200
 
+
 @app.route("/find_label_by_click", methods=["POST"])
 @cross_origin()
 def find_label_by_click():
+    """
+    Function that find label or annotations by click
 
+    Returns:
+        (int): returns a int that represents the id of a label
+
+    """
     try:
         x = request.json["x_coord"]
         y = request.json["y_coord"]
@@ -277,10 +288,26 @@ def find_label_by_click():
     except Exception as e:
         return handle_exception(str(e))
 
-    if(axis == "XY"):
+    if (axis == "XY"):
         data = (slice, y, x)
 
-    elif(axis == "XZ"):
+    elif (axis == "XZ"):
+        data = (y, slice, x)
+
+    else:
+        data = (x, y, slice)
+
+    label_img = data_repo.get_image(key="label")
+
+    if (label_img is not None):
+        id_data = int(label_img[data])
+        _debugger_print("id_data found", id_data)
+        return jsonify(id_data)
+
+    if (axis == "XY"):
+        data = (slice, y, x)
+
+    elif (axis == "XZ"):
         data = (y, slice, x)
 
     else:
@@ -292,6 +319,7 @@ def find_label_by_click():
         return jsonify(annotations[data][0])
 
     return jsonify(-1)
+
 
 @app.route("/merge_labels", methods=["POST"])
 @cross_origin()
@@ -338,6 +366,7 @@ def merge_labels():
     data_repo.set_annotation(data=annotations)
 
     return jsonify(selected_labels[1:])
+
 
 @app.route("/is_annotation_empty", methods=["POST"])
 @cross_origin()
