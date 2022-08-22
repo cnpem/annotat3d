@@ -147,6 +147,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
                                     deleteLabelsToMerge(labelsToDelete);
                                     console.log("annotationChanged dispatch on merge");
                                     dispatch("annotationChanged", null);
+                                    dispatch('labelChanged', '');
                                     setShowMergeMenu(false);
                                     setSelectedLabels([]);
                                     ionToastActivateExtendOp(`Labels merged successfully !`, timeToast);

@@ -3,15 +3,16 @@ This script contains functions used for annotations
 @Docs author : Gabriel Borin Macedo (gabriel.macedo@lnls.com.br or borinmacedo@gmail.com)
 """
 
-from flask import Blueprint, request, send_file, jsonify
 import pickle
 import io
 import zlib
+import numpy as np
 
 from sscAnnotat3D.modules import annotation_module
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D import utils
 
+from flask import Blueprint, request, send_file, jsonify
 from flask_cors import cross_origin
 from werkzeug.exceptions import BadRequest
 
@@ -167,10 +168,12 @@ def close_annot():
 
     try:
         label_img = data_repo.get_image(key="label")
-        label_img[label_img != 0] = 0
-        data_repo.set_image(key="label", data=label_img)
     except Exception as e:
         return handle_exception(str(e))
+
+    if (label_img is not None):
+        label_img[label_img > 0] = 0
+        data_repo.set_image(key="label", data=label_img)
 
     return "All markers erased successfully", 200
 
@@ -325,7 +328,7 @@ def find_label_by_click():
     except Exception as e:
         return handle_exception(str(e))
 
-    if (label_img is not None):
+    if (label_img is not None and np.max(label_img) > 0):
         _debugger_print("id_data found", int(label_img[data]))
         return jsonify(int(label_img[data]))
 
@@ -343,7 +346,7 @@ def find_label_by_click():
         print("data found by key : {}".format(annotations[data]))
         return jsonify(annotations[data][0])
 
-    return jsonify(-1)
+    return jsonify(0)
 
 
 @app.route("/merge_labels", methods=["POST"])
@@ -368,11 +371,16 @@ def merge_labels():
     if (len(selected_labels) <= 1):
         return handle_exception("Please, choose at least 2 labels to merge")
 
+    try:
+        label_img = data_repo.get_image(key="label")
+    except Exception as e:
+        return handle_exception(str(e))
+
     pivot_label = selected_labels[0]
     annot_module = module_repo.get_module('annotation')
     annotations = annot_module.get_annotation()
 
-    if (annotations != None):
+    if (annotations != None and label_img is not None):
         for i in range(1, len(selected_labels)):
             label_to_find = selected_labels[i]
 
@@ -381,6 +389,24 @@ def merge_labels():
                 Notes:
                     In this case, value is a tuple with coordinates (label, click_order)
                     
+                Examples:
+                    (0, 4): label 0 (Background) was created on the 4 click  
+                """
+                if (label_to_find == value[0]):
+                    annotations[key] = (pivot_label, value[1])
+                    label_img[label_img == label_to_find] = pivot_label
+
+        data_repo.set_image(key="label", data=label_img)
+
+    elif (annotations != None):
+        for i in range(1, len(selected_labels)):
+            label_to_find = selected_labels[i]
+
+            for key, value in annotations.items():
+                """
+                Notes:
+                    In this case, value is a tuple with coordinates (label, click_order)
+
                 Examples:
                     (0, 4): label 0 (Background) was created on the 4 click  
                 """
