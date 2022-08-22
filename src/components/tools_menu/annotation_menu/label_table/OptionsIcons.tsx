@@ -150,13 +150,13 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                         };
 
                         sfetch("POST", "/delete_label_annot", JSON.stringify(params), "").then(
-                            (info) => {
+                            () => {
                                 dispatch("annotationChanged", null);
-                                console.log("printing info ", info)
+                                dispatch('labelChanged', '');
                             }
                         ).catch((error: ErrorInterface) => {
-                                //TODO: Need to implement a error window here
-                                console.log(error);
+                            //TODO: Need to implement a error window here
+                            console.log(error);
 
                         });
 

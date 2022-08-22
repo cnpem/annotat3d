@@ -250,6 +250,13 @@ def undo_annot():
 @app.route("/delete_label_annot", methods=["POST"])
 @cross_origin()
 def delete_label_annot():
+    """
+    Function that deletes label and annotation
+
+    Returns:
+        (str): returns a string "success" if everything goes well and an Error otherwise
+
+    """
     try:
         label_id = request.json["label_id"]
     except Exception as e:
@@ -260,6 +267,15 @@ def delete_label_annot():
         annot_module.remove_label(label_id)
     except Exception as e:
         return handle_exception(str(e))
+
+    try:
+        label_img = data_repo.get_image(key="label")
+    except Exception as e:
+        return handle_exception(str(e))
+
+    if (label_img is not None and label_id is not 0):
+        label_img[label_img == label_id] = 0
+        data_repo.set_image(key="label", data=label_img)
 
     return "success", 200
 
@@ -297,12 +313,14 @@ def find_label_by_click():
     else:
         data = (x, y, slice)
 
-    label_img = data_repo.get_image(key="label")
+    try:
+        label_img = data_repo.get_image(key="label")
+    except Exception as e:
+        return handle_exception(str(e))
 
     if (label_img is not None):
-        id_data = int(label_img[data])
-        _debugger_print("id_data found", id_data)
-        return jsonify(id_data)
+        _debugger_print("id_data found", int(label_img[data]))
+        return jsonify(int(label_img[data]))
 
     if (axis == "XY"):
         data = (slice, y, x)
