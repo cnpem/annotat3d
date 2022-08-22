@@ -165,6 +165,13 @@ def close_annot():
     except:
         return handle_exception("Failed to erase all markers")
 
+    try:
+        label_img = data_repo.get_image(key="label")
+        label_img[label_img != 0] = 0
+        data_repo.set_image(key="label", data=label_img)
+    except Exception as e:
+        return handle_exception(str(e))
+
     return "All markers erased successfully", 200
 
 
