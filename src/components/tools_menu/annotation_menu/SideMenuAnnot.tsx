@@ -2,6 +2,7 @@ import React from "react";
 import {IonCard, IonCardContent} from "@ionic/react";
 import LabelTable from "./label_table/LabelTable";
 import {defaultColormap} from '../../../utils/colormap';
+import EditLabelMenu from "../edit_module_menu/EditLabelMenu";
 
 /**
  * Component that creates the lateral bar menu
@@ -17,6 +18,7 @@ const SideMenuAnnot: React.FC = () => {
                     <LabelTable colors={defaultColormap}/>
                 </IonCardContent>
             </IonCard>
+            <EditLabelMenu/>
         </div>
     )
 
