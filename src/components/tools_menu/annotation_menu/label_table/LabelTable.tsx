@@ -10,8 +10,8 @@ import {dispatch, useEventBus, currentEventValue} from '../../../../utils/eventb
 import './LabelTable.css';
 import {useStorageState} from "react-storage-hooks";
 import {isEqual} from "lodash";
-import { trashOutline } from "ionicons/icons";
-import { sfetch } from "../../../../utils/simplerequest";
+import {arrowUndoOutline, trashOutline} from "ionicons/icons";
+import {sfetch} from "../../../../utils/simplerequest";
 
 import ErrorInterface from "../../../main_menu/file/utils/ErrorInterface";
 
@@ -36,11 +36,13 @@ interface WarningWindowInterface {
  * @param {(labels: LabelInterface[]) => void} onLabelList - Setter for labelList
  * @param {(id: number) => void} onNewLabelId - Setter of new label id
  */
-const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
+const WarningWindow: React.FC<WarningWindowInterface> = ({
+                                                             openWarningWindow,
                                                              onOpenWarningWindow,
                                                              labelList,
                                                              onLabelList,
-                                                             onNewLabelId}) => {
+                                                             onNewLabelId
+                                                         }) => {
 
     const closeWarningWindow = () => {
         onOpenWarningWindow(false);
@@ -55,17 +57,17 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({openWarningWindow,
             () => {
                 dispatch('annotationChanged', null);
                 dispatch('labelChanged', '');
-            }).catch((error:ErrorInterface) => {
-                //TODO : need to implement an error component here
-                console.log("error to delete all labels\n");
-                console.log(error);
+            }).catch((error: ErrorInterface) => {
+            //TODO : need to implement an error component here
+            console.log("error to delete all labels\n");
+            console.log(error);
         }).finally(() => {
             closeWarningWindow();
         });
         sfetch("POST", "/delete_info/anot_backup", "");
     }
 
-    return(
+    return (
         <IonAlert
             isOpen={openWarningWindow}
             onDidDismiss={closeWarningWindow}
@@ -107,6 +109,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     }]);
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
+    const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
 
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
     const [ionToastLabelFounded,] = useIonToast();
@@ -150,6 +153,10 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         dispatch('labelColorsChanged', labelList);
     });
 
+    useEventBus('LockComponents', (activateAddLabelButton: boolean) => {
+        setLockMenu(activateAddLabelButton);
+    });
+
     const removeLabelElement = (label: LabelInterface) => {
         setLabelList(labelList!.filter(l => l.id !== label.id));
 
@@ -186,6 +193,13 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         dispatch('labelSelected', {
             id: id
         });
+    }
+
+    const undoAnnotation = () => {
+        sfetch('POST', '/undo_annot', '')
+            .then(() => {
+                dispatch('annotationChanged', null);
+            });
     }
 
     const renderLabel = (labelElement: LabelInterface) => {
@@ -242,14 +256,25 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                     </tbody>
                 </ReactBootStrap.Table>
             </div>
-            {/*Delete all component*/}
             <IonRow>
                 <IonCol>
-                    <div style={ {display: "flex", justifyContent: "flex-end"} }>
+                    {/*Undo Button*/}
+                    <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+                        <IonButton color="danger" size="small" disabled={lockMenu}
+                                   onClick={() => {
+                                       undoAnnotation();
+                                   }}>
+                            <IonIcon slot="end" icon={arrowUndoOutline}/>
+                            Undo
+                        </IonButton>
+                    </div>
+                    {/*==================*/}
+                    {/*Delete all button*/}
+                    <div style={{display: "flex", justifyContent: "flex-end"}}>
                         <IonButton color="danger" size="small" slot={"end"}
-                            disabled={labelList.length <= 1}
-                            onClick={() => setOpenWarningWindow(true)}>
-                            <IonIcon icon={trashOutline} slot={"end"} />
+                                   disabled={labelList.length <= 1}
+                                   onClick={() => setOpenWarningWindow(true)}>
+                            <IonIcon icon={trashOutline} slot={"end"}/>
                             Delete all
                         </IonButton>
                         {(openWarningWindow) ?
@@ -258,10 +283,11 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                                 onOpenWarningWindow={handleShowWarningWindow}
                                 labelList={labelList}
                                 onLabelList={selectLabelList}
-                                onNewLabelId={selectIdGenerator} /> :
+                                onNewLabelId={selectIdGenerator}/> :
                             <></>
                         }
                     </div>
+                    {/*=============*/}
                 </IonCol>
             </IonRow>
         </div>
