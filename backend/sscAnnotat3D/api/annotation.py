@@ -101,7 +101,7 @@ def is_available_annot(annot_id: str):
 @app.route("/open_annot", methods=["POST"])
 @cross_origin()
 def open_annot():
-    f"""
+    """
     Function that opens an annotation
 
     Notes:

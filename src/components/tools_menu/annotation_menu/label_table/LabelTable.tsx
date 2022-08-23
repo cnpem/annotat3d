@@ -242,6 +242,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                     </tbody>
                 </ReactBootStrap.Table>
             </div>
+            {/*Delete all component*/}
             <IonRow>
                 <IonCol>
                     <div style={ {display: "flex", justifyContent: "flex-end"} }>
