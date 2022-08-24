@@ -12,7 +12,7 @@ import {LabelInterface} from './LabelInterface';
 import {ChromePicker} from "react-color";
 import {useStorageState} from "react-storage-hooks";
 import {defaultColormap} from "../../../../utils/colormap";
-import {dispatch} from "../../../../utils/eventbus";
+import {dispatch, useEventBus} from "../../../../utils/eventbus";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../../main_menu/file/utils/ErrorInterface";
 
@@ -84,12 +84,17 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
     const [showDeletePopUp, setShowDeletePopUp] = useState<boolean>(false);
     const [showNamePopover, setShowNamePopover] = useState<boolean>(false);
     const [showColorPopover, setShowColorPopover] = useState<boolean>(false);
+    const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
 
     useEffect(() => {
         if (userDeleteOp && props.label.id !== 0) {
             props.onChangeLabelList(props.label);
         }
     }, [userDeleteOp, props]);
+
+    useEventBus('changeLockButton', (flag: boolean) => {
+        setLockMenu(flag);
+    });
 
     const [color, setColor] = useStorageState<[number, number, number]>(
         sessionStorage, 'labelColor.' + props.label.id, defaultColormap[props.label.id]
@@ -106,14 +111,17 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
     return (
         <IonButtons>
             <IonButton id={"delete-label-button-" + props.label.id} size="small"
-                       onClick={() => setShowDeletePopUp(true)}>
+                       onClick={() => setShowDeletePopUp(true)}
+                       disabled={lockMenu}>
                 <IonIcon icon={closeOutline}/>
             </IonButton>
-            <IonButton id={"edit-label-button-" + props.label.id} onClick={handleNameEditClickButton}>
+            <IonButton id={"edit-label-button-" + props.label.id} onClick={handleNameEditClickButton}
+                       disabled={lockMenu}>
                 <IonIcon icon={pencilOutline}/>
             </IonButton>
 
-            <IonButton id={"edit-color-button-" + props.label.id} onClick={() => setShowColorPopover(true)}>
+            <IonButton id={"edit-color-button-" + props.label.id} onClick={() => setShowColorPopover(true)}
+                       disabled={lockMenu}>
                 <IonIcon icon={colorPalette}/>
             </IonButton>
 

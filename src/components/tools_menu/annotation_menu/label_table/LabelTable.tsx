@@ -137,7 +137,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
             ionToastLabelFounded(`Cannot find a label by click !`, toastTimer);
         }
 
-    })
+    });
 
     useEventBus("LabelLoaded", (labelVec: LabelInterface[]) => {
         console.log("Label color : ", props.colors);
@@ -157,6 +157,10 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
     useEventBus('LockComponents', (activateAddLabelButton: boolean) => {
         setLockMenu(activateAddLabelButton);
+    });
+
+    useEventBus('changeLockButton', (flag: boolean) => {
+        setLockMenu(flag);
     });
 
     const removeLabelElement = (label: LabelInterface) => {
@@ -210,7 +214,11 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
         return (
             <tr key={labelElement.id} className={isActive ? "label-table-active" : ""}
-                onClick={() => selectLabel(labelElement.id)}>
+                onClick={() => {
+                    if (!activateSL) {
+                        selectLabel(labelElement.id)
+                    }
+                }}>
                 <td>
                     <div style={{display: "flex"}}>
                         <div className="round-bar" style={{background: `rgb(${labelElement.color.join(',')})`}}></div>
@@ -272,11 +280,14 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                             checked={activateSL}
                             slot={"end"}
                             onIonChange={(e: CustomEvent) => {
-                                const newColor = colorFromId(props.colors, newLabelId);
+                                if (e.detail.checked) {
+                                    setSelectedLabel(newLabelId - 1);
+                                }
                                 dispatch("activateSL", {
                                     isActivated: e.detail.checked,
                                     id: newLabelId,
                                 });
+                                dispatch("changeLockButton", e.detail.checked);
                                 setActivateSL(e.detail.checked);
                             }}/>
                     </IonItem>
@@ -295,7 +306,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                         </IonButton>
                         {/*Delete all button*/}
                         <IonButton color="danger" size="small" slot={"end"}
-                                   disabled={labelList.length <= 1}
+                                   disabled={labelList.length <= 1 || lockMenu}
                                    onClick={() => setOpenWarningWindow(true)}>
                             <IonIcon icon={trashOutline} slot={"end"}/>
                             Delete all

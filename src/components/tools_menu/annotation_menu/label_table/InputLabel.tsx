@@ -45,12 +45,14 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         setLockMenu(activateAddLabelButton);
     });
 
+    useEventBus("changeLockButton", (flag: boolean) => {
+        setLockMenu(flag);
+    });
+
     // This function simulates a click user to add a new label.
     useEventBus("sequentialLabelUpdate", (slPayload: { id: number, tableLen: number }) => {
-        if (slPayload.id >= slPayload.tableLen) {
-            const link = document.getElementById("add-label-button");
-            link!.click();
-        }
+        const link = document.getElementById("add-label-button");
+        link!.click();
         props.onSelectLabel(slPayload.id);
     });
 
