@@ -225,7 +225,8 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                     <OptionsIcons
                         label={labelElement}
                         onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList} isSLActivated={activateSL}/>
+                        onChangeLabel={changeLabelList}
+                        isSLActivated={activateSL}/>
                 </td>
             </tr>
         );
@@ -250,7 +251,8 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                         onLabelList={selectLabelList}
                         newLabelId={newLabelId}
                         onNewLabelId={selectIdGenerator}
-                        onSelectLabel={selectLabel}/>
+                        onSelectLabel={selectLabel}
+                        isSLActivated={activateSL}/>
                 </IonCol>
             </IonRow>
             <div className={"label-table"}>
@@ -277,13 +279,13 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                             slot={"end"}
                             onIonChange={(e: CustomEvent) => {
                                 if (e.detail.checked) {
-                                    setSelectedLabel(newLabelId - 1);
+                                    console.log("newLabelId - 1 : ", labelList[labelList.length - 1].id);
+                                    setSelectedLabel(labelList[labelList.length - 1].id);
                                 }
                                 dispatch("activateSL", {
                                     isActivated: e.detail.checked,
                                     id: newLabelId,
                                 });
-                                dispatch("changeLockButton", e.detail.checked);
                                 setActivateSL(e.detail.checked);
                             }}/>
                     </IonItem>

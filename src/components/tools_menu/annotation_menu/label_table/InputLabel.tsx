@@ -19,6 +19,7 @@ interface InputLabelProps {
     newLabelId: number;
     onNewLabelId: (id: number) => void;
     onSelectLabel: (id: number) => void;
+    isSLActivated: boolean
 }
 
 interface LabelMergeListInterface {
@@ -43,10 +44,6 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     useEventBus('LockComponents', (activateAddLabelButton: boolean) => {
         setLockMenu(activateAddLabelButton);
-    });
-
-    useEventBus("changeLockButton", (flag: boolean) => {
-        setLockMenu(flag);
     });
 
     // This function simulates a click user to add a new label.
@@ -119,7 +116,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     return (
         <div style={{display: "flex", justifyContent: "flex-end"}}>
-            <IonButton size={"small"} onClick={extendLabel} disabled={lockMenu}>
+            <IonButton size={"small"} onClick={extendLabel} disabled={lockMenu || props.isSLActivated}>
                 <IonIcon icon={eyedrop} slot={"end"}/>
                 Find Label
             </IonButton>
@@ -174,7 +171,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
             {/*        }*/}
             {/*    ]}/>*/}
 
-            <IonButton size="small" id={"add-label-button"} onClick={addNewLabel} disabled={lockMenu}>
+            <IonButton size="small" id={"add-label-button"} onClick={addNewLabel} disabled={lockMenu || props.isSLActivated}>
                 <IonIcon icon={addOutline} slot={"end"}/>
                 Add
             </IonButton>
