@@ -159,10 +159,6 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         setLockMenu(activateAddLabelButton);
     });
 
-    useEventBus('changeLockButton', (flag: boolean) => {
-        setLockMenu(flag);
-    });
-
     const removeLabelElement = (label: LabelInterface) => {
         setLabelList(labelList!.filter(l => l.id !== label.id));
 
@@ -297,7 +293,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                 <IonCol>
                     <div style={{display: 'flex', justifyContent: 'flex-end'}}>
                         {/*Undo Button*/}
-                        <IonButton color="danger" size="small" disabled={lockMenu}
+                        <IonButton color="danger" size="small" disabled={lockMenu || activateSL}
                                    onClick={() => {
                                        undoAnnotation();
                                    }}>
@@ -306,7 +302,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                         </IonButton>
                         {/*Delete all button*/}
                         <IonButton color="danger" size="small" slot={"end"}
-                                   disabled={labelList.length <= 1 || lockMenu}
+                                   disabled={labelList.length <= 1 || lockMenu || activateSL}
                                    onClick={() => setOpenWarningWindow(true)}>
                             <IonIcon icon={trashOutline} slot={"end"}/>
                             Delete all
