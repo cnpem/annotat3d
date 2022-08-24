@@ -18,6 +18,7 @@ interface InputLabelProps {
     labelList: LabelInterface[];
     newLabelId: number;
     onNewLabelId: (id: number) => void;
+    onSelectLabel: (id: number) => void;
 }
 
 interface LabelMergeListInterface {
@@ -45,9 +46,12 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     });
 
     // This function simulates a click user to add a new label.
-    useEventBus("sequentialLabelUpdate", () => {
-        const link = document.getElementById("add-label-button");
-        link!.click();
+    useEventBus("sequentialLabelUpdate", (slPayload: { id: number, tableLen: number }) => {
+        if (slPayload.id >= slPayload.tableLen) {
+            const link = document.getElementById("add-label-button");
+            link!.click();
+        }
+        props.onSelectLabel(slPayload.id);
     });
 
     const handleErrorWindow = (flag: boolean) => {
@@ -111,8 +115,8 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
         }
     }
 
-    return(
-        <div style={ {display: "flex", justifyContent: "flex-end"} }>
+    return (
+        <div style={{display: "flex", justifyContent: "flex-end"}}>
             <IonButton size={"small"} onClick={extendLabel} disabled={lockMenu}>
                 <IonIcon icon={eyedrop} slot={"end"}/>
                 Find Label

@@ -240,8 +240,13 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         <div>
             <IonRow>
                 <IonCol>
-                    <InputLabel colors={defaultColormap} labelList={labelList} onLabelList={selectLabelList}
-                                newLabelId={newLabelId} onNewLabelId={selectIdGenerator}/>
+                    <InputLabel
+                        colors={defaultColormap}
+                        labelList={labelList}
+                        onLabelList={selectLabelList}
+                        newLabelId={newLabelId}
+                        onNewLabelId={selectIdGenerator}
+                        onSelectLabel={selectLabel}/>
                 </IonCol>
             </IonRow>
             <div className={"label-table"}>

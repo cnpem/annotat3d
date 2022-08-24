@@ -245,6 +245,8 @@ class Canvas {
     imageShape?: ImageShapeInterface;
     cropShape?: CropShapeInterface;
 
+    labelTableLen: number = 0;
+
     imgMin: number = 0.0;
     imgMax: number = 1.0;
 
@@ -340,6 +342,8 @@ class Canvas {
         colors.forEach((color) => {
             this.colors[color.id] = color.color;
         });
+
+        this.labelTableLen = colors.length;
 
         if (this.labelData) {
             this.setLabelImage(this.labelData);
@@ -443,7 +447,10 @@ class Canvas {
 
         console.log("finish drawing on onPointerUp in Canvas");
         if (this.activateSequentialLabel) {
-            dispatch("sequentialLabelUpdate", {});
+            dispatch("sequentialLabelUpdate", {
+                id: this.brush.label,
+                tableLen: this.labelTableLen
+            });
             this.brush.setLabel(this.brush.label + 1);
         }
         this.isPainting = false;
