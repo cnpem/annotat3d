@@ -225,7 +225,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                     <OptionsIcons
                         label={labelElement}
                         onChangeLabelList={removeLabelElement}
-                        onChangeLabel={changeLabelList}/>
+                        onChangeLabel={changeLabelList} isSLActivated={activateSL}/>
                 </td>
             </tr>
         );

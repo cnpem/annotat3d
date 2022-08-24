@@ -20,6 +20,7 @@ interface OptionsProps {
     label: LabelInterface;
     onChangeLabelList: (label: LabelInterface) => void;
     onChangeLabel: (newLabelName: string, labelId: number, color: [number, number, number]) => void;
+    isSLActivated: boolean
 }
 
 interface LabelEditProps {
@@ -112,16 +113,16 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
         <IonButtons>
             <IonButton id={"delete-label-button-" + props.label.id} size="small"
                        onClick={() => setShowDeletePopUp(true)}
-                       disabled={lockMenu}>
+                       disabled={lockMenu || props.isSLActivated}>
                 <IonIcon icon={closeOutline}/>
             </IonButton>
             <IonButton id={"edit-label-button-" + props.label.id} onClick={handleNameEditClickButton}
-                       disabled={lockMenu}>
+                       disabled={lockMenu || props.isSLActivated}>
                 <IonIcon icon={pencilOutline}/>
             </IonButton>
 
             <IonButton id={"edit-color-button-" + props.label.id} onClick={() => setShowColorPopover(true)}
-                       disabled={lockMenu}>
+                       disabled={lockMenu || props.isSLActivated}>
                 <IonIcon icon={colorPalette}/>
             </IonButton>
 
