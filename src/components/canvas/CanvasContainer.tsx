@@ -228,7 +228,7 @@ class Canvas {
     labelSlice: PIXI.Sprite;
     superpixelSlice: PIXI.Sprite;
     futureSlice: PIXI.Sprite;
-    cropSlice: PIXI.Sprite; 
+    cropSlice: PIXI.Sprite;
 
     superpixelColor: number = 0xff0000;
     cropColor: number = 0xff0000;
@@ -242,9 +242,9 @@ class Canvas {
     labelData?: NdArray<TypedArray>;
     futureData?: NdArray<TypedArray>;
 
-    imageShape?: ImageShapeInterface; 
-    cropShape?: CropShapeInterface; 
-    
+    imageShape?: ImageShapeInterface;
+    cropShape?: CropShapeInterface;
+
     imgMin: number = 0.0;
     imgMax: number = 1.0;
 
@@ -252,6 +252,7 @@ class Canvas {
     sliceNum: number;
 
     pointsBuffer: [number, number][] = [];
+    activateSequentialLabel: boolean;
 
     constructor(div: HTMLDivElement, colors: [number, number, number][], axis: 'XY' | 'XZ' | 'YZ', sliceNum: number) {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
@@ -277,11 +278,11 @@ class Canvas {
 
         this.labelSlice = new PIXI.Sprite();
 
-        this.cropSlice = new PIXI.Sprite(); 
+        this.cropSlice = new PIXI.Sprite();
         this.cropSlice.tint = this.cropColor;
-        this.cropSlice.alpha = 0.2; 
-        this.cropSlice.blendMode = PIXI.BLEND_MODES.ADD; 
-        this.cropSlice.visible = false; 
+        this.cropSlice.alpha = 0.2;
+        this.cropSlice.blendMode = PIXI.BLEND_MODES.ADD;
+        this.cropSlice.visible = false;
 
         this.futureSlice = new PIXI.Sprite();
         this.futureSlice.visible = false;
@@ -329,6 +330,8 @@ class Canvas {
         this.axis = axis;
         this.sliceNum = sliceNum;
 
+        this.activateSequentialLabel = false;
+
         this.setLabelVisibility(true);
     }
 
@@ -347,17 +350,17 @@ class Canvas {
     }
 
 
-    setImageShape() {         
+    setImageShape() {
         sfetch('POST', '/get_image_info/image_info', '', 'json')
-        .then((imgInfo:ImageInfoInterface) => {
-            const imageShape: ImageShapeInterface = {
-                x: imgInfo.imageShape.x,
-                y: imgInfo.imageShape.y,
-                z: imgInfo.imageShape.z
-            };
-            this.imageShape = imageShape;
-            console.log('Canvas: Getting imageShape from the backend: ', imageShape);  
-        });
+            .then((imgInfo: ImageInfoInterface) => {
+                const imageShape: ImageShapeInterface = {
+                    x: imgInfo.imageShape.x,
+                    y: imgInfo.imageShape.y,
+                    z: imgInfo.imageShape.z
+                };
+                this.imageShape = imageShape;
+                console.log('Canvas: Getting imageShape from the backend: ', imageShape);
+            });
     }
 
     setSliceNum(sliceNum: number) {
@@ -438,7 +441,11 @@ class Canvas {
 
         this.pointsBuffer = [];
 
-        console.log("up");
+        console.log("finish drawing on onPointerUp in Canvas");
+        if (this.activateSequentialLabel) {
+            console.log("opa, bão ? ", this.brush.label);
+            this.brush.setLabel(this.brush.label + 1);
+        }
         this.isPainting = false;
     }
 
@@ -456,7 +463,7 @@ class Canvas {
         if (this.imgData) {
             this.setImage(this.imgData);
         }
-    }  
+    }
 
     draw(currPosition: PIXI.Point): [number, number][] {
 
@@ -503,6 +510,12 @@ class Canvas {
             this.brush.contextDrawBrush(context, x, y);
 
             this.annotation.sprite.texture.update();
+
+            // if (this.activateSequentialLabel) {
+            //     console.log("opa, bão ? ", this.brush.label);
+            //     // this.brush.setLabel(this.brush.label);
+            // }
+
             return [
                 [x, y],
             ];
@@ -542,7 +555,7 @@ class Canvas {
         this.labelSlice.alpha = alpha;
     }
 
-    setCropAlpha(alpha: number) { 
+    setCropAlpha(alpha: number) {
         this.cropSlice.alpha = alpha;
     }
 
@@ -555,7 +568,7 @@ class Canvas {
     }
 
     /** Changes the visibility of the crop layer listening an event on CanvasContainer */
-    setCropVisibility(visible: boolean = false) { 
+    setCropVisibility(visible: boolean = false) {
         console.log('Canvas: Changing visibility', visible);
         if (visible) {
             this.setCropPreviewMaskImage();
@@ -563,11 +576,15 @@ class Canvas {
         this.cropSlice.visible = visible;
     }
 
-    /** From an event listener of changes in axis and slices, 
-     * checks if the vancas is in crop preview mode and calls the 
+    setSequentialLabel(payload: boolean) {
+        this.activateSequentialLabel = payload;
+    }
+
+    /** From an event listener of changes in axis and slices,
+     * checks if the canvas is in crop preview mode and calls the
      * function that builds the preview mask if so. */
-    checkUpdateCropPreview() { 
-        if ( this.cropSlice.visible ) {
+    checkUpdateCropPreview() {
+        if (this.cropSlice.visible) {
             this.setCropPreviewMaskImage();
         }
     }
@@ -595,7 +612,7 @@ class Canvas {
         for (let i = 0; i < len; ++i) {
             const idx = i * 4;
             const label = labelSlice.data[i];
-            if (label <= 0)  
+            if (label <= 0)
                 continue;
 
             const color = colors[label];
@@ -608,28 +625,29 @@ class Canvas {
         const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
         this.labelSlice.texture = texture;
     }
+
     /** Sets the crop shape from an envent listener on CanvasContainer */
-    setCropShape(cropShape: CropShapeInterface ) {
+    setCropShape(cropShape: CropShapeInterface) {
         this.cropShape = cropShape;
     }
 
     /**
      * Builds a mask layer for the preview mode for the current slice and axis on canvas
      * with information set on Canvas by event listeners.
-     * The resulting image is set on the cropSlice layer on canvas. 
+     * The resulting image is set on the cropSlice layer on canvas.
      */
-    private setCropPreviewMaskImage() { 
+    private setCropPreviewMaskImage() {
 
-        let error : string;
+        let error: string;
 
         if (this.imageShape === undefined) {
             error = 'Canvas.setCropPreviewMaskImage: imageShape is undefined';
             console.log(error);
-            return 
-        } 
+            return
+        }
 
-        let width : number; 
-        let height : number;
+        let width: number;
+        let height: number;
         const depth = this.sliceNum;
 
         let cropW: CropAxisInterface;
@@ -658,34 +676,34 @@ class Canvas {
             if (this.cropShape === undefined) {
                 error = 'Canvas.setCropPreviewMaskImage: cropShape is undefined';
             } else {
-                error = 'Canvas.setCropPreviewMaskImage: error setting dimensions in axis: '+this.axis;
+                error = 'Canvas.setCropPreviewMaskImage: error setting dimensions in axis: ' + this.axis;
             }
             console.log(error);
-            return 
+            return
         }
 
-        const insideBox = (y: number, x: number) => {   
-            const uIn = ( u: number, cropU: CropAxisInterface ) => { 
-                return ( cropU.lower <= u && u <= cropU.upper ); 
+        const insideBox = (y: number, x: number) => {
+            const uIn = (u: number, cropU: CropAxisInterface) => {
+                return (cropU.lower <= u && u <= cropU.upper);
             };
             return uIn(depth, cropD) && uIn(y, cropH) && uIn(x, cropW);
         };
 
-        const len : number = width*height;
+        const len: number = width * height;
         let uint8data = new Uint8Array(len);
 
         const rowMajIdx = (yi: number, xj: number) => {
-            return xj + yi*width;
+            return xj + yi * width;
         };
 
         for (let yi = 0; yi < height; ++yi) {
             for (let xj = 0; xj < width; ++xj) {
-                if ( !insideBox(yi, xj, ) ) {
-                    const idx = rowMajIdx(yi, xj) ;//* 4;
+                if (!insideBox(yi, xj,)) {
+                    const idx = rowMajIdx(yi, xj);//* 4;
                     uint8data[idx] = 255;
-                } 
+                }
             }
-        }        
+        }
         const texture = this.textureFromSlice(uint8data, width, height);
         this.cropSlice.texture = texture;
     }
@@ -869,12 +887,19 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onLabelColorsChanged!: (colors: { id: number, color: [number, number, number] }[]) => void;
     onAnnotationChanged!: () => void;
     onLabelContourChanged!: (contour: boolean) => void;
-    onFutureChanged!: (hasPreview: boolean) => void; 
-    onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
-    onExtendLabel: (flag: boolean) => void = () => {};
-    onCropPreviewMode: (activateCropPreview: boolean) => void = () => {};
-    onCropShape: (cropShape: CropShapeInterface) => void = () => {};
-    onCropPreviewColorChanged: (color: any) => void = () => {};
+    onFutureChanged!: (hasPreview: boolean) => void;
+    onChangeStateBrush: (mode: brush_mode_type) => void = () => {
+    };
+    onExtendLabel: (flag: boolean) => void = () => {
+    };
+    onCropPreviewMode: (activateCropPreview: boolean) => void = () => {
+    };
+    onCropShape: (cropShape: CropShapeInterface) => void = () => {
+    };
+    onCropPreviewColorChanged: (color: any) => void = () => {
+    };
+    onActivateSL: (sequentialLabelPayload: { isActivated: boolean, id: number }) => void = () => {
+    };
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -1009,13 +1034,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
             this.fetchAll(true);
 
-            this.onLabelSelected = (payload: any) => {
+            this.onLabelSelected = (payload: { id: number }) => {
                 console.log(payload);
                 console.log('label selected');
                 this.canvas?.brush.setLabel(payload.id);
             };
 
-            this.onImageLoaded = ( payload ) => {
+            this.onImageLoaded = (payload) => {
                 const promise = this.fetchAll(true);
                 promise?.then(() => {
                     sfetch("POST", "/is_annotation_empty", "", "json")
@@ -1104,12 +1129,17 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas!!.extendLabel = flag;
             }
 
-            this.onCropPreviewMode = (activateCropPreview: boolean ) => {
+            this.onCropPreviewMode = (activateCropPreview: boolean) => {
                 this.cropPreviewMode(activateCropPreview);
             }
 
-            this.onCropShape = (cropShape: CropShapeInterface ) => {
+            this.onCropShape = (cropShape: CropShapeInterface) => {
                 this.setCropShape(cropShape);
+            }
+
+            this.onActivateSL = (sequentialLabelPayload: { isActivated: boolean, id: number }) => {
+                this.canvas?.setSequentialLabel(sequentialLabelPayload.isActivated);
+                this.canvas?.brush.setLabel(sequentialLabelPayload.id);
             }
 
             subscribe('futureChanged', this.onFutureChanged);
@@ -1132,6 +1162,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('cropShape', this.onCropShape);
             subscribe('cropPreviewMode', this.onCropPreviewMode);
             subscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
+            subscribe("activateSL", this.onActivateSL);
         }
     }
 
@@ -1157,11 +1188,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('cropShape', this.onCropShape);
         unsubscribe('cropPreviewMode', this.onCropPreviewMode);
         unsubscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
+        unsubscribe("activateSL", this.onActivateSL);
     }
 
-    componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) { 
+    componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
 
-        if (isEqual(prevProps, this.props)) 
+        if (isEqual(prevProps, this.props))
             return;
 
         if (this.props.canvasMode !== prevProps.canvasMode) {
@@ -1184,15 +1216,15 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.canvas?.adjustContrast(minimum, maximum);
     }
 
-    updateCropPreview = () => { 
+    updateCropPreview = () => {
         this.canvas?.checkUpdateCropPreview();
     }
 
-    cropPreviewMode(activateCropPreview: boolean) { 
+    cropPreviewMode(activateCropPreview: boolean) {
         this.canvas?.setCropVisibility(activateCropPreview);
     }
 
-    setCropShape( cropShape: CropShapeInterface ) { 
+    setCropShape(cropShape: CropShapeInterface) {
         this.canvas?.setCropShape(cropShape);
     }
 
@@ -1231,7 +1263,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                     }}>
                         <IonIcon icon={add}/>
                     </IonFabButton>
-                    <IonFabButton size="small" title="Decrease brush/eraser size"onClick={() => {
+                    <IonFabButton size="small" title="Decrease brush/eraser size" onClick={() => {
                         this.canvas?.decreaseBrushSize();
                     }}>
                         <IonIcon icon={remove}/>

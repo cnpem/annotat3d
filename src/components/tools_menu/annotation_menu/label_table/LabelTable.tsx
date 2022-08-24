@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import * as ReactBootStrap from "react-bootstrap";
-import {IonRow, IonCol, IonLabel, useIonToast, IonButton, IonIcon, IonAlert} from "@ionic/react";
+import {IonRow, IonCol, IonLabel, useIonToast, IonButton, IonIcon, IonAlert, IonCheckbox, IonItem} from "@ionic/react";
 import InputLabel from "./InputLabel";
 import OptionsIcons from "./OptionsIcons";
 import {LabelInterface} from './LabelInterface';
@@ -107,6 +107,8 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         color: props.colors[0],
         id: 0
     }]);
+
+    const [activateSL, setActivateSL] = useStorageState<boolean>(sessionStorage, "activateSL", false)
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
     const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
@@ -256,10 +258,29 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                     </tbody>
                 </ReactBootStrap.Table>
             </div>
+            {/*Sequential Label menu*/}
             <IonRow>
                 <IonCol>
-                    {/*Undo Button*/}
+                    <IonItem>
+                        <IonLabel>Sequential Label</IonLabel>
+                        <IonCheckbox
+                            checked={activateSL}
+                            slot={"end"}
+                            onIonChange={(e: CustomEvent) => {
+                                const newColor = colorFromId(props.colors, newLabelId);
+                                dispatch("activateSL", {
+                                    isActivated: e.detail.checked,
+                                    id: newLabelId,
+                                });
+                                setActivateSL(e.detail.checked);
+                            }}/>
+                    </IonItem>
+                </IonCol>
+            </IonRow>
+            <IonRow>
+                <IonCol>
                     <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+                        {/*Undo Button*/}
                         <IonButton color="danger" size="small" disabled={lockMenu}
                                    onClick={() => {
                                        undoAnnotation();
@@ -267,10 +288,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                             <IonIcon slot="end" icon={arrowUndoOutline}/>
                             Undo
                         </IonButton>
-                    </div>
-                    {/*==================*/}
-                    {/*Delete all button*/}
-                    <div style={{display: "flex", justifyContent: "flex-end"}}>
+                        {/*Delete all button*/}
                         <IonButton color="danger" size="small" slot={"end"}
                                    disabled={labelList.length <= 1}
                                    onClick={() => setOpenWarningWindow(true)}>
@@ -287,7 +305,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                             <></>
                         }
                     </div>
-                    {/*=============*/}
+                    {/*==================*/}
                 </IonCol>
             </IonRow>
         </div>
