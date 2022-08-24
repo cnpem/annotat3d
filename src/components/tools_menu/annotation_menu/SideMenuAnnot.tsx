@@ -6,7 +6,6 @@ import EditLabelMenu from "../edit_module_menu/EditLabelMenu";
 
 /**
  * Component that creates the lateral bar menu
- * @constructor
  * @return this function return a list of all lateral components
  */
 const SideMenuAnnot: React.FC = () => {

@@ -443,7 +443,7 @@ class Canvas {
 
         console.log("finish drawing on onPointerUp in Canvas");
         if (this.activateSequentialLabel) {
-            console.log("opa, bão ? ", this.brush.label);
+            dispatch("sequentialLabelUpdate", {});
             this.brush.setLabel(this.brush.label + 1);
         }
         this.isPainting = false;
@@ -510,11 +510,6 @@ class Canvas {
             this.brush.contextDrawBrush(context, x, y);
 
             this.annotation.sprite.texture.update();
-
-            // if (this.activateSequentialLabel) {
-            //     console.log("opa, bão ? ", this.brush.label);
-            //     // this.brush.setLabel(this.brush.label);
-            // }
 
             return [
                 [x, y],

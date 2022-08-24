@@ -42,7 +42,13 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
 
     useEventBus('LockComponents', (activateAddLabelButton: boolean) => {
         setLockMenu(activateAddLabelButton);
-    })
+    });
+
+    // This function simulates a click user to add a new label.
+    useEventBus("sequentialLabelUpdate", () => {
+        const link = document.getElementById("add-label-button");
+        link!.click();
+    });
 
     const handleErrorWindow = (flag: boolean) => {
         setShowError(flag);
@@ -162,7 +168,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
             {/*        }*/}
             {/*    ]}/>*/}
 
-            <IonButton size="small" onClick={addNewLabel} disabled={lockMenu}>
+            <IonButton size="small" id={"add-label-button"} onClick={addNewLabel} disabled={lockMenu}>
                 <IonIcon icon={addOutline} slot={"end"}/>
                 Add
             </IonButton>
