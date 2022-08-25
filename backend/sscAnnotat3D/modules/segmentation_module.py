@@ -1,9 +1,9 @@
 import abc
-from abc import abstractmethod, abstractproperty
+
+from abc import abstractmethod
 
 
 class SegmentationModule(abc.ABC):
-
     _module_name = 'Generic Segmentation'
 
     @classmethod

@@ -7,6 +7,7 @@ const EditLabelMenu: React.FC = () => {
 
     const [toggleEditLabel, setToggleEditLabel] = useStorageState<boolean>(sessionStorage, "toggleEditLabel", false);
     const [isMergeActivated, setIsMergeActivated] = useStorageState<boolean>(sessionStorage, "isMergeActivated", false);
+    const [isSplitActivated, setIsSplitActivated] = useStorageState<boolean>(sessionStorage, "isSplitActivated", false);
     const [isEditLabelDisabled, setIsEditLabelDisabled] = useStorageState<boolean>(sessionStorage, "isEditLabelDisabled", false);
 
     useEventBus("changeMergeDisableStatus", (flagPayload: boolean) => {
@@ -36,6 +37,9 @@ const EditLabelMenu: React.FC = () => {
                                     checked={isMergeActivated}
                                     slot={"end"}
                                     onIonChange={(e: CustomEvent) => {
+                                        if (e.detail.checked) {
+                                            setIsSplitActivated(false);
+                                        }
                                         setIsMergeActivated(e.detail.checked);
                                     }}
                                     disabled={isEditLabelDisabled}/>
@@ -44,10 +48,13 @@ const EditLabelMenu: React.FC = () => {
                             <IonItem>
                                 <IonLabel>Split</IonLabel>
                                 <IonCheckbox
-                                    checked={isMergeActivated}
+                                    checked={isSplitActivated}
                                     slot={"end"}
                                     onIonChange={(e: CustomEvent) => {
-                                        setIsMergeActivated(e.detail.checked);
+                                        if(e.detail.checked) {
+                                            setIsMergeActivated(false);
+                                        }
+                                        setIsSplitActivated(e.detail.checked);
                                     }}
                                     disabled={isEditLabelDisabled}/>
                             </IonItem>

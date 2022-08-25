@@ -302,10 +302,10 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         setPathFiles({
             workspacePath: pathFiles.workspacePath,
             imagePath: pathFiles.imagePath,
-            superpixelPath: "",
-            labelPath: "",
-            annotPath: "",
-            classificationPath: ""
+            superpixelPath: pathFiles.superpixelPath,
+            labelPath: pathFiles.labelPath,
+            annotPath: pathFiles.annotPath,
+            classificationPath: pathFiles.classificationPath
         });
         setDtype("uint16");
         setImageShapeRaw([null, null, null]);
@@ -347,6 +347,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">Workspace Path</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/workspace"}
                                             value={pathFiles.workspacePath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({
@@ -368,6 +369,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">Image Path</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/file.tif, .tiff, .raw or .b"}
                                             value={pathFiles.imagePath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({
@@ -514,6 +516,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">{"Superpixel Path"}</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/Superpixel.tif, .tiff, .raw or .b"}
                                             value={pathFiles.superpixelPath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({
@@ -534,6 +537,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">{"Label image"}</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/Label.tif, .tiff, .raw or .b"}
                                             value={pathFiles.labelPath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({
@@ -554,6 +558,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">{"Annotation file"}</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/Annotation.pkl"}
                                             value={pathFiles.annotPath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({
@@ -574,6 +579,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">Classifier Path</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/classifier.model"}
                                             value={pathFiles.classificationPath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({

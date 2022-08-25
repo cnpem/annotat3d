@@ -69,7 +69,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
             labelPath: setDefaultStringPath(loadedPaths.labelPath),
             annotPath: setDefaultStringPath(loadedPaths.annotPath),
             classificationPath: setDefaultStringPath(loadedPaths.classificationPath)
-        })
+        });
     });
 
     useEventBus("useSuperpixelModule", (flag: boolean) => {
@@ -323,6 +323,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">{"Workspace Path"}</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/workspace"}
                                             value={pathFiles.workspacePath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({
@@ -344,6 +345,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">Image Path</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/file.tif, .tiff, .raw or .b"}
                                             value={pathFiles.imagePath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({
@@ -383,6 +385,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">{"Superpixel Path"}</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/Superpixel.tif, .tiff, .raw or .b"}
                                             value={pathFiles.superpixelPath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({
@@ -403,6 +406,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">{"Label image"}</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/Label.tif, .tiff, .raw or .b"}
                                             value={pathFiles.labelPath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({
@@ -423,6 +427,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">{"Annotation file"}</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/Annotation.pkl"}
                                             value={pathFiles.annotPath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({
@@ -443,6 +448,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({name}) => {
                                     <IonItem>
                                         <IonLabel position="stacked">Classifier Path</IonLabel>
                                         <IonInput
+                                            clearInput
                                             placeholder={"/path/to/classifier.model"}
                                             value={pathFiles.classificationPath}
                                             onIonChange={(e: CustomEvent) => setPathFiles({
