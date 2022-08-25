@@ -10,7 +10,7 @@ import {dispatch, useEventBus, currentEventValue} from '../../../../utils/eventb
 import './LabelTable.css';
 import {useStorageState} from "react-storage-hooks";
 import {isEqual} from "lodash";
-import {arrowUndoOutline, trashOutline} from "ionicons/icons";
+import {arrowUndoOutline, eyedrop, trashOutline} from "ionicons/icons";
 import {sfetch} from "../../../../utils/simplerequest";
 
 import ErrorInterface from "../../../main_menu/file/utils/ErrorInterface";
@@ -108,7 +108,8 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         id: 0
     }]);
 
-    const [activateSL, setActivateSL] = useStorageState<boolean>(sessionStorage, "activateSL", false)
+    const [activateSL, setActivateSL] = useStorageState<boolean>(sessionStorage, "activateSL", false);
+    const [isExtendActivated, setIsExtendActivated] = useStorageState<boolean>(sessionStorage, "isExtendActivated", false);
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
     const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
@@ -118,6 +119,8 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     const toastTimer = 2000;
 
     const [openWarningWindow, setOpenWarningWindow] = useState<boolean>(false);
+    const timeToast = 2000;
+    const [ionToastActivateExtendOp,] = useIonToast();
 
     const handleShowWarningWindow = (flag: boolean) => {
         setOpenWarningWindow(flag);
@@ -148,7 +151,11 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         setLabelList(labelVec);
         setNewLabelId(labelVec.length);
         console.log("label List rn : ", labelVec);
-    })
+    });
+
+    useEventBus("isExtendLabelActivated", (flag: boolean) => {
+        setIsExtendActivated(flag);
+    });
 
     useEffect(() => {
         console.log("doing this dispatch rn");
@@ -192,6 +199,9 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
     function selectLabel(id: number) {
         setSelectedLabel(id);
+        if (isExtendActivated) {
+            setIsExtendActivated(false);
+        }
         dispatch('labelSelected', {
             id: id
         });
@@ -202,6 +212,16 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
             .then(() => {
                 dispatch('annotationChanged', null);
             });
+    }
+
+    const extendLabel = (e: CustomEvent) => {
+        if (e.detail.checked) {
+            console.log("Doing dispatch for ExtendLabel");
+            dispatch("ExtendLabel", true);
+            ionToastActivateExtendOp(`Extend label operation activated !`, timeToast);
+            setActivateSL(!e.detail.checked);
+        }
+        setIsExtendActivated(e.detail.checked);
     }
 
     const renderLabel = (labelElement: LabelInterface) => {
@@ -281,6 +301,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                                 if (e.detail.checked) {
                                     console.log("newLabelId - 1 : ", labelList[labelList.length - 1].id);
                                     setSelectedLabel(labelList[labelList.length - 1].id);
+                                    setIsExtendActivated(false);
                                 }
                                 dispatch("activateSL", {
                                     isActivated: e.detail.checked,
@@ -288,6 +309,22 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                                 });
                                 setActivateSL(e.detail.checked);
                             }}/>
+                    </IonItem>
+                </IonCol>
+            </IonRow>
+            {/*Sequential Label menu*/}
+            <IonRow>
+                <IonCol>
+                    <IonItem>
+                        <IonLabel>
+                            Find Label
+                        </IonLabel>
+                        <IonIcon icon={eyedrop} slot={"end"}/>
+                        <IonCheckbox
+                            checked={isExtendActivated}
+                            slot={"end"}
+                            onIonChange={extendLabel}
+                            disabled={activateSL}/>
                     </IonItem>
                 </IonCol>
             </IonRow>

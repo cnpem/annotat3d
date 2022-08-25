@@ -1,6 +1,8 @@
-import {IonCard, IonCardContent, IonItem, IonLabel, IonToggle} from "@ionic/react";
+import {IonButton, IonCard, IonCardContent, IonItem, IonLabel, IonToggle} from "@ionic/react";
 import {useStorageState} from "react-storage-hooks";
+import {dispatch} from "../../../utils/eventbus";
 
+//TODO : Need to dispatch isEditLabelActivated event to Superpixel and Pixel module
 const EditLabelMenu: React.FC = () => {
 
     const [toggleEditLabel, setToggleEditLabel] = useStorageState<boolean>(sessionStorage, "toggleEditLabel", false);
@@ -14,10 +16,11 @@ const EditLabelMenu: React.FC = () => {
                         checked={toggleEditLabel}
                         onIonChange={(e: CustomEvent) => {
                             setToggleEditLabel(e.detail.checked);
+                            dispatch("isEditLabelActivated", e.detail.checked);
                         }}/>
                 </IonItem>
-                <div hidden={!toggleEditLabel}>
-                    {"oh, hello there !!!"}
+                <div style={{display: "flex", justifyContent: "flex-end"}} hidden={!toggleEditLabel}>
+                    <IonButton size={"small"}>Merge</IonButton>
                 </div>
             </IonCardContent>
         </IonCard>

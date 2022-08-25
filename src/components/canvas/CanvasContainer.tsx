@@ -501,6 +501,7 @@ class Canvas {
                     }
                     this.brush.cursor.visible = true;
                     dispatch("changeSelectedLabel", labelId);
+                    dispatch("isExtendLabelActivated", false);
                 }
             );
             return []
