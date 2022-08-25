@@ -1,13 +1,12 @@
 import React, {useState} from "react";
-import {IonButton, IonIcon, useIonToast} from "@ionic/react";
+import {IonButton, IonIcon} from "@ionic/react";
 import {LabelInterface} from "./LabelInterface";
 import {colorFromId} from '../../../../utils/colormap';
 
 /*Icons import*/
-import {addOutline, eyedrop} from "ionicons/icons";
+import {addOutline} from "ionicons/icons";
 
 import './OptionsIcons.css';
-import {dispatch} from "../../../../utils/eventbus";
 import {useEventBus} from "../../../../utils/eventbus";
 import {useStorageState} from "react-storage-hooks";
 import ErrorWindowComp from "../../../main_menu/file/utils/ErrorWindowComp";
@@ -32,8 +31,6 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     const [showError, setShowError] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>("");
     const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
-    const [ionToastActivateExtendOp,] = useIonToast();
-    const timeToast = 2000;
 
     useEventBus('LockComponents', (activateAddLabelButton: boolean) => {
         setLockMenu(activateAddLabelButton);

@@ -307,12 +307,13 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                                     isActivated: e.detail.checked,
                                     id: newLabelId,
                                 });
+                                dispatch("changeMergeDisableStatus", e.detail.checked);
                                 setActivateSL(e.detail.checked);
                             }}/>
                     </IonItem>
                 </IonCol>
             </IonRow>
-            {/*Sequential Label menu*/}
+            {/*Find Label menu*/}
             <IonRow>
                 <IonCol>
                     <IonItem>
