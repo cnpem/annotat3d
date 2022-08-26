@@ -25,7 +25,6 @@ import {
     extension_file,
     MultiplesPath,
     OutputInterface,
-    SelectInterface,
     typeExt,
     typePM
 } from "./BatchInferenceInterfaces";
@@ -35,6 +34,7 @@ import ErrorInterface from "../../file/ErrorInterface";
 import * as ReactBootStrap from "react-bootstrap";
 import "./Table.css";
 import DeepLoadingComp from "../Utils/DeepLoadingComp";
+import { SelectInterface } from "../Utils/WorkspaceInterfaces";
 
 interface WarningWindowInterface {
     openWarningWindow: boolean,

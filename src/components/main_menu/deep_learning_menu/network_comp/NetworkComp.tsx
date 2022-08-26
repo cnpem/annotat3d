@@ -9,10 +9,7 @@ import {
     IonInput,
     IonItem,
     IonLabel,
-    IonList,
-    IonRow,
-    IonText,
-    IonTextarea
+    IonRow
 } from '@ionic/react'
 import { useState } from 'react'
 import { sfetch } from '../../../../utils/simplerequest'

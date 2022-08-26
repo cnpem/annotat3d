@@ -17,12 +17,13 @@ import InferenceComp from "./InferenceComp";
 import {
     initialOutput,
     initialPatches, OutputInterface,
-    PatchesInterface, SelectInterface,
+    PatchesInterface
 } from "./BatchInferenceInterfaces";
 import Settings from "./Settings";
 import {sfetch} from "../../../../utils/simplerequest";
 import ErrorInterface from "../../file/ErrorInterface";
 import DeepLoadingComp from "../Utils/DeepLoadingComp";
+import { SelectInterface } from "../Utils/WorkspaceInterfaces";
 
 const menuChoices = ["Inference", "Settings"] as const;
 type InputMenuChoicesType = typeof menuChoices[number];

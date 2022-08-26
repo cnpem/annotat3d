@@ -25,11 +25,17 @@ from tensorflow.python.client import device_lib
 
 from sscDeepsirius.cython import standardize
 from sscAnnotat3D.repository import data_repo
-from sscDeepsirius.utils import dataset, image#, gpu
+from annotat3dumal.backend.sscAnnotat3D.modules.deep_network_module import deepNetworkModule
+from sscDeepsirius.utils import dataset, image
 from sscDeepsirius.controller.inference_controller import InferenceController
 from sscDeepsirius.controller.host_network_controller import HostNetworkController as NetworkController
 
+
+activeNet = deepNetworkModule()
+
 app = Blueprint('deep', __name__)
+
+# 
 
 def init_logger(init_msg : str = '\nStarting message logger queue.\n'):
     data_repo.init_logger(init_msg)
@@ -37,60 +43,26 @@ def init_logger(init_msg : str = '\nStarting message logger queue.\n'):
 def log_msg(msg):
     data_repo.set_log_message(msg)
 
-def get_msg():
-    return data_repo.dequeue_log_message()
-class activeNet:
-    def __init__(self):
-        self._is_running = False
-        self._discard_network_instances = False
 
-        self._data_info = None
-        self._data = None
+"""
+    Reads from a queue of messages stored on data_repo. 
+    Args:
 
-        self._tensorboard_server = None
-        self._frozen_model = None
-        self._dataset_file = None
-
-        self._workspacePath = None
-        self._model
-
-        self._network_controller = None
-        self._tepui_connection = None
-
-        self._gpus = None
-        self._custom_params_ui = {}
-
-        self._network_instance = None
-        self._network_instance_name = None
-
-        self._log_thread = None
-        self._sentry_transaction = None
-
-        self._networkModel = None
-
-    def set_network_controller(self):
-        try: 
-            self._networkModel = data_repo.get_deep_model(key='deep_learning')
-            self._workspacePath = self._model['deep_model_path']
-        except Exception as e:
-            return handle_exception('Error trying to get the workspace path. Not found. : {}'.format(str(e)))
-
-        # try network controller
-        try:
-            self._network_controller = NetworkController(self._workspacePath, streaming_mode=True)
-        except Exception as e:
-            return handle_exception('Error trying to get Network controller object. : {}'.format(str(e)))
-
-    def start_server(self):
-        init_logger('Starting training server.')
-        self._tensorboard_server = self._network_controller.start_tensorboard(self._networkModel)
-        log_msg('Tensorboard: {}'.format(self._tensorboard_server))
-        url = self._tensorboard_server
-        log_msg('Running on {}'.format(url))
-
+    Returns:
+        (str): An empty string if the queue is empty.
+"""
+@app.route("/read_log_queue", methods=["POST"])
+@cross_origin()
+def read_log_queue():
+    """
+    Request for training from the frontend
+    """
+    msg = data_repo.dequeue_log_message()
+    if msg == None:
+        return ''
     
+    return msg
 
-# thisNet = # import from 
 
 @app.errorhandler(BadRequest)
 def handle_exception(error_msg: str):
@@ -331,8 +303,28 @@ def run_inference():
 # Functions for the Network module
 # ---
 
+@app.route("/network/set_workspace", methods=["POST"])
+@cross_origin()
+def set_workspace():
+    """
+        Sets the workspace path on the active network by searching for it on the respository.
 
-@app.route("/import_network", methods=["POST"])
+    Args:
+        payload(any): a generic payload
+
+    Returns:
+        None
+    """
+    global activeNet
+
+    try:
+        deepModelRef = data_repo.get_deep_model(key='deep_learning')
+        return activeNet.set_workspace_path(deepModelRef['deep_model_workspace_path'])
+    except Exception as e:
+        return handle_exception('Error trying to get the workspace path. Not found. : {}'.format(str(e)))
+
+
+@app.route("/network/import_network", methods=["POST"])
 @cross_origin()
 def import_network():
     """
@@ -341,22 +333,6 @@ def import_network():
     importNetworkPath = request.json['path']
     importNetworkName = request.json['name']
 
-    # try get the workspace path
-    try:
-        deepModel = data_repo.get_deep_model(key='deep_learning')
-        workspacePath = deepModel['deep_model_path']
-    except Exception as e:
-        return handle_exception('Error trying to get the workspace path. Not found. : {}'.format(str(e)))
-
-    # try network controller
-    try:
-        NTctrl = NetworkController(workspacePath, streaming_mode=True)
-    except Exception as e:
-        return handle_exception('Error trying to get Network controller object. : {}'.format(str(e)))
-
-    # check if name doesnt already exists
-    if importNetworkName in NTctrl.network_models:
-        return handle_exception('Network Name {} already exists. Please create another name. {}'.format(importNetworkName))
     
     # try import model
     try:
@@ -364,137 +340,79 @@ def import_network():
     except Exception as e:
         return handle_exception('Error trying to import model. : {} workspascePath is {}'.format(str(e), workspacePath))
 
-    # get actual info from?
-    # is it here? _dataset_info_runnable
-    # maybe here? _data_info
-
     info = 'New network \n'+'Imported from path: '+importNetworkPath+'\n'+'New Name: '+importNetworkName
-
-    print(glob.glob(workspacePath+'*'))
 
     return jsonify(info)
 
 
-@app.route("/import_dataset", methods=["POST"])
+@app.route("/network/import_network_custom_settings", methods=["POST"])
+@cross_origin()
+def import_network_custom_settings():
+    """
+    Import a json with settings specific to a network in a dictionary form to be rendered as an input on the frontend.
+    layout: {'setting_name_1': {'option_11', 'option_12', 'option_1n'}, 'setting_name_2': {'option_21', 'option_22', 'option_2n'}}
+    Requires an active network.
+
+    Returns: 
+        customSettings (dic): dictionary of the custom settings for the active network
+
+    """
+    customSettings = #data_repo.?
+
+    return jsonify(customSettings)
+
+
+@app.route("/network/import_dataset", methods=["POST"])
 @cross_origin()
 def import_dataset():
     """
     Request for training from the frontend
     """
-    global thisNet
+    global activeNet
 
     importDatasetPath = request.json['path']
-    
-    # try network controller
-    try:
-        data = dataset.load_dataset(importDatasetPath)
-    except Exception as e:
-        return handle_exception('Error: Unable to load dataset. : {}'.format(str(e)))
-
-    try:
-        dataList = data['data']
-        labelList = data['data']
-    except Exception as e:
-        return handle_exception('Error: Unable to import labeled data. : {} \nFrom path: {}'.format(str(e), importDatasetPath))
-
-    # get actual info from?
-    # is it here? _dataset_info_runnable
-    # maybe here? _data_info
-
-    info = 'Importing dataset from: '+importDatasetPath+'\n'+'here goes nothing: '+str(type(dataList))+str(type(dataList[0]))
 
     return jsonify(info)
 
-def run_training(params):
-    _loss = {
-        'Cross Entropy': 'CrossEntropy',
-        'Dice': 'Dice',
-        'Cross Entropy + Dice': 'DicePlusXEnt',
-    }
-    
-    log_msg('loss ->')
-    log_msg('{}'.format(_loss))
 
-    num_gpus = params['num_gpus']
-    loss_type = params['loss_type']
-    optimiser = params['optimiser']
-    cuda_devices = ','.join(map(str, num_gpus))
-    batch_size = params['']
-    max_iter = params['']
-    learning_rate = params['learning_rate']
-
-    run_mode = 'local' # fixed
-
-    # try get the workspace path
-    try:
-        deepModel = data_repo.get_deep_model(key='deep_learning')
-        workspacePath = deepModel['deep_model_path']
-    except Exception as e:
-        return handle_exception('Error: Unable to get the workspace path. Not found. : {}'.format(str(e)))
-
-    # try network controller
-    try:
-        NTctrl = NetworkController(workspacePath, streaming_mode=True)
-    except Exception as e:
-        return handle_exception('Error: Unable to get Network controller object. : {}'.format(str(e)))
-
-    try:
-        network_instance = NTctrl.get_network_instance()
-    except Exception as e:
-        return handle_exception('Error: Unable to get Network instance. : {}'.format(str(e)))
-
-    try:
-        dataset_file = None
-    except Exception as e:
-        return handle_exception('Error: Unable to get Dataset file. : {}'.format(str(e)))
-
-
-    if run_mode == 'local':
-        network_instance, log = NTctrl.train(network_instance,
-                                                dataset_file,
-                                                num_gpus=num_gpus,
-                                                cuda_devices=cuda_devices,
-                                                batch_size=batch_size,
-                                                max_iter=max_iter,
-                                                lr=learning_rate,
-                                                loss_type=loss_type,
-                                                optimiser=optimiser)
-    else:  #tepui
-        log = 'remote (tepui) mode not available'
-
-    return log
-
-@app.route("/read_log", methods=["POST"])
-@cross_origin()
-def read_log():
-    """
-    Request for training from the frontend
-    """
-    print('on read log ')
-    msg = get_msg()
-    if msg == None:
-        print('empty msg')
-        return ''
-    
-    return msg
-
-@app.route("/train", methods=["POST"])
+@app.route("/network/train", methods=["POST"])
 @cross_origin()
 def train():
     """
-    Request for training from the frontend
+    Request training for the network by setting training parameters and calling the training method of the active nework.
+
+    Args:
+        msg(str): string message to user in debugger
+        payload(any): a generic payload
+
+    Returns:
+        None
+
     """
+    global activeNet
 
-    init_logger()
+    num_gpus = request.json['num_gpus']
+    loss_type = request.json['loss_type']
+    optimiser =request.json['optimiser']
+    cuda_devices = data_repo.get_inference_gpus()
+    batch_size = request.json['']
+    max_iter = request.json['']
+    learning_rate = request.json['learning_rate']
 
-    nreps = 5
-    
-    # understand this and keep going
-    # sentry_transaction = sentry_sdk.start_transaction(name='Training', op='deeplearning')
-    # sentry_transaction.__enter__()
+    params = {
+        'num_gpus': num_gpus,
+        'loss_type': loss_type,
+        'optimiser': optimiser,
+        'cuda_devices': cuda_devices,
+        'batch_size': batch_size,
+        'max_iter': max_iter,
+        'learning_rate': learning_rate
+    }
 
-    for n in range(nreps):
-        log_msg('message '+str(n))
+    activeNet.activate(params)
+
+    activeNet.set_network_controller()
+
         
     log_msg('done training')
     return 'done training'

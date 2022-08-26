@@ -51,35 +51,6 @@ def get_axis_num(axis: str):
     """
     return __axis_num[axis.lower()]
 
-# class ThreadWorker(QtCore.QThread):
-    # append_log = QtCore.pyqtSignal(str)
-    # finished = QtCore.pyqtSignal()
-
-    # def __init__(self, runnable):
-        # super().__init__()
-        # self._runnable = runnable
-
-    # def run(self):
-        # try:
-            # log = self._runnable()
-            # #             print('logging ui: {} > {}'.format(log, type(log)))
-
-            # if log is not None:
-                # for line in log:
-                    # if line is not None:
-                        # #                         print(type(line))
-                        # #                         print(list(line))
-                        # if type(line) == str:
-                            # self.append_log.emit(line)
-                        # else:
-                            # self.append_log.emit(str(line, 'UTF-8'))
-
-        # except Exception as e:
-            # print(str(e))
-            # self.append_log.emit(str(e))
-        # finally:
-            # self.finished.emit()
-
 
 # def pyqt_trace():
 # import pdb

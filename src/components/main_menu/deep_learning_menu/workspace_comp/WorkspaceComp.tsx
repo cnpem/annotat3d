@@ -17,8 +17,8 @@ import ErrorInterface from "../../file/ErrorInterface";
 import {construct, folder} from "ionicons/icons";
 import "./Workspace.css";
 import {dispatch} from "../../../../utils/eventbus";
-import {SelectInterface} from "../batch_inference_comp/BatchInferenceInterfaces";
 import DeepLoadingComp from "../Utils/DeepLoadingComp";
+import { SelectInterface, WorkspaceLoadedPayloadInterface } from "../Utils/WorkspaceInterfaces";
 
 interface WorkspaceInterface {
     workspacePath: string,
@@ -37,7 +37,7 @@ const WorkspaceComp: React.FC = () => {
         event: undefined,
     });
 
-    const [userInput, setUserInput] = useState<WorkspaceInterface>({workspacePath: "", folderName: "workspace/"});
+    const [userInput, setUserInput] = useState<WorkspaceInterface>({workspacePath: "", folderName: "/workspace"});
     const [showToast,] = useIonToast();
     const toastTime = 2000;
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
@@ -60,22 +60,28 @@ const WorkspaceComp: React.FC = () => {
             workspace_path: userInput.workspacePath + userInput.folderName,
         }
 
-        sfetch("POST", "/load_workspace", JSON.stringify(params), "json").then(
+        sfetch("POST", "/load_workspace", JSON.stringify(params), "json")
+        .then(
             (workspace_path: string) => {
                 console.log("Loaded a Workspace in the path ", workspace_path);
                 showToast(`loaded a Workspace in the path "${params.workspace_path}"`, toastTime);
                 cleanUp();
+                // get the available gpus when workspace is loaded
+                sfetch("POST", "/get_available_gpus", "", "json").then((gpus: SelectInterface[]) => {
+                    console.log("payload in get_available_gpus");
+                    const workspaceLoadadPayload: WorkspaceLoadedPayloadInterface = {
+                        workspaceFullPath: params.workspace_path,
+                        isDisabled: false, 
+                        gpus: gpus
+                    }
+                    dispatch("workspaceLoaded", workspaceLoadadPayload);
+                    setShowLoadingComp(false);
+                });
             }
         ).catch((error: ErrorInterface) => {
             console.log("Error message while trying to load the Workspace", error.error_msg);
             setErrorMsg(error.error_msg);
             setShowErrorWindow(true);
-        }).finally(() => {
-            sfetch("POST", "/get_available_gpus", "", "json").then((gpus: SelectInterface[]) => {
-                console.log("payload in get_available_gpus");
-                dispatch("workspaceLoaded", {isDisabled: false, gpus: gpus});
-                setShowLoadingComp(false);
-            });
         })
     }
 
@@ -86,25 +92,29 @@ const WorkspaceComp: React.FC = () => {
             workspace_path: userInput.workspacePath + userInput.folderName,
             workspace_root: userInput.workspacePath
         }
-
-        sfetch("POST", "/open_new_workspace", JSON.stringify(params), "json").then(
+        sfetch("POST", "/open_new_workspace", JSON.stringify(params), "json")
+        .then(
             (workspace_path: string) => {
                 console.log("Create a Workspace in the path ", workspace_path);
                 showToast(`Create a Workspace in the path "${params.workspace_path}"`, toastTime);
-                dispatch("workspaceLoaded", false);
                 cleanUp();
+                // get the available gpus when workspace is loaded
+                sfetch("POST", "/get_available_gpus", "", "json").then((gpus: SelectInterface[]) => {
+                    console.log("payload in get_available_gpus");
+                    const workspaceLoadadPayload: WorkspaceLoadedPayloadInterface = {
+                        workspaceFullPath: params.workspace_path,
+                        isDisabled: false, 
+                        gpus: gpus
+                    }
+                    dispatch("workspaceLoaded", workspaceLoadadPayload);
+                    setShowLoadingComp(false);
+                });
             }
         ).catch((errorMsg: ErrorInterface) => {
             console.log("Error message while trying to open a new Workspace", errorMsg.error_msg);
             setErrorMsg(errorMsg.error_msg);
             setShowErrorWindow(true);
-        }).finally(() => {
-            sfetch("POST", "/get_available_gpus", "", "json").then((gpus: SelectInterface[]) => {
-                console.log("payload in get_available_gpus");
-                dispatch("workspaceLoaded", {isDisabled: false, gpus: gpus});
-                setShowLoadingComp(false);
-            });
-        });
+        })
     }
 
     /**
@@ -134,6 +144,7 @@ const WorkspaceComp: React.FC = () => {
                         </IonItem>
                         <IonList slot={"content"}>
                             <IonInput
+                                clearInput
                                 placeholder={"/path/to/Workspace"}
                                 value={userInput.workspacePath}
                                 onIonChange={(e: CustomEvent) => setUserInput({
@@ -151,6 +162,7 @@ const WorkspaceComp: React.FC = () => {
                         </IonItem>
                         <IonList slot={"content"}>
                             <IonInput
+                                clearInput 
                                 placeholder={"Folder Name"}
                                 value={userInput.folderName}
                                 onIonChange={(e: CustomEvent) => setUserInput({

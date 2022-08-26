@@ -1,6 +1,6 @@
-import { IonContent, IonInput, IonItem, IonLabel, IonList, IonSelect, IonSelectOption } from "@ionic/react";
+import { IonContent, IonInput, IonItem, IonLabel, IonSelect, IonSelectOption } from "@ionic/react";
 import { useState } from "react";
-import { useEventBus } from "../../../../utils/eventbus";
+import { useEventBus } from "../../../../utils/eventbus"; //needs changing the payload
 
 /**
  *

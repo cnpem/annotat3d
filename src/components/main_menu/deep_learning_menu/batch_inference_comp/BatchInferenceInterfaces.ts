@@ -1,3 +1,5 @@
+import { SelectInterface } from "../Utils/WorkspaceInterfaces";
+
 /**
  * Dtype for files loaded into the input images
  */
@@ -51,14 +53,7 @@ export const initialPatches: PatchesInterface = {
     patchBorder: [0, 0, 0],
 }
 
-/**
- * Generic interface used to create the ion-select options
- */
-export interface SelectInterface {
-    key: number,
-    value: string,
-    label: string,
-}
+
 
 export interface OutputInterface {
     outputPath: string,

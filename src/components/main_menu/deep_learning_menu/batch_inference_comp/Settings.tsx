@@ -1,5 +1,5 @@
 import {
-    PatchesInterface, SelectInterface
+    PatchesInterface
 } from "./BatchInferenceInterfaces";
 import {
     IonAccordion,
@@ -13,6 +13,7 @@ import {
     IonRow
 } from "@ionic/react";
 import React from "react";
+import { SelectInterface } from "../Utils/WorkspaceInterfaces";
 
 interface SettingsInterface {
     patches: PatchesInterface,
