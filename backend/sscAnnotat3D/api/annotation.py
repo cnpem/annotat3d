@@ -211,6 +211,19 @@ def draw():
 
     annot_module = module_repo.get_module('annotation')
 
+    try:
+        flag_is_merge_activated = data_repo.get_edit_label_options(key="is_merge_activated")
+        flag_is_split_activated = data_repo.get_edit_label_options(key="is_split_activated")
+        _debugger_print("flag_is_merge_activated", flag_is_merge_activated)
+        _debugger_print("flag_is_split_activated", flag_is_split_activated)
+    except Exception as e:
+        return handle_exception(str(e))
+
+    if (flag_is_merge_activated):
+        _debugger_print("flag_is_merge_activated", flag_is_merge_activated)
+    elif (flag_is_split_activated):
+        _debugger_print("flag_is_split_activated", flag_is_split_activated)
+
     if annot_module is None:
         return handle_exception("Annotation module not found")
 
@@ -426,7 +439,7 @@ def is_annotation_empty():
     Function that verify if exist any previous annotation
 
     Notes:
-        This function is only used in CanvasContainer.tsx just to verify if is needed to create a new annotaiton
+        This function is only used in CanvasContainer.tsx just to verify if is needed to create a new annotation
 
     Returns:
         (bool): return True to create a new annotation and False otherwise
@@ -438,3 +451,31 @@ def is_annotation_empty():
         return jsonify(True)
 
     return jsonify(False)
+
+
+@app.route("/set_edit_label_options", methods=["POST"])
+@cross_origin()
+def set_edit_label_options():
+    try:
+        key = request.json["payload_key"]
+        flag = request.json["payload_flag"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    try:
+        _debugger_print("flag_merge", key)
+        _debugger_print("flag_slip", flag)
+        data_repo.set_edit_label_options(key, flag)
+        if (key == "is_merge_activated" and data_repo.get_edit_label_options("is_split_activated")):
+            data_repo.set_edit_label_options("is_split_activated", False)
+
+        elif (key == "is_split_activated" and data_repo.get_edit_label_options("is_merge_activated")):
+            data_repo.set_edit_label_options("is_merge_activated", False)
+
+        _debugger_print("is_merge_activated", data_repo.get_edit_label_options("is_merge_activated"))
+        _debugger_print("is_split_activated", data_repo.get_edit_label_options("is_split_activated"))
+
+    except Exception as e:
+        return handle_exception(str(e))
+
+    return jsonify("success")

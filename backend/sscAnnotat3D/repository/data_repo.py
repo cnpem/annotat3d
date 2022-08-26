@@ -75,6 +75,19 @@ dict that holds the feature_extraction_params chosen by the user
 """
 __feature_extraction_params = dict()
 
+__edit_label_options = {
+    "is_merge_activated": False,
+    "is_split_activated": False
+}
+
+
+def set_edit_label_options(key: str = "", flag: bool = False):
+    __edit_label_options[key] = flag
+
+
+def get_edit_label_options(key: str = ""):
+    return __edit_label_options.get(key, None)
+
 
 def set_feature_extraction_params(key: str = "", data: dict = None):
     """
