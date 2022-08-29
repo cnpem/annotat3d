@@ -5,6 +5,8 @@ saved on the backend
 
 import numpy as np
 
+# TODO : I need to document the dict for edit label menu
+
 """
 dict that contains the loaded image, superpixel and label
 """
@@ -77,11 +79,12 @@ __feature_extraction_params = dict()
 
 __edit_label_options = {
     "is_merge_activated": False,
-    "is_split_activated": False
+    "is_split_activated": False,
+    "edit_label_annotation_module": None
 }
 
 
-def set_edit_label_options(key: str = "", flag: bool = False):
+def set_edit_label_options(key: str = "", flag: bool = False or object):
     __edit_label_options[key] = flag
 
 
