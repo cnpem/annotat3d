@@ -272,7 +272,7 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         start = end = 0
         classifier_trained = False
-
+        selected_features_names = []
         logging.debug('loaded_training_superpixel_features: {}'.format(
             np.array(self._loaded_training_superpixel_features).shape))
 
@@ -363,11 +363,13 @@ class ClassifierSegmentationModule(SegmentationModule):
                                                                                    selected_features, sigmas)
                         name = spin_feat_extraction.SPINFilters.filter_name(filter_id)
                         if not name in logging.debuged:
+                            selected_features_names.append(name)
                             logging.debuged.append(name)
                             logging.debug('----- {}'.format(spin_feat_extraction.SPINFilters.filter_name(filter_id)))
 
             else:
-                logging.debug('-- Using all features for training')
+                selected_features_names = [name for feat, name in spin_feat_extraction.SPINFilters.available_filters()]
+                logging.debug('-- Using all features for training: {}'.format(selected_features_names))
                 X = self._training_features
 
             logging.debug('-- Training model')
@@ -411,7 +413,7 @@ class ClassifierSegmentationModule(SegmentationModule):
         if classifier_trained:
             logging.debug("--> Completed")
 
-        return classifier_trained, training_time
+        return classifier_trained, training_time, selected_features_names
 
     def change_classifier(self, classifier):
         classifier = classifier.lower()
