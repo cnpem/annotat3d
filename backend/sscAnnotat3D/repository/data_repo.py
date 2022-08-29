@@ -80,7 +80,8 @@ __feature_extraction_params = dict()
 __edit_label_options = {
     "is_merge_activated": False,
     "is_split_activated": False,
-    "edit_label_annotation_module": None
+    "edit_label_merge_module": None,
+    "edit_label_split_module": None
 }
 
 

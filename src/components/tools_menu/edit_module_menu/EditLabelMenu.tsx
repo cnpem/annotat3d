@@ -23,6 +23,41 @@ const EditLabelMenu: React.FC = () => {
         setIsEditLabelDisabled(flagPayload);
     })
 
+    /**
+     * This function resets the back and front parameters every time that toogle is off
+     * @param turnMergeSplitFalse {boolean} - variable that contains the event of toogle. All the time, this variable need to be false
+     */
+    const reseEditLabel = (turnMergeSplitFalse: boolean = false) => {
+
+        if (isMergeActivated) {
+            setIsMergeActivated(turnMergeSplitFalse);
+            const payloadMerge: EditLabelPayload = {
+                payload_key: "is_merge_activated",
+                payload_flag: turnMergeSplitFalse
+            }
+
+            sfetch("POST", "/set_edit_label_options", JSON.stringify(payloadMerge), "json")
+                .catch((error: ErrorInterface) => {
+                    console.log("Error in Merge operation");
+                    console.log(error.error_msg)
+                });
+
+        } else if (isSplitActivated) {
+            setIsSplitActivated(turnMergeSplitFalse);
+            const payloadSlipt: EditLabelPayload = {
+                payload_key: "is_split_activated",
+                payload_flag: turnMergeSplitFalse
+            }
+
+            sfetch("POST", "/set_edit_label_options", JSON.stringify(payloadSlipt), "json")
+                .catch((error: ErrorInterface) => {
+                    console.log("Error in Split operation");
+                    console.log(error.error_msg)
+                });
+        }
+
+    }
+
     return (
         <IonCard>
             <IonCardContent>
@@ -34,6 +69,9 @@ const EditLabelMenu: React.FC = () => {
                         onIonChange={(e: CustomEvent) => {
                             setToggleEditLabel(e.detail.checked);
                             dispatch("isEditLabelActivated", e.detail.checked);
+                            if (!e.detail.checked) {
+                                reseEditLabel(e.detail.checked);
+                            }
                         }}/>
                 </IonItem>
                 <IonRow>

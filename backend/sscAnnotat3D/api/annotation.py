@@ -228,13 +228,21 @@ def draw():
 
     mk_id = annot_module.current_mk_id
 
+    if (flag_is_merge_activated):
+        edit_label_annotation_module = data_repo.get_edit_label_options("edit_label_merge_module")
+    elif (flag_is_split_activated):
+        edit_label_annotation_module = data_repo.get_edit_label_options("edit_label_split_module")
+
     for coord in request.json['coords']:
         annot_module.draw_marker_dot(coord[1], coord[0], label, mk_id, erase)
-        _debugger_print("annotations before the change", annot_module.get_annotation())
-        if (flag_is_merge_activated or flag_is_split_activated):
-            edit_label_annotation_module = data_repo.get_edit_label_options("edit_label_annotation_module")
+        if (flag_is_merge_activated or flag_is_merge_activated):
             edit_label_annotation_module.draw_marker_dot(coord[1], coord[0], label, mk_id, erase)
-            data_repo.set_edit_label_options("edit_label_annotation_module", edit_label_annotation_module)
+            _debugger_print("annotations just to merge or split the change", annot_module.get_annotation())
+
+    if (flag_is_merge_activated):
+        data_repo.set_edit_label_options("edit_label_merge_module", edit_label_annotation_module)
+    elif (flag_is_split_activated):
+        data_repo.set_edit_label_options("edit_label_split_module", edit_label_annotation_module)
 
     return "success", 200
 
@@ -466,25 +474,26 @@ def set_edit_label_options():
         _debugger_print("getting the information", data_repo.get_edit_label_options(key))
         if (key == "is_merge_activated" and flag):
             data_repo.set_edit_label_options("is_split_activated", False)
-            img = data_repo.get_image('image')
-            if img is None:
-                return handle_exception('No image associated')
-            edit_label_annotation_module = annotation_module.AnnotationModule(img.shape)
-            data_repo.set_edit_label_options("edit_label_annotation_module", edit_label_annotation_module)
+            if (not data_repo.get_edit_label_options("edit_label_merge_module")):
+                img = data_repo.get_image('image')
+                if img is None:
+                    return handle_exception('No image associated')
+                edit_label_annotation_module = annotation_module.AnnotationModule(img.shape)
+                data_repo.set_edit_label_options("edit_label_merge_module", edit_label_annotation_module)
 
         elif (key == "is_split_activated" and flag):
             data_repo.set_edit_label_options("is_merge_activated", False)
-            img = data_repo.get_image('image')
-            if img is None:
-                return handle_exception('No image associated')
-            edit_label_annotation_module = annotation_module.AnnotationModule(img.shape)
-            data_repo.set_edit_label_options("edit_label_annotation_module", edit_label_annotation_module)
+            if (not data_repo.get_edit_label_options("is_split_activated")):
+                img = data_repo.get_image('image')
+                if img is None:
+                    return handle_exception('No image associated')
+                edit_label_annotation_module = annotation_module.AnnotationModule(img.shape)
+                data_repo.set_edit_label_options("edit_label_split_module", edit_label_annotation_module)
 
         else:
             _debugger_print("None merge or split is activated", "")
             _debugger_print("is_merge_activated", data_repo.get_edit_label_options("is_merge_activated"))
             _debugger_print("is_split_activated", data_repo.get_edit_label_options("is_split_activated"))
-            data_repo.set_edit_label_options("edit_label_annotation_module", None)
 
     except Exception as e:
         return handle_exception(str(e))
