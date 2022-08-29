@@ -1,0 +1,62 @@
+/**
+Component used for "Dataset" in "deep learning"
+This is the link i used as reference to change this component
+https://www.damirscorner.com/blog/posts/20220204-PositioningIonicPopovers.html
+https://css-tricks.com/quick-css-trick-how-to-center-an-object-exactly-in-the-center/
+Also, this video can help in any case too
+https://www.youtube.com/watch?v=ZCrQjk6PdK0
+ */
+.file-popover-dataset::part(content) {
+    position: fixed;
+    top: 0 !important;
+    left: 50%;
+    --width: 70%;
+    --max-height: 92%;
+    transform: translate(-50%, 3%) !important;
+}
+
+/**
+Component used in ion-popover in SamplingComp.tsx
+ */
+.add-menu {
+    --width: 25%;
+    --max-height: 33%;
+}
+
+/**
+Component used in ion-popover in DatasetComp.tsx to create the window
+ */
+.create-h5-popover {
+    --width: 25%;
+    --max-height: 23%;
+    transform: translate(0%, -15%);
+}
+
+/**
+Component used to show the preview menu in AugmentationComp.tsx
+ */
+.preview-popover {
+    top: 75%;
+    left: -14%;
+    --max-height: 100% !important;
+    width: 100% !important;
+    height: 160% !important;
+    transform: translate(-50%, -50%);
+}
+
+/**
+Component used in ion-popover in SamplingComp.tsx to delete an element of Bootstrap-table
+ */
+.delete-popover::part(content) {
+    --width: 400px;
+    --min-width: 300px;
+    --max-height: 650px;
+    position: fixed !important;
+}
+
+/**
+Component used in ion-input in SamplingComp.tsx to center the text in data, label, weight size
+ */
+.ion-input {
+    text-align: center !important;
+}

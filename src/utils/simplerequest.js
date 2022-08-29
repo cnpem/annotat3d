@@ -101,7 +101,7 @@ function sfetch(method, url, data = '', responseType = '') {
             return Promise.reject(error);
         }
 
-        console.log('hue', response);
+        console.log('sfetch.then: ', response);
         switch (responseType) {
             case 'gzip/numpyndarray':
                 const responseNumpy = responseToNdArray(response);

@@ -1,13 +1,11 @@
 from flask import Blueprint, request, jsonify
-
-import numpy as np
+from flask_cors import cross_origin
+from werkzeug.exceptions import BadRequest
 
 from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D.modules.pixel_segmentation_module import PixelSegmentationModule
 from sscPySpin import feature_extraction as spin_feat_extraction
-
-from flask_cors import cross_origin
 
 app = Blueprint('pixel_segmentation_module', __name__)
 
@@ -15,8 +13,7 @@ __default_selected_features = (spin_feat_extraction.SPINFilters.NONE,
                                spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_GAUSS,
                                spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_DIFF_OF_GAUSS,
                                spin_feat_extraction.SPINFilters.MEMBRANE_PROJECTIONS)
-__default_selected_supervoxel_feat_pooling = (spin_feat_extraction.SPINSupervoxelPooling.MEAN, )
-
+__default_selected_supervoxel_feat_pooling = (spin_feat_extraction.SPINSupervoxelPooling.MEAN,)
 
 __default_feature_extraction_params = {
     'sigmas': (1, 2, 4, 8),
@@ -31,10 +28,192 @@ __default_classifier_params = {
     'grid_search': False,
     'rf_n_estimators': 200,
     'svm_C': 1.0,
-    'mlp_hidden_layer_sizes': (100,10),
+    'mlp_hidden_layer_sizes': (100, 10),
     'knn_n_neighbors': 5,
     'adaboost_n_estimators': 200
 }
+
+__default_features_front = [
+    {
+        "active": False,
+        "id": 'fft_gauss',
+        "name": 'FFT Gauss',
+        "type": 'Smoothing',
+        "description": 'Filters structures (smoothing) of the specified gaussian filtering in fourier space. Promotes smoothing without worrying about edges.'
+    },
+    {
+        "active": False,
+        "id": 'average',
+        "name": 'Average',
+        "type": 'Smoothing',
+        "description": 'It is a method of "smoothing" images by reducing the amount of intensity variation inside a window (Noise removal)'
+    },
+    {
+        "active": False,
+        "id": 'median',
+        "name": 'Median',
+        "type": 'Smoothing',
+        "description": 'It makes the target pixel intensity equal to the median value in the running window (Noise removal)'
+    },
+    {
+        "active": False,
+        "id": 'sobel',
+        "name": 'Sobel',
+        "type": 'Edge detection',
+        "description": 'It creates an image emphasizing edges because it performs a 2-D spatial gradient measurement on an image and so emphasizes regions of high spatial frequency that correspond to edges.'
+    },
+    {
+        "active": False,
+        "id": 'fft_dog',
+        "name": 'FFT Difference Of Gaussians',
+        "type": 'Edge detection',
+        "description": 'Calculates two gaussian blur images from the original image and subtracts one from the other. It is used to detect edges in the image.'
+    },
+    {
+        "active": False,
+        "id": 'fft_gabor',
+        "name": 'FFT Gabor',
+        "type": 'Edge detection,Texture detection',
+        "description": 'It determines if there is any specific frequency content in the image in specific directions in a localized region around the point or region of analysis. In the spatial domain, it is a Gaussian kernel function modulated by a sinusoidal plane wave. It is one of the most suitable option for texture segmentation and boundary detection'
+    },
+    {
+        "active": False,
+        "id": 'variance',
+        "name": 'Variance',
+        "type": 'Texture detection',
+        "description": 'It is a statistical measure of the amount of variation inside the window. This determines how uniform or not that filtering window is (important for assessing homogeneity and texture)'
+    },
+    {
+        "active": False,
+        "id": 'lbp',
+        "name": 'Local Binary Pattern',
+        "type": 'Texture detection',
+        "description": 'It is a texture operator that tries to capture how are the neighborhoods allocated. It labels the pixels of an image by thresholding the neighborhood of each pixel and considers the result as a binary number.'
+    },
+    {
+        "active": False,
+        "id": 'membrane_projections',
+        "name": 'Membrane Projections',
+        "type": 'Membrane Detection',
+        "description": 'Enhances membrane-like structures of the image through directional filtering.'
+    },
+    {
+        "active": False,
+        "id": 'minimum',
+        "name": 'Minimum',
+        "type": 'Color Identification',
+        "description": 'It replaces the value of the pixel with the value of the darkest pixel inside the filtering window'
+    },
+    {
+        "active": False,
+        "id": 'maximum',
+        "name": 'Maximum',
+        "type": 'Color Identification',
+        "description": 'It replaces the value of the pixel with the value of the lightest pixel inside the filtering window'
+    },
+    {
+        "active": False,
+        "id": 'none',
+        "name": 'None (Original Image)',
+        "type": 'Identity',
+        "description": 'Used to guarantee the preservation of some characteristics of the original image.'
+    }
+]
+
+
+@app.errorhandler(BadRequest)
+def handle_exception(error_msg: str):
+    return jsonify({"error_msg": error_msg}), 400
+
+
+def _default_features_front(features: dict = None):
+    """
+    Build-in function that creates the front-end features
+
+    Args:
+        features (dict): a dict that contains the raw features
+
+    Returns:
+        None
+
+    """
+    # This loop resets the dict to make for easily to create the front-end component
+    for default_feature_front in __default_features_front:
+        default_feature_front["active"] = False
+
+    for feature_name in features["selected_features"]:
+        exit_loop = False
+        i = 0
+        default_features_len = len(__default_features_front)
+        while (i < default_features_len and not exit_loop):
+            default_features = __default_features_front[i]
+
+            if (feature_name == default_features["id"]):
+                default_features["active"] = True
+                exit_loop = True
+                __default_features_front[i] = default_features
+
+            i += 1
+
+def _default_classifier_front(classifier_dict: dict = None):
+    """
+    Build-in function that creates the front-end classifier
+
+    Args:
+        classifier_dict (dict): a dict that contains the raw pooling
+
+    Returns:
+        (dict): returns a dict with the correct front-end template
+
+    """
+    if (classifier_dict["classifier_type"] == "rf"):
+        return [{
+            "id": 'rf_n_estimators',
+            "label": 'Random Forest N. Trees',
+            "value": classifier_dict["rf_n_estimators"],
+            "input": 'number'
+        }]
+
+    elif (classifier_dict["classifier_type"] == "svm"):
+        return [{
+            "id": 'svm_C',
+            "label": 'SVM C',
+            "value": classifier_dict["svm_C"],
+            "input": 'number'
+        }]
+
+    elif (classifier_dict["classifier_type"] == "mlp"):
+        return [{
+            "id": 'mlp_hidden_layer_sizes',
+            "label": 'N. hidden Neurons',
+            "value": [*classifier_dict["mlp_hidden_layer_sizes"]],
+            "input": 'text'
+        }]
+
+    elif (classifier_dict["classifier_type"] == "adaboost"):
+        return [{
+            "id": 'adaboost_n_estimators',
+            "label": 'N. classifiers',
+            "value": classifier_dict["adaboost_n_estimators"],
+            "input": 'number'
+        }]
+
+    elif (classifier_dict["classifier_type"] == "knn"):
+        return [{
+            "id": 'knn_n_neighbors',
+            "label": 'N. neighbors',
+            "value": classifier_dict["knn_n_neighbors"],
+            "input": 'number'
+        }]
+
+    return [{}]
+
+
+def _debugger_print(msg: str, payload: any):
+    print("\n----------------------------------------------------------")
+    print("{} : {}".format(msg, payload))
+    print("-------------------------------------------------------------\n")
+
 
 def features_to_spin_features(feature):
     if feature.lower() == 'fft_gauss':
@@ -64,13 +243,43 @@ def features_to_spin_features(feature):
     else:
         raise f'Unknown feature: {feature.lower()}'
 
+
 @app.route('/pixel_segmentation_module/create', methods=['POST', 'GET'])
 @cross_origin()
 def create():
     img = data_repo.get_image('image')
 
-    feature_extraction_params = request.json['feature_extraction_params']
-    classifier_params = request.json['classifier_params']
+    annotations = module_repo.get_module('annotation').annotation
+    if (annotations == {}):
+        return handle_exception(
+            "unable to apply!. Please, at least create one label and background annotation and try again the preprocess.")
+
+    dict_tuple_values = [*annotations.values()]
+    unique_ids = set()
+    for tuple_values in dict_tuple_values:
+        id, _ = tuple_values
+        unique_ids.add(id)
+    if (len(unique_ids) <= 1):
+        return handle_exception(
+            "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
+
+    try:
+        feature_extraction_params = request.json['feature_extraction_params']
+        data_repo.set_feature_extraction_params(key="feature_extraction_params",
+                                                data=feature_extraction_params.copy())
+
+        classifier_params = request.json['classifier_params']
+        classifier_values = request.json["classifier_values"]
+        if (isinstance(classifier_values["value"], str)):
+            value = eval(classifier_values["value"])
+        elif (isinstance(classifier_values["value"], list)):
+            value = (*classifier_values["value"],)
+        else:
+            value = classifier_values["value"]
+
+        classifier_params[classifier_values["id"]] = value
+    except:
+        return handle_exception("error trying to get the request in /pixel_segmentation_module/create")
 
     print(feature_extraction_params['selected_features'])
     if 'selected_features' in feature_extraction_params:
@@ -89,7 +298,7 @@ def create():
     print(classifier_params)
 
     if img is None:
-        return 'Needs a valid image to create module.', 400
+        return handle_exception('Needs a valid image to create module.')
 
     segm_module = PixelSegmentationModule(img)
 
@@ -113,6 +322,7 @@ def create():
 
     return "success", 200
 
+
 @app.route('/pixel_segmentation_module/preprocess', methods=['POST'])
 @cross_origin()
 def preprocess():
@@ -121,13 +331,16 @@ def preprocess():
 
     return "success", 200
 
+
 @app.route('/pixel_segmentation_module/preview', methods=['POST'])
 @cross_origin()
 def preview():
-
     segm_module = module_repo.get_module(key='pixel_segmentation_module')
 
     annotations = module_repo.get_module('annotation').annotation
+    if (annotations == {}):
+        return handle_exception(
+            "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
 
     slice_num = request.json['slice']
     axis = request.json['axis']
@@ -141,45 +354,99 @@ def preview():
         return "This module does not have a preview", 400
 
     try:
-        label = segm_module.preview(annotations, [slice_num], axis_dim)
+        label, selected_features_names = segm_module.preview(annotations, [slice_num], axis_dim)
     except Exception as e:
-        import traceback
-        stack_trace = traceback.format_exc()
-        return jsonify({
-            'error': 'Failure on Pixel Segmentation Preview',
-            'error_msg': stack_trace
-        }), 500
+        dict_tuple_values = [*annotations.values()]
+        unique_ids = set()
+        for tuple_values in dict_tuple_values:
+            id, _ = tuple_values
+            unique_ids.add(id)
+        if (len(unique_ids) <= 1):
+            return handle_exception(
+                "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
+        return handle_exception("unable to preview! {}".format(str(e)))
     data_repo.set_image('label', label)
 
-    return "success", 200
+    return jsonify({"selected_features_names": selected_features_names}), 200
 
 
 @app.route('/pixel_segmentation_module/execute', methods=['POST'])
 @cross_origin()
 def execute():
-
     segm_module = module_repo.get_module(key='pixel_segmentation_module')
 
     annotations = module_repo.get_module('annotation').annotation
+    if (annotations == {}):
+        return handle_exception(
+            "unable to apply!. Please, at least create one label and background annotation and try again the preprocess.")
 
     if segm_module is None:
         return "Not a valid segmentation module", 400
 
     try:
-        label = segm_module.execute(annotations)
+        label, selected_features_names = segm_module.execute(annotations)
     except Exception as e:
-        import traceback
-        stack_trace = traceback.format_exc()
-        return jsonify({
-            'error': 'Failure on Pixel Segmentation Apply',
-            'error_msg': stack_trace
-        }), 500
-
-    # print(label.mean(), label.shape)
+        dict_tuple_values = [*annotations.values()]
+        unique_ids = set()
+        for tuple_values in dict_tuple_values:
+            id, _ = tuple_values
+            unique_ids.add(id)
+        if (len(unique_ids) <= 1):
+            return handle_exception(
+                "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
+        return handle_exception("unable to preview! {}".format(str(e)))
 
     data_repo.set_image('label', label)
 
     print(segm_module._feature_extraction_params)
     print(segm_module._classifier_params)
 
-    return "success", 200
+    return jsonify({"selected_features_names": selected_features_names}), 200
+
+
+@app.route('/save_classifier_pixel', methods=['POST'])
+@cross_origin()
+def save_classifier_pixel():
+    """
+    Function that saves the classifier in a .model file
+
+    Notes:
+        This function is used in FileSaveDialog.tsx
+
+    Returns:
+        (str): returns a string "successes" if everything goes well and an error otherwise
+
+    """
+    try:
+        path = request.json["classificationPath"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    try:
+        segm_module = module_repo.get_module(key='pixel_segmentation_module')
+    except Exception as e:
+        return handle_exception(
+            "Unable to get save the classifier !. Please, run again the preprocess and apply in Pixel Segmentation menu and try again this operation")
+
+    if (segm_module is None):
+        return handle_exception("Please, load a classifier first !")
+
+    try:
+        superpixel_state = data_repo.get_superpixel_state()
+        superpixel_state["use_pixel_segmentation"] = True
+    except:
+        return handle_exception("Unable to get superpixel_state")
+
+    try:
+        feature_extraction_params = data_repo.get_feature_extraction_params("feature_extraction_params")
+    except Exception as e:
+        return handle_exception(str(e))
+
+    resp, msg, model_complete = segm_module.save_classifier(path, superpixel_state, feature_extraction_params)
+
+    if (not resp):
+        return handle_exception(msg)
+
+    data_repo.set_classification_model("model_complete", model_complete)
+
+    return jsonify("successes")

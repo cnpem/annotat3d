@@ -1,0 +1,39 @@
+/**
+This script is used for the css components for bootstrap-tables used in InferenceComp.tsx
+*/
+
+@import '../../../../theme/variables.css';
+
+/**
+css for data
+ */
+.label-table {
+    height: 20em;
+    table-layout: fixed;
+    word-wrap: break-word;
+    overflow-y: auto;
+}
+
+/**
+Ion-item used in each row of bootstrap-table in InferenceComp.tsx
+ */
+.ion-item-table {
+    --ion-item-background: transparent !important;
+    --ion-border-color: transparent !important;
+    display: inline-flex !important;
+}
+
+/**
+css the bootstrap-table in InferenceComp.tsx
+ */
+.label-table-active {
+    background-color: var(--ion-color-primary);
+}
+
+/**
+css for the bootstrap-table in InferenceComp.tsx
+ */
+.label-table-active ion-label {
+    color: white;
+    font-weight: 600;
+}

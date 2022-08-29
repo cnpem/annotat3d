@@ -24,12 +24,10 @@ from .. import aux_functions as functions
 from .. import progressbar, utils
 from sscAnnotat3D import cython
 from .classifier_segmentation_module import ClassifierSegmentationModule
-# from annotat3D.widgets_parameters import SuperpixelSegmentationParamWidget
 
 
 # @decorate_all_methods(timecall(immediate=False))
 class SuperpixelSegmentationModule(ClassifierSegmentationModule):
-
     _module_name = "SuperpixelSegmentationModule"
 
     def __init__(self,
@@ -50,9 +48,6 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                             feature_extraction_params=str(self._feature_extraction_params),
                             classifier_params=str(self._classifier_params),
                             superpixel_params=str(self._superpixel_params))
-
-        # if not utils.headless_mode():
-            # utils.add_variable_console({'segmentation': self})
 
     def has_preprocess(self):
         return True
@@ -183,7 +178,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
         return preview_bounding_box
 
-    #bbox is a 6 valued tuple with z0, y0, x0, z1, y1, x1
+    # bbox is a 6 valued tuple with z0, y0, x0, z1, y1, x1
     def boundingbox_idx(self, bbox):
         z0, y0, x0, z1, y1, x1 = bbox
         return [slice(z0, z1 + 1), slice(y0, y1 + 1), slice(x0, x1 + 1)]
@@ -207,7 +202,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                     raise Exception(
                         'Unable to compute preview for axis %s because too much memory may be consumed (beyond the accepted limit of %d GB). Please preview only on XY axis for now.'
                         % ('XZ' if selected_axis == 1 else 'YZ', self._estimate_feature_extraction_memory_usage() /
-                           (1024.0**3)))
+                           (1024.0 ** 3)))
 
             mainbar = progressbar.get('main')
 
@@ -257,7 +252,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                           (str(preview_image.shape)))
 
             with sentry_sdk.start_span(op='Training classifier for preview'):
-                classifier_trained, training_time = self._train_classifier(annotations,
+                classifier_trained, training_time, selected_features_names = self._train_classifier(annotations,
                                                                            self._features,
                                                                            min_superpixel_id=self._min_superpixel_label)
 
@@ -266,7 +261,6 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
             mainbar.inc()
             with sentry_sdk.start_span(op='Classify superpixels for preview'):
                 if classifier_trained:
-
                     pred = np.zeros(self._image.shape, dtype='uint16')
                     preview_superpixel_limits = spin_img.spin_min_max_region_id(preview_superpixels, True)
                     min_superpixel_label = preview_superpixel_limits['min']
@@ -316,7 +310,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
             mainbar.reset()
 
-            return pred
+            return pred, selected_features_names
 
     def has_superpixel_features_cached(self):
         cached_features = True
@@ -387,7 +381,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
             mainbar.inc()
             with sentry_sdk.start_span(op='Training classifier'):
-                classifier_trained, training_time = self._train_classifier(annotations,
+                classifier_trained, training_time, selected_features_names = self._train_classifier(annotations,
                                                                            features,
                                                                            min_superpixel_id=min_superpixel_label)
 
@@ -504,13 +498,13 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
             mainbar.reset()
 
-            return pred
+            return pred, selected_features_names
 
     def _classify_superpixels(self, superpixel_features_global, pred, superpixels, selected_superpixels=None):
         logging.debug("Predicting...")
         start = time.time()
 
-        #we pass global features, so min_superpixel_id is always 1
+        # we pass global features, so min_superpixel_id is always 1
         min_superpixel_id, max_superpixel_id = self._min_superpixel_label, self._max_superpixel_label
         superpixel_features = superpixel_features_global
 
@@ -550,7 +544,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         logging.info('Assigning superpixel labels to voxels')
         start = time.time()
         spin_seg.spin_label_from_classification(superpixels, pred, prediction, min_superpixel_id=min_superpixel_id)
-        #pred[...] = np.take(prediction, superpixels-min_superpixel_id)
+        # pred[...] = np.take(prediction, superpixels-min_superpixel_id)
         end = time.time()
         logging.info('After assignment')
 
@@ -631,7 +625,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         nsamples = len(self._training_superpixel_ids)
         if isinstance(superpixel_features, dict):
             nfeats = len(next(iter(
-                superpixel_features.values())))  #look how many chainned functions, this feel lispy as hell
+                superpixel_features.values())))  # look how many chainned functions, this feel lispy as hell
         else:
             nfeats = superpixel_features.shape[1]
 
@@ -790,9 +784,9 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
                 start = time.time()
                 image_crop = image[bbox_min[0]:bbox_max[0] + 1, bbox_min[1]:bbox_max[1] + 1,
-                                   bbox_min[2]:bbox_max[2] + 1]
+                             bbox_min[2]:bbox_max[2] + 1]
                 superpixels_crop = self._superpixels[bbox_min[0]:bbox_max[0] + 1, bbox_min[1]:bbox_max[1] + 1,
-                                                     bbox_min[2]:bbox_max[2] + 1]
+                                   bbox_min[2]:bbox_max[2] + 1]
                 end = time.time()
 
                 logging.info('**** Image cropping time: {}s'.format(end - start))
@@ -916,9 +910,9 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
                 start = time.time()
                 image_crop = image[bbox_min[0]:bbox_max[0] + 1, bbox_min[1]:bbox_max[1] + 1,
-                                   bbox_min[2]:bbox_max[2] + 1]
+                             bbox_min[2]:bbox_max[2] + 1]
                 superpixels_crop = self._superpixels[bbox_min[0]:bbox_max[0] + 1, bbox_min[1]:bbox_max[1] + 1,
-                                                     bbox_min[2]:bbox_max[2] + 1]
+                                   bbox_min[2]:bbox_max[2] + 1]
                 end = time.time()
 
                 logging.debug('\n\n**** Image cropping time {}s'.format(end - start))
@@ -984,3 +978,35 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                 logging.debug('**** Superpixel feature dict creation run time {}s'.format(end - start))
 
         return superpixel_features_dict
+
+    # TODO : don't forget to document this function
+    def load_classifier(self, path: str = ""):
+        """
+        Function that load the classifier as .model extension
+
+        Args:
+            path (str): string to load the classifier
+
+        Returns:
+            (bool, str, dict): returns a tuple that contains in this order : a boolean with the response, a str with the error msg if the boolean is False and a dict that contains the information to update the front-end component
+
+        """
+        resp, msg, model_complete = ClassifierSegmentationModule.load_classifier(self, path)
+        return resp, msg, model_complete
+
+    def save_classifier(self, path: str = "", superpixel_state: dict = None, feature_extraction_params: dict = None):
+        """
+        Function that save the classifier as .model extension
+
+        Args:
+            path (str): string to save the classifier
+            superpixel_state (dict): dict that contains information about the superpixel
+            feature_extraction_params (dict): dict that contains the feature_extraction_params chosen by the user
+
+        Returns:
+            (bool, str, dict): returns a tuple that contains in this order : a boolean with the response, a str with the error msg if the boolean is False and a dict that contains the information to update the front-end component
+
+        """
+        resp, msg, model_complete = ClassifierSegmentationModule.save_classifier(self, path, superpixel_state,
+                                                                                 feature_extraction_params)
+        return resp, msg, model_complete

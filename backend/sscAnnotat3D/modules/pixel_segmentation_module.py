@@ -27,6 +27,7 @@ from sscAnnotat3D import progressbar, utils
 from .classifier_segmentation_module import \
     ClassifierSegmentationModule
 
+
 class PixelSegmentationModule(ClassifierSegmentationModule):
     _module_name = "PixelSegmentationModule"
 
@@ -147,7 +148,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         self._training_labels = np.array(self._training_labels_raw)
         self._training_features = np.array(self._training_features_raw)
 
-
     def preview(self, annotations, selected_slices, selected_axis, **kwargs):
         """
         This function is responsible to make all operations when the user click in the "preview" option bar
@@ -167,7 +167,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         """
 
         with sentry_sdk.start_transaction(name='Pixel Segmentation Preview', op='pixel classification') as t:
-            image_params ={
+            image_params = {
                 'shape': self._image.shape,
                 'dtype': self._image.dtype
             }
@@ -182,7 +182,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                 if not valid:
                     raise Exception(
                         'Unable to compute preview for axis %s because too much memory may be consumed (beyond the accepted limit of %d GB). Please preview only on XY axis for now.'
-                        % ('XZ' if selected_axis == 1 else 'YZ', self._maxself._annotations_mem_usage / (1024.0**3)))
+                        % ('XZ' if selected_axis == 1 else 'YZ', self._maxself._annotations_mem_usage / (1024.0 ** 3)))
 
             mainbar = progressbar.get('main')
 
@@ -209,11 +209,12 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                 end = time.time()
 
                 logging.debug('Time to compute superpixel bounding boxes: %fs' %
-                            (end - start))
+                              (end - start))
                 logging.debug('Selected preview bounding box for preview {}'.format(
                     preview_bounding_box))
 
-                preview_bounding_box = self._bounding_box_for_feat_extraction(preview_bounding_box, min_coord, max_coord)
+                preview_bounding_box = self._bounding_box_for_feat_extraction(preview_bounding_box, min_coord,
+                                                                              max_coord)
 
                 logging.debug('Feat extraction bounding box for preview {}'.format(
                     preview_bounding_box))
@@ -237,25 +238,24 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                 # the preview region. Hence, annotations may have been done for other slices so we force the training to recompute only what is
                 # necessary, since it caches superpixel features as well
                 with sentry_sdk.start_span(op='Training classifier for preview'):
-                    classifier_trained, training_time = self._train_classifier(annotations, None)
+                    classifier_trained, training_time, selected_features_names = self._train_classifier(annotations, None)
             else:
                 preview_features = self._features[[slice(None), *selected_slices_idx]]
                 logging.debug('Training classifier for preview from features estimated for the entire image')
                 with sentry_sdk.start_span(op='Training classifier for preview'):
-                    classifier_trained, training_time = self._train_classifier(annotations, self._features)
+                    classifier_trained, training_time, selected_features_names = self._train_classifier(annotations, self._features)
 
             pred = None
 
             mainbar.inc()
             with sentry_sdk.start_span(op='Classify pixels for preview'):
                 if classifier_trained:
-
                     pred = np.zeros(self._image.shape, dtype='uint16')
                     pred[selected_slices_idx], assignment_time, test_time, predict_times = self._classify_pixels(
                         preview_features)
 
                     logging.debug('bounding box: {} {} {}'.format((z0, z1), (y0, y1),
-                                                                (x0, x1)))
+                                                                  (x0, x1)))
                     total_time = training_time + test_time + assignment_time
 
                     logging.debug(
@@ -267,7 +267,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
             total_user_time = (total_time_end - total_time_start)
             logging.debug('Total user time = %f s' %
-                        (total_time_end - total_time_start))
+                          (total_time_end - total_time_start))
 
             try:
                 functions.log_usage(op_type='preview_' + self._module_name,
@@ -294,8 +294,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
             mainbar.reset()
 
-            return pred
-
+            return pred, selected_features_names
 
     def execute(self, annotations, force_feature_extraction=False, **kwargs):
         """
@@ -312,11 +311,11 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         """
 
         with sentry_sdk.start_transaction(name='Pixel Segmentation Apply', op='pixel classification') as t:
-            image_params ={
+            image_params = {
                 'shape': self._image.shape,
                 'dtype': self._image.dtype
             }
-            sentry_sdk.set_context('Image Params',image_params)
+            sentry_sdk.set_context('Image Params', image_params)
             if len(annotations) <= 0:
                 return
 
@@ -356,7 +355,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
             mainbar.inc()
             with sentry_sdk.start_span(op='Training classifier'):
-                classifier_trained, training_time = self._train_classifier(annotations, features)
+                classifier_trained, training_time, selected_features_names = self._train_classifier(annotations, features)
 
             pred = None
             test_time = assignment_time = 0.0
@@ -379,7 +378,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                         block_size = max(
                             1, math.ceil(image.shape[0] // memory_splitting_factor))
                         logging.debug('**** Splitting image into blocks of %d slices' %
-                                    block_size)
+                                      block_size)
 
                         features_shape = np.zeros(2, dtype='int')
                         nblocks = 0
@@ -422,8 +421,9 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
                     total_time = training_time + test_time + assignment_time
 
-                    logging.debug("Training time = %f s, Testing time = %f s, Label assignment time = %f s, Total time= %f s " %
-                                (training_time, test_time, assignment_time, total_time))
+                    logging.debug(
+                        "Training time = %f s, Testing time = %f s, Label assignment time = %f s, Total time= %f s " %
+                        (training_time, test_time, assignment_time, total_time))
                     logging.debug('Finished')
 
             total_time_end = time.time()
@@ -432,7 +432,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
             total_user_time = (total_time_end - total_time_start)
             logging.debug('Total user time = %f s' %
-                        (total_time_end - total_time_start))
+                          (total_time_end - total_time_start))
 
             try:
                 functions.log_usage(op_type='execute_' + self._module_name,
@@ -455,7 +455,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                 functions.log_error(e)
 
             mainbar.reset()
-            return pred
+            return pred, selected_features_names
 
     def has_preview(self):
         """
@@ -499,7 +499,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         """
         pass
 
-
     def get_superpixel(self):
         """
         Function that get the image superpixel
@@ -512,7 +511,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
         """
         return None
-
 
     def set_superpixel(self, superpixel):
         """
@@ -530,3 +528,14 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         """
 
         pass
+
+        # TODO : don't forget to document this function
+        def load_classifier(self, path: str = ""):
+            resp, msg, model_complete = ClassifierSegmentationModule.load_classifier(self, path)
+            return resp, msg, model_complete
+
+        def save_classifier(self, path: str = "", superpixel_state: dict = None,
+                            feature_extraction_params: dict = None):
+            resp, msg, model_complete = ClassifierSegmentationModule.save_classifier(self, path, superpixel_state,
+                                                                                     feature_extraction_params)
+            return resp, msg, model_complete

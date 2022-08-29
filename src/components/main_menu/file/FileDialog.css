@@ -1,4 +1,25 @@
-.file-popover {
+/**
+Component used for "Load Files" menu
+ */
+.file-popover-load {
     --width: 400px;
     --min-width: 300px;
+    --max-height: 650px;
+}
+
+/**
+Component used in ion-input in FileLoadDialog.tsx
+to center the text in Load Image option
+ */
+.ion-input {
+    text-align: center !important;
+}
+
+/**
+Component used for "Save Files" menu
+ */
+.file-popover-save {
+    --width: 400px;
+    --min-width: 300px;
+    --max-height: 600px;
 }

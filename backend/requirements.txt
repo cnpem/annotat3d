@@ -4,7 +4,7 @@ flask-cors
 jinja2
 sscIO
 sscPySpin
-sscDeepsirius
+sscDeepsirius>=0.14.1
 ssc-remotevis
 sentry-sdk
 opencv-python

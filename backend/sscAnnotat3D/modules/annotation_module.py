@@ -1,16 +1,16 @@
 import logging
 import math
 import pickle
-import sys
-import threading
-from skimage import draw
-from operator import itemgetter
 import numpy as np
 
-from sscAnnotat3D import aux_functions, utils
+from skimage import draw
+from operator import itemgetter
+
+from sscAnnotat3D import aux_functions
 
 class Label(object):
     def __init__(self, id, name=None):
+        self.name = name
         self.id = id
 
     def __lt__(self, other):
@@ -43,7 +43,7 @@ class AnnotationModule():
                                 image_shape=image_shape)
 
         self.zsize, self.ysize, self.xsize = image_shape
-
+        self.volume_data = kwargs["image"] if "image" in kwargs else None
         self.xyslice = 0
         self.xzslice = 0
         self.yzslice = 0
@@ -74,7 +74,9 @@ class AnnotationModule():
         self.create_labels()
 
         self.selected_cmap = 'grays'
+        self.classifier = None
 
+    # So we need to pay attention if anything broke on the code
     @property
     def marker_mode_support(self):
         return self.classifier.marker_mode_support
@@ -379,18 +381,19 @@ class AnnotationModule():
 
         self.added_labels.append(Label(new_label, name))
 
-    def remove_label(self, label):
-        label = int(label)
+    def remove_label(self, label_id: int):
+        self.remove_annotation(labels=(label_id, ))
 
-        self.remove_annotation(labels=(label, ))
+        removed_labels = aux_functions.get_marker_ids(self.removed_annotation)
+        try:
+            self.order_markers -= removed_labels
+        except Exception as e:
+            print(str(e))
 
         #update the label list
-        added_labels = [l for l in self.added_labels if l.id != label]
-        removed = added_labels != self.added_labels
-
+        added_labels = [l for l in self.added_labels if l.id != label_id]
         self.added_labels = added_labels
-
-        return removed
+        return removed_labels
 
     def erase_all_markers(self):
         # Copying all removed annotation
@@ -399,6 +402,7 @@ class AnnotationModule():
         self.annotation = {}
         self.label_merging_scribbles = {}
         self.label_splitting_scribbles = {}
+        self.order_markers = set()
 
     def clear_removed_data(self):
         self.removed_annotation = {}
@@ -543,6 +547,10 @@ class AnnotationModule():
         self.annotation = remaining_annotation
 
     def get_annotation(self):
+        return self.annotation
+
+    def set_annotation(self, label_annotation: dict):
+        self.annotation = label_annotation
         return self.annotation
 
     def update_annotation(self, annotations):

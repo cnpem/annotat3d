@@ -4,10 +4,10 @@ import {IonButton, IonButtons, IonIcon,
 } from "@ionic/react";
 import {albumsOutline} from "ionicons/icons";
 
-import {ImageShapeInterface} from './ImageShapeInterface';
+import {ImageShapeInterface} from './utils/ImageShapeInterface';
 
-import {dispatch} from '../../utils/eventbus';
-import {SliceInfoInterface} from "./SliceInfoInterface";
+import {dispatch, useEventBus} from '../../utils/eventbus';
+import {SliceInfoInterface} from "./utils/SliceInfoInterface";
 import {useStorageState} from "react-storage-hooks";
 import {Fragment, useEffect} from "react";
 
@@ -29,6 +29,8 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
 
     const [sliceName, setSliceName] = useStorageState<'XY' | 'XZ' | 'YZ'>(sessionStorage, 'sliceName', "XY");
     const [sliceValue, setSliceValue] = useStorageState<number>(sessionStorage, 'sliceValue', 0);
+    const [LockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
+    const [cropPreviewMode, setCropPreviewMode] = useStorageState<boolean>(sessionStorage, 'cropPreviewMode', false);
 
     const maxValSlider: Record<'XY'|'XZ'|'YZ', number> = {
         'XY': props.imageShape.z - 1,
@@ -36,14 +38,22 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         'YZ': props.imageShape.x - 1
     }
 
+    useEventBus('cropPreviewMode', (cropMode) => {
+        setCropPreviewMode(cropMode);
+    })
+
     const handleSliceValue = (e: CustomEvent) => {
         setSliceValue(+e.detail.value);
         const payload: SliceInfoInterface =  {
             axis: sliceName,
             slice: +e.detail.value
         };
-
         dispatch('sliceChanged', payload);
+        dispatch('cropPreviewMode', cropPreviewMode); 
+    }
+
+    const handleIonInputSliceValue = (e: CustomEvent) => {
+        setSliceValue(+e.detail.value);
     }
 
     const handleSliceName = (e: CustomEvent) => {
@@ -60,6 +70,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         };
 
         dispatch('sliceChanged', payload);
+        dispatch('cropPreviewMode', cropPreviewMode); 
     }
 
     useEffect(() => {
@@ -69,9 +80,13 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         });
     })
 
+    useEventBus('LockComponents', (changeLockMenu) => {
+        setLockMenu(changeLockMenu);
+    })
+
     return(
         <Fragment>
-            <IonSegment value={sliceName} onIonChange={handleSliceName}>
+            <IonSegment value={sliceName} onIonChange={handleSliceName} disabled={LockMenu}>
                 <IonSegmentButton value={"XY"}>
                     <IonLabel>{"XY"}</IonLabel>
                 </IonSegmentButton>
@@ -86,7 +101,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             </IonSegment>
 
             <IonItem>
-                <IonRange min={0} max={maxValSlider[sliceName]} pin={true} value={sliceValue} onIonChange={handleSliceValue}>
+                <IonRange min={0} max={maxValSlider[sliceName]} pin={true} value={sliceValue} onIonKnobMoveEnd={handleSliceValue} disabled={LockMenu}>
                     <IonIcon size={"small"} slot={"start"} icon={albumsOutline}/>
                 </IonRange>
             </IonItem>
@@ -94,7 +109,12 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                 <IonButtons>
                     <IonButton disabled={true} color={"dark"} size={"default"}>{buttonSliceName[sliceName]}</IonButton>
                 </IonButtons>
-                <IonInput type={"number"} min={0} max={maxValSlider[sliceName]} clearInput value={sliceValue} onIonChange={handleSliceValue}/>
+                <IonInput
+                    type={"number"}
+                    min={0} max={maxValSlider[sliceName]}
+                    clearInput value={sliceValue}
+                    onIonChange={handleIonInputSliceValue}
+                    disabled={LockMenu}/>
             </IonItem>
         </Fragment>
     );

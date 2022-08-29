@@ -6,61 +6,49 @@
 # -----------------------------------------------------------------------------
 # vispy: gallery 2
 
-import gc
-import json
 import logging
 import math
-import multiprocessing as mp
 import os.path
 import pickle
 import shutil
 import time
-from abc import ABC, abstractmethod
-from operator import itemgetter
-from pathlib import Path
 
 import joblib
-# from sklearn.utils import parallel_backend # future fix for sklearn 0.20.x
 import numpy as np
 import psutil
-import scipy as sp
 import sentry_sdk
 import sscPySpin.classification as spin_class
 import sscPySpin.feature_extraction as spin_feat_extraction
-import sscPySpin.image as spin_img
-import sscPySpin.segmentation as spin_seg
 from sklearn import ensemble, model_selection, neighbors, neural_network, svm
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils import assert_all_finite, parallel_backend
+from sklearn.utils import parallel_backend
+from abc import abstractmethod
+from pathlib import Path
 
 from .. import aux_functions as functions
 from .. import utils
 from .segmentation_module import SegmentationModule
-# from .widgets_parameters import SuperpixelSegmentationParamWidget
 
 __rapids_support__ = utils.rapids_support()
 
 if __rapids_support__:
-    import cuml
-    # from cuml.dask import ensemble as cuensemble
     from cuml import ensemble as cuensemble
     from cuml import svm as cusvm
 
-__svc_params__ = {'C': [10**i for i in range(-5, 6)]}
-__rfc_params__ = {'n_estimators': [10**i for i in range(1, 3)]}
+__svc_params__ = {'C': [10 ** i for i in range(-5, 6)]}
+__rfc_params__ = {'n_estimators': [10 ** i for i in range(1, 3)]}
 __mlp_params__ = {
-    'hidden_layer_sizes': [(100, ), (
+    'hidden_layer_sizes': [(100,), (
         50,
         10,
     ), (30, 20, 10)]
 }
 __knn_params__ = {'n_neighbors': [1, 3, 5, 7]}
-__adaboost_params__ = {'n_estimators': [10**i for i in range(1, 3)]}
+__adaboost_params__ = {'n_estimators': [10 ** i for i in range(1, 3)]}
 
-__max_mem_usage__ = int(512 * 1024**3)
+__max_mem_usage__ = int(512 * 1024 ** 3)
 __max_available_mem_usage_percentage__ = 0.8
 
 
@@ -155,13 +143,15 @@ class ClassifierSegmentationModule(SegmentationModule):
                              spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_GAUSS,
                              spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_DIFF_OF_GAUSS,
                              spin_feat_extraction.SPINFilters.MEMBRANE_PROJECTIONS)
-        selected_supervoxel_feat_pooling = (spin_feat_extraction.SPINSupervoxelPooling.MEAN, )
+        selected_supervoxel_feat_pooling = (spin_feat_extraction.SPINSupervoxelPooling.MEAN,)
+        selected_features_front = ['fft_gauss', 'fft_dog', 'membrane_projections', 'none']
+        selected_supervoxel_feat_pooling_front = ['mean']
 
         default_waterpixels_compactness = 10.0 if self._image.dtype == 'uint8' else 10000.0
         default_n_estimators = 200
         default_svm_C = 1.0
         default_grid_search = False
-        default_mlp_hidden = (100, )
+        default_mlp_hidden = (100,)
         default_knn_k = 1
 
         self._superpixel_params = {
@@ -179,6 +169,13 @@ class ClassifierSegmentationModule(SegmentationModule):
             'selected_supervoxel_feat_pooling': selected_supervoxel_feat_pooling,
             'feat_selection_enabled': True,
             'feat_selection_clf_n_estimators': 50,
+            'feat_selection_method_threshold': 0.01
+        }
+        self._feature_extraction_params_front = {
+            'sigmas': [1, 2, 4, 8],
+            'selected_features': selected_features_front,
+            'selected_supervoxel_feat_pooling': selected_supervoxel_feat_pooling_front,
+            'feat_selection_enabled': True,
             'feat_selection_method_threshold': 0.01
         }
         self._classifier_params = {
@@ -265,7 +262,7 @@ class ClassifierSegmentationModule(SegmentationModule):
     def _extract_features_for_training(self, annotations, features, **kwargs):
         pass
 
-    #does not implement load label capability
+    # does not implement load label capability
     def load_label(self, label):
         pass
 
@@ -275,7 +272,7 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         start = end = 0
         classifier_trained = False
-
+        selected_features_names = []
         logging.debug('loaded_training_superpixel_features: {}'.format(
             np.array(self._loaded_training_superpixel_features).shape))
 
@@ -321,7 +318,7 @@ class ClassifierSegmentationModule(SegmentationModule):
                                                                           self._training_features,
                                                                           self._feat_scaler.mean_,
                                                                           self._feat_scaler.scale_)
-                    #self._training_features = self._feat_scaler.fit_transform(self._training_features_raw)
+                    # self._training_features = self._feat_scaler.fit_transform(self._training_features_raw)
                     logging.debug('training labels raw: {}'.format(self._training_labels_raw))
                     self._training_labels = np.array(self._training_labels_raw)
             send = time.time()
@@ -366,11 +363,13 @@ class ClassifierSegmentationModule(SegmentationModule):
                                                                                    selected_features, sigmas)
                         name = spin_feat_extraction.SPINFilters.filter_name(filter_id)
                         if not name in logging.debuged:
+                            selected_features_names.append(name)
                             logging.debuged.append(name)
                             logging.debug('----- {}'.format(spin_feat_extraction.SPINFilters.filter_name(filter_id)))
 
             else:
-                logging.debug('-- Using all features for training')
+                selected_features_names = [name for feat, name in spin_feat_extraction.SPINFilters.available_filters()]
+                logging.debug('-- Using all features for training: {}'.format(selected_features_names))
                 X = self._training_features
 
             logging.debug('-- Training model')
@@ -414,7 +413,7 @@ class ClassifierSegmentationModule(SegmentationModule):
         if classifier_trained:
             logging.debug("--> Completed")
 
-        return classifier_trained, training_time
+        return classifier_trained, training_time, selected_features_names
 
     def change_classifier(self, classifier):
         classifier = classifier.lower()
@@ -425,7 +424,134 @@ class ClassifierSegmentationModule(SegmentationModule):
         logging.debug('\n\n***Classifier type: {}'.format(type(self._model)))
         logging.debug('Changing classifier to {}'.format(classifier.upper()))
 
-    def save_classifier(self, path):
+    def _debugger_print(self, msg: str, payload: any):
+        print("\n----------------------------------------------------------")
+        print("{} : {}".format(msg, payload))
+        print("-------------------------------------------------------------\n")
+
+    # TODO : need to document this function later
+    def save_classifier(self, path: str = "", superpixel_state: dict = None, feature_extraction_params: dict = None):
+        labels = np.unique(self._training_labels)
+        self._superpixel_params["superpixel_type"] = superpixel_state["method"]
+        self._superpixel_params["pixel_segmentation"] = superpixel_state["use_pixel_segmentation"]
+        self._superpixel_params["waterpixels_compactness"] = float(superpixel_state["compactness"])
+        self._superpixel_params["waterpixels_seed_spacing"] = superpixel_state["seedsSpacing"]
+        self._feature_extraction_params_front = feature_extraction_params
+
+        model_complete = {
+            'version': self._classifier_version,
+            'labels': labels,
+            'classifier_params': self._classifier_params,
+            'superpixel_params': self._superpixel_params,
+            'feature_extraction_params': self._feature_extraction_params,
+            'classifier': self._model,
+            'feat_selector': self._feat_selector,
+            'feat_scaler': self._feat_scaler,
+            'feature_extraction_params_front': self._feature_extraction_params_front
+        }
+
+        try:
+            """IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
+            not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
+            data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
+            besides being far more critical than classifier loading/saving."""
+            with open(path, 'wb') as f:
+                pickle.dump(model_complete, f)
+        except Exception as e:
+            try:
+                f.close()
+            except:
+                pass
+            return False, 'Unable to save classification model! Error: %s' % str(e), {}
+        else:
+            logging.debug('Classifier saved successfully')
+
+        return True, "", model_complete
+
+    def load_classifier(self, path: str = ""):
+
+        try:
+
+            """IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
+            not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
+            data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
+            besides being far more critical than classifier loading/saving."""
+            with open(path, 'rb') as f:
+                model_complete = pickle.load(f)
+
+        except Exception as e:
+            try:
+                f.close()
+            except:
+                pass
+            error_msg = 'Invalid classifier file! Unable to load classification model! Error: %s.\n\n' % str(e)
+            error_msg += ('IMPORTANT NOTE: since Annotat3D version 0.3.7, classifiers saved with previous versions '
+                          'of the software are no longer fully supported and may fail to load.')
+            return False, error_msg, {}
+
+        logging.debug('After deserializing classifier file')
+
+        try:
+            classifier_version = model_complete['version']
+        except Exception as e:
+            return False, 'Invalid classifier file! Unable to load classification model! Error: %s' % str(e), {}
+        else:
+            if classifier_version != self._classifier_version:
+                return False, 'Invalid classifier file! Classifier version does not match current model!', {}
+        try:
+            self._model = model_complete['classifier']
+        except Exception as e:
+            return False, 'Invalid classifier file! Unable to load classification model! Error: %s' % str(e), {}
+
+        try:
+            self._superpixel_params = model_complete['superpixel_params']
+            self._feature_extraction_params = model_complete['feature_extraction_params']
+            self._classifier_params = model_complete['classifier_params']
+
+        except Exception as e:
+            return False, 'Invalid classifier file! Unable to load parameters! (Error: %s)' % str(e), {}
+
+        try:
+            self._feat_selector = model_complete['feat_selector']
+            self._default_feat_selector = self._feat_selector
+        except:
+            return False, 'Invalid classifier file! Unable to load feature selection model!', {}
+
+        try:
+            self._feat_scaler = model_complete['feat_scaler']
+            self._default_feat_scaler = self._feat_scaler
+        except:
+            return False, 'Invalid classifier file! Unable to load feature scaling method', {}
+
+        try:
+            labels = model_complete['labels']
+        except:
+            return False, 'Invalid classifier file! Unable to load labels', {}
+
+        classifier = self._classifier_params['classifier_type']
+
+        self._available_classifiers[classifier] = self._model
+
+        if classifier not in self._available_classifiers:
+            return False, 'Invalid classifier type ' + classifier, {}
+
+        self._flag_classifier_loaded = True
+
+        if self._parent is not None:
+            self._parent.include_labels(labels)
+
+        try:
+            self._feature_extraction_params_front = model_complete["feature_extraction_params_front"]
+        except:
+            return False, "Invalid classifier file! Unable to load feature_extraction_params_front", {}
+
+        logging.debug('Classifier loaded successfully')
+
+        functions.log_usage(op_type='load_classifier',
+                            feature_extraction_params=str(self._feature_extraction_params),
+                            classifier_params=str(self._classifier_params),
+                            superpixel_params=str(self._superpixel_params))
+
         labels = np.unique(self._training_labels)
         model_complete = {
             'version': self._classifier_version,
@@ -435,110 +561,21 @@ class ClassifierSegmentationModule(SegmentationModule):
             'feature_extraction_params': self._feature_extraction_params,
             'classifier': self._model,
             'feat_selector': self._feat_selector,
-            'feat_scaler': self._feat_scaler
+            'feat_scaler': self._feat_scaler,
+            'feature_extraction_params_front': self._feature_extraction_params_front
         }
 
-        # joblib.dump(model_complete,  path)
+        self._debugger_print("model_complete loaded", model_complete)
 
-        try:
-            # IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
-            # not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
-            # data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
-            # besides being far more critical than classifier loading/saving.
-            with open(path, 'wb') as f:
-                pickle.dump(model_complete, f)
-        except Exception as e:
-            f.close()
-            raise Exception('Unable to save classification model! Error: %s' % str(e))
-        else:
-            logging.debug('Classifier saved successfully')
-
-        return True
-
-    def load_classifier(self, path):
-
-        try:
-            # model_complete = joblib.load(path)
-
-            # IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
-            # not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
-            # data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
-            # besides being far more critical than classifier loading/saving.
-            with open(path, 'rb') as f:
-                model_complete = pickle.load(f)
-
-        except Exception as e:
-            f.close()
-            error_msg = 'Invalid classifier file! Unable to load classification model! Error: %s.\n\n' % str(e)
-            error_msg += ('IMPORTANT NOTE: since Annotat3D version 0.3.7, classifiers saved with previous versions '
-                          'of the software are no longer fully supported and may fail to load.')
-            raise Exception(error_msg)
-
-        logging.debug('After deserializing classifier file')
-
-        try:
-            classifier_version = model_complete['version']
-        except Exception as e:
-            raise Exception('Invalid classifier file! Unable to load classification model! Error: %s' % str(e))
-        else:
-            if classifier_version != self._classifier_version:
-                raise Exception('Invalid classifier file! Classifier version does not match current model!')
-        try:
-            self._model = model_complete['classifier']
-        except Exception as e:
-            raise Exception('Invalid classifier file! Unable to load classification model! Error: %s' % str(e))
-
-        try:
-            self._superpixel_params = model_complete['superpixel_params']
-            self._feature_extraction_params = model_complete['feature_extraction_params']
-            self._classifier_params = model_complete['classifier_params']
-
-        except Exception as e:
-            raise Exception('Invalid classifier file! Unable to load parameters! (Error: %s)' % str(e))
-
-        try:
-            self._feat_selector = model_complete['feat_selector']
-            self._default_feat_selector = self._feat_selector
-        except:
-            raise Exception('Invalid classifier file! Unable to load feature selection model!')
-
-        try:
-            self._feat_scaler = model_complete['feat_scaler']
-            self._default_feat_scaler = self._feat_scaler
-        except:
-            raise Exception('Invalid classifier file! Unable to load feature scaling method')
-
-        try:
-            labels = model_complete['labels']
-        except:
-            raise Exception('Invalid classifier file! Unable to load labels')
-
-        classifier = self._classifier_params['classifier_type']
-
-        self._available_classifiers[classifier] = self._model
-
-        if classifier not in self._available_classifiers:
-            raise Exception('Invalid classifier type ' + classifier)
-
-        self._flag_classifier_loaded = True
-
-        if self._parent is not None:
-            self._parent.include_labels(labels)
-
-        logging.debug('Classifier loaded successfully')
-
-        functions.log_usage(op_type='load_classifier',
-                            feature_extraction_params=str(self._feature_extraction_params),
-                            classifier_params=str(self._classifier_params),
-                            superpixel_params=str(self._superpixel_params))
-        return True
+        return True, "", model_complete
 
     def _load_training_data_v1_1(self, training_data):
         version = training_data['version']
         newest_version = self._training_data_version
 
         if version != '1.1':
-            raise 'This seems to be an older version of training data file (file version: %s, current version %s). Superpixel estimation and classification parameters were not stored in the file. Please set them according to the original specifications, otherwise classification results may differ.' % (version, newest_version)
+            raise 'This seems to be an older version of training data file (file version: %s, current version %s). Superpixel estimation and classification parameters were not stored in the file. Please set them according to the original specifications, otherwise classification results may differ.' % (
+                version, newest_version)
             return False
 
         try:
@@ -627,7 +664,6 @@ class ClassifierSegmentationModule(SegmentationModule):
         self._training_labels = []
         self._training_labels_raw = []
 
-
         if len(self._loaded_training_superpixel_features) > 0 and force_reset_loaded_data:
             self._loaded_training_superpixel_features = []
             self._loaded_training_superpixel_labels = []
@@ -698,8 +734,9 @@ class ClassifierSegmentationModule(SegmentationModule):
 
     def save_training_data(self, path):
         if not (
-            (len(self._loaded_training_superpixel_labels) != 0 and len(self._loaded_training_superpixel_labels) != 0) or
-            (len(self._training_labels_raw) != 0 and len(self._training_features_raw) != 0)):
+                (len(self._loaded_training_superpixel_labels) != 0 and len(
+                    self._loaded_training_superpixel_labels) != 0) or
+                (len(self._training_labels_raw) != 0 and len(self._training_features_raw) != 0)):
             raise Exception('Please train the classifier before trying to save training data')
         # Updating training data with loaded data for saving
         labels = np.array([*self._training_labels_raw, *self._loaded_training_superpixel_labels])
@@ -880,7 +917,7 @@ class ClassifierSegmentationModule(SegmentationModule):
         return params
 
     # def get_classifier_parameters_widget(self, window):
-        # return SuperpixelSegmentationParamWidget(window)
+    # return SuperpixelSegmentationParamWidget(window)
 
     def get_classifier(self):
         return self._classifier_params['classifier_type']
@@ -1008,7 +1045,7 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         if _annotations is not None and _classif_params is not None:
             if _classif_params['image_info']['shape'] == self._image.shape and _classif_params['image_info'][
-                    'dtype'] == self._image.dtype:
+                'dtype'] == self._image.dtype:
                 valid_data = 2
             else:
                 valid_data = 1

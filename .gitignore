@@ -44,3 +44,5 @@ backend/build
 backend/dist
 backend/.eggs
 backend/sscAnnotat3D/static
+
+Makefile

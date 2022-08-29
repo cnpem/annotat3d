@@ -1,4 +1,3 @@
-
 __modules = dict()
 
 def set_module(key, module):
