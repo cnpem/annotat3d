@@ -354,7 +354,7 @@ def preview():
         return "This module does not have a preview", 400
 
     try:
-        label = segm_module.preview(annotations, [slice_num], axis_dim)
+        label, selected_features_names = segm_module.preview(annotations, [slice_num], axis_dim)
     except Exception as e:
         dict_tuple_values = [*annotations.values()]
         unique_ids = set()
@@ -367,7 +367,7 @@ def preview():
         return handle_exception("unable to preview! {}".format(str(e)))
     data_repo.set_image('label', label)
 
-    return "success", 200
+    return jsonify({"selected_features_names": selected_features_names}), 200
 
 
 @app.route('/pixel_segmentation_module/execute', methods=['POST'])
@@ -384,7 +384,7 @@ def execute():
         return "Not a valid segmentation module", 400
 
     try:
-        label = segm_module.execute(annotations)
+        label, selected_features_names = segm_module.execute(annotations)
     except Exception as e:
         dict_tuple_values = [*annotations.values()]
         unique_ids = set()
@@ -401,7 +401,7 @@ def execute():
     print(segm_module._feature_extraction_params)
     print(segm_module._classifier_params)
 
-    return "success", 200
+    return jsonify({"selected_features_names": selected_features_names}), 200
 
 
 @app.route('/save_classifier_pixel', methods=['POST'])
