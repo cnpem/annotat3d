@@ -278,8 +278,9 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         setDisabled(true);
         setShowLoadingCompSpS(true);
         setLoadingMsg(loadingMessages.onPreview);
-        sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice))
-            .then(() => {
+        sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice), 'json')
+            .then((response:{selected_features_names: string[]}) => {
+                dispatch('selectedFeaturesNames', response.selected_features_names)
                 dispatch('labelChanged', '');
                 setDisabled(false);
                 setShowLoadingCompSpS(false);
