@@ -5,7 +5,7 @@ saved on the backend
 
 import numpy as np
 
-# TODO : I need to document the dict for edit label menu
+# TODO : I need to document the dict for edit label menu and for the other functions as well
 
 """
 dict that contains the loaded image, superpixel and label
@@ -86,10 +86,27 @@ __edit_label_options = {
 
 
 def set_edit_label_options(key: str = "", flag: bool = False or object):
+    """
+
+    Args:
+        key:
+        flag:
+
+    Returns:
+
+    """
     __edit_label_options[key] = flag
 
 
 def get_edit_label_options(key: str = ""):
+    """
+
+    Args:
+        key:
+
+    Returns:
+
+    """
     return __edit_label_options.get(key, None)
 
 

@@ -8,6 +8,7 @@ from operator import itemgetter
 
 from sscAnnotat3D import aux_functions
 
+
 class Label(object):
     def __init__(self, id, name=None):
         self.name = name
@@ -31,8 +32,10 @@ class Label(object):
     def __hash__(self):
         return hash(self.id)
 
+
 class AnnotationModule():
     """docstring for Annotation"""
+
     def __init__(self, image_shape, **kwargs):
 
         logging.debug('Creating Annotation_Canvas')
@@ -132,7 +135,7 @@ class AnnotationModule():
         self.clipping_plane_grid = np.zeros((grid_x.shape[0], grid_x.shape[1], 3), dtype='float32')
         self.clipping_plane_grid[:, :, 0] = grid_x
         self.clipping_plane_grid[:, :, 1] = grid_y
- 
+
     def reload(self, image, **kwargs):
         logging.info('Reloading annotation class')
 
@@ -149,7 +152,7 @@ class AnnotationModule():
         self.set_marker_label_selection_type(self.__default_marker_label_selection_type)
 
         logging.debug('Reloading complete for annotation class')
- 
+
     def get_volume_grid_data(self, volume_data=None):
         d0, d1, d2 = self.zsize, self.ysize, self.xsize
         diag = int(math.sqrt(d0 * d0 + d1 * d1 + d2 * d2))
@@ -375,14 +378,14 @@ class AnnotationModule():
         self.added_labels = [Label(l) for l in sorted(new_labels)]
 
     def add_label(self, name=None, new_base_label=0):
-        #Increasing the maximum available label id by 1
+        # Increasing the maximum available label id by 1
         added_labels = [l.id for l in self.added_labels]
         new_label = new_base_label + (np.max(added_labels) if len(self.added_labels) > 0 else 0) + 1
 
         self.added_labels.append(Label(new_label, name))
 
     def remove_label(self, label_id: int):
-        self.remove_annotation(labels=(label_id, ))
+        self.remove_annotation(labels=(label_id,))
 
         removed_labels = aux_functions.get_marker_ids(self.removed_annotation)
         try:
@@ -390,7 +393,7 @@ class AnnotationModule():
         except Exception as e:
             print(str(e))
 
-        #update the label list
+        # update the label list
         added_labels = [l for l in self.added_labels if l.id != label_id]
         self.added_labels = added_labels
         return removed_labels
@@ -433,9 +436,11 @@ class AnnotationModule():
         print('gonna undo ...', self.order_markers)
         if len(self.order_markers) > 0:
             marker_to_remove = max(self.order_markers)
-
+            print("marker_to_remove", marker_to_remove)
             self.order_markers.remove(marker_to_remove)
-            self.remove_annotation(ids=(marker_to_remove, ))
+            self.remove_annotation(ids=(marker_to_remove,))
+            return marker_to_remove
+        return -1
 
     @property
     def current_mk_id(self):
@@ -477,7 +482,7 @@ class AnnotationModule():
                 dd, rr, cc = np.nonzero(sphere)
                 center = np.array(sphere.shape) // 2
 
-                #coords = map(lambda coord: (self.get_current_slice_3d_coord(coord), (marker_lb, marker_id)), zip(dd - center[0], rr - center[1] + y, cc - center[2] + x))
+                # coords = map(lambda coord: (self.get_current_slice_3d_coord(coord), (marker_lb, marker_id)), zip(dd - center[0], rr - center[1] + y, cc - center[2] + x))
                 coord = self.get_current_slice_3d_coord((y, x))
                 coords = map(lambda co: (tuple((np.array(co)).astype('int32')), (marker_lb, marker_id)),
                              zip(dd - center[0] + coord[0], rr - center[1] + coord[1], cc - center[2] + coord[2]))
@@ -620,4 +625,3 @@ class AnnotationModule():
                                     num_selected_markers=len(np.unique(list(map(itemgetter(1), annotation.values())))))
 
         return success
-

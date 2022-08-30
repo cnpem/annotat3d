@@ -167,6 +167,20 @@ def close_annot():
         return handle_exception("Failed to erase all markers")
 
     try:
+        edit_label_merge_module = data_repo.get_edit_label_options(key="edit_label_merge_module")
+        edit_label_split_module = data_repo.get_edit_label_options(key="edit_label_split_module")
+    except Exception as e:
+        return handle_exception(str(e))
+
+    try:
+        if (edit_label_merge_module is not None):
+            edit_label_merge_module.erase_all_markers()
+        if (edit_label_split_module is not None):
+            edit_label_split_module.erase_all_markers()
+    except Exception as e:
+        return handle_exception(str(e))
+
+    try:
         label_img = data_repo.get_image(key="label")
     except Exception as e:
         return handle_exception(str(e))
@@ -237,7 +251,6 @@ def draw():
         annot_module.draw_marker_dot(coord[1], coord[0], label, mk_id, erase)
         if (flag_is_merge_activated or flag_is_merge_activated):
             edit_label_annotation_module.draw_marker_dot(coord[1], coord[0], label, mk_id, erase)
-            _debugger_print("annotations just to merge or split the change", annot_module.get_annotation())
 
     if (flag_is_merge_activated):
         data_repo.set_edit_label_options("edit_label_merge_module", edit_label_annotation_module)
@@ -294,6 +307,20 @@ def delete_label_annot():
     try:
         annot_module = module_repo.get_module('annotation')
         annot_module.remove_label(label_id)
+    except Exception as e:
+        return handle_exception(str(e))
+
+    try:
+        edit_label_merge_module = data_repo.get_edit_label_options(key="edit_label_merge_module")
+        edit_label_split_module = data_repo.get_edit_label_options(key="edit_label_split_module")
+    except Exception as e:
+        return handle_exception(str(e))
+
+    try:
+        if (edit_label_merge_module is not None):
+            edit_label_merge_module.remove_label(label_id)
+        if (edit_label_split_module is not None):
+            edit_label_split_module.remove_label(label_id)
     except Exception as e:
         return handle_exception(str(e))
 
