@@ -9,6 +9,7 @@ from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmentationModule
 from sscAnnotat3D.modules.pixel_segmentation_module import PixelSegmentationModule
 from sscPySpin import feature_extraction as spin_feat_extraction
+from sscPySpin.segmentation import spin_flood_fill
 
 # TODO : We need to template sscIO for other superpixel types
 # TODO : In this actual stage, we're forcing superpixel to be 32 int type
@@ -428,6 +429,26 @@ def preprocess():
     return "success", 200
 
 
+def _convert_dtype_to_str(img_dtype: np.dtype):
+    return np.dtype(img_dtype).name
+
+
+def _merge_label(label_merging_scribbles: dict, img_label: np.ndarray, segm_module: object):
+    # TODO : need to edit this function to make the merge
+    # TODO : need to document this function too
+    # No geral, dá para aproveitar essa função e mandar o dale no resto
+
+    label = np.empty(img_label.shape, dtype='int32')
+    label[...] = img_label
+
+    # all points that not are background
+    coords = [coord for coord in label_merging_scribbles.keys() if label[coord] > 0]
+    mk_lb = next(iter(label_merging_scribbles.values()))[0]
+    spin_flood_fill(label, coords, mk_lb)
+
+    segm_module.reset_classifier()
+
+
 @app.route('/superpixel_segmentation_module/preview', methods=['POST'])
 @cross_origin()
 def preview():
@@ -468,6 +489,21 @@ def preview():
             return handle_exception(
                 "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
         return handle_exception("unable to preview! {}".format(str(e)))
+
+    try:
+        flag_is_merge_activated = data_repo.get_edit_label_options(key="is_merge_activated")
+        flag_is_split_activated = data_repo.get_edit_label_options(key="is_split_activated")
+        edit_label_merge_module = data_repo.get_edit_label_options(key="edit_label_merge_module")
+        edit_label_split_module = data_repo.get_edit_label_options(key="edit_label_split_module")
+    except Exception as e:
+        return handle_exception(str(e))
+
+    if (flag_is_merge_activated and edit_label_merge_module is not None):
+        _debugger_print("doing the merge on preview", "RIGHT NOW")
+        _merge_label(edit_label_merge_module.get_annotation(), label, segm_module)
+
+    if (flag_is_split_activated and edit_label_split_module is not None):
+        _merge_label(edit_label_split_module.get_module(), label, segm_module)
 
     data_repo.set_image('label', label)
 

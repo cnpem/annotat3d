@@ -1,3 +1,5 @@
+import numpy as np
+
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from werkzeug.exceptions import BadRequest
@@ -6,6 +8,7 @@ from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D.modules.pixel_segmentation_module import PixelSegmentationModule
 from sscPySpin import feature_extraction as spin_feat_extraction
+from sscPySpin.segmentation import spin_flood_fill
 
 app = Blueprint('pixel_segmentation_module', __name__)
 
@@ -154,6 +157,7 @@ def _default_features_front(features: dict = None):
                 __default_features_front[i] = default_features
 
             i += 1
+
 
 def _default_classifier_front(classifier_dict: dict = None):
     """
