@@ -5,14 +5,29 @@ import random
 from sscDeepsirius.controller.host_network_controller import \
     HostNetworkController as NetworkController
 from sscDeepsirius.utils import dataset, gpu
-from sscRemoteProcess import modules as remote_modules
-from sscRemoteProcess import tepui
-from sscRemoteProcess import utils as remote_utils
+# from sscRemoteProcess import modules as remote_modules
+# from sscRemoteProcess import tepui
+# from sscRemoteProcess import utils as remote_utils
 
 from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo
 
-from ..api import __ui_path__, _tepui_partitions, _annotat3d_singularity_img_path
+# from ..api import __ui_path__, _tepui_partitions, _annotat3d_singularity_img_path
+
+_tepui_partitions = {
+    '1 GPU': {
+        'partition': 'annot1',
+        'num_gpus': 1,
+    },
+    '2 GPUs': {
+        'partition': 'annot2',
+        'num_gpus': 2,
+    },
+    '4 GPUs': {
+        'partition': 'annot4',
+        'num_gpus': 4
+    }
+}
 
 _loss = {
     'Cross Entropy': 'CrossEntropy',
@@ -58,119 +73,60 @@ def data_repo_logger(log_thread):
 
 
 class deepNetworkModule():
-    def __init__(self):
-        self._is_running = False
-        self._discard_network_instances = False
+    def __init__(self, workspacePath):
+        self._workspace_path = workspacePath
+        
+        # network
+        self._network_controller = NetworkController(workspacePath, streaming_mode=True)
+        self._network_instance = None
+        self._network_instance_name = None
+        self._networkModels = []
+        self._networkModelsActive = None
 
+        self._network_custom_settings = {}
+
+        # dataset
+        self._dataset_file = None
         self._data_info = None
         self._data = None
 
-        self._tensorboard_server = None
-        self._frozen_model = None
-        self._dataset_file = None
-
-        self._workspace_path = None #deeplearning_workspace_dialog.__workspace__
-        self._network_controller = None
-        self._tepui_connection = None
-
-        self.networkModels = []
-
-        self.lossType = sorted(_loss.keys())
-        self.partition = sorted(_tepui_partitions.keys())
-        self.optimiserType =  sorted(_optimiser.keys())
-
-        self.maxIter = None
-        # self.maxEpochs = None # why this?
-
-        self.networkModels = []
-        self.networkModelsCurrent = None
-
+        # system settings
         self._availableGPUs = gpu.get_gpus()
 
-        self._custom_settings_value = {}
+        # running info
+        self._is_running = False
+        self._tensorboard_server = None
+        self._frozen_model = None
 
-        self.log_msg('Local Available GPUS:\n {}'.format('\n '.join(self._availableGPUs)))
+    # called from the outisde
+    def start_training(self, params):
+        self.start_tensorboard_server()
+        self.set_cache_dir(params['cache_dir'])
 
-        self._network_instance = None
-        self._network_instance_name = None
-
-        self.destroyed.connect(self._destroy_resources)
-
-    def set_workspace_path(self, path):
-        self._workspace_path = path
-
-    def set_network_controller(self):
-        self._network_controller = NetworkController(self._workspace_path, streaming_mode=True)
 
     # use the params json in the sscDeepsirius network workspace
     # to set pass extra parameters for specific networks
     def set_custom_settings(self, params):
-        self._custom_settings_value = params
+        self._network_custom_settings = params
 
-    def activate(self, params): # continue this
-        self.init_logger('\nStarting Active Network')
-        self._user_params = params # num_gpus, loss_type, optimiser, cuda_devices, batch_size, max_iter, learning_rate
-        self.set_network_controller()
-        self.networkModels = sorted(self._network_controller.network_models)
-        self.lossType = sorted(_loss.keys())
-        self._tensorboard_server = self._network_controller.start_tensorboard(self._networkModel)
-        self.log_msg('Tensorboard: {}'.format(self._tensorboard_server))
-        url = self._tensorboard_server
-        self.log_msg('Running on {}'.format(url))
-        self._set_start_running()
+    def start_tensorboard_server(self): 
+        self._tensorboard_server = self._network_controller.start_tensorboard(self._networkModelsActive)
+        data_repo_logger('Tensorboard: {}'.format(self._tensorboard_server))
 
-    def load_cache_dir(self, set_cache_dir):
-        cache_dir = set_cache_dir
-        if not cache_dir:
-            return
+    def set_cache_dir(self, new_cache_dir):
+        self._network_controller.set_cache_base_dir(new_cache_dir)
 
-        self.cacheEdit.setText(cache_dir)
-
-    def _update_machine(self, current):
-        self.machine = current
-
-    def change_cache_dir(self, newCacheDir):
-        self._network_controller.set_cache_base_dir(newCacheDir)
-        self._discard_network_instances = True
-
-    def save_network(self, set_network_name):
+    def save_network(self, set_network_name_checked):
         cur_network_name = self.networkModelsCurrent
-        new_network_name = set_network_name
-
         #underscore is a reserved character in network name
-        new_network_name = new_network_name.replace('_', '-')
-        nets = self.networkModels
-        if new_network_name in nets:
-            self.log_msg('Sorry', 'The network {} already exists.'.format(new_network_name))
-        else:
-            self._network_controller.copy_network(cur_network_name, new_network_name)
+        new_network_name = set_network_name_checked.replace('_', '-')
 
-            self.networkModels.clear()
-            self.networkModels.insertItems(0, sorted(self._network_controller.network_models))
+        self._network_controller.copy_network(cur_network_name, new_network_name)
+        self.networkModels = sorted(self._network_controller.network_models)
 
-
-    def _empty_layout(self, layout):
-        if layout is not None:
-            while layout.count():
-                item = layout.takeAt(0)
-                widget = item.widget()
-                if widget is not None:
-                    widget.deleteLater()
-                else:
-                    self._empty_layout(item.layout())
-
-    def update_max_iter(self):
+    def update_max_iter(self): # bruno: is this a last iter? 
         network = self.networkModels.currentText()
-        self.maxIter = self._network_controller.checkpoint(network)
-
-    def on_network_changed(self):
-        self.log_msg('on network changed')
-        self.update_max_iter()
-        self.set_custom_params()
-        self.start_tensorboard_server()        
-
-    def start_tensorboard_server(self):
-        self._tensorboard_server = self._network_controller.start_tensorboard(self.network)
+        self.maxIter = self._network_controller.checkpoint(network)      
 
     def _update_status_network_instance(self):
         status, message = self._network_controller.network_instance_status
@@ -179,13 +135,6 @@ class deepNetworkModule():
             message = message + ' (Contact system administrator)'
         self.network_instance_status.setText(message)
 
-    def _destroy_resources(self):
-        self.log_msg('DEBUG: destroying ...')
-        if self._network_instance is not None:
-
-        self._network_controller.destroy_network_instance(self._network_instance_name)
-        self._network_instance = None
-        self._network_instance_name = None
 
     def _set_start_running(self):
         self._is_running = True
@@ -194,13 +143,13 @@ class deepNetworkModule():
     def _set_stop_running(self):
         self._update_status_network_instance()
         self._is_running = False
-        self._log_thread = None
-        self.log_msg('DEBUG: set stop running called ...')
-        self.log_msg('DEBUG: transaction: {}'.format(self._sentry_transaction))
+        data_repo_logger('Stop running')
+        data_repo_logger('DEBUG: set stop running called ...')
+        data_repo_logger('DEBUG: transaction: {}'.format(self._sentry_transaction))
         try:
             self._sentry_transaction.__exit__(None, None, None)
         except:
-            self.log_msg('WARNING: Could not finish transaction. Perhaps it is already finished?')
+            data_repo_logger('WARNING: Could not finish transaction. Perhaps it is already finished?')
 
     def _set_network_instance(self, network_instance_name):
 
@@ -236,9 +185,6 @@ class deepNetworkModule():
 
     def _deploy_finished(self):
         self._update_status_network_instance()
-        if self._log_thread is not None:
-            self._set_start_running()
-            self._log_thread.start()
 
     def import_net(self, import_model_path, new_network_name):
         self._network_controller.import_model(import_model_path, new_network_name)
@@ -281,7 +227,7 @@ class deepNetworkModule():
             self.logTextEdit.moveCursor(QtGui.QTextCursor.Start)
             self.logTextEdit.insertPlainText('')
 
-            self.log_msg('DEBUG: Run finetune inside network instance ...')
+            data_repo_logger('DEBUG: Run finetune inside network instance ...')
 
             if self._check_run_local():
 
@@ -326,99 +272,37 @@ class deepNetworkModule():
         return run
 
     def _train_runnable(self):
-        def run():
-
-            self.log_msg('DEBUG: loss ->')
-            self.log_msg('DEBUG: {}'.format(_loss))
-            active_gpus = self._active_gpus
-            loss_type = _loss[self.lossType]
-            optimiser = _optimiser[self.optimiserType]
-
-            if self._check_run_local():
-                network_instance, log = self._network_controller.train(self._network_instance,
-                                                                       self._dataset_file,
-                                                                       num_gpus=len(active_gpus),
-                                                                       cuda_devices=','.join(map(str, active_gpus)),
-                                                                       batch_size=self.batchSizeSpinBox.value(),
-                                                                       max_iter=self.maxIterSpinBox.value(),
-                                                                       lr=self.learnRateSpinBox.value(),
-                                                                       loss_type=loss_type,
-                                                                       optimiser=optimiser,
-                                                                       **self._custom_params_value())
-            else:  #tepui
-                log = remote_utils.PipeStream()
-                partition_info = _tepui_partitions[self.partition.currentText()]
-                with remote_modules.slurm.slurm(self._tepui_connection,
-                                                partition_info['partition'],
-                                                ngpus=partition_info['num_gpus']):
-                    with remote_modules.singularity.singularity(self._tepui_connection,
-                                                                _annotat3d_singularity_img_path,
-                                                                mount={'/ibira': '/ibira'}):
-                        remote_modules.deepsirius.train(self._tepui_connection,
-                                                        self._workspace_path,
-                                                        self.networkModels.currentText(),
-                                                        self._dataset_file,
-                                                        batch_size=self.batchSizeSpinBox.value(),
-                                                        max_iter=self.maxIterSpinBox.value(),
-                                                        lr=self.learnRateSpinBox.value(),
-                                                        loss_type=loss_type,
-                                                        optimiser=optimiser,
-                                                        num_gpus=partition_info['num_gpus'],
-                                                        custom_param_values=self._custom_params_value(),
-                                                        out_stream=log,
-                                                        run_async=True)
-
-            return log
-
-        return run
-
-    def _check_run_tepui(self):
-        return self.machine == 'tepui'
-
-    def _check_run_local(self):
-        return self.machine == 'local'
-
-    def _connect_tepui(self):
+        # this method is no longer used for the web version. See train().
         pass
-        # if self._tepui_connection is None:
-        #     try:
-        #         username = QtCore.QSettings('login').value('username', getpass.getuser())
-        #         self.log_msg('DEBUG: username: {}'.format(username))
-        #         self._tepui_connection = tepui.TepuiConnection(username)
-        #     except remote_utils.RemoteProcessException as e:
-        #         login_dialog = LoginDialog(self)
-        #         login_dialog.exec_()
-        #         self.log_msg('DEBUG: {}'.format(login_dialog.accepted))
-        #         if login_dialog.accepted:
-        #             self._tepui_connection = tepui.TepuiConnection(*login_dialog.auth_info())
-        #         if self._tepui_connection:
-        #             self.log_msg('DEBUG: {}'.format(self._tepui_connection))
-        #             self.log_msg('DEBUG: {}'.format(self._tepui_connection.run('hostname')))
 
     def train(self):
-        if self._check_run_tepui():
-            if self._tepui_connection is None:
-                self._connect_tepui()
+        # method thal runs training for the active network instance locally
+        data_repo_logger('Creating network instance (training) ...\n')
 
-        self.log_msg('Creating network instance (training) ...\n')
+        # start training (returns a log thread)
+        data_repo_logger('DEBUG: {}'.format(_loss))
+        # _network_controller.train returns a network instance and a log thread
+        # as the returned network instance is not used on the legacy code, that variable is omitted here
+        _, log_thread = self._network_controller.train(self._network_instance,
+                                                        self._dataset_file,
+                                                        num_gpus=self.num_gpus,
+                                                        cuda_devices=','.join(map(str, self._active_gpus)),
+                                                        batch_size=self.batchSize,
+                                                        max_iter=self.maxIter,
+                                                        lr=self.learnRate,
+                                                        loss_type=self.lossType,
+                                                        optimiser=self.optimiser,
+                                                        **self._custom_params_value()) 
 
-        # self._sentry_transaction = sentry_sdk.start_transaction(name='Training', op='deeplearning')
-        # self._sentry_transaction.__enter__()
-        # sentry_sdk.set_context('Dataset Params', self._stats)
-
-        self._log_thread = ThreadWorkerWeb(self._train_runnable())
-        self._train_runnable()
+        # posts the log thread as separate lines on data repo
+        data_repo_logger(log_thread)
 
         self._set_network_instance(self.selectedNetwork)
 
 
     def finetune(self):
 
-        if self._check_run_tepui():
-            if self._tepui_connection is None:
-                self._connect_tepui()
-
-        self.log_msg('Creating network instance (finetune)...\n')
+        data_repo_logger('Creating network instance (finetune)...\n')
         # sentry_sdk.set_context('Dataset Params', self._stats)
 
         # self._log_thread = utils.ThreadWorker(self._finetune_runnable())
@@ -440,23 +324,23 @@ class deepNetworkModule():
 
     def _count_labels(self, labels):
         m = int(dataset.get_max(labels) + 1)
-        self.log_msg('DEBUG: max labels >>> {}'.format(m))
+        data_repo_logger('DEBUG: max labels >>> {}'.format(m))
         values = dataset.get_count(labels, m)
         keys = range(m)
         return {k: v for (k, v) in zip(keys, values)}
 
     def _dataset_info_runnable(self):
         def run():
-            self.log_msg('DEBUG: RUN THREAD ... ')
+            data_repo_logger('DEBUG: RUN THREAD ... ')
             _dataset = self._data
 
-            self.log_msg('DEBUG: {}'.format(dataset))
+            data_repo_logger('DEBUG: {}'.format(dataset))
 
             if dataset is None:
                 return
 
             data = _dataset['data']
-            self.log_msg('DEBUG: Compute dataset info')
+            data_repo_logger('DEBUG: Compute dataset info')
 
             stats = dataset.get_stats(_dataset)
 
@@ -466,38 +350,26 @@ class deepNetworkModule():
                                stats['weight_max'])
 
             self._stats = stats
-            self.log_msg('DEBUG: Done ...')
+            data_repo_logger('DEBUG: Done ...')
 
         return run
 
     def _get_dataset_info(self):
         self.datasetEdit.setText(self._dataset_file)
         self.datasetInfoTextEdit.setPlainText('Computing dataset info ...')
-        # self._log_thread = utils.ThreadWorker(self._dataset_info_runnable())
-        self._log_thread.finished.connect(self._update_dataset_info)
-        self._log_thread.start()
+        data_repo_logger(self._update_dataset_info)
 
     def _update_dataset_info(self):
 
         if self._stats['nlabels'] != self._data['num_classes']:
-            self.log_msg(message='Label images have {} classes. But your dataset indicates {} classes'.format(
+            data_repo_logger('Label images have {} classes. But your dataset indicates {} classes'.format(
                 self._stats['nlabels'], self._data['num_classes']))
             return
-
-        self.tabWidget.setTabEnabled(2, True)
-        self.tabWidget.setTabEnabled(3, True)
-
-        if self._data is not None:
-            self.trainButton.setEnabled(True)
-            self.finetuneButton.setEnabled(True)
-
-        if self._data_info is not None:
-            self.datasetInfoTextEdit.setPlainText(_dataset_info_template.format(*self._data_info))
 
     def load_dataset(self):
         self._data = dataset.load_dataset(self._dataset_file)
         self._get_dataset_info()
-        self.log_msg('Dataset Params', self._data)
+        data_repo_logger('Dataset Params', self._data)
 
 
 

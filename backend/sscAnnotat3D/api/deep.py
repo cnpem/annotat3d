@@ -303,7 +303,7 @@ def run_inference():
 # Functions for the Network module
 # ---
 
-@app.route("/network/set_workspace", methods=["POST"])
+@app.route("/deep/network/set_workspace", methods=["POST"])
 @cross_origin()
 def set_workspace():
     """
@@ -324,12 +324,14 @@ def set_workspace():
         return handle_exception('Error trying to get the workspace path. Not found. : {}'.format(str(e)))
 
 
-@app.route("/network/import_network", methods=["POST"])
+@app.route("/deep/network/import_network", methods=["POST"])
 @cross_origin()
 def import_network():
     """
-    Request for training from the frontend
+    Request for importing network from network component from the deep learning menu to activeNet object. 
+    The workspace mst be initialized to the object and then 
     """
+    global activeNet
     importNetworkPath = request.json['path']
     importNetworkName = request.json['name']
 
@@ -345,7 +347,7 @@ def import_network():
     return jsonify(info)
 
 
-@app.route("/network/import_network_custom_settings", methods=["POST"])
+@app.route("/deep/network/import_network_custom_settings", methods=["POST"])
 @cross_origin()
 def import_network_custom_settings():
     """
@@ -362,7 +364,7 @@ def import_network_custom_settings():
     return jsonify(customSettings)
 
 
-@app.route("/network/import_dataset", methods=["POST"])
+@app.route("/deep/network/import_dataset", methods=["POST"])
 @cross_origin()
 def import_dataset():
     """
@@ -375,7 +377,7 @@ def import_dataset():
     return jsonify(info)
 
 
-@app.route("/network/train", methods=["POST"])
+@app.route("/deep/network/train", methods=["POST"])
 @cross_origin()
 def train():
     """
