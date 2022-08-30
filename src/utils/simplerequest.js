@@ -1,7 +1,7 @@
 import npyjs from "npyjs";
 import pako from "pako"; 
 
-const BACKEND_HOST = (process.env.NODE_ENV === 'development') ? 'http://0.0.0.0:5000/' : window.location.href;
+const BACKEND_HOST = (process.env.NODE_ENV === 'development') ? process.env.REACT_APP_DEV_API_URL : REACT_APP_PROD_API_URL;
 
 function sxhr(method, url, callback, data = '', responseType = '') {
 
