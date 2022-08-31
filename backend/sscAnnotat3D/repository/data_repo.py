@@ -5,8 +5,6 @@ saved on the backend
 
 import numpy as np
 
-# TODO : I need to document the dict for edit label menu and for the other functions as well
-
 """
 dict that contains the loaded image, superpixel and label
 """
@@ -77,6 +75,9 @@ dict that holds the feature_extraction_params chosen by the user
 """
 __feature_extraction_params = dict()
 
+"""
+dict that contains the flag to use merge or split operations with the object of annotations
+"""
 __edit_label_options = {
     "is_merge_activated": False,
     "is_split_activated": False,
@@ -87,12 +88,14 @@ __edit_label_options = {
 
 def set_edit_label_options(key: str = "", flag: bool = False or object):
     """
+    Setter for __edit_label_options
 
     Args:
-        key:
-        flag:
+        key (str): key for the value
+        flag (bool or object): value to the setter
 
     Returns:
+        None
 
     """
     __edit_label_options[key] = flag
@@ -100,11 +103,13 @@ def set_edit_label_options(key: str = "", flag: bool = False or object):
 
 def get_edit_label_options(key: str = ""):
     """
+    Getter for __edit_label_options
 
     Args:
-        key:
+        key(str): key for the value
 
     Returns:
+        (bool or object): returns the annotations or the object with the annotations
 
     """
     return __edit_label_options.get(key, None)
@@ -112,12 +117,14 @@ def get_edit_label_options(key: str = ""):
 
 def set_feature_extraction_params(key: str = "", data: dict = None):
     """
+    Setter for __feature_extraction_params
 
     Args:
-        key:
-        data:
+        key(str): key for the value
+        data(dict): data that contains the feature extraction
 
     Returns:
+        None
 
     """
     if (data is not None):
@@ -126,11 +133,13 @@ def set_feature_extraction_params(key: str = "", data: dict = None):
 
 def get_feature_extraction_params(key: str = ""):
     """
+    Getter for __feature_extraction_params
 
     Args:
-        key:
+        key(str): key for the value
 
     Returns:
+        (dict): data that contains the feature extraction
 
     """
     return __feature_extraction_params[key]

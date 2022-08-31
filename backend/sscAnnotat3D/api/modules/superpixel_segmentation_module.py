@@ -429,14 +429,21 @@ def preprocess():
     return "success", 200
 
 
-def _convert_dtype_to_str(img_dtype: np.dtype):
-    return np.dtype(img_dtype).name
-
-
 def _merge_label(label_merging_scribbles: dict, img_label: np.ndarray, segm_module: object):
-    # TODO : need to edit this function to make the merge
-    # TODO : need to document this function too
-    # No geral, dá para aproveitar essa função e mandar o dale no resto
+    """
+    Build-in function that makes the merge of labels
+
+    Notes:
+        TODO : Need to implement a better way to merge the labels
+
+    Args:
+        label_merging_scribbles (dict): dict of annotations to merge
+        img_label (np.ndarray): label imagem
+        segm_module (object): classifier object that will merge this labels
+
+    Returns:
+
+    """
 
     label = np.empty(img_label.shape, dtype='int32')
     label[...] = img_label
