@@ -1,4 +1,6 @@
 import numpy as np
+import sentry_sdk
+import logging
 
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
@@ -9,7 +11,7 @@ from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmentationModule
 from sscAnnotat3D.modules.pixel_segmentation_module import PixelSegmentationModule
 from sscPySpin import feature_extraction as spin_feat_extraction
-from sscPySpin.segmentation import spin_flood_fill, SPINImageForest
+from sscPySpin.segmentation import spin_flood_fill, SPINImageForest, spin_watershed_on_labels
 
 # TODO : We need to template sscIO for other superpixel types
 # TODO : In this actual stage, we're forcing superpixel to be 32 int type
@@ -473,6 +475,22 @@ def _convert_dtype_to_str(img_dtype: np.dtype):
 
 
 def _split_label(labels_to_split: dict, user_annotations: dict, label_img: np.ndarray):
+    """
+    Build-in function that split labels
+
+    Notes:
+        Split operation isn't working properly. Someties, this operation deletes all the labels value in a label_image.
+        In any case, you can read __interactive_annotation funtion in row 361 on this link https://gitlab.cnpem.br/GCC/segmentation/Annotat3D/-/blob/master/sscAnnotat3D/segmentation_module_edit_labels.py
+
+    Args:
+        labels_to_split(dict): dict that contains the annotations to split
+        user_annotations(dict): dict that contains all the annotations
+        label_img (np.ndarray): label image
+
+    Returns:
+        (np.ndarray): returns the new label image
+
+    """
     label_splitting_annotations = {
         k: v
         for k, v in user_annotations.items() if label_img[k] in labels_to_split
@@ -487,6 +505,19 @@ def _split_label(labels_to_split: dict, user_annotations: dict, label_img: np.nd
         img = img.astype(np.int32)
 
     forest = SPINImageForest(img, radius=1.0, cost_dtype='float32')
+    label_split = np.full(forest.img.shape, -1, dtype='int32')
+
+    logging.debug('run watershed ...')
+    with sentry_sdk.start_span(op='label split'):
+        spin_watershed_on_labels(forest.img,
+                                 forest.label,
+                                 label_split,
+                                 label_splitting_annotations,
+                                 radius=1.0,
+                                 conquer_background=True)
+        logging.debug('watershed done.')
+
+    return forest.label
 
 
 @app.route('/superpixel_segmentation_module/preview', methods=['POST'])
@@ -580,10 +611,12 @@ def execute():
     if (edit_label_merge_module is not None and edit_label_merge_module.get_annotation()):
         _debugger_print("doing the merge on apply", "RIGHT NOW")
         label = _merge_label(edit_label_merge_module.get_annotation(), label, segm_module)
+        data_repo.set_edit_label_options("edit_label_merge_module", None)
 
     if (edit_label_split_module is not None and edit_label_split_module.get_annotation()):
         _debugger_print("doing the split on apply", "RIGHT NOW")
-        _split_label(edit_label_split_module.get_annotation(), annotations, label)
+        label = _split_label(edit_label_split_module.get_annotation(), annotations, label)
+        data_repo.get_edit_label_options("edit_label_split_module", None)
 
     data_repo.set_image('label', label)
 

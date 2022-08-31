@@ -1,4 +1,7 @@
+import logging
+
 import numpy as np
+import sentry_sdk
 
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
@@ -8,7 +11,7 @@ from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D.modules.pixel_segmentation_module import PixelSegmentationModule
 from sscPySpin import feature_extraction as spin_feat_extraction
-from sscPySpin.segmentation import spin_flood_fill
+from sscPySpin.segmentation import spin_flood_fill, SPINImageForest, spin_watershed_on_labels
 
 app = Blueprint('pixel_segmentation_module', __name__)
 
@@ -365,6 +368,62 @@ def _merge_label(label_merging_scribbles: dict, img_label: np.ndarray, segm_modu
     return label
 
 
+def _convert_dtype_to_str(img_dtype: np.dtype):
+    """
+    Build-in function to convert dtype to a str
+
+    Args:
+        img_dtype (np.dtype): np.dtype object that contains
+
+    Returns:
+        (str): returns the str version of the dtype
+
+    """
+    return np.dtype(img_dtype).name
+
+
+def _split_label(labels_to_split: dict, user_annotations: dict, label_img: np.ndarray):
+    """
+    Build-in function that split labels
+
+    Args:
+        labels_to_split(dict): dict that contains the annotations to split
+        user_annotations(dict): dict that contains all the annotations
+        label_img (np.ndarray): label image
+
+    Returns:
+        (np.ndarray): returns the new label image
+
+    """
+    label_splitting_annotations = {
+        k: v
+        for k, v in user_annotations.items() if label_img[k] in labels_to_split
+    }
+
+    img = data_repo.get_image("image")
+
+    if (img is None):
+        return None
+
+    if (_convert_dtype_to_str(img_dtype=img.dtype) != "int32"):
+        img = img.astype(np.int32)
+
+    forest = SPINImageForest(img, radius=1.0, cost_dtype='float32')
+    label_split = np.full(forest.img.shape, -1, dtype='int32')
+
+    logging.debug('run watershed ...')
+    with sentry_sdk.start_span(op='label split'):
+        spin_watershed_on_labels(forest.img,
+                                 forest.label,
+                                 label_split,
+                                 label_splitting_annotations,
+                                 radius=1.0,
+                                 conquer_background=True)
+        logging.debug('watershed done.')
+
+    return forest.label
+
+
 @app.route('/pixel_segmentation_module/preview', methods=['POST'])
 @cross_origin()
 def preview():
@@ -442,7 +501,7 @@ def execute():
 
     if (edit_label_split_module is not None and edit_label_split_module.get_annotation()):
         _debugger_print("doing the split on apply", "RIGHT NOW")
-        label = _merge_label(edit_label_split_module.get_module(), label, segm_module)
+        label = _split_label(edit_label_split_module.get_annotation(), annotations, label)
 
     data_repo.set_image('label', label)
 
