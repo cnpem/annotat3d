@@ -442,6 +442,7 @@ def _merge_label(label_merging_scribbles: dict, img_label: np.ndarray, segm_modu
         segm_module (object): classifier object that will merge this labels
 
     Returns:
+        (np.ndarray): returns the new label image
 
     """
 
@@ -454,6 +455,7 @@ def _merge_label(label_merging_scribbles: dict, img_label: np.ndarray, segm_modu
     spin_flood_fill(label, coords, mk_lb)
 
     segm_module.reset_classifier()
+    return label
 
 
 @app.route('/superpixel_segmentation_module/preview', methods=['POST'])
@@ -498,19 +500,17 @@ def preview():
         return handle_exception("unable to preview! {}".format(str(e)))
 
     try:
-        flag_is_merge_activated = data_repo.get_edit_label_options(key="is_merge_activated")
-        flag_is_split_activated = data_repo.get_edit_label_options(key="is_split_activated")
         edit_label_merge_module = data_repo.get_edit_label_options(key="edit_label_merge_module")
         edit_label_split_module = data_repo.get_edit_label_options(key="edit_label_split_module")
     except Exception as e:
         return handle_exception(str(e))
 
-    if (flag_is_merge_activated and edit_label_merge_module is not None):
+    if (edit_label_merge_module is not None and edit_label_merge_module.get_annotation()):
         _debugger_print("doing the merge on preview", "RIGHT NOW")
-        _merge_label(edit_label_merge_module.get_annotation(), label, segm_module)
+        label = _merge_label(edit_label_merge_module.get_annotation(), label, segm_module)
 
-    if (flag_is_split_activated and edit_label_split_module is not None):
-        _merge_label(edit_label_split_module.get_module(), label, segm_module)
+    if (edit_label_split_module is not None and edit_label_split_module.get_annotation()):
+        label = _merge_label(edit_label_split_module.get_module(), label, segm_module)
 
     data_repo.set_image('label', label)
 
@@ -552,6 +552,19 @@ def execute():
             return handle_exception(
                 "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
         return handle_exception("unable to preview! {}".format(str(e)))
+
+    try:
+        edit_label_merge_module = data_repo.get_edit_label_options(key="edit_label_merge_module")
+        edit_label_split_module = data_repo.get_edit_label_options(key="edit_label_split_module")
+    except Exception as e:
+        return handle_exception(str(e))
+
+    if (edit_label_merge_module is not None and edit_label_merge_module.get_annotation()):
+        _debugger_print("doing the merge on preview", "RIGHT NOW")
+        label = _merge_label(edit_label_merge_module.get_annotation(), label, segm_module)
+
+    if (edit_label_split_module is not None and edit_label_split_module.get_annotation()):
+        label = _merge_label(edit_label_split_module.get_module(), label, segm_module)
 
     data_repo.set_image('label', label)
 
