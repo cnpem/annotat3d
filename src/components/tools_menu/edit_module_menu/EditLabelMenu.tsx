@@ -12,16 +12,27 @@ interface EditLabelPayload {
 }
 
 //TODO : Need to dispatch isEditLabelActivated event to Superpixel and Pixel module
+/**
+ * Component that creates "Edit Label Menu"
+ */
 const EditLabelMenu: React.FC = () => {
 
     const [toggleEditLabel, setToggleEditLabel] = useStorageState<boolean>(sessionStorage, "toggleEditLabel", false);
     const [isMergeActivated, setIsMergeActivated] = useStorageState<boolean>(sessionStorage, "isMergeActivated", false);
     const [isSplitActivated, setIsSplitActivated] = useStorageState<boolean>(sessionStorage, "isSplitActivated", false);
     const [isEditLabelDisabled, setIsEditLabelDisabled] = useStorageState<boolean>(sessionStorage, "isEditLabelDisabled", false);
+    const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
+
+    useEventBus('LockComponents', (activateAddLabelButton: boolean) => {
+        setLockMenu(activateAddLabelButton);
+    });
 
     useEventBus("changeMergeDisableStatus", (flagPayload: boolean) => {
         setIsEditLabelDisabled(flagPayload);
-    })
+        if (flagPayload) {
+            setToggleEditLabel(false);
+        }
+    });
 
     /**
      * This function resets the back and front parameters every time that toogle is off
@@ -65,10 +76,9 @@ const EditLabelMenu: React.FC = () => {
                     <IonLabel>Edit Label Menu</IonLabel>
                     <IonToggle
                         checked={toggleEditLabel}
-                        disabled={isEditLabelDisabled}
+                        disabled={isEditLabelDisabled || lockMenu}
                         onIonChange={(e: CustomEvent) => {
                             setToggleEditLabel(e.detail.checked);
-                            dispatch("isEditLabelActivated", e.detail.checked);
                             if (!e.detail.checked) {
                                 reseEditLabel(e.detail.checked);
                             }
@@ -86,6 +96,7 @@ const EditLabelMenu: React.FC = () => {
                                     onIonChange={(e: CustomEvent) => {
                                         if (e.detail.checked) {
                                             setIsSplitActivated(false);
+                                            dispatch("isEditLabelActivated", false);
                                         }
 
                                         const payload: EditLabelPayload = {
@@ -100,7 +111,7 @@ const EditLabelMenu: React.FC = () => {
                                                 console.log(error.error_msg)
                                             });
                                     }}
-                                    disabled={isEditLabelDisabled}/>
+                                    disabled={isEditLabelDisabled || lockMenu}/>
                             </IonItem>
                             {/*Split Menu*/}
                             <IonItem>
@@ -111,6 +122,7 @@ const EditLabelMenu: React.FC = () => {
                                     onIonChange={(e: CustomEvent) => {
                                         if (e.detail.checked) {
                                             setIsMergeActivated(false);
+                                            dispatch("isEditLabelActivated", false);
                                         }
                                         setIsSplitActivated(e.detail.checked);
                                         const payload: EditLabelPayload = {
@@ -125,7 +137,7 @@ const EditLabelMenu: React.FC = () => {
                                                 console.log(error.error_msg)
                                             });
                                     }}
-                                    disabled={isEditLabelDisabled}/>
+                                    disabled={isEditLabelDisabled || lockMenu}/>
                             </IonItem>
                         </div>
                     </IonCol>

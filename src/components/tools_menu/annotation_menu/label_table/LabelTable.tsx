@@ -166,6 +166,15 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         setLockMenu(activateAddLabelButton);
     });
 
+    useEventBus("isEditLabelActivated", (payload: boolean = false) => {
+        if (isExtendActivated) {
+            setIsExtendActivated(payload);
+        }
+        if (activateSL) {
+            setActivateSL(payload);
+        }
+    });
+
     const removeLabelElement = (label: LabelInterface) => {
         setLabelList(labelList!.filter(l => l.id !== label.id));
 
@@ -309,7 +318,8 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                                 });
                                 dispatch("changeMergeDisableStatus", e.detail.checked);
                                 setActivateSL(e.detail.checked);
-                            }}/>
+                            }}
+                            disabled={lockMenu}/>
                     </IonItem>
                 </IonCol>
             </IonRow>
@@ -324,8 +334,11 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                         <IonCheckbox
                             checked={isExtendActivated}
                             slot={"end"}
-                            onIonChange={extendLabel}
-                            disabled={activateSL}/>
+                            onIonChange={(e: CustomEvent) => {
+                                extendLabel(e);
+                                dispatch("changeMergeDisableStatus", e.detail.checked);
+                            }}
+                            disabled={lockMenu}/>
                     </IonItem>
                 </IonCol>
             </IonRow>

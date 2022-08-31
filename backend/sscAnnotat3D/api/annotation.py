@@ -195,6 +195,14 @@ def close_annot():
 @app.route("/save_annot", methods=["POST"])
 @cross_origin()
 def save_annot():
+    """
+    Function that saves the annotation as .pickle
+
+    Returns:
+        (str): returns "success" if everything goes well and an error otherwise
+
+    """
+
     annot_module = module_repo.get_module('annotation')
     annot = annot_module.annotation
 
@@ -263,6 +271,13 @@ def draw():
 @app.route("/get_annot_slice", methods=["POST"])
 @cross_origin()
 def get_annot_slice():
+    """
+    Function that gets the annotation of a specific image slice
+
+    Returns:
+        (tuple[np.ndarray, str]): returns the np.ndarray with the annotations and a str that represents the response type for sfetch
+
+    """
     slice_num = request.json["slice"]
     axis = request.json["axis"]
     axis_dim = utils.get_axis_num(axis)
@@ -283,6 +298,13 @@ def get_annot_slice():
 @app.route("/undo_annot", methods=['POST'])
 @cross_origin()
 def undo_annot():
+    """
+    Function that undos an annotation
+
+    Returns:
+        (str): returns "success" if everything goes well and an error otherwise
+
+    """
     annot_module = module_repo.get_module('annotation')
     annot_module.undo()
 
@@ -489,6 +511,16 @@ def is_annotation_empty():
 @app.route("/set_edit_label_options", methods=["POST"])
 @cross_origin()
 def set_edit_label_options():
+    """
+    Function that set the annotations for merge and split in merge menu
+
+    Notes:
+        TODO : merge and slipt isn't working properly. We need to think a better way to make this operations work
+
+    Returns:
+        (str): returns "success" if everything goes well and an error otherwise
+
+    """
     try:
         key = request.json["payload_key"]
         flag = request.json["payload_flag"]
