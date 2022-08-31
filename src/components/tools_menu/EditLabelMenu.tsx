@@ -1,8 +1,8 @@
 import {IonCard, IonCardContent, IonCheckbox, IonCol, IonItem, IonLabel, IonRow, IonToggle} from "@ionic/react";
 import {useStorageState} from "react-storage-hooks";
-import {dispatch, useEventBus} from "../../../utils/eventbus";
-import {sfetch} from "../../../utils/simplerequest";
-import ErrorInterface from "../../main_menu/file/utils/ErrorInterface";
+import {dispatch, useEventBus} from "../../utils/eventbus";
+import {sfetch} from "../../utils/simplerequest";
+import ErrorInterface from "../main_menu/file/utils/ErrorInterface";
 
 type payloadKey = "is_merge_activated" | "is_split_activated"
 
@@ -82,6 +82,7 @@ const EditLabelMenu: React.FC = () => {
                             if (!e.detail.checked) {
                                 reseEditLabel(e.detail.checked);
                             }
+                            dispatch("isEditLabelDisabled", e.detail.checked);
                         }}/>
                 </IonItem>
                 <IonRow>

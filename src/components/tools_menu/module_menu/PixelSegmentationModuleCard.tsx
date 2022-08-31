@@ -46,6 +46,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         params: defaultModelClassifierParams['rf']
     });
 
+    const [isEditLabelActivated, setIsEditLabelActivated] = useStorageState<boolean>(sessionStorage, "isEditLabelActivatedPixel", false);
     const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'pixelSegmPreprocessed', false);
     const [loadingMsg, setLoadingMsg] = useState<string>("");
     const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
@@ -205,6 +206,10 @@ const PixelSegmentationModuleCard: React.FC = () => {
     useEventBus('ImageLoaded', () => {
         setPrevFeatParams(null);
         setPrevClassParams(null);
+    });
+
+    useEventBus("isEditLabelDisabled", (flagPayload: boolean) => {
+        setIsEditLabelActivated(flagPayload);
     });
 
     function getModuleBackendParams() {
@@ -395,7 +400,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
     return (
         <ModuleCard name="Pixel Segmentation" disabled={disabled}
                     onApply={onApply} onPreview={onPreview} onOther={onPreprocess}
-                    disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed} disabledOther={hasPreprocessed}
+                    disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed || isEditLabelActivated}
+                    disabledOther={hasPreprocessed}
                     OtherName="Preprocess">
 
             <ModuleCardItem name="Pixel Segmentation Parameters">

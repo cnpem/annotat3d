@@ -257,7 +257,7 @@ def draw():
 
     for coord in request.json['coords']:
         annot_module.draw_marker_dot(coord[1], coord[0], label, mk_id, erase)
-        if (flag_is_merge_activated or flag_is_merge_activated):
+        if (flag_is_merge_activated or flag_is_split_activated):
             edit_label_annotation_module.draw_marker_dot(coord[1], coord[0], label, mk_id, erase)
 
     if (flag_is_merge_activated):
@@ -538,14 +538,16 @@ def set_edit_label_options():
                 if img is None:
                     return handle_exception('No image associated')
                 edit_label_annotation_module = annotation_module.AnnotationModule(img.shape)
+                _debugger_print("Creating module for", "merge_option")
                 data_repo.set_edit_label_options("edit_label_merge_module", edit_label_annotation_module)
 
         elif (key == "is_split_activated" and flag):
             data_repo.set_edit_label_options("is_merge_activated", False)
-            if (not data_repo.get_edit_label_options("is_split_activated")):
+            if (not data_repo.get_edit_label_options("edit_label_split_module")):
                 img = data_repo.get_image('image')
                 if img is None:
                     return handle_exception('No image associated')
+                _debugger_print("Creating module for", "split_option")
                 edit_label_annotation_module = annotation_module.AnnotationModule(img.shape)
                 data_repo.set_edit_label_options("edit_label_split_module", edit_label_annotation_module)
 

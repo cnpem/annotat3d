@@ -2,7 +2,7 @@ import React from "react";
 import {IonCard, IonCardContent} from "@ionic/react";
 import LabelTable from "./label_table/LabelTable";
 import {defaultColormap} from '../../../utils/colormap';
-import EditLabelMenu from "../edit_module_menu/EditLabelMenu";
+import EditLabelMenu from "../EditLabelMenu";
 
 /**
  * Component that creates the lateral bar menu

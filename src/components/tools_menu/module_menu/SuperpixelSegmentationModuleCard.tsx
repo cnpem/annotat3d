@@ -44,6 +44,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         params: defaultModelClassifierParams['rf']
     });
 
+    const [isEditLabelActivated, setIsEditLabelActivated] = useStorageState<boolean>(sessionStorage, "isEditLabelActivatedSuperpixel", false);
     const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(sessionStorage, 'superpixelSegmPreprocessed', false);
     const [loadingMsg, setLoadingMsg] = useState<string>("");
     const [showLoadingCompSpS, setShowLoadingCompSpS] = useState<boolean>(false);
@@ -216,6 +217,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     useEventBus('ImageLoaded', () => {
         setPrevFeatParams(null);
         setPrevClassParams(null);
+    });
+
+    useEventBus("isEditLabelDisabled", (flagPayload: boolean) => {
+        setIsEditLabelActivated(flagPayload);
     });
 
     function getModuleBackendParams() {
@@ -429,7 +434,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     return (
         <ModuleCard name="Superpixel Segmentation" disabled={disabled}
                     onApply={onApply} onPreview={onPreview} onOther={onPreprocess}
-                    disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed}
+                    disabledApply={!hasPreprocessed} disabledPreview={!hasPreprocessed || isEditLabelActivated}
                     disabledOther={hasPreprocessed}
                     OtherName="Preprocess">
 
