@@ -19,7 +19,7 @@ import {dispatch, subscribe, unsubscribe} from '../../utils/eventbus';
 import {defaultColormap} from '../../utils/colormap';
 import {CropAxisInterface, CropShapeInterface} from '../tools_menu/utils/CropInterface';
 import {ImageShapeInterface} from '../tools_menu/utils/ImageShapeInterface';
-import ImageInfoInterface from '../main_menu/file/utils/ImageInfoInterface';
+import {ImageInfoInterface} from '../main_menu/file/utils/ImageInfoInterface';
 
 class Brush {
 

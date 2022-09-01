@@ -8,7 +8,7 @@ import SideMenuVis from "./vis_menu/SideMenuVis";
 import SlicesMenu from "./SlicesMenu";
 
 import {eyeOutline, brushOutline, colorWandOutline} from "ionicons/icons";
-import ImageInfoInterface from "../main_menu/file/utils/ImageInfoInterface";
+import {ImageInfoInterface} from "../main_menu/file/utils/ImageInfoInterface";
 import { useEventBus } from "../../utils/eventbus";
 
 interface SideMenuProps {

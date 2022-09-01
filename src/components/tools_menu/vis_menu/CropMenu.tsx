@@ -10,7 +10,7 @@ import { SliderPicker } from 'react-color';
 
 import { dispatch } from '../../../utils/eventbus';
 import { sfetch } from '../../../utils/simplerequest';
-import ImageInfoInterface from '../../main_menu/file/utils/ImageInfoInterface';
+import {ImageInfoInterface} from '../../main_menu/file/utils/ImageInfoInterface';
 import { CropAxisInterface, CropShapeInterface } from '../utils/CropInterface';
 import { ImageShapeInterface } from '../utils/ImageShapeInterface';
 

@@ -28,7 +28,7 @@ import {
 import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import ErrorWindowComp from "./utils/ErrorWindowComp";
-import ImageInfoInterface from "./utils/ImageInfoInterface";
+import {ImageInfoInterface, ImageInfoPayload} from "./utils/ImageInfoInterface";
 import ErrorInterface from "./utils/ErrorInterface";
 import {LabelInterface} from "../../tools_menu/annotation_menu/label_table/LabelInterface";
 import LoadingComponent from "../../tools_menu/utils/LoadingComponent";
@@ -93,7 +93,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
         let msgReturned = "";
         let isError = false;
         await sfetch("POST", "/open_image/" + loadImgOp, JSON.stringify(params), "json")
-            .then((image: ImageInfoInterface) => {
+            .then((image: ImageInfoPayload) => {
                 const imgName = imgPath.split("/");
                 msgReturned = `${imgName[imgName.length - 1]} loaded as ${loadImgOp}`;
 
@@ -105,7 +105,12 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                     imageFullPath: image.imageFullPath
                 }
 
-                if (loadImgOp === "superpixel") {
+                if (loadImgOp === "label") {
+                    const labelTable = image.labelList;
+                    console.table(labelTable);
+                    dispatch("LabelLoaded", labelTable);
+                    dispatch("annotationChanged", null);
+                } else if (loadImgOp === "superpixel") {
                     dispatch("superpixelChanged", {});
                 }
 

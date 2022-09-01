@@ -287,8 +287,22 @@ def open_image(image_id: str):
     image_info = {"imageShape": {'x': image_shape[2], 'y': image_shape[1], 'z': image_shape[0]}, "imageExt": extension,
                   "imageName": file_name, "imageDtype": image_dtype, "imageFullPath": image_path}
 
+    label_list = []
     if image_id == 'image':
         data_repo.set_info(data=image_info)
+
+    elif image_id == "label":
+        set_unique_labels_id = np.unique(image)
+        for label_value in set_unique_labels_id:
+            # I force label_value to be int just jsonify doen't accept numpy dtypes.
+            label_value = int(label_value)
+            label_list.append({
+                "labelName": "Label {}".format(label_value) if label_value > 0 else "Background",
+                "id": label_value,
+                "color": []
+            })
+
+    image_info["labelList"] = label_list
 
     return jsonify(image_info)
 
