@@ -109,6 +109,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     }]);
 
     const [activateSL, setActivateSL] = useStorageState<boolean>(sessionStorage, "activateSL", false);
+    const [isSplitActivated, setIsSplitActivated] = useStorageState<boolean>(sessionStorage, "isSplitActivatedLabel", false);
     const [isExtendActivated, setIsExtendActivated] = useStorageState<boolean>(sessionStorage, "isExtendActivated", false);
 
     const [selectedLabel, setSelectedLabel] = useStorageState<number>(sessionStorage, 'selectedLabel', 0);
@@ -155,6 +156,10 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
     useEventBus("isExtendLabelActivated", (flag: boolean) => {
         setIsExtendActivated(flag);
+    });
+
+    useEventBus("isSplitActivated", (flag: boolean) => {
+        setIsSplitActivated(flag);
     });
 
     useEffect(() => {
@@ -255,7 +260,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                         label={labelElement}
                         onChangeLabelList={removeLabelElement}
                         onChangeLabel={changeLabelList}
-                        isSLActivated={activateSL}/>
+                        isSLActivated={activateSL || isSplitActivated}/>
                 </td>
             </tr>
         );
@@ -281,7 +286,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                         newLabelId={newLabelId}
                         onNewLabelId={selectIdGenerator}
                         onSelectLabel={selectLabel}
-                        isSLActivated={activateSL}/>
+                        isSLActivated={activateSL || isSplitActivated}/>
                 </IonCol>
             </IonRow>
             <div className={"label-table"}>
@@ -346,7 +351,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                 <IonCol>
                     <div style={{display: 'flex', justifyContent: 'flex-end'}}>
                         {/*Undo Button*/}
-                        <IonButton color="danger" size="small" disabled={lockMenu || activateSL}
+                        <IonButton color="danger" size="small" disabled={lockMenu || activateSL || isSplitActivated}
                                    onClick={() => {
                                        undoAnnotation();
                                    }}>
@@ -355,7 +360,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                         </IonButton>
                         {/*Delete all button*/}
                         <IonButton color="danger" size="small" slot={"end"}
-                                   disabled={labelList.length <= 1 || lockMenu || activateSL}
+                                   disabled={labelList.length <= 1 || lockMenu || activateSL || isSplitActivated}
                                    onClick={() => setOpenWarningWindow(true)}>
                             <IonIcon icon={trashOutline} slot={"end"}/>
                             Delete all

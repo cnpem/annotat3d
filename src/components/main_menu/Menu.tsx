@@ -10,9 +10,9 @@ import './Menu.css';
 
 import ThemeToggle from "./ThemeToggle";
 import File from "./file/File";
-import Colormap from "./Colormap";
+// import Colormap from "./Colormap";
 import DeepLearning from "./deep_learning_menu/DeepLearning";
-import Remote from "./Remote";
+// import Remote from "./Remote";
 
 import React, {useState} from "react";
 import About from './About';
