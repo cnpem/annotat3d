@@ -8,15 +8,10 @@ TODO : Don't forget to document the functions
 
 """
 import glob
-from mimetypes import init
-from pkgutil import extend_path
-from re import T
-from tkinter.messagebox import NO
 import numpy as np
 import os
 import logging
 import time
-import sentry_sdk
 
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
@@ -25,17 +20,15 @@ from tensorflow.python.client import device_lib
 
 from sscDeepsirius.cython import standardize
 from sscAnnotat3D.repository import data_repo
-from annotat3dumal.backend.sscAnnotat3D.modules.deep_network_module import deepNetworkModule
-from sscDeepsirius.utils import dataset, image
+from sscDeepsirius.utils import dataset, image, augmentation
 from sscDeepsirius.controller.inference_controller import InferenceController
-from sscDeepsirius.controller.host_network_controller import HostNetworkController as NetworkController
+from sscDeepsirius.controller.host_network_controller import HostNetworkController 
+from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 
-
-activeNet = deepNetworkModule()
+def test():
+    print('im am here!')
 
 app = Blueprint('deep', __name__)
-
-# 
 
 def init_logger(init_msg : str = '\nStarting message logger queue.\n'):
     data_repo.init_logger(init_msg)
@@ -44,18 +37,15 @@ def log_msg(msg):
     data_repo.set_log_message(msg)
 
 
-"""
-    Reads from a queue of messages stored on data_repo. 
-    Args:
-
-    Returns:
-        (str): An empty string if the queue is empty.
-"""
 @app.route("/read_log_queue", methods=["POST"])
 @cross_origin()
 def read_log_queue():
     """
-    Request for training from the frontend
+        Reads from a queue of messages stored on data_repo. 
+        Args:
+
+        Returns:
+            (str): An empty string if the queue is empty.
     """
     msg = data_repo.dequeue_log_message()
     if msg == None:
@@ -110,7 +100,327 @@ def _debugger_print(msg: str, payload: any):
     """
     print("\n----------------------------------------------------------")
     print("{} : {}".format(msg, payload))
-    print("-------------------------------------------------------------\n")
+    print("----------------------------------------------------------\n")
+
+# removed from io.py and placed here
+@app.route("/open_new_workspace", methods=["POST"])
+@cross_origin()
+def open_new_workspace():
+    """
+    Function that opens a new workspace
+
+    Notes:
+        the request.json["workspace_path"] receives only the parameter "selected_labels"(str)
+
+    Returns:
+        (str): returns a string that contains the new workspace path
+
+    """
+    try:
+        workspace_path = request.json["workspace_path"]
+        workspace_root = request.json["workspace_root"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    if (workspace_root == ""):
+        return handle_exception("Empty path isn't valid !")
+
+    deep_model = DeepLearningWorkspaceDialog()
+    save_status, error_desc = deep_model.open_new_workspace(workspace_path)
+
+    if (save_status):
+        data_repo.set_deep_model(data={"deep_model_path": workspace_path})
+        return jsonify(workspace_path)
+
+    return handle_exception("unable to create the Workspace ! : {}".format(error_desc))
+
+
+@app.route("/load_workspace", methods=["POST"])
+@cross_origin()
+def load_workspace():
+    """
+    Function that loads a created workspace
+
+    Notes:
+        the request.json["workspace_path"] receives only the parameter "selected_labels"(str)
+
+    Returns:
+        (str): returns a string that contains the loaded workspace path
+
+    """
+    try:
+        workspace_path = request.json["workspace_path"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    deep_model = DeepLearningWorkspaceDialog()
+    check_valid_workspace = deep_model.check_workspace(workspace_path)
+
+    if (check_valid_workspace):
+        data_repo.set_deep_model(data={"deep_model_path": workspace_path})
+        return jsonify(check_valid_workspace)
+
+    return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
+
+
+def _augmenters_list(augmentation_vec: list = None, ion_range_vec: list = None):
+    """
+    Build-in function that formats the front-end data into the correct structure in the function augment_web
+
+    Args:
+        augmentation_vec (list): a list that contains all the elements to augment
+        ion_range_vec (list): a list that contains the value of ion-rage of some augment parameters
+
+    Returns:
+        (list): returns a list that contains the params to augment and the respective values
+
+    """
+    augmenters = []
+
+    # vertical-flip option
+    if (augmentation_vec[0]["isChecked"]):
+        augmenters.append("vertical-flip")
+
+    # horizontal-flip option
+    if (augmentation_vec[1]["isChecked"]):
+        augmenters.append("horizontal-flip")
+
+    # rotate-90-degrees option
+    if (augmentation_vec[2]["isChecked"]):
+        augmenters.append("rotate-90-degrees")
+
+    # rotate-less-90-degrees (rotate 270 degrees) option
+    if (augmentation_vec[3]["isChecked"]):
+        augmenters.append("rotate-less-90-degrees")
+
+    # contrast option
+    if (augmentation_vec[4]["isChecked"]):
+        # c_min, c_max = ion_range_vec[0]["ionRangeLimit"].values
+        c_lower, c_upper = ion_range_vec[0]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="contrast",
+                 contrast=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in contrast", augmentation_vec[-1])
+
+    # linear-contrast option
+    if (augmentation_vec[5]["isChecked"]):
+        c_lower, c_upper = ion_range_vec[1]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="linear-contrast",
+                 linearContrast=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in linear-contrast", augmentation_vec[-1])
+
+    # dropout option
+    if (augmentation_vec[6]["isChecked"]):
+        c_lower, c_upper = ion_range_vec[2]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="dropout",
+                 dropout=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in dropout", augmentation_vec[-1])
+
+    # gaussian-blur option
+    if (augmentation_vec[7]["isChecked"]):
+        c_lower, c_upper = ion_range_vec[3]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="gaussian-blur",
+                 sigma=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in gaussian-blur", augmentation_vec[-1])
+
+    # average-blur option
+    if (augmentation_vec[8]["isChecked"]):
+        c_lower, c_upper = ion_range_vec[4]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="average-blur",
+                 k=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in average-blur", augmentation_vec[-1])
+
+    # additive-poisson-noise option
+    if (augmentation_vec[9]["isChecked"]):
+        c_lower, c_upper = ion_range_vec[5]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="additive-poisson-noise",
+                 k=(c_lower, c_upper)))
+        _debugger_print("test for ion-range in additive-poisson-noise", augmentation_vec[-1])
+
+    # elastic-deformation option
+    if (augmentation_vec[10]["isChecked"]):
+        c_lower_alpha, c_upper_alpha = ion_range_vec[6]["actualRangeVal"].values()
+        c_lower_sigma, c_upper_sigma = ion_range_vec[7]["actualRangeVal"].values()
+        augmenters.append(
+            dict(type="elastic-deformation",
+                 alpha=(c_lower_alpha, c_upper_alpha),
+                 sigma=(c_lower_sigma, c_upper_sigma)))
+        _debugger_print("test for ion-range in elastic-deformation", augmentation_vec[-1])
+
+    _debugger_print("augmenters param", augmenters)
+    return augmenters
+
+
+@app.route("/create_dataset", methods=["POST"])
+@cross_origin()
+def create_dataset():
+    """
+    Function that creates the .h5 dataset
+
+    Notes:
+        This function is used in DatasetComp.tsx
+
+    Returns:
+        (dict): returns a dict that contains the dataset .h5 name. Otherwise, will return an error for the front-end
+
+    """
+
+    try:
+        output = request.json["file_path"]
+        sample = request.json["sample"]
+        augmentation_vec = request.json["augmentation"]
+        ion_range_vec = request.json["ion_range_vec"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    size = (sample["patchSize"][0], sample["patchSize"][1], sample["patchSize"][2])
+    num_classes = sample["nClasses"]
+    nsamples = sample["sampleSize"]
+    offset = (0, 0, 0)
+    logging.debug('size = {}, nsamples = {}'.format(size, sample["sampleSize"]))
+    augmenter_params = _augmenters_list(augmentation_vec, ion_range_vec)
+
+    imgs = list(data_repo.get_all_dataset_data().values())
+    labels = list(data_repo.get_all_dataset_label().values())
+    weights = list(data_repo.get_all_dataset_weight().values())
+
+    data, error_status = dataset.create_dataset_web(imgs, labels, weights,
+                                            output, nsamples, num_classes,
+                                            size, offset)
+
+    if (not data):
+        return handle_exception(error_status)
+
+    initial_output = output
+    splited_str = output.split("/")
+    dataset_name = splited_str[-1]
+    new_dataset_name = splited_str[-1].split(".")[0] + "_augment" + ".h5"
+    output = output.replace(dataset_name, new_dataset_name)
+
+    if (augmenter_params):
+        data, error_status = augmentation.augment_web(output, initial_output, augmenter_params, data)
+
+    if (not data):
+        return handle_exception(error_status)
+
+    dataset.save_dataset(data)
+
+    return jsonify({"datasetFilename": initial_output.split("/")[-1]})
+
+
+@app.route("/open_inference_files/<file_id>", methods=["POST"])
+@cross_origin()
+def open_inference_files(file_id: str):
+    _debugger_print("new key", file_id)
+    try:
+        file_path = request.json["image_path"]
+    except:
+        return handle_exception("Error while trying to get the image path")
+
+    try:
+        file_dtype = request.json["image_dtype"]
+    except:
+        return handle_exception("Error while trying to get the image dtype")
+
+    file = file_path.split("/")[-1]
+    file_name, extension = os.path.splitext(file)
+
+    if (file == ""):
+        return handle_exception("Empty path isn't valid !")
+
+    raw_extensions = [".raw", ".b"]
+    tif_extensions = [".tif", ".tiff", ".npy", ".cbf"]
+
+    extensions = [*raw_extensions, *tif_extensions]
+
+    if extension not in extensions:
+        return handle_exception("The extension {} isn't supported !".format(extension))
+
+    error_msg = ""
+
+    try:
+        use_image_raw_parse = request.json["use_image_raw_parse"]
+        if (extension in tif_extensions or use_image_raw_parse):
+            start = time.process_time()
+            image, info = sscIO.io.read_volume(file_path, 'numpy')
+            end = time.process_time()
+            error_msg = "No such file or directory {}".format(file_path)
+
+            if (_convert_dtype_to_str(image.dtype) != file_dtype and (file_id == "image" or file_id == "label")):
+                image = image.astype(file_dtype)
+
+        else:
+            image_raw_shape = request.json["image_raw_shape"]
+            start = time.process_time()
+            image, info = sscIO.io.read_volume(file_path, 'numpy',
+                                               shape=(image_raw_shape[2], image_raw_shape[1], image_raw_shape[0]),
+                                               dtype=file_dtype)
+            end = time.process_time()
+            error_msg = "Unable to reshape the volume {} into shape {} and type {}. " \
+                        "Please change the dtype and shape and load the image again".format(file, request.json[
+                "image_raw_shape"], file_dtype)
+        image_shape = image.shape
+        image_dtype = _convert_dtype_to_str(image.dtype)
+    except:
+        return handle_exception(error_msg)
+
+    image_info = {"fileName": file_name + extension,
+                  "shape": image_shape,
+                  "type": image_dtype,
+                  "scan": info,
+                  "time": np.round(end - start, 2),
+                  "size": np.round(image.nbytes / 1000000, 2),
+                  "filePath": file_path}
+
+    data_repo.set_inference_data(key=file_id, data=image)
+    data_repo.set_inference_info(key=file_id, data=image_info)
+
+    return jsonify(image_info)
+
+
+@app.route("/close_inference_file/<file_id>", methods=["POST"])
+@cross_origin()
+def close_inference_file(file_id: str):
+    """
+    Function that deletes a file in inference a menu using a key as string
+
+    Args:
+        file_id (str): string used as key to delete the file
+
+    Returns:
+        (str): Returns a string that contains the error or "success on delete the key i in Input Image inference"
+
+    """
+    try:
+        data_repo.del_inference_data(file_id)
+        data_repo.del_inference_info(file_id)
+        return jsonify("success on delete the key {} in Input Image inference".format(file_id))
+    except Exception as e:
+        return handle_exception(str(e))
+
+
+@app.route("/close_all_files_dataset", methods=["POST"])
+@cross_origin()
+def close_all_inference_files():
+    """
+    Function that delete all the files in inference menu
+
+    Returns:
+        (str): Returns a string that contains the error or "Success to delete all data"
+
+    """
+    try:
+        data_repo.del_all_inference_data()
+        data_repo.del_all_inference_info()
+        return jsonify("Success to delete all data")
+    except Exception as e:
+        return handle_exception(str(e))
+
 
 
 @app.route("/get_available_gpus", methods=["POST"])
@@ -279,7 +589,7 @@ def run_inference():
         logging.debug('{}'.format(data.shape))
         data = standardize(data, mean, std, 64)
         t2 = time.time()
-        logging.debug('Rotate and cast image: {}'.format(t2 - t1))
+        logging.debug('Rotate and cast image: {}'.format(t2 - t1)) 
         dtype = _depth_prob_map_dtype[output["outputBits"]]
 
         output_data = inference_controller.inference(data, output_dtype=dtype)
@@ -303,119 +613,131 @@ def run_inference():
 # Functions for the Network module
 # ---
 
-@app.route("/deep/network/set_workspace", methods=["POST"])
-@cross_origin()
-def set_workspace():
-    """
-        Sets the workspace path on the active network by searching for it on the respository.
+# @app.route("/deep/network/set_active_network", methods=["POST"])
+# @cross_origin()
+# def set_active_network():
+#     """
+#         Sets up the active network object with workspace path and initializes the deepsirius network controller. 
 
-    Args:
-        payload(any): a generic payload
+#     Args:
+#         None
+#         This function looks for the deep_model_workspace_path value on the data repository.
 
-    Returns:
-        None
-    """
-    global activeNet
+#     Returns:
+#         None
+#         Calls an error handler function that retuns a .json with error messages if not successful.
+        
+#     """
+#     global activeNet
 
-    try:
-        deepModelRef = data_repo.get_deep_model(key='deep_learning')
-        return activeNet.set_workspace_path(deepModelRef['deep_model_workspace_path'])
-    except Exception as e:
-        return handle_exception('Error trying to get the workspace path. Not found. : {}'.format(str(e)))
+#     try:
+#         deepModelRef = data_repo.get_deep_model(key='deep_learning')
+#         deep_model_workspace_path = deepModelRef['deep_model_workspace_path']
+#     except Exception as e:
+#         return handle_exception('ERROR: Workspace path not found. {}'.format(str(e)))
 
+#     # setting up active network object
+#     success, load_msg = activeNet.activate_module(deep_model_workspace_path)
 
-@app.route("/deep/network/import_network", methods=["POST"])
-@cross_origin()
-def import_network():
-    """
-    Request for importing network from network component from the deep learning menu to activeNet object. 
-    The workspace mst be initialized to the object and then 
-    """
-    global activeNet
-    importNetworkPath = request.json['path']
-    importNetworkName = request.json['name']
+#     if not success:
+#         # formatting multiple error messages
+#         return handle_exception('ERROR: Could not load network.:\n'+'\n'.join(load_msg))
 
     
-    # try import model
-    try:
-        NTctrl.import_model(importNetworkPath, importNetworkName)
-    except Exception as e:
-        return handle_exception('Error trying to import model. : {} workspascePath is {}'.format(str(e), workspacePath))
-
-    info = 'New network \n'+'Imported from path: '+importNetworkPath+'\n'+'New Name: '+importNetworkName
-
-    return jsonify(info)
 
 
-@app.route("/deep/network/import_network_custom_settings", methods=["POST"])
-@cross_origin()
-def import_network_custom_settings():
-    """
-    Import a json with settings specific to a network in a dictionary form to be rendered as an input on the frontend.
-    layout: {'setting_name_1': {'option_11', 'option_12', 'option_1n'}, 'setting_name_2': {'option_21', 'option_22', 'option_2n'}}
-    Requires an active network.
+# @app.route("/deep/network/import_network", methods=["POST"])
+# @cross_origin()
+# def import_network():
+#     """
+#     Request for importing network from network component from the deep learning menu to activeNet object. 
+#     The workspace mst be initialized to the object and then 
+#     """
+#     global activeNet
+#     importNetworkPath = request.json['path']
+#     importNetworkName = request.json['name']
 
-    Returns: 
-        customSettings (dic): dictionary of the custom settings for the active network
+    
+#     # try import model
+#     try:
+#         NTctrl.import_model(importNetworkPath, importNetworkName)
+#     except Exception as e:
+#         return handle_exception('Error trying to import model. : {} workspascePath is {}'.format(str(e), workspacePath))
 
-    """
-    customSettings = #data_repo.?
+#     info = 'New network \n'+'Imported from path: '+importNetworkPath+'\n'+'New Name: '+importNetworkName
 
-    return jsonify(customSettings)
-
-
-@app.route("/deep/network/import_dataset", methods=["POST"])
-@cross_origin()
-def import_dataset():
-    """
-    Request for training from the frontend
-    """
-    global activeNet
-
-    importDatasetPath = request.json['path']
-
-    return jsonify(info)
+#     return jsonify(info)
 
 
-@app.route("/deep/network/train", methods=["POST"])
-@cross_origin()
-def train():
-    """
-    Request training for the network by setting training parameters and calling the training method of the active nework.
+# @app.route("/deep/network/import_network_custom_settings", methods=["POST"])
+# @cross_origin()
+# def import_network_custom_settings():
+#     """
+#     Import a json with settings specific to a network in a dictionary form to be rendered as an input on the frontend.
+#     layout: {'setting_name_1': {'option_11', 'option_12', 'option_1n'}, 'setting_name_2': {'option_21', 'option_22', 'option_2n'}}
+#     Requires an active network.
 
-    Args:
-        msg(str): string message to user in debugger
-        payload(any): a generic payload
+#     Returns: 
+#         customSettings (dic): dictionary of the custom settings for the active network
 
-    Returns:
-        None
+#     """
+#     customSettings = #data_repo.?
 
-    """
-    global activeNet
+#     return jsonify(customSettings)
 
-    num_gpus = request.json['num_gpus']
-    loss_type = request.json['loss_type']
-    optimiser =request.json['optimiser']
-    cuda_devices = data_repo.get_inference_gpus()
-    batch_size = request.json['']
-    max_iter = request.json['']
-    learning_rate = request.json['learning_rate']
 
-    params = {
-        'num_gpus': num_gpus,
-        'loss_type': loss_type,
-        'optimiser': optimiser,
-        'cuda_devices': cuda_devices,
-        'batch_size': batch_size,
-        'max_iter': max_iter,
-        'learning_rate': learning_rate
-    }
+# @app.route("/deep/network/import_dataset", methods=["POST"])
+# @cross_origin()
+# def import_dataset():
+#     """
+#     Request for training from the frontend
+#     """
+#     global activeNet
 
-    activeNet.activate(params)
+#     importDatasetPath = request.json['path']
 
-    activeNet.set_network_controller()
+#     return jsonify(info)
+
+
+# @app.route("/deep/network/train", methods=["POST"])
+# @cross_origin()
+# def train():
+#     """
+#     Request training for the network by setting training parameters and calling the training method of the active nework.
+
+#     Args:
+#         msg(str): string message to user in debugger
+#         payload(any): a generic payload
+
+#     Returns:
+#         None
+
+#     """
+#     global activeNet
+
+#     num_gpus = request.json['num_gpus']
+#     loss_type = request.json['loss_type']
+#     optimiser =request.json['optimiser']
+#     cuda_devices = data_repo.get_inference_gpus()
+#     batch_size = request.json['']
+#     max_iter = request.json['']
+#     learning_rate = request.json['learning_rate']
+
+#     params = {
+#         'num_gpus': num_gpus,
+#         'loss_type': loss_type,
+#         'optimiser': optimiser,
+#         'cuda_devices': cuda_devices,
+#         'batch_size': batch_size,
+#         'max_iter': max_iter,
+#         'learning_rate': learning_rate
+#     }
+
+#     activeNet.activate(params)
+
+#     activeNet.set_network_controller()
 
         
-    log_msg('done training')
-    return 'done training'
+#     log_msg('done training')
+#     return 'done training'
 
