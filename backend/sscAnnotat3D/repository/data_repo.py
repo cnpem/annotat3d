@@ -5,7 +5,7 @@ saved on the backend
 
 import numpy as np
 from collections import deque
-
+    
 """
 dict that contains the loaded image, superpixel and label
 """
@@ -24,7 +24,10 @@ __info = dict()
 """
 dict that contains information about the path to the deep_model folder
 """
-__deep_model = dict()
+__deep_model_info = {
+    'workspace_path': str(),
+    'available_gpus': {}
+}
 
 """
 dict that contains the saved data in dataset menu
@@ -50,11 +53,6 @@ __inference_data = dict()
 dict that contain info about the saved data in batch_inference menu
 """
 __inference_info = dict()
-
-"""
-list that contain the number of gpus to use in inference
-"""
-__inference_gpus = list()
 
 """
 list of log messages implemented as a FIFO queue
@@ -128,23 +126,23 @@ def get_all_inference_info():
     return __inference_info.values()
 
 
-def set_deep_model(key='deep_learning', data: dict = None):
+def set_deep_model_info(key: str, data: any = None):
     """
     Function that set the deep_model path directory
 
     Args:
-        key(str): string that represents the key for deep_model
-        data(dict): a dict that contain the directory path about the directory of the deep learning workspace
+        key(str): string that needs to be a key from the dict __deep_model_info
+        data(any): a dict that contain the directory path about the directory of the deep learning workspace
 
     Returns:
         None
 
     """
-    if data is not None:
-        __deep_model[key] = data
+    if data is not None and key in __deep_model_info.keys():
+        __deep_model_info[key] = data
 
 
-def get_deep_model(key='deep_learning'):
+def get_deep_model_info(key: str):
     """
     Function that gets the path of deep learning workspace
 
@@ -152,10 +150,10 @@ def get_deep_model(key='deep_learning'):
         key(str): string that represents the key for deep_model
 
     Returns:
-        (dict): Returns a dict that contains information about the deep learning workspace
+        data(any): Returns a dict that contains information about the deep learning workspace
 
     """
-    return __deep_model[key]
+    return __deep_model_info[key]
 
 
 def set_image(key='image', data: np.ndarray = None):
@@ -567,7 +565,7 @@ def del_all_inference_data():
     __inference_data.clear()
 
 
-def set_inference_gpus(data: list = None):
+def set_available_gpus(data: list = None):
     """
     Function that set the number of gpu's to use in batch_inference menu on deep learning
 
@@ -579,8 +577,8 @@ def set_inference_gpus(data: list = None):
 
     """
     if (data is not None):
-        __inference_gpus = data
-
+        __deep_model_info['available_gpus'] = data
+        
 
 def get_inference_gpus():
     """
@@ -590,7 +588,7 @@ def get_inference_gpus():
         (list): Returns a list that contains all the gpu to use in batch_inference
 
     """
-    return __inference_gpus
+    return __deep_model_info['available_gpus']
 
 def init_logger(init_message : str):
     print(init_message)

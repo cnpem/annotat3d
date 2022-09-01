@@ -2,7 +2,8 @@
 
 This script contains some back-end functions for the deep learning module
 
-@author : Gabriel Borin Macedo (gabriel.macedo@lnls.br or borinmacedo@gmail.com)
+@authors : Gabriel Borin Macedo (gabriel.macedo@lnls.br or borinmacedo@gmail.com)
+         : Bruno Carlos (bruno.carlos@lnls.br)
 
 TODO : Don't forget to document the functions
 
@@ -18,6 +19,7 @@ from flask_cors import cross_origin
 from werkzeug.exceptions import BadRequest
 from tensorflow.python.client import device_lib
 
+from sscIO.io import read_volume
 from sscDeepsirius.cython import standardize
 from sscAnnotat3D.repository import data_repo
 from sscDeepsirius.utils import dataset, image, augmentation
@@ -25,8 +27,6 @@ from sscDeepsirius.controller.inference_controller import InferenceController
 from sscDeepsirius.controller.host_network_controller import HostNetworkController 
 from sscAnnotat3D.deeplearning import DeepLearningWorkspaceDialog
 
-def test():
-    print('im am here!')
 
 app = Blueprint('deep', __name__)
 
@@ -129,7 +129,7 @@ def open_new_workspace():
     save_status, error_desc = deep_model.open_new_workspace(workspace_path)
 
     if (save_status):
-        data_repo.set_deep_model(data={"deep_model_path": workspace_path})
+        data_repo.set_deep_model_info(key='workspace_path', data=workspace_path)
         return jsonify(workspace_path)
 
     return handle_exception("unable to create the Workspace ! : {}".format(error_desc))
@@ -157,7 +157,7 @@ def load_workspace():
     check_valid_workspace = deep_model.check_workspace(workspace_path)
 
     if (check_valid_workspace):
-        data_repo.set_deep_model(data={"deep_model_path": workspace_path})
+        data_repo.set_deep_model_info(key='workspace_path', data=workspace_path)
         return jsonify(check_valid_workspace)
 
     return handle_exception("path \"{}\" is a invalid workspace path!".format(workspace_path))
@@ -347,7 +347,7 @@ def open_inference_files(file_id: str):
         use_image_raw_parse = request.json["use_image_raw_parse"]
         if (extension in tif_extensions or use_image_raw_parse):
             start = time.process_time()
-            image, info = sscIO.io.read_volume(file_path, 'numpy')
+            image, info = read_volume(file_path, 'numpy')
             end = time.process_time()
             error_msg = "No such file or directory {}".format(file_path)
 
@@ -357,7 +357,7 @@ def open_inference_files(file_id: str):
         else:
             image_raw_shape = request.json["image_raw_shape"]
             start = time.process_time()
-            image, info = sscIO.io.read_volume(file_path, 'numpy',
+            image, info = read_volume(file_path, 'numpy',
                                                shape=(image_raw_shape[2], image_raw_shape[1], image_raw_shape[0]),
                                                dtype=file_dtype)
             end = time.process_time()
@@ -446,8 +446,9 @@ def get_available_gpus():
             "value": "GPU {}".format(gpu_number),
             "label": device
         })
+        i+=1
 
-    data_repo.set_inference_gpus(gpus)
+    data_repo.set_available_gpus(gpus)
     return jsonify(gpu_device_names)
 
 
@@ -462,13 +463,13 @@ def get_frozen_data():
 
     """
     try:
-        deep_model = data_repo.get_deep_model()
+        workspace_path = data_repo.get_deep_model_info('workspace_path')
     except Exception as e:
         return handle_exception(str(e))
 
     try:
-        frozen_path_pb = glob.glob(deep_model["deep_model_path"] + "frozen/*.pb")
-        frozen_path_PB = glob.glob(deep_model["deep_model_path"] + "frozen/*.PB")
+        frozen_path_pb = glob.glob(workspace_path + "frozen/*.pb")
+        frozen_path_PB = glob.glob(workspace_path + "frozen/*.PB")
         frozen_path = [*frozen_path_pb, *frozen_path_PB]
     except Exception as e:
         return handle_exception(str(e))
@@ -507,14 +508,19 @@ def run_inference():
     if (output["outputPath"] == ""):
         return handle_exception("Empty path isn't valid !")
 
+    try:
+        workspace_path = data_repo.get_deep_model_info('workspace_path')
+    except Exception as e:
+        return handle_exception(str(e))
+
     _depth_prob_map_dtype = {'16-bits': np.dtype('float16'), '32-bits': np.dtype('float32')}
     images_list = [*data_repo.get_all_inference_keys()]
     images_props = [*data_repo.get_all_inference_info()]
     images_list_name = [*data_repo.get_all_inference_info()]
     images_list_name = [x["filePath"] for x in images_list_name]
     output_folder = output["outputPath"]
-    model_file_h5 = os.path.join(data_repo.get_deep_model()["deep_model_path"], "frozen", network + ".meta.h5")
-    model_file = os.path.join(data_repo.get_deep_model()["deep_model_path"], "frozen", network)
+    model_file_h5 = os.path.join(workspace_path, "frozen", network + ".meta.h5")
+    model_file = os.path.join(workspace_path, "frozen", network)
     error_message = ""
     try:
         metadata = dataset.load_metadata(model_file_h5)
@@ -609,135 +615,4 @@ def run_inference():
 
     return jsonify("successes")
 
-# ---
-# Functions for the Network module
-# ---
-
-# @app.route("/deep/network/set_active_network", methods=["POST"])
-# @cross_origin()
-# def set_active_network():
-#     """
-#         Sets up the active network object with workspace path and initializes the deepsirius network controller. 
-
-#     Args:
-#         None
-#         This function looks for the deep_model_workspace_path value on the data repository.
-
-#     Returns:
-#         None
-#         Calls an error handler function that retuns a .json with error messages if not successful.
-        
-#     """
-#     global activeNet
-
-#     try:
-#         deepModelRef = data_repo.get_deep_model(key='deep_learning')
-#         deep_model_workspace_path = deepModelRef['deep_model_workspace_path']
-#     except Exception as e:
-#         return handle_exception('ERROR: Workspace path not found. {}'.format(str(e)))
-
-#     # setting up active network object
-#     success, load_msg = activeNet.activate_module(deep_model_workspace_path)
-
-#     if not success:
-#         # formatting multiple error messages
-#         return handle_exception('ERROR: Could not load network.:\n'+'\n'.join(load_msg))
-
-    
-
-
-# @app.route("/deep/network/import_network", methods=["POST"])
-# @cross_origin()
-# def import_network():
-#     """
-#     Request for importing network from network component from the deep learning menu to activeNet object. 
-#     The workspace mst be initialized to the object and then 
-#     """
-#     global activeNet
-#     importNetworkPath = request.json['path']
-#     importNetworkName = request.json['name']
-
-    
-#     # try import model
-#     try:
-#         NTctrl.import_model(importNetworkPath, importNetworkName)
-#     except Exception as e:
-#         return handle_exception('Error trying to import model. : {} workspascePath is {}'.format(str(e), workspacePath))
-
-#     info = 'New network \n'+'Imported from path: '+importNetworkPath+'\n'+'New Name: '+importNetworkName
-
-#     return jsonify(info)
-
-
-# @app.route("/deep/network/import_network_custom_settings", methods=["POST"])
-# @cross_origin()
-# def import_network_custom_settings():
-#     """
-#     Import a json with settings specific to a network in a dictionary form to be rendered as an input on the frontend.
-#     layout: {'setting_name_1': {'option_11', 'option_12', 'option_1n'}, 'setting_name_2': {'option_21', 'option_22', 'option_2n'}}
-#     Requires an active network.
-
-#     Returns: 
-#         customSettings (dic): dictionary of the custom settings for the active network
-
-#     """
-#     customSettings = #data_repo.?
-
-#     return jsonify(customSettings)
-
-
-# @app.route("/deep/network/import_dataset", methods=["POST"])
-# @cross_origin()
-# def import_dataset():
-#     """
-#     Request for training from the frontend
-#     """
-#     global activeNet
-
-#     importDatasetPath = request.json['path']
-
-#     return jsonify(info)
-
-
-# @app.route("/deep/network/train", methods=["POST"])
-# @cross_origin()
-# def train():
-#     """
-#     Request training for the network by setting training parameters and calling the training method of the active nework.
-
-#     Args:
-#         msg(str): string message to user in debugger
-#         payload(any): a generic payload
-
-#     Returns:
-#         None
-
-#     """
-#     global activeNet
-
-#     num_gpus = request.json['num_gpus']
-#     loss_type = request.json['loss_type']
-#     optimiser =request.json['optimiser']
-#     cuda_devices = data_repo.get_inference_gpus()
-#     batch_size = request.json['']
-#     max_iter = request.json['']
-#     learning_rate = request.json['learning_rate']
-
-#     params = {
-#         'num_gpus': num_gpus,
-#         'loss_type': loss_type,
-#         'optimiser': optimiser,
-#         'cuda_devices': cuda_devices,
-#         'batch_size': batch_size,
-#         'max_iter': max_iter,
-#         'learning_rate': learning_rate
-#     }
-
-#     activeNet.activate(params)
-
-#     activeNet.set_network_controller()
-
-        
-#     log_msg('done training')
-#     return 'done training'
 

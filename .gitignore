@@ -46,3 +46,4 @@ backend/.eggs
 backend/sscAnnotat3D/static
 
 Makefile
+backend/sscAnnotat3D/api/deep_network_testing.ipynb
