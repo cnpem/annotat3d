@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import sentry_sdk
 import logging
@@ -373,20 +374,20 @@ def create():
             pooling_to_spin_pooling(p) for p in feature_extraction_params['selected_supervoxel_feat_pooling']
         ]
 
-    print(feature_extraction_params['selected_features'])
+    logging.debug('feature_extraction_params: {}'.format(feature_extraction_params['selected_features']))
     if 'selected_features' in feature_extraction_params:
         feature_extraction_params['selected_features'] = [
             features_to_spin_features(f) for f in feature_extraction_params['selected_features']
         ]
 
-    print(__default_feature_extraction_params)
-    print(feature_extraction_params)
-    print(classifier_params)
+    logging.debug('__default_feature_extraction_params"{}'.format(__default_feature_extraction_params))
+    logging.debug('feature_extraction_params: {}'.format(feature_extraction_params))
+    logging.debug('classifier_params: {}'.format(classifier_params))
     available = spin_feat_extraction.SPINFilters.available_filters()
 
-    print(available)
-    print(feature_extraction_params)
-    print(classifier_params)
+    logging.debug('available: {}'.format(available))
+    logging.debug('feature_extraction_params: {}'.format(feature_extraction_params))
+    logging.debug('classifier_params: {}'.format(classifier_params))
 
     if img is None or img_superpixel is None:
         return handle_exception('Needs a valid image and superpixel to create module.')
@@ -398,8 +399,8 @@ def create():
         **feature_extraction_params
     }
 
-    print('full')
-    print(full_feat_extraction_params)
+    logging.debug('full')
+    logging.debug('full_feat_extraction_params: {}'.format(full_feat_extraction_params))
 
     segm_module.set_feature_extraction_parameters(**full_feat_extraction_params)
 
@@ -549,7 +550,7 @@ def preview():
         return "This module does not have a preview", 400
 
     try:
-        label = segm_module.preview(annotations, [slice_num], axis_dim)
+        label, selected_features_names = segm_module.preview(annotations, [slice_num], axis_dim)
     except Exception as e:
         dict_tuple_values = [*annotations.values()]
         unique_ids = set()
@@ -563,7 +564,7 @@ def preview():
 
     data_repo.set_image('label', label)
 
-    return "success", 200
+    return jsonify({'selected_features_names': selected_features_names})
 
 
 @app.route('/superpixel_segmentation_module/execute', methods=['POST'])
@@ -590,7 +591,7 @@ def execute():
         return "Not a valid segmentation module", 400
 
     try:
-        label = segm_module.execute(annotations)
+        label, selected_features_names = segm_module.execute(annotations)
     except Exception as e:
         dict_tuple_values = [*annotations.values()]
         unique_ids = set()
@@ -620,7 +621,7 @@ def execute():
 
     data_repo.set_image('label', label)
 
-    return jsonify("success")
+    return jsonify({"selected_features_names": selected_features_names})
 
 
 @app.route('/save_classifier', methods=['POST'])

@@ -11,6 +11,7 @@ import GroupSelect from "./GroupSelect";
 import PixelSegmentationModuleCard from "./PixelSegmentationModuleCard";
 import SuperpixelModuleCard from "./SuperpixelModuleCard";
 import SuperpixelSegmentationModuleCard from "./SuperpixelSegmentationModuleCard";
+import MessageCard from "./MessageCard";
 
 const moduleOptions = [
     {id: "superpixel", label: 'Superpixel Segmentation'},
@@ -77,6 +78,7 @@ const ProcessingMenu: React.FC = () => {
             <IonList hidden={curModule !== "nlm_filter"}>
                 <NonLocalMeansFilteringModuleCard/>
             </IonList>
+            <MessageCard/>
         </Fragment>
     );
 };

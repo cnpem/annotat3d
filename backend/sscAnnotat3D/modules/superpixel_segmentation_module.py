@@ -252,7 +252,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                           (str(preview_image.shape)))
 
             with sentry_sdk.start_span(op='Training classifier for preview'):
-                classifier_trained, training_time = self._train_classifier(annotations,
+                classifier_trained, training_time, selected_features_names = self._train_classifier(annotations,
                                                                            self._features,
                                                                            min_superpixel_id=self._min_superpixel_label)
 
@@ -310,7 +310,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
             mainbar.reset()
 
-            return pred
+            return pred, selected_features_names
 
     def has_superpixel_features_cached(self):
         cached_features = True
@@ -381,7 +381,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
             mainbar.inc()
             with sentry_sdk.start_span(op='Training classifier'):
-                classifier_trained, training_time = self._train_classifier(annotations,
+                classifier_trained, training_time, selected_features_names = self._train_classifier(annotations,
                                                                            features,
                                                                            min_superpixel_id=min_superpixel_label)
 
@@ -498,7 +498,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
             mainbar.reset()
 
-            return pred
+            return pred, selected_features_names
 
     def _classify_superpixels(self, superpixel_features_global, pred, superpixels, selected_superpixels=None):
         logging.debug("Predicting...")

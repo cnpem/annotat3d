@@ -238,12 +238,12 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                 # the preview region. Hence, annotations may have been done for other slices so we force the training to recompute only what is
                 # necessary, since it caches superpixel features as well
                 with sentry_sdk.start_span(op='Training classifier for preview'):
-                    classifier_trained, training_time = self._train_classifier(annotations, None)
+                    classifier_trained, training_time, selected_features_names = self._train_classifier(annotations, None)
             else:
                 preview_features = self._features[[slice(None), *selected_slices_idx]]
                 logging.debug('Training classifier for preview from features estimated for the entire image')
                 with sentry_sdk.start_span(op='Training classifier for preview'):
-                    classifier_trained, training_time = self._train_classifier(annotations, self._features)
+                    classifier_trained, training_time, selected_features_names = self._train_classifier(annotations, self._features)
 
             pred = None
 
@@ -294,7 +294,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
             mainbar.reset()
 
-            return pred
+            return pred, selected_features_names
 
     def execute(self, annotations, force_feature_extraction=False, **kwargs):
         """
@@ -355,7 +355,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
             mainbar.inc()
             with sentry_sdk.start_span(op='Training classifier'):
-                classifier_trained, training_time = self._train_classifier(annotations, features)
+                classifier_trained, training_time, selected_features_names = self._train_classifier(annotations, features)
 
             pred = None
             test_time = assignment_time = 0.0
@@ -455,7 +455,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                 functions.log_error(e)
 
             mainbar.reset()
-            return pred
+            return pred, selected_features_names
 
     def has_preview(self):
         """
