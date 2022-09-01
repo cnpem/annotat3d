@@ -160,6 +160,11 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
     useEventBus("isSplitActivated", (flag: boolean) => {
         setIsSplitActivated(flag);
+        if (flag) {
+            console.log("newLabelId - 1 : ", labelList[labelList.length - 1].id);
+            setSelectedLabel(labelList[labelList.length - 1].id);
+            setIsExtendActivated(false);
+        }
     });
 
     useEffect(() => {
@@ -229,9 +234,9 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     }
 
     const extendLabel = (e: CustomEvent) => {
+        dispatch("ExtendLabel", e.detail.checked);
         if (e.detail.checked) {
             console.log("Doing dispatch for ExtendLabel");
-            dispatch("ExtendLabel", true);
             ionToastActivateExtendOp(`Extend label operation activated !`, timeToast);
             setActivateSL(!e.detail.checked);
         }
@@ -245,7 +250,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         return (
             <tr key={labelElement.id} className={isActive ? "label-table-active" : ""}
                 onClick={() => {
-                    if (!activateSL) {
+                    if (!activateSL && !isSplitActivated) {
                         selectLabel(labelElement.id)
                     }
                 }}>

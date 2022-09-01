@@ -29,7 +29,6 @@ class Brush {
     radius: number = 0;
 
     mode: brush_mode_type = 'draw_brush';
-    extendLabel: boolean;
     maintainExtendLabel: boolean;
 
     canvas: HTMLCanvasElement;
@@ -42,7 +41,6 @@ class Brush {
     constructor(colors: [number, number, number][]) {
         this.label = 0;
         this.color = 0xffffff;
-        this.extendLabel = false;
         this.maintainExtendLabel = false;
 
         this.canvas = document.createElement('canvas');
@@ -477,6 +475,10 @@ class Canvas {
         if (this.imgData) {
             this.setImage(this.imgData);
         }
+    }
+
+    setExtendLabel(flag: boolean) {
+        this.extendLabel = flag
     }
 
     draw(currPosition: PIXI.Point): [number, number][] {
@@ -1145,8 +1147,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
             this.onExtendLabel = (flag: boolean) => {
                 console.log("flag val : ", flag);
+                this.canvas!!.setExtendLabel(flag);
                 this.canvas!!.showBrush(false);
-                this.canvas!!.extendLabel = flag;
             }
 
             this.onExtendLabelOnMerge = (flag: boolean) => {
