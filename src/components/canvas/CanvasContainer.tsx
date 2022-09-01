@@ -357,6 +357,9 @@ class Canvas {
         this.brush.update();
     }
 
+    getLabelTableLen() {
+        return this.labelTableLen
+    }
 
     setImageShape() {
         sfetch('POST', '/get_image_info/image_info', '', 'json')
@@ -915,6 +918,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     };
     onActivateSL: (sequentialLabelPayload: { isActivated: boolean, id: number }) => void = () => {
     };
+    onSplitLabel: (flag: boolean) => void = () => {
+    }
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -1146,7 +1151,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
             this.onExtendLabelOnMerge = (flag: boolean) => {
                 this.canvas!!.setMaintainExtend(flag);
-                if(flag) {
+                if (flag) {
                     this.onExtendLabel(flag);
                 }
             }
@@ -1162,6 +1167,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             this.onActivateSL = (sequentialLabelPayload: { isActivated: boolean, id: number }) => {
                 this.canvas?.setSequentialLabel(sequentialLabelPayload.isActivated);
                 this.canvas?.brush.setLabel(sequentialLabelPayload.id);
+            }
+
+            this.onSplitLabel = (flag: boolean) => {
+                this.onActivateSL({
+                    isActivated: flag,
+                    id: this.canvas!!.getLabelTableLen(),
+                });
             }
 
             subscribe('futureChanged', this.onFutureChanged);
@@ -1186,6 +1198,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('cropPreviewMode', this.onCropPreviewMode);
             subscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
             subscribe("activateSL", this.onActivateSL);
+            subscribe("splitLabel", this.onSplitLabel);
         }
     }
 
@@ -1213,6 +1226,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('cropPreviewMode', this.onCropPreviewMode);
         unsubscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
         unsubscribe("activateSL", this.onActivateSL);
+        unsubscribe("splitLabel", this.onSplitLabel);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {

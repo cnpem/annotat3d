@@ -5,7 +5,7 @@ import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
 
 /**
  * Remote visualization component
- * @constructor
+ * TODO : Need to implement remove visualization later here
  */
 const Remote: React.FC = () => {
     /**
@@ -20,7 +20,7 @@ const Remote: React.FC = () => {
         mdIcon: paperPlaneSharp
     };
     return (
-        <IonAccordion>
+        <IonAccordion disabled={true}>
             <IonItem slot={"header"}>
                 <IonIcon slot={"start"} ios={items.iosIcon} md={items.mdIcon}/>
                 <IonLabel>{items.title}</IonLabel>

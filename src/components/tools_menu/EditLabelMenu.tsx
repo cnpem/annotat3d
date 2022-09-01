@@ -122,6 +122,7 @@ const EditLabelMenu: React.FC = () => {
                                     checked={isSplitActivated}
                                     slot={"end"}
                                     onIonChange={(e: CustomEvent) => {
+                                        dispatch("splitLabel", e.detail.checked);
                                         if (e.detail.checked) {
                                             setIsMergeActivated(false);
                                             dispatch("isEditLabelActivated", false);

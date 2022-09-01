@@ -616,7 +616,7 @@ def execute():
     if (edit_label_split_module is not None and edit_label_split_module.get_annotation()):
         _debugger_print("doing the split on apply", "RIGHT NOW")
         label = _split_label(edit_label_split_module.get_annotation(), annotations, label)
-        data_repo.get_edit_label_options("edit_label_split_module", None)
+        data_repo.set_edit_label_options("edit_label_split_module", None)
 
     data_repo.set_image('label', label)
 

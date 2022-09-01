@@ -46,9 +46,9 @@ const Menu: React.FC = () => {
             <IonContent>
                 <IonAccordionGroup>
                     <File/>
-                    <Colormap/>
+                    {/*<Colormap/>*/}
                     <DeepLearning/>
-                    <Remote/>
+                    {/*<Remote/>*/}
                     <About />
                     <People />
                 </IonAccordionGroup>

@@ -5,7 +5,7 @@ import {IonAccordion, IonIcon, IonItem, IonLabel, IonList, IonRadioGroup, IonRad
 
 /**
  * Colormap selector component
- * @constructor
+ * TODO : Need to implement the color map here later
  */
 const Colormap : React.FC = () => {
     /**
@@ -29,7 +29,7 @@ const Colormap : React.FC = () => {
     const [selected, setSelected] = useState<string>("Grey");
 
     return (
-        <IonAccordion>
+        <IonAccordion disabled={true}>
             <IonItem slot={"header"}>
                 <IonIcon slot={"start"} ios={items.iosIcon} md={items.mdIcon}/>
                 <IonLabel>{items.title}  <IonChip hidden={!selected} color="tertiary">{selected}</IonChip> </IonLabel>
