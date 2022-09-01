@@ -30,6 +30,7 @@ class Brush {
 
     mode: brush_mode_type = 'draw_brush';
     extendLabel: boolean;
+    maintainExtendLabel: boolean;
 
     canvas: HTMLCanvasElement;
     context: CanvasRenderingContext2D;
@@ -42,6 +43,7 @@ class Brush {
         this.label = 0;
         this.color = 0xffffff;
         this.extendLabel = false;
+        this.maintainExtendLabel = false;
 
         this.canvas = document.createElement('canvas');
 
@@ -214,6 +216,7 @@ class Canvas {
 
     isPainting: boolean;
     extendLabel: boolean;
+    maintainExtendLabel: boolean;
     mergeLabel: boolean;
 
     annotation: Annotation;
@@ -276,6 +279,7 @@ class Canvas {
         this.slice = new PIXI.Sprite();
         this.slice.visible = true;
         this.extendLabel = false;
+        this.maintainExtendLabel = false;
         this.mergeLabel = false;
 
         this.labelSlice = new PIXI.Sprite();
@@ -518,6 +522,8 @@ class Canvas {
             this.brush.contextDrawBrush(context, x, y);
 
             this.annotation.sprite.texture.update();
+
+            dispatch("extendLabelOnMerge", this.maintainExtendLabel);
 
             return [
                 [x, y],
@@ -762,6 +768,10 @@ class Canvas {
         this.futureSlice.texture = PIXI.Texture.EMPTY;
     }
 
+    setMaintainExtend(flag: boolean) {
+        this.maintainExtendLabel = flag;
+    }
+
     setImage(imgSlice: NdArray<TypedArray>) {
 
         this.imgData = imgSlice;
@@ -895,6 +905,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     };
     onExtendLabel: (flag: boolean) => void = () => {
     };
+    onExtendLabelOnMerge: (flag: boolean) => void = () => {
+    }
     onCropPreviewMode: (activateCropPreview: boolean) => void = () => {
     };
     onCropShape: (cropShape: CropShapeInterface) => void = () => {
@@ -1132,6 +1144,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas!!.extendLabel = flag;
             }
 
+            this.onExtendLabelOnMerge = (flag: boolean) => {
+                this.canvas!!.setMaintainExtend(flag);
+                if(flag) {
+                    this.onExtendLabel(flag);
+                }
+            }
+
             this.onCropPreviewMode = (activateCropPreview: boolean) => {
                 this.cropPreviewMode(activateCropPreview);
             }
@@ -1162,6 +1181,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('ImageLoaded', this.onImageLoaded);
             subscribe("ChangeStateBrush", this.onChangeStateBrush);
             subscribe("ExtendLabel", this.onExtendLabel);
+            subscribe("extendLabelOnMerge", this.onExtendLabelOnMerge);
             subscribe('cropShape', this.onCropShape);
             subscribe('cropPreviewMode', this.onCropPreviewMode);
             subscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
@@ -1188,6 +1208,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('labelChanged', this.onLabelChanged);
         unsubscribe("ChangeStateBrush", this.onChangeStateBrush);
         unsubscribe("ExtendLabel", this.onExtendLabel);
+        unsubscribe("extendLabelOnMerge", this.onExtendLabelOnMerge);
         unsubscribe('cropShape', this.onCropShape);
         unsubscribe('cropPreviewMode', this.onCropPreviewMode);
         unsubscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);

@@ -135,7 +135,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         console.log("Value : ", labelId);
         if (labelId >= 0) {
             setSelectedLabel(labelId);
-            ionToastLabelFounded(`Label named "${labelList[labelId].labelName}" founded !`, toastTimer);
+            ionToastLabelFounded(`"${labelList[labelId].labelName}" found !`, toastTimer);
         } else {
             ionToastLabelFounded(`Cannot find a label by click !`, toastTimer);
         }

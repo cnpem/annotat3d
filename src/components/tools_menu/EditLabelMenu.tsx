@@ -95,6 +95,7 @@ const EditLabelMenu: React.FC = () => {
                                     checked={isMergeActivated}
                                     slot={"end"}
                                     onIonChange={(e: CustomEvent) => {
+                                        dispatch("extendLabelOnMerge", e.detail.checked);
                                         if (e.detail.checked) {
                                             setIsSplitActivated(false);
                                             dispatch("isEditLabelActivated", false);
@@ -106,11 +107,11 @@ const EditLabelMenu: React.FC = () => {
                                         }
 
                                         setIsMergeActivated(e.detail.checked);
-                                        sfetch("POST", "/set_edit_label_options", JSON.stringify(payload), "json")
-                                            .catch((error: ErrorInterface) => {
-                                                console.log("Error in Merge operation");
-                                                console.log(error.error_msg)
-                                            });
+                                        sfetch("POST", "/set_edit_label_options", JSON.stringify(payload), "json").then(() => {
+                                        }).catch((error: ErrorInterface) => {
+                                            console.log("Error in Merge operation");
+                                            console.log(error.error_msg)
+                                        });
                                     }}
                                     disabled={isEditLabelDisabled || lockMenu}/>
                             </IonItem>
