@@ -1,25 +1,18 @@
 #!/bin/bash
 
-echo "PID $!"
-echo "Args: $@"
+# echo "PID $!"
+# echo "Args: $@"
 
 # Preventing errors when dealing with JSON and using pt_BR, since commas in floating-point
 # numbers messe everything up.
 export LC_ALL=en_US.UTF-8
 
-#if not defined assume current dir
-if [ -z $ANNOTAT3D_PATH ];
-then cd ./demo;
-else cd ${ANNOTAT3D_PATH}/demo;
-fi
-INDEX_PATH=./nvindex-viewer.sh
-
+export ANNOTAT3D_PATH=$(pwd)
 export ANNOTAT3D_VOLUME_PATH=Foo.raw
 export ANNOTAT3D_VOLUME_XSIZE=2048 
 export ANNOTAT3D_VOLUME_YSIZE=2048 
 export ANNOTAT3D_VOLUME_ZSIZE=2048 
 export ANNOTAT3D_VOLUME_FORMAT=uint16
-#export ANNOTAT3D_CONFIG_DIR=$(pwd)/../config
 VISIBLE_DEVICES="all"  
 export ANNOTAT3D_PORT="8083"
 export ANNOTAT3D_RTMP_VIDEO_STREAMING_PORT=1935
@@ -30,8 +23,8 @@ export ANNOTAT3D_REACT_FS_TREEVIEW_PORT=8093
 export ANNOTAT3D_ADVANCED_STATS_PORT="5005"
 export ANNOTAT3D_LNLS_EXTENSION_NOTIF_HOST="localhost" 
 export ANNOTAT3D_SCRIPTS=$ANNOTAT3D_PATH/scripts
-export ANNOTAT3D_PORT_RANGE0=50000
-export ANNOTAT3D_PORT_RANGE1=60000
+export ANNOTAT3D_PORT_RANGE0=60000
+export ANNOTAT3D_PORT_RANGE1=70000
 # export ANNOTAT3D_LNLS_EXTENSION_RENDERING_NOTIF_PORT="12345"
 # export ANNOTAT3D_LNLS_EXTENSION_SHUTDOWN_NOTIF_PORT="12346"
 export MESSAGE_BUS=$(pwd)/../src/plugins/lnls_extension/message-bus
@@ -101,24 +94,27 @@ run_index()
         unset CUDA_VISIBLE_DEVICES
     fi
 
-    echo "Environment variable setting selected for running IndeX"
-    echo ""
- 
-    echo "ANNOTAT3D_VOLUME_XSIZE:" $ANNOTAT3D_VOLUME_XSIZE
-    echo "ANNOTAT3D_VOLUME_YSIZE:" $ANNOTAT3D_VOLUME_YSIZE
-    echo "ANNOTAT3D_VOLUME_ZSIZE:" $ANNOTAT3D_VOLUME_ZSIZE
-    echo "ANNOTAT3D_VOLUME_FORMAT:" $ANNOTAT3D_VOLUME_FORMAT
+    echo "Environment variable setting selected for running Annotat3D Web"
     echo ""
 
-    echo "ANNOTAT3D_VOLUME_XMAX:" $ANNOTAT3D_VOLUME_XMAX
-    echo "ANNOTAT3D_VOLUME_YMAX:" $ANNOTAT3D_VOLUME_YMAX
-    echo "ANNOTAT3D_VOLUME_ZMAX:" $ANNOTAT3D_VOLUME_ZMAX
+    echo "ANNOTAT3D_PATH :" $ANNOTAT3D_PATH
     echo ""
 
-    echo "ANNOTAT3D_VOLUME_XTRANS:" $ANNOTAT3D_VOLUME_XTRANS
-    echo "ANNOTAT3D_VOLUME_YTRANS:" $ANNOTAT3D_VOLUME_YTRANS
-    echo "ANNOTAT3D_VOLUME_ZTRANS:" $ANNOTAT3D_VOLUME_ZTRANS
-    echo ""
+    # echo "ANNOTAT3D_VOLUME_XSIZE:" $ANNOTAT3D_VOLUME_XSIZE
+    # echo "ANNOTAT3D_VOLUME_YSIZE:" $ANNOTAT3D_VOLUME_YSIZE
+    # echo "ANNOTAT3D_VOLUME_ZSIZE:" $ANNOTAT3D_VOLUME_ZSIZE
+    # echo "ANNOTAT3D_VOLUME_FORMAT:" $ANNOTAT3D_VOLUME_FORMAT
+    # echo ""
+
+    # echo "ANNOTAT3D_VOLUME_XMAX:" $ANNOTAT3D_VOLUME_XMAX
+    # echo "ANNOTAT3D_VOLUME_YMAX:" $ANNOTAT3D_VOLUME_YMAX
+    # echo "ANNOTAT3D_VOLUME_ZMAX:" $ANNOTAT3D_VOLUME_ZMAX
+    # echo ""
+
+    # echo "ANNOTAT3D_VOLUME_XTRANS:" $ANNOTAT3D_VOLUME_XTRANS
+    # echo "ANNOTAT3D_VOLUME_YTRANS:" $ANNOTAT3D_VOLUME_YTRANS
+    # echo "ANNOTAT3D_VOLUME_ZTRANS:" $ANNOTAT3D_VOLUME_ZTRANS
+    # echo ""
     
     echo "CUDA_VISIBLE_DEVICES:" $CUDA_VISIBLE_DEVICES
     echo ""
@@ -140,8 +136,10 @@ run_index()
     echo "Running Annotat3DWeb-alpha from folder: $(pwd)"
     echo ""
 
-    # Running Gunicorn server 
-    nohup gunicorn --threads 32 --workers 1 --bind ${ANNOTAT3D_LNLS_EXTENSION_NOTIF_HOST}:${ANNOTAT3D_PORT} sscAnnotat3D.app:app 2>&1
+    # # Running Gunicorn server 
+    # nohup gunicorn --threads 32 --workers 1 --bind ${ANNOTAT3D_LNLS_EXTENSION_NOTIF_HOST}:${ANNOTAT3D_PORT} sscAnnotat3D.app:app 2>&1
+
+    singularity run --nv --app Annotat3D -B /ibira,/tmp,/dev/shm /ibira/lnls/labs/tepui/apps/Annotat3DWeb-alpha.sif -b ${ANNOTAT3D_LNLS_EXTENSION_NOTIF_HOST}:${ANNOTAT3D_PORT} &
 
     FS_TREEVIEW_SERVER_PID=$!
     echo "FS TreeView Server PID $FS_TREEVIEW_SERVER_PID"
@@ -151,9 +149,9 @@ run_index()
     echo "Killing FS TreeView Server PID $FS_TREEVIEW_SERVER_PID"
     kill $FS_TREEVIEW_SERVER_PID
 
-    # # For now, IndeX is cleaning up its own session files, no need to clean up here since
-    # # IndeX knows the names of the files more accurately
-    # clean_session_files
+    # # # For now, IndeX is cleaning up its own session files, no need to clean up here since
+    # # # IndeX knows the names of the files more accurately
+    # # clean_session_files
 }
 
 clean_session_files()
@@ -179,10 +177,10 @@ while [ "$1" != "" ]; do
                                 project_file=$1
                                 ;;
         --index_port_range )    shift
-                                PORT_RANGE0=$(printf "%d" $1)
+                                ANNOTAT3D_PORT_RANGE0=$(printf "%d" $1)
                                 shift
-                                PORT_RANGE1=$(printf "%d" $1)
-                                export ANNOTAT3D_PORT=$(printf "%d" `$ANNOTAT3D_SCRIPTS/request_port.py --port_range $PORT_RANGE0 $PORT_RANGE1 | grep REQUESTED_PORT | sed 's/REQUESTED_PORT //g'`)
+                                ANNOTAT3D_PORT_RANGE1=$(printf "%d" $1)
+                                export ANNOTAT3D_PORT=$(printf "%d" `$ANNOTAT3D_SCRIPTS/request_port.py --port_range $ANNOTAT3D_PORT_RANGE0 $ANNOTAT3D_PORT_RANGE1 | grep REQUESTED_PORT | sed 's/REQUESTED_PORT //g'`)
                                 export ANNOTAT3D_STREAMING_PORT=`expr $ANNOTAT3D_PORT + 1`
                                 export ANNOTAT3D_HTTP_PORT=`expr $ANNOTAT3D_PORT + 2`
                                 export ANNOTAT3D_ADMIN_HTTP_PORT=`expr $ANNOTAT3D_PORT + 3`
