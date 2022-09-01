@@ -382,23 +382,10 @@ def find_label_by_click():
     except Exception as e:
         return handle_exception(str(e))
 
-    if (axis == "XY"):
-        data = (slice, y, x)
-
-    elif (axis == "XZ"):
-        data = (y, slice, x)
-
-    else:
-        data = (x, y, slice)
-
     try:
         label_img = data_repo.get_image(key="label")
     except Exception as e:
         return handle_exception(str(e))
-
-    if (label_img is not None and np.max(label_img) > 0):
-        _debugger_print("id_data found", int(label_img[data]))
-        return jsonify(int(label_img[data]))
 
     if (axis == "XY"):
         data = (slice, y, x)
@@ -413,6 +400,10 @@ def find_label_by_click():
         print("data : {}".format(data))
         print("data found by key : {}".format(annotations[data]))
         return jsonify(annotations[data][0])
+
+    if (label_img is not None and np.max(label_img) > 0):
+        _debugger_print("id_data found", int(label_img[data]))
+        return jsonify(int(label_img[data]))
 
     return jsonify(0)
 
