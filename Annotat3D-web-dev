@@ -46,7 +46,7 @@ fi
 
 BASEDIR=/ibira/lnls/labs/tepui/apps/;
 
-IMAGE="Annotat3D-web-staging.sif"
+IMAGE="Annotat3D-web-dev.sif"
 
 export ANNOTAT3D_PORT=$(printf "%d" `scripts/request_port.py --port_range $ANNOTAT3D_PORT_RANGE0 $ANNOTAT3D_PORT_RANGE1 | grep REQUESTED_PORT | sed 's/REQUESTED_PORT //g'`)
 
