@@ -1,0 +1,146 @@
+#!/usr/bin/env /bin/bash
+
+# Preventing errors when dealing with JSON and using pt_BR, since commas in floating-point
+# numbers messe everything up.
+export LC_ALL=en_US.UTF-8
+
+# From: https://unix.stackexchange.com/questions/146756/forward-sigterm-to-child-in-bash
+prep_signal()
+{
+    unset child_pid
+    unset kill_needed
+    trap 'handle_signal' USR1 INT
+}
+
+handle_signal()
+{
+    if [ "${child_pid}" ]; then
+        echo "Handling signal ${child_pid}"
+
+        kill -USR1 "${child_pid}" 2>/dev/null
+    else
+        echo "Kill needed"
+
+        kill_needed="yes"
+    fi
+}
+
+wait_signal()
+{
+    child_pid=$!
+    if [ "${kill_needed}" ]; then
+        kill -USR1 "${child_pid}" 2>/dev/null 
+    fi
+    echo "CHILD ${child_pid}"
+    wait ${child_pid} 2>/dev/null
+    trap - USR1 INT
+    wait ${child_pid} 2>/dev/null
+}
+
+run_annotat3d_web()
+{
+   export IMAGE="Annotat3D-web.sif"
+   export BASEDIR=/ibira/lnls/labs/tepui/apps/;
+   export ANNOTAT3D_PATH=$(pwd)
+   export ANNOTAT3D_VOLUME_PATH=Foo.raw
+   export ANNOTAT3D_VOLUME_XSIZE=2048 
+   export ANNOTAT3D_VOLUME_YSIZE=2048 
+   export ANNOTAT3D_VOLUME_ZSIZE=2048 
+   export ANNOTAT3D_VOLUME_FORMAT=uint16
+   VISIBLE_DEVICES="all"  
+   export ANNOTAT3D_PORT="8083"
+   export ANNOTAT3D_RTMP_VIDEO_STREAMING_PORT=1935
+   export ANNOTAT3D_HTTP_PORT=8080
+   export ANNOTAT3D_ADMIN_HTTP_PORT=8081
+   export ANNOTAT3D_STREAMING_PORT=3333
+   export ANNOTAT3D_REACT_FS_TREEVIEW_PORT=8093
+   export ANNOTAT3D_ADVANCED_STATS_PORT="5005"
+   export ANNOTAT3D_LNLS_EXTENSION_NOTIF_HOST=$(hostname)
+   export ANNOTAT3D_PORT_RANGE0=60000
+   export ANNOTAT3D_PORT_RANGE1=70000
+   # export ANNOTAT3D_LNLS_EXTENSION_RENDERING_NOTIF_PORT="12345"
+   # export ANNOTAT3D_LNLS_EXTENSION_SHUTDOWN_NOTIF_PORT="12346"
+   export MESSAGE_BUS=$(pwd)/../src/plugins/lnls_extension/message-bus
+   export PYTHONPATH=$MESSAGE_BUS/python:$PYTHONPATH
+   export LD_LIBRARY_PATH=$MESSAGE_BUS/build:$LD_LIBRARY_PATH
+   GDB=""
+
+   CMD=""
+   if [ $(command -v nvcc) ]; then
+       CMD=nvcc
+   elif [ -x /usr/local/cuda/bin/nvcc ]; then
+       CMD=/usr/local/cuda/bin/nvcc
+   fi
+
+   if [[ $CMD != "" ]]; then
+      CUDA_VERSION=`$CMD --version | grep "release" | awk '{print $6}' | cut -c2-`
+      CUDA_VERSION_MAJOR=`echo $CUDA_VERSION | cut -d. -f1`
+   else
+      echo "Unable to determine CUDA version. Attempting to use default container image.";
+      CUDA_VERSION_MAJOR=""
+   fi
+
+   export ANNOTAT3D_PORT=$(printf "%d" `$BASEDIR/request_port.py --port_range $ANNOTAT3D_PORT_RANGE0 $ANNOTAT3D_PORT_RANGE1 | grep REQUESTED_PORT | sed 's/REQUESTED_PORT //g'`)
+
+
+   if [ $(hostname) == "ada" ]; then
+       echo "--- NOTE: Adding /usr/local/lib64 to fix issue with path on Ada (i.e., hack)" 
+       export LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH
+   fi
+
+   echo "Environment variable setting selected for running Annotat3D Web"
+   echo ""
+
+   echo "ANNOTAT3D_PATH :" $ANNOTAT3D_PATH
+   echo ""
+
+   # echo "ANNOTAT3D_VOLUME_XSIZE:" $ANNOTAT3D_VOLUME_XSIZE
+   # echo "ANNOTAT3D_VOLUME_YSIZE:" $ANNOTAT3D_VOLUME_YSIZE
+   # echo "ANNOTAT3D_VOLUME_ZSIZE:" $ANNOTAT3D_VOLUME_ZSIZE
+   # echo "ANNOTAT3D_VOLUME_FORMAT:" $ANNOTAT3D_VOLUME_FORMAT
+   # echo ""
+
+   # echo "ANNOTAT3D_VOLUME_XMAX:" $ANNOTAT3D_VOLUME_XMAX
+   # echo "ANNOTAT3D_VOLUME_YMAX:" $ANNOTAT3D_VOLUME_YMAX
+   # echo "ANNOTAT3D_VOLUME_ZMAX:" $ANNOTAT3D_VOLUME_ZMAX
+   # echo ""
+
+   # echo "ANNOTAT3D_VOLUME_XTRANS:" $ANNOTAT3D_VOLUME_XTRANS
+   # echo "ANNOTAT3D_VOLUME_YTRANS:" $ANNOTAT3D_VOLUME_YTRANS
+   # echo "ANNOTAT3D_VOLUME_ZTRANS:" $ANNOTAT3D_VOLUME_ZTRANS
+   # echo ""
+
+   echo "CUDA_VISIBLE_DEVICES:" $CUDA_VISIBLE_DEVICES
+   echo ""
+
+   echo "ANNOTAT3D_PORT:" $ANNOTAT3D_PORT
+   echo "ANNOTAT3D_HTTP_PORT:" $ANNOTAT3D_HTTP_PORT
+   echo "ANNOTAT3D_ADMIN_HTTP_PORT:" $ANNOTAT3D_ADMIN_HTTP_PORT
+   echo "ANNOTAT3D_STREAMING_PORT:" $ANNOTAT3D_STREAMING_PORT
+   echo "ANNOTAT3D_RTMP_VIDEO_STREAMING_PORT:" $ANNOTAT3D_RTMP_VIDEO_STREAMING_PORT
+   echo "ANNOTAT3D_ADVANCED_STATS_PORT:" $ANNOTAT3D_ADVANCED_STATS_PORT
+   echo ""
+
+   echo "ANNOTAT3D_LNLS_EXTENSION_NOTIF_HOST:" $ANNOTAT3D_LNLS_EXTENSION_NOTIF_HOST
+   echo "ANNOTAT3D_LNLS_EXTENSION_RENDERING_NOTIF_PORT:" $ANNOTAT3D_LNLS_EXTENSION_RENDERING_NOTIF_PORT
+   echo "ANNOTAT3D_LNLS_EXTENSION_SHUTDOWN_NOTIF_PORT:" $ANNOTAT3D_LNLS_EXTENSION_SHUTDOWN_NOTIF_PORT
+   echo ""
+
+   echo "Running $IMAGE as user: $(whoami) -- $(id -u)"
+   echo "Running $IMAGE from folder: $(pwd)"
+   echo ""
+
+   export PYTHONIOENCODING=UTF-8
+
+   singularity run --nv --app Annotat3D -B /ibira,/tmp,/dev/shm $BASEDIR/$IMAGE -b "${ANNOTAT3D_LNLS_EXTENSION_NOTIF_HOST}.lnls.br:${ANNOTAT3D_PORT}" &
+
+   FS_TREEVIEW_SERVER_PID=$!
+   echo "FS TreeView Server PID $FS_TREEVIEW_SERVER_PID"
+
+   echo ""
+   echo "Access Annotat3D-web instance in http://${ANNOTAT3D_LNLS_EXTENSION_NOTIF_HOST}.lnls.br:${ANNOTAT3D_PORT}"
+
+   wait_signal
+}
+
+run_annotat3d_web
