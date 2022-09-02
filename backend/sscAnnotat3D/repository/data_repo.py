@@ -26,7 +26,9 @@ dict that contains information about the path to the deep_model folder
 """
 __deep_model_info = {
     'workspace_path': str(),
-    'available_gpus': {}
+    'available_gpus': {},
+    'network_controller': None,
+    'instance_ref': None
 }
 
 """
