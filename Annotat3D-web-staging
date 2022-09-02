@@ -1,0 +1,37 @@
+#!/usr/bin/env /bin/bash
+
+CMD=""
+if [ $(command -v nvcc) ]; then
+    CMD=nvcc
+elif [ -x /usr/local/cuda/bin/nvcc ]; then
+    CMD=/usr/local/cuda/bin/nvcc
+fi
+
+if [[ $CMD != "" ]]; then
+   CUDA_VERSION=`$CMD --version | grep "release" | awk '{print $6}' | cut -c2-`
+   CUDA_VERSION_MAJOR=`echo $CUDA_VERSION | cut -d. -f1`
+else
+   echo "Unable to determine CUDA version. Attempting to use default container image.";
+   CUDA_VERSION_MAJOR=""
+fi
+
+if [ -x /ddn/GCC/apps ]; then
+    BASEDIR=/ddn/GCC/apps;
+elif [ -x /ddn-nfs/GCC/apps ]; then
+    BASEDIR=/ddn-nfs/GCC/apps;
+else
+    echo "Error: Executable file not found to run Annotat3D! Please contact admin.";
+    exit -1;
+fi
+
+if [[ $CUDA_VERSION_MAJOR == "9" ]]; then
+    IMAGE="Annotat3D-cuda92-dev.sif"
+else
+    IMAGE="Annotat3D-dev.sif"
+fi
+
+echo $IMAGE
+
+export PYTHONIOENCODING=UTF-8
+
+singularity run -B /tmp:/tmp,/ddn,/var/run:/var/run --nv --app Annotat3D $BASEDIR/$IMAGE
