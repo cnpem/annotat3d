@@ -3,44 +3,27 @@ import {IonAccordion, IonIcon, IonItem, IonLabel, IonList, useIonToast} from "@i
 
 const peopleList: Person[] = [
     {
-        name: 'Thiago Spina',
-        linkedin: 'https://www.linkedin.com/in/thiago-vallin-spina-935563100',
-        lattes: 'http://lattes.cnpq.br/1977864892800649'
-    },
-    {
-        name: "Allan Pinto",
-        linkedin: "https://www.linkedin.com/in/allansp84/",
-        lattes: "https://allansp84.github.io/",
-        github: "https://github.com/allansp84"
-    },
-    {
         name: 'Alan Peixinho',
         linkedin: 'https://www.linkedin.com/in/alan-zanoni-peixinho-2816ab23',
         github: 'https://github.com/alanpeixinho'
     },
     {
-        name: 'Matheus BernardiNi',
-        linkedin: 'https://www.linkedin.com/in/matheus-bernardi',
+        name: 'Allan Pinto',
+        linkedin: "https://www.linkedin.com/in/allansp84/",
+        lattes: "https://allansp84.github.io/",
+        github: "https://github.com/allansp84"
+    },
+    {
+        name: 'Bruno Carlos',
+        lattes: "https://www.linkedin.com/in/bruno-vasco-de-paula-carlos-711345231/",
+        linkedin: "https://www.linkedin.com/in/bruno-vasco-711345231/",
+        github: "https://github.com/brnovasco"
     },
     {
         name: 'Gabriel Borin',
         lattes: 'http://lattes.cnpq.br/2649693387467428',
         linkedin: 'https://www.linkedin.com/in/gabriel-borin-3b7b7a14b',
         github: "https://github.com/borin98"
-    },
-    {
-        name: "Bruno Carlos",
-        lattes: "https://www.linkedin.com/in/bruno-vasco-de-paula-carlos-711345231/",
-        linkedin: "https://www.linkedin.com/in/bruno-vasco-711345231/",
-        github: "https://github.com/brnovasco"
-    },
-    {
-        name: 'Victor Cesaroni',
-        linkedin: 'https://www.linkedin.com/in/victorcesaroni'
-    },
-    {
-        name: 'Paulo Mausbach',
-        linkedin: 'https://www.linkedin.com/in/paulo-baraldi-mausbach-094b9216a'
     },
     {
         name: 'Giovanna Antonieti',
@@ -55,13 +38,30 @@ const peopleList: Person[] = [
         linkedin: 'https://www.linkedin.com/in/jhessica'
     },
     {
-        name: 'Vitória Pinho',
-        lattes: 'http://lattes.cnpq.br/5243670807170633'
+        name: 'Matheus Bernardi',
+        linkedin: 'https://www.linkedin.com/in/matheus-bernardi',
     },
     {
         name: 'Matheus Sarmento',
         lattes: 'http://lattes.cnpq.br/1743191077849984'
-    }
+    },
+    {
+        name: 'Paulo Mausbach',
+        linkedin: 'https://www.linkedin.com/in/paulo-baraldi-mausbach-094b9216a'
+    },
+    {
+        name: 'Thiago Spina',
+        linkedin: 'https://www.linkedin.com/in/thiago-vallin-spina-935563100',
+        lattes: 'http://lattes.cnpq.br/1977864892800649'
+    },
+    {
+        name: 'Victor Cesaroni',
+        linkedin: 'https://www.linkedin.com/in/victorcesaroni'
+    },
+    {
+        name: 'Vitória Pinho',
+        lattes: 'http://lattes.cnpq.br/5243670807170633'
+    },
 ];
 
 interface Person {
