@@ -36,7 +36,7 @@ const Menu: React.FC = () => {
                 <IonToolbar>
                     <IonCard color="primary" style={ {padding: '1em', fontFamily: 'monospace'} }>
                         <IonCardTitle className={"ion-text-center"}><big>Annotat3D</big></IonCardTitle>
-                    <IonCardSubtitle className={"ion-text-center"}>web version 1.0.0</IonCardSubtitle>
+                    <IonCardSubtitle className={"ion-text-center"}>Web Version</IonCardSubtitle>
                         </IonCard>
                 </IonToolbar>
             </IonHeader>
