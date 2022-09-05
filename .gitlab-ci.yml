@@ -51,7 +51,7 @@ deploy:
         # --privileged is necessary to build singularity in docker (sind)
         - ls .
         - ./build_singularity.sh
-        - cp scripts/request_port.py "${GCC_APPS}"/
+        - cp scripts/* "${GCC_APPS}"/
         - cp Annotat3DWeb.sif "${GCC_APPS}"/Annotat3D-web-staging.sif
     tags:
         - x86_64
