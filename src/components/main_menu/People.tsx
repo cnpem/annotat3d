@@ -1,17 +1,6 @@
 import {book, logoGithub, logoLinkedin, people} from "ionicons/icons";
 import {IonAccordion, IonIcon, IonItem, IonLabel, IonList, useIonToast} from "@ionic/react";
 
-const goodbye_messages = [
-    "So long and thanks for all the fish",
-    "I miss you too <3",
-    "Just call me, we can talk",
-    "I can see you are really in need",
-    "If you keep pressing this button I will get worried",
-    "Just send me an email bro, alanpeixinho81@gmail.com",
-    "Keep pressing this and I swear I am filling a restriction order",
-    "Again, just call me (alanpeixinho81@gmail.com)"
-];
-
 const peopleList: Person[] = [
     {
         name: 'Thiago Spina',
@@ -93,13 +82,7 @@ const People : React.FC = () => {
     function renderPeople(person: Person) {
         return (
             <IonItem>
-                <IonLabel onClick={() => {
-                    if (person.name === 'Alan Peixinho') {
-                    present(goodbye_messages[0], 2000);
-                    if (goodbye_messages.length>1)
-                        goodbye_messages.shift();
-                    }
-                }}>{ person.name }</IonLabel>
+                <IonLabel>{ person.name }</IonLabel>
                 <a hidden={person.linkedin === undefined} href={person.linkedin}>
                     <IonIcon icon={logoLinkedin}/>
                 </a>
