@@ -100,7 +100,7 @@ const People : React.FC = () => {
         <IonAccordion>
             <IonItem slot={"header"}>
                 <IonIcon slot={"start"} icon={people}/>
-                <IonLabel> People </IonLabel>
+                <IonLabel> Acknowledgements </IonLabel>
             </IonItem>
             <IonList slot={"content"}>
                 { peopleList.map(renderPeople) }
