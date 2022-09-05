@@ -338,7 +338,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                 <IonCol>
                     <IonItem>
                         <IonLabel>
-                            Find Label
+                            Extend Label
                         </IonLabel>
                         <IonIcon icon={eyedrop} slot={"end"}/>
                         <IonCheckbox
