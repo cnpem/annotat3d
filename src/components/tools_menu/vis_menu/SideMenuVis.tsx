@@ -1,9 +1,21 @@
-import React, {useEffect, useRef} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import {IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonItem} from "@ionic/react";
 import {moon, sunny} from "ionicons/icons";
 import {dispatch, useEventBus} from "../../../utils/eventbus";
-import { useStorageState } from 'react-storage-hooks';
+import {useStorageState} from 'react-storage-hooks';
 import {isEqual} from "lodash";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Filler,
+    Legend,
+} from 'chart.js';
+import {Line} from "react-chartjs-2"
 
 //ignoring types for react-color, as it seems broken
 //TODO: investigate if this is fixed, otherwise declare the types manually
@@ -11,6 +23,17 @@ import {isEqual} from "lodash";
 import { AlphaPicker, SliderPicker } from 'react-color';
 import CropMenu from "./CropMenu";
 import { ImageShapeInterface } from "../utils/ImageShapeInterface";
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Filler,
+    Legend
+  );
 
 function rgbToHex(r: number, g: number, b: number) {
     const bin = (r << 16) | (g << 8) | b;
@@ -29,11 +52,40 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
         lower: 10,
         upper: 90
     });
-
+    
     useEventBus('LockComponents', (changeDisableVis) => {
         setLockVisCards(changeDisableVis);
     })
 
+    let baseHistogram = {
+        labels: [0],
+        datasets: [
+          {
+            fill: true,
+            data: [0],
+            borderColor: 'rgb(53, 162, 235)',
+            backgroundColor: 'rgba(53, 162, 235, 0.5)',
+          },
+        ],
+      }
+
+    const [histogramData, setHistogramData] = useStorageState(sessionStorage, 'histogramData', baseHistogram);
+
+    const histogramOptions = {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+      };
+
+    useEventBus('ImageHistogramLoaded', (histogram: number[]) => {
+        baseHistogram.datasets[0].data = histogram
+        baseHistogram.labels = Array.from(Array(histogram.length).keys())
+        setHistogramData(baseHistogram)
+    })
+      
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
     const [showSuperpixel, setShowSuperpixel] = useStorageState<boolean>(sessionStorage, 'showSuperpixel', true);
@@ -51,7 +103,7 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
     useEffect(() => {
         if (contrastRangeRef) {
             if (!isEqual(contrastRangeRef.current!.value, contrast)) {
-                // this is used to  reposition the slider markers to the last values set on contrast
+                // this is used to reposition the slider markers to the last values set on contrast
                 setTimeout(() => {
                     contrastRangeRef.current!.value = contrast;
                 }, 20);
@@ -87,6 +139,7 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
                         <IonIcon slot='start' icon={sunny}></IonIcon>
                         <IonIcon slot='end' icon={moon}></IonIcon>
                     </IonRange>
+                    <Line options={histogramOptions} data={histogramData}/>
                 </IonCardContent>
             </IonCard>
             <IonCard disabled={lockVisCards}>
