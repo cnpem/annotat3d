@@ -214,6 +214,35 @@ def close_all_files_dataset(file_id: str):
     else:
         return handle_exception("{} is an invalid key".format(file_id))
 
+@app.route("/get_image_histogram/", methods=["POST"])
+@cross_origin()
+def get_image_histogram():
+    """
+    Function used to calculate and return current image histogram
+
+    Notes:
+        This API request requires that an image was already loaded, otherwise an exception will be launched
+
+    Args:
+        None
+
+    Returns:
+        (list): List containing the calculated image histogram for the previously loaded image
+
+    """
+    print('################DEBUG HERE###############')
+    #TODO: FIX PROBLEM THAT CRASHES ANNOTAT3D WHEN INCORRECT IMAGE PATH IS PASSES FOR LOADING
+    # THIS IS RELATED TO DIRECTLY ACESSING DTYPE FROM GET_IMAGE, I SHOULD CHECK THAT IT IS NONE, AND IN CASE IT IS THROW AN EXCEPTION
+
+    bins = np.iinfo(data_repo.get_image().dtype).max
+    histogram = np.histogram(data_repo.get_image(), bins=bins)[0].tolist()
+    print(histogram)
+    #TODO: erxtract time that histogram calculation takes 
+    #TODO: Save histogram into data_repo (???)
+    #TODO: Should i save histogram as np array or list?
+    #TODO: When pressing F5, histogram vanishes but images continues there. 
+    return jsonify(histogram)
+
 
 @app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()
