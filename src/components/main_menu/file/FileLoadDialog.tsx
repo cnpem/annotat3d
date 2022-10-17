@@ -128,6 +128,12 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 setErrorMsg(error.error_msg);
             });
 
+        await sfetch("POST", "/get_image_histogram/", JSON.stringify(params), "json")
+            .then((histogram) => { //TODO: Set histogram type here for better code understandment
+                console.table(histogram)
+                dispatch("ImageHistogramLoaded", histogram)
+            });
+
         const returnedObj: QueueToast = {message: msgReturned, isError: isError};
         return returnedObj;
 
