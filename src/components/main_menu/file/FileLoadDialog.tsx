@@ -29,6 +29,7 @@ import {sfetch} from "../../../utils/simplerequest";
 import {dispatch} from "../../../utils/eventbus";
 import ErrorWindowComp from "./utils/ErrorWindowComp";
 import {ImageInfoInterface, ImageInfoPayload} from "./utils/ImageInfoInterface";
+import {HistogramInfoPayload} from "./utils/HistogramInfoInterface";
 import ErrorInterface from "./utils/ErrorInterface";
 import {LabelInterface} from "../../tools_menu/annotation_menu/label_table/LabelInterface";
 import LoadingComponent from "../../tools_menu/utils/LoadingComponent";
@@ -127,11 +128,15 @@ const FileLoadDialog: React.FC<{ name: string }> = ({name}) => {
                 setHeaderErrorMsg(`error while loading the ${loadImgOp}`);
                 setErrorMsg(error.error_msg);
             });
-
-        await sfetch("POST", "/get_image_histogram/", JSON.stringify(params), "json")
-            .then((histogram) => { //TODO: Set histogram type here for better code understandment
-                console.table(histogram)
+        
+        //[TODO]: Treat exception
+        //[TODO]: DO THIS SFETCH ONLY WHEN IMAGE TYPE ISNT LABEL OR SUPERPIXEL
+        await sfetch("POST", "/get_image_histogram/", "", "json")
+            .then((histogram: HistogramInfoPayload) => {
                 dispatch("ImageHistogramLoaded", histogram)
+            })
+            .catch((error) => {
+                console.log(error)
             });
 
         const returnedObj: QueueToast = {message: msgReturned, isError: isError};

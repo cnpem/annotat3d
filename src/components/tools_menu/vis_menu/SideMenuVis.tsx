@@ -23,6 +23,7 @@ import {Line} from "react-chartjs-2"
 import { AlphaPicker, SliderPicker } from 'react-color';
 import CropMenu from "./CropMenu";
 import { ImageShapeInterface } from "../utils/ImageShapeInterface";
+import { HistogramInfoPayload } from "../../main_menu/file/utils/HistogramInfoInterface";
 
 ChartJS.register(
     CategoryScale,
@@ -61,15 +62,13 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
         labels: [0],
         datasets: [
           {
-            fill: true,
+            fill: false,
             data: [0],
             borderColor: 'rgb(53, 162, 235)',
             backgroundColor: 'rgba(53, 162, 235, 0.5)',
           },
         ],
       }
-
-    const [histogramData, setHistogramData] = useStorageState(sessionStorage, 'histogramData', baseHistogram);
 
     const histogramOptions = {
         responsive: true,
@@ -80,10 +79,31 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
         },
       };
 
-    useEventBus('ImageHistogramLoaded', (histogram: number[]) => {
-        baseHistogram.datasets[0].data = histogram
-        baseHistogram.labels = Array.from(Array(histogram.length).keys())
+    const [histogramData, setHistogramData] = useStorageState(sessionStorage, 'histogramData', baseHistogram);
+    const [contrastRangeRefMaxValue, setContrastRangeRefMaxValue] = useStorageState(sessionStorage, 'contrastRangeRefMaxValue', 100)
+    const [contrastRangeRefMinValue, setContrastRangeRefMinValue] = useStorageState(sessionStorage, 'contrastRangeRefMinValue', 0)
+
+    function updateContrastRangeLimitValues(){
+        contrastRangeRef.current!.max = contrastRangeRefMaxValue
+        contrastRangeRef.current!.min = contrastRangeRefMinValue
+    }
+
+    useEventBus('ImageHistogramLoaded', (loadedHistogram: HistogramInfoPayload) => {
+
+        // Update histogram data and labels
+        baseHistogram.datasets[0].data = loadedHistogram.data
+        baseHistogram.labels = Array.from(Array(baseHistogram.datasets[0].data.length).keys())
+
+        // Plot histogram 
         setHistogramData(baseHistogram)
+
+        // Store histogram max and min values 
+        setContrastRangeRefMaxValue(loadedHistogram.maxValue)
+        setContrastRangeRefMinValue(loadedHistogram.minValue)
+
+        // Update range component
+        updateContrastRangeLimitValues()
+        
     })
       
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
@@ -97,17 +117,21 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
     const [annotationAlpha, setAnnotationAlpha] = useStorageState<number>(sessionStorage, 'annotationAlpha', 0.75);
 
     const contrastRangeRef = useRef<HTMLIonRangeElement | null>(null);
-
+    
     //for some weird reason, IonRange is ignoring value when using the value property,
     //so I am manually setting it.
     useEffect(() => {
         if (contrastRangeRef) {
+
+            updateContrastRangeLimitValues()
+    
             if (!isEqual(contrastRangeRef.current!.value, contrast)) {
                 // this is used to reposition the slider markers to the last values set on contrast
                 setTimeout(() => {
                     contrastRangeRef.current!.value = contrast;
                 }, 20);
             }
+            
         }
         //now I am just dispatch all events on mount
         //(however, I should change canvas container to store this state properly)
