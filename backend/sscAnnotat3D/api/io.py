@@ -231,17 +231,31 @@ def get_image_histogram():
 
     """
     print('################DEBUG HERE###############')
-    #TODO: FIX PROBLEM THAT CRASHES ANNOTAT3D WHEN INCORRECT IMAGE PATH IS PASSES FOR LOADING
+    #[TODO]: FIX PROBLEM THAT CRASHES ANNOTAT3D WHEN INCORRECT IMAGE PATH IS PASSES FOR LOADING
     # THIS IS RELATED TO DIRECTLY ACESSING DTYPE FROM GET_IMAGE, I SHOULD CHECK THAT IT IS NONE, AND IN CASE IT IS THROW AN EXCEPTION
 
-    bins = np.iinfo(data_repo.get_image().dtype).max
+    #start = time.process_time()
+    #bins = np.iinfo(data_repo.get_image().dtype).max
+    #end = time.process_time()
+    #print(f"np.iinfo(...).max operation time: {end-start}")
+    bins = 1000 #[TODO]: BINS AND RANGE TICKS MUST BE SOMEHOW CORELATED!!!
+    start = time.process_time()
     histogram = np.histogram(data_repo.get_image(), bins=bins)[0].tolist()
-    print(histogram)
-    #TODO: erxtract time that histogram calculation takes 
-    #TODO: Save histogram into data_repo (???)
-    #TODO: Should i save histogram as np array or list?
-    #TODO: When pressing F5, histogram vanishes but images continues there. 
-    return jsonify(histogram)
+    end = time.process_time()
+    print(f"np.histogram(...).tolist() operation time: {end-start}")
+    #[TODO]: erxtract time that histogram calculation takes 
+    #[TODO]: Save histogram into data_repo (???) --> just needed if backend need to store its state, what doesnt seem to be needed
+    #[TODO]: Should i save histogram as np array or list?
+    #[TODO]: When pressing F5, histogram vanishes but images continues there. IMG IS VANISHING NOW!?
+    #[TODO]: Guarantee that backend do not change image dtype
+
+    # Mount response following HistogramInfoInterface.ts pattern
+    histogram_info = {}
+    histogram_info["data"] = histogram
+    histogram_info["maxValue"] = len(histogram) -1
+    histogram_info["minValue"] = 0
+
+    return jsonify(histogram_info)
 
 
 @app.route("/open_image/<image_id>", methods=["POST"])
