@@ -19,7 +19,7 @@ __annotations = dict()
 """
 dict that contains info about images and annotation to use in crop function
 """
-__info = dict()
+__crop_info = dict()
 
 """
 dict that contains information about the path to the deep_model folder
@@ -55,6 +55,11 @@ __inference_data = dict()
 dict that contain info about the saved data in batch_inference menu
 """
 __inference_info = dict()
+
+"""
+repository for temporary info used on the functions related to the network_comp of the deep_learning_menu 
+"""
+__deep_network_info = dict()
 
 """
 list of log messages implemented as a FIFO queue
@@ -261,7 +266,7 @@ def set_info(key='image_info', data: dict = None):
 
     """
     if data is not None:
-        __info[key] = data
+        __crop_info[key] = data
 
 
 def get_info(key='image_info'):
@@ -275,7 +280,7 @@ def get_info(key='image_info'):
         (dict): Returns a dict that contains information of image, superpixel or annotation.
 
     """
-    return __info.get(key)
+    return __crop_info.get(key)
 
 
 def delete_info(key):
@@ -289,7 +294,7 @@ def delete_info(key):
         None
 
     """
-    del __info[key]
+    del __crop_info[key]
 
 
 def set_dataset_data(key='data-0', data: np.ndarray = None):
@@ -608,3 +613,33 @@ def dequeue_log_message():
         return __log_messages.popleft()
     else:
         return
+
+
+def set_deep_network_info(key: str, data: any = None):
+    """
+    Sets info to __deep_network_info dict 
+
+    Args:
+        key(str): string 
+        data(any): a dict that contain the directory path about the directory of the deep learning workspace
+
+    Returns:
+        None
+
+    """
+    if data is not None and key in __deep_network_info.keys():
+        __deep_network_info[key] = data
+
+
+def get_deep_network_info(key: str):
+    """
+    Gets info to __deep_network_info dict 
+
+    Args:
+        key(str)
+
+    Returns:
+        data(any)
+
+    """
+    return __deep_network_info[key]
