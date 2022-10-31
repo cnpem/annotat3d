@@ -627,7 +627,7 @@ def set_deep_network_info(key: str, data: any = None):
         None
 
     """
-    if data is not None and key in __deep_network_info.keys():
+    if data is not None:
         __deep_network_info[key] = data
 
 

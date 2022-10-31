@@ -616,3 +616,269 @@ def run_inference():
     return jsonify("successes")
 
 
+"""
+    Network module functions
+"""
+
+# todo : return type
+def _set_network_controller():
+    """
+    Access workspace on data repo, set up network controller and reads available nets
+    find workspace > creates a network controller, reads available networks and its custom parametes
+    
+    return available networks
+    """
+    try:
+        workspace_path = data_repo.get_deep_model_info(key='workspace_path')
+    except Exception as e:
+        return handle_exception('Workspace path not found. {}'.format(str(e)))
+    
+    try:
+        network_controller = HostNetworkController(workspace=workspace_path, streaming_mode=True)
+    except Exception as e:
+        return handle_exception('Unable to load Network Controller from this workspace. {}'.format(str(e)))
+    
+    get_available_gpus() # stores gpu info on data_repo
+
+    data_repo.set_deep_model_info(key='network_controller', data=network_controller)
+    
+    return 'success'
+
+def _get_network_controller():
+    return data_repo.get_deep_model_info(key='network_controller')
+
+@app.route("/deep/network/get_available_networks", methods=["POST"])
+@cross_origin()
+def get_available_networks():
+    """
+    Access workspace on data repo, set up network controller and reads available nets
+    find workspace > creates a network controller, reads available networks and its custom parametes
+    
+    return available networks
+    """
+    network_controller = _get_network_controller()
+    
+    if not network_controller:
+        return handle_exception('Unable toload Network Controller. Make sure workspace is loaded.')
+    
+    return jsonify(network_controller.network_models)
+
+@app.route("/deep/network/get_network_params", methods=["POST"])
+@cross_origin()
+def get_network_params(network_name):
+    # {k: self._custom_params_ui[k].currentText() for k in self._custom_params_ui}
+    # params = self._network_controller.network_list_params(network)
+    
+    network_controller = _get_network_controller()
+    
+    if not network_controller:
+        return handle_exception('Unable toload Network Controller. Make sure workspace is loaded.')
+    
+    return jsonify(network_controller.network_list_params(network_name))
+
+@app.route("/deep/network/import_network", methods=["POST"])
+@cross_origin()
+def import_network():
+    import_network_path = request.json['import_network_path']
+    import_network_name = request.json['import_network_name']
+
+    network_controller = _get_network_controller()
+    
+    if not network_controller:
+        return handle_exception('Unable toload Network Controller. Make sure workspace is loaded.')
+
+    try:
+        network_controller.import_model(import_network_path, import_network_name)
+    except Exception as e:
+        return handle_exception('Unable to import network. {}'.format(str(e)))
+
+    return get_network_params(import_network_name) # make this call on sfetch().then 
+
+
+@app.route("/deep/network/import_dataset", methods=["POST"])
+@cross_origin()
+def import_dataset():
+    dataset_fpath = request.json['import_dataset_path']
+
+    thisdataset = dataset.load_dataset(dataset_fpath)
+    
+    logging.debug('RUN THREAD ... ')
+    logging.debug('{}'.format(thisdataset))
+
+    if dataset is None:
+        return "Fail. Dataset not found"
+
+    data = thisdataset['data']
+    logging.debug('Compute dataset info')
+
+    stats = dataset.get_stats(thisdataset)
+    
+    # legacy format:
+    # data_info = (data.shape[0], data.shape[1], data.shape[2:], stats['data_mean'], stats['data_std'],
+    #                    stats['data_min'], stats['data_max'], _dataset['num_classes'], stats['nlabels'],
+    #                    stats['label_count'], stats['weight_mean'], stats['weight_std'], stats['weight_min'],
+    #                    stats['weight_max']) #legacy qt code
+    
+    data_info_dict = {
+        '#_images'   : data.shape[0] ,
+        '#_samples'  : data.shape[1] ,
+        'Dimensions' : data.shape[2:],
+        'data_mean': stats['data_mean'],
+        'data_std' : stats['data_std'],
+        'data_min' : stats['data_min'],
+        'data_max' : stats['data_max'],
+        '#_classes': thisdataset['num_classes'], 
+        '#_labels' : stats['nlabels'],
+        'hist' : stats['label_count'], 
+        'weight_mean' : stats['weight_mean'], 
+        'weight_std' : stats['weight_std'], 
+        'weight_min' : stats['weight_min'],
+        'weight_max' : stats['weight_max']
+    }
+    
+    data_repo.set_deep_network_info('data_info_dict', data_info_dict)
+    data_repo.set_deep_network_info('dataset_fpath', dataset_fpath)
+    
+    logging.debug('Done ...')
+    return jsonify(data_info_dict)
+
+def _set_cache_path(cache_path):
+
+    network_controller = _get_network_controller()
+    
+    if not network_controller:
+        return handle_exception('Unable toload Network Controller. Make sure workspace is loaded.')
+    
+    network_controller.set_cache_base_dir(cache_path)
+    
+    return
+
+
+def _set_instance(network_instance_name):
+    """
+    Sets new instance of a network, with information to be tracked on the repository and be accessible by the frontend
+    
+    instance is an struct like object used in the sscDeepsirius module, with attributes network, train, infer, freeze and finetune
+    """
+    network_controller = _get_network_controller()
+    instance_container = network_controller.deploy_network_instance(network_instance_name)
+    
+    data_repo.set_deep_network_info(key='instance_container', data=instance_container)
+    return None
+
+@app.route("/deep/network/set_tensorboard_server/<selected_network_name>", methods=["POST"])
+@cross_origin()
+def set_tensorboard_server(selected_network_name):
+    network_controller = _get_network_controller()
+    tensorboard_server_url = network_controller.start_tensorboard(selected_network_name)
+    logging.debug('Tensorboard: {}'.format(self._tensorboard_server))
+    logging.debug('Tensorboard URL: {}'.format(tensorboard_server_url))
+    return tensorboard_server_url
+
+@app.route("/deep/network/go_training/", methods=["POST"])
+@cross_origin()
+def go_training():
+    """
+        From request start training the network. 
+    Request.json params: 
+        network_name_selected (str) : 
+        custom_params_selected (dict) :
+        training_params (dict) : 
+    """
+    # self._sentry_transaction = sentry_sdk.start_transaction(name='Training', op='deeplearning')
+    # self._sentry_transaction.__enter__() # why is it an object and do we tell it when to stop?
+    
+    network_name_selected = request.json['network_name_selected']
+    custom_params_selected = request.json['custom_params_selected']
+    training_params = request.json['training_params']
+    
+    
+    network_controller = _get_network_controller()
+    
+    dataset_fpath = data_repo.get_deep_network_info('dataset_fpath')
+    active_gpus = data_repo.get_inference_gpus()
+    instance_container = data_repo.get_deep_network_info('instance_container')
+
+    new_instance_container, log = network_controller.train(instance_container,
+                                                       dataset_fpath,
+                                                       num_gpus=len(active_gpus),
+                                                       cuda_devices=','.join(map(str, active_gpus)),
+                                                       batch_size=training_params['batch_size'],
+                                                       max_iter=training_params['max_iter'],
+                                                       lr=training_params['lr'],
+                                                       loss_type=training_params['loss_type'],
+                                                       optimiser=training_params['optimiser'],
+                                                       **custom_params_selected)
+    
+    _set_instance(network_name_selected)
+    logging.debug('Done training instance: {}'.format(network_name_selected))
+    return
+
+@app.route("/deep/network/go_finetuning/", methods=["POST"])
+@cross_origin()
+def go_finetuning():
+    """
+        From request start training the network. 
+    Request.json params: 
+        network_name_selected (str) : 
+        custom_params_selected (dict) :
+        training_params (dict) : 
+    """
+    # self._sentry_transaction = sentry_sdk.start_transaction(name='Training', op='deeplearning')
+    # self._sentry_transaction.__enter__() # why is it an object and do we tell it when to stop?
+    
+    network_name_selected = request.json['network_name_selected']
+    custom_params_selected = request.json['custom_params_selected']
+    training_params = request.json['training_params']
+    
+    
+    network_controller = _get_network_controller()
+    
+    dataset_fpath = data_repo.get_deep_network_info('dataset_fpath')
+    active_gpus = data_repo.get_inference_gpus()
+    instance_container = data_repo.get_deep_network_info('instance_container')
+
+    new_instance_container, log = network_controller.finetune(instance_container,
+                                                       dataset_fpath,
+                                                       num_gpus=len(active_gpus),
+                                                       cuda_devices=','.join(map(str, active_gpus)),
+                                                       batch_size=training_params['batch_size'],
+                                                       max_iter=training_params['max_iter'],
+                                                       lr=training_params['lr'],
+                                                       loss_type=training_params['loss_type'],
+                                                       optimiser=training_params['optimiser'],
+                                                       **custom_params_selected)
+    
+    _set_instance(network_name_selected)
+    logging.debug('Done training instance: {}'.format(network_name_selected))
+    return
+
+def destroy_instance(instance_name):
+    network_controller = _get_network_controller()
+    network_controller.destroy_network_instance(instance_name)
+    return
+
+@app.route("/deep/network/export_network", methods=["POST"])
+@cross_origin()
+def export_network():
+    """
+        path should have extension '.model.tar.gz'
+    """
+    network_name = request.json['export_network_name']
+    export_network_path = request.json['export_network_path'] # with new name
+    
+    network_controller = _get_network_controller()
+    
+    if not network_controller:
+        return handle_exception('Unable toload Network Controller. Make sure workspace is loaded.')
+    
+    if network_name not in network_controller.network_models:
+        return handle_exception('Network name not in network models list. {}'.format(str(e)))
+    
+    # exporting model
+    try:
+        network_controller.export_model(network_name, export_network_path)
+    except Exception as e:
+        return handle_exception('Unable to export network. {} {}'.format(str(e), export_network_path))
+    
+    return
