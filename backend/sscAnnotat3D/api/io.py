@@ -214,9 +214,9 @@ def close_all_files_dataset(file_id: str):
     else:
         return handle_exception("{} is an invalid key".format(file_id))
 
-@app.route("/get_image_histogram/", methods=["POST"])
+@app.route("/get_image_histogram/<image_dtype>", methods=["POST"])
 @cross_origin()
-def get_image_histogram():
+def get_image_histogram(image_dtype: str):
     """
     Function used to calculate and return current image histogram
 
@@ -230,33 +230,36 @@ def get_image_histogram():
         (list): List containing the calculated image histogram for the previously loaded image
 
     """
-    print('################DEBUG HERE###############')
-    #[TODO]: FIX PROBLEM THAT CRASHES ANNOTAT3D WHEN INCORRECT IMAGE PATH IS PASSES FOR LOADING
-    # THIS IS RELATED TO DIRECTLY ACESSING DTYPE FROM GET_IMAGE, I SHOULD CHECK THAT IT IS NONE, AND IN CASE IT IS THROW AN EXCEPTION
 
-    #start = time.process_time()
-    #bins = np.iinfo(data_repo.get_image().dtype).max
-    #end = time.process_time()
-    #print(f"np.iinfo(...).max operation time: {end-start}")
-    bins = 1000 #[TODO]: BINS AND RANGE TICKS MUST BE SOMEHOW CORELATED!!!
+    bins = np.iinfo(np.uint8).max
+    # FYK: Currently, front-end canvas only works with uint8 images. Due to that, no matter which image
+    # dtype was opened, the histogram returned must be considering that it is a uint8 to guarantee a
+    # correct bind between contrast control range and histogram plot. In future, if front-end canvas
+    # extend support for other dtypes, more logic need to be added here to deal with different dtypes.
+    # The choise for adding image_dtype parameter in this request is for the sake of already preparing
+    # it for possible future extension.
+
     start = time.process_time()
-    histogram = np.histogram(data_repo.get_image(), bins=bins)[0].tolist()
+    try:
+        histogram = np.histogram(data_repo.get_image(), bins=bins)[0].tolist()
+    except KeyError:
+        return handle_exception("An error occured when trying to get image data to calculate histogram")
+    except:
+        return handle_exception("An error occured during histogram calculation")
     end = time.process_time()
-    print(f"np.histogram(...).tolist() operation time: {end-start}")
-    #[TODO]: erxtract time that histogram calculation takes 
-    #[TODO]: Save histogram into data_repo (???) --> just needed if backend need to store its state, what doesnt seem to be needed
-    #[TODO]: Should i save histogram as np array or list?
-    #[TODO]: When pressing F5, histogram vanishes but images continues there. IMG IS VANISHING NOW!?
-    #[TODO]: Guarantee that backend do not change image dtype
+    print(f"Elapsed time during histogram calculation: {end-start} seconds")
 
-    # Mount response following HistogramInfoInterface.ts pattern
+    #[TODO]: f5 REFRESHES SLICE PRESENTATION BUT NOT RANGE VALUES , SO AFTER IT WHAT IS BEING VIEWED IS NOT BINDED TO THE RANGE.
+    # MOVING THE RANGE ONCE SEEMS TO CORRECT, BUT IT WOUKLD BE GOOD IF CANVAS KEPT SLICE WITH CONTRAST OR RANGE POSITION GO
+    # BACK TO DEFAULT VALUE
+
+    # Mount response following HistogramInfoInterface.ts definition
     histogram_info = {}
     histogram_info["data"] = histogram
     histogram_info["maxValue"] = len(histogram) -1
     histogram_info["minValue"] = 0
 
     return jsonify(histogram_info)
-
 
 @app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()
