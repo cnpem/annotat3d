@@ -57,7 +57,7 @@ deploy:
     tags:
         - x86_64
         - cuda11
-        -docker
+        - docker
     only:
         - tags
     dependencies:
