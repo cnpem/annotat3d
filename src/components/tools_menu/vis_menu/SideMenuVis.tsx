@@ -19,7 +19,7 @@ import {Line} from "react-chartjs-2"
 
 //ignoring types for react-color, as it seems broken
 //TODO: investigate if this is fixed, otherwise declare the types manually
-// @ts-ignore
+// @ts-ignoreTooltip
 import { AlphaPicker, SliderPicker } from 'react-color';
 import CropMenu from "./CropMenu";
 import { ImageShapeInterface } from "../utils/ImageShapeInterface";
@@ -53,7 +53,7 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
         lower: 10,
         upper: 90
     });
-    
+
     useEventBus('LockComponents', (changeDisableVis) => {
         setLockVisCards(changeDisableVis);
     })
@@ -62,22 +62,25 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
         labels: [0],
         datasets: [
           {
-            fill: false,
             data: [0],
             borderColor: 'rgb(53, 162, 235)',
             backgroundColor: 'rgba(53, 162, 235, 0.5)',
+            normalized: true
           },
         ],
-      }
+    }
 
     const histogramOptions = {
         responsive: true,
         plugins: {
-          legend: {
-            display: false
-          }
+            legend: {
+                display: false
+            },
+            tooltip:{
+                enabled: false
+            }
         },
-      };
+    };
 
     const [histogramData, setHistogramData] = useStorageState(sessionStorage, 'histogramData', baseHistogram);
     const [contrastRangeRefMaxValue, setContrastRangeRefMaxValue] = useStorageState(sessionStorage, 'contrastRangeRefMaxValue', 100)
@@ -94,18 +97,18 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
         baseHistogram.datasets[0].data = loadedHistogram.data
         baseHistogram.labels = Array.from(Array(baseHistogram.datasets[0].data.length).keys())
 
-        // Plot histogram 
+        // Plot histogram
         setHistogramData(baseHistogram)
 
-        // Store histogram max and min values 
+        // Store histogram max and min values
         setContrastRangeRefMaxValue(loadedHistogram.maxValue)
         setContrastRangeRefMinValue(loadedHistogram.minValue)
 
         // Update range component
         updateContrastRangeLimitValues()
-        
+
     })
-      
+
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
     const [showSuperpixel, setShowSuperpixel] = useStorageState<boolean>(sessionStorage, 'showSuperpixel', true);
@@ -117,21 +120,21 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
     const [annotationAlpha, setAnnotationAlpha] = useStorageState<number>(sessionStorage, 'annotationAlpha', 0.75);
 
     const contrastRangeRef = useRef<HTMLIonRangeElement | null>(null);
-    
+
     //for some weird reason, IonRange is ignoring value when using the value property,
     //so I am manually setting it.
     useEffect(() => {
         if (contrastRangeRef) {
 
             updateContrastRangeLimitValues()
-    
+
             if (!isEqual(contrastRangeRef.current!.value, contrast)) {
                 // this is used to reposition the slider markers to the last values set on contrast
                 setTimeout(() => {
                     contrastRangeRef.current!.value = contrast;
                 }, 20);
             }
-            
+
         }
         //now I am just dispatch all events on mount
         //(however, I should change canvas container to store this state properly)
@@ -150,9 +153,9 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
         <React.Fragment>
             <IonCard disabled={lockVisCards}>
                 <IonCardContent>
-                    <IonRange ref={contrastRangeRef} pin={true} debounce={300}
-                        dualKnobs={true} 
-                        onIonChange={ (e:CustomEvent) => {
+                    <IonRange ref={contrastRangeRef} pin={true}
+                        dualKnobs={true}
+                        onIonKnobMoveEnd={ (e:CustomEvent) => {
                             if (e.detail.value) {
                                 const range = e.detail.value as any;
                                 setContrast(range);
