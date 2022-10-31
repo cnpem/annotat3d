@@ -31,6 +31,7 @@ build:
     tags:
         - x86_64
         - cuda11
+        - docker
     artifacts:
       paths:
           - backend/dist/*whl
@@ -56,6 +57,7 @@ deploy:
     tags:
         - x86_64
         - cuda11
+        -docker
     only:
         - tags
     dependencies:
