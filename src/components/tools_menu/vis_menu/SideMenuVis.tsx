@@ -133,6 +133,8 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
                 setTimeout(() => {
                     contrastRangeRef.current!.value = contrast;
                 }, 20);
+
+                dispatch('contrastChanged', [contrast.lower/100, contrast.upper/100]);
             }
 
         }

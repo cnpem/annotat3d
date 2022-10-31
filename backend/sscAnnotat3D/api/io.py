@@ -249,10 +249,6 @@ def get_image_histogram(image_dtype: str):
     end = time.process_time()
     print(f"Elapsed time during histogram calculation: {end-start} seconds")
 
-    #[TODO]: f5 REFRESHES SLICE PRESENTATION BUT NOT RANGE VALUES , SO AFTER IT WHAT IS BEING VIEWED IS NOT BINDED TO THE RANGE.
-    # MOVING THE RANGE ONCE SEEMS TO CORRECT, BUT IT WOUKLD BE GOOD IF CANVAS KEPT SLICE WITH CONTRAST OR RANGE POSITION GO
-    # BACK TO DEFAULT VALUE
-
     # Mount response following HistogramInfoInterface.ts definition
     histogram_info = {}
     histogram_info["data"] = histogram
