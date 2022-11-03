@@ -214,6 +214,48 @@ def close_all_files_dataset(file_id: str):
     else:
         return handle_exception("{} is an invalid key".format(file_id))
 
+@app.route("/get_image_histogram/<image_dtype>", methods=["POST"])
+@cross_origin()
+def get_image_histogram(image_dtype: str):
+    """
+    Function used to calculate and return current image histogram
+
+    Notes:
+        This API request requires that an image was already loaded, otherwise an exception will be launched
+
+    Args:
+        None
+
+    Returns:
+        (list): List containing the calculated image histogram for the previously loaded image
+
+    """
+
+    bins = np.iinfo(np.uint8).max
+    # FYK: Currently, front-end canvas only works with uint8 images. Due to that, no matter which image
+    # dtype was opened, the histogram returned must be considering that it is a uint8 to guarantee a
+    # correct bind between contrast control range and histogram plot. In future, if front-end canvas
+    # extend support for other dtypes, more logic need to be added here to deal with different dtypes.
+    # The choise for adding image_dtype parameter in this request is for the sake of already preparing
+    # it for possible future extension.
+
+    start = time.process_time()
+    try:
+        histogram = np.histogram(data_repo.get_image(), bins=bins)[0].tolist()
+    except KeyError:
+        return handle_exception("An error occured when trying to get image data to calculate histogram")
+    except:
+        return handle_exception("An error occured during histogram calculation")
+    end = time.process_time()
+    print(f"Elapsed time during histogram calculation: {end-start} seconds")
+
+    # Mount response following HistogramInfoInterface.ts definition
+    histogram_info = {}
+    histogram_info["data"] = histogram
+    histogram_info["maxValue"] = len(histogram) -1
+    histogram_info["minValue"] = 0
+
+    return jsonify(histogram_info)
 
 @app.route("/open_image/<image_id>", methods=["POST"])
 @cross_origin()

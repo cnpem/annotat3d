@@ -85,7 +85,6 @@ __edit_label_options = {
     "edit_label_split_module": None
 }
 
-
 def set_edit_label_options(key: str = "", flag: bool = False or object):
     """
     Setter for __edit_label_options
@@ -266,13 +265,12 @@ def get_deep_model(key='deep_learning'):
     """
     return __deep_model[key]
 
-
 def set_image(key='image', data: np.ndarray = None):
     """
     Function that set an image, superpixel or label
 
     Args:
-        key(str): string that represents the key to accesses the data. This key can be "image", "superpixel" or "label"
+        key(str): string that represents the key to access the data. This key can be "image", "superpixel" or "label"
         data(np.ndarray): np.ndarray that contains the data information
 
     Returns:
@@ -288,7 +286,7 @@ def get_image(key='image'):
     Function that get an image, superpixel or label
 
     Args:
-        key(str): string that represents the key to accesses the data. This key can be "image", "superpixel" or "label"
+        key(str): string that represents the key to access the data. This key can be "image", "superpixel" or "label"
 
     Returns:
         (np.ndarray): returns the data based on the key
@@ -302,7 +300,7 @@ def delete_image(key='image'):
     Function that deletes an image, superpixel or label
 
     Args:
-        key(str): string that represents the key to accesses the data. This key can be "image", "superpixel" or "label"
+        key(str): string that represents the key to access the data. This key can be "image", "superpixel" or "label"
 
     Returns:
         None
@@ -310,13 +308,12 @@ def delete_image(key='image'):
     """
     del __images[key]
 
-
 def set_annotation(key='annotation', data: dict = None):
     """
     Function that set an annotation
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is used as "annotation"
+        key(str): string that represents the key to access the data. This key is used as "annotation"
         data(dict):
 
     Returns:
@@ -331,7 +328,7 @@ def get_annotation(key='annotation'):
     Function that gets an annotation
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is used as "annotation"
+        key(str): string that represents the key to access the data. This key is used as "annotation"
 
     Returns:
         (dict): Returns a dict that contains the annotations
@@ -345,7 +342,7 @@ def delete_annotation(key='annotation'):
     Function that deletes the annotation
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is used as annotation
+        key(str): string that represents the key to access the data. This key is used as annotation
 
     Returns:
         None
@@ -362,7 +359,7 @@ def set_info(key='image_info', data: dict = None):
         Crop feature also use this function to set new images, superpixels and annotations.
 
     Args:
-        key(str): string that represents the key to accesses the data.
+        key(str): string that represents the key to access the data.
         data(dict): dict that contains information of image, superpixel or annotation.
 
     Returns:
@@ -378,7 +375,7 @@ def get_info(key='image_info'):
     Function that gets the image, superpixel or annotation info
 
     Args:
-        key(str): string that represents the key to accesses the data.
+        key(str): string that represents the key to access the data.
 
     Returns:
         (dict): Returns a dict that contains information of image, superpixel or annotation.
@@ -392,7 +389,7 @@ def delete_info(key):
     Function that deletes the image, superpixel or annotation info
 
     Args:
-        key(str): string that represents the key to accesses the data.
+        key(str): string that represents the key to access the data.
 
     Returns:
         None
@@ -406,7 +403,7 @@ def set_dataset_data(key='data-0', data: np.ndarray = None):
     Function that set the data in dataset menu on deep learning
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "data-i" where's "i" is a integer
+        key(str): string that represents the key to access the data. This key is always "data-i" where's "i" is a integer
         data(np.ndarray): np.ndarray that contains the data information
 
     Returns:
@@ -422,7 +419,7 @@ def get_dataset_data(key='data-0'):
     Function that gets the data in dataset menu on deep learning
 
     Args:
-        key (str): string that represents the key to accesses the data. This key is always "data-i" where's "i" is a integer
+        key (str): string that represents the key to access the data. This key is always "data-i" where's "i" is a integer
 
     Returns:
         (np.ndarray): np.ndarray that contains the data information
@@ -447,7 +444,7 @@ def delete_dataset_data(key='data-0'):
     Function that deletes a data in dataset menu on deep learning
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "data-i" where's "i" is a integer
+        key(str): string that represents the key to access the data. This key is always "data-i" where's "i" is a integer
 
     Returns:
         None
@@ -472,7 +469,7 @@ def set_dataset_label(key='label-0', label: np.ndarray = None):
     Function that set the label in dataset menu on deep learning
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "label-i" where's "i" is a integer
+        key(str): string that represents the key to access the data. This key is always "label-i" where's "i" is a integer
         label(np.ndarray): np.ndarray that contains the label information
 
     Returns:
@@ -488,7 +485,7 @@ def get_dataset_label(key='label-0'):
     Function that get the label in dataset menu on deep learning
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "label-i" where's "i" is a integer
+        key(str): string that represents the key to access the data. This key is always "label-i" where's "i" is a integer
 
     Returns:
         (np.ndarray): np.ndarray that contains the label information
@@ -513,7 +510,7 @@ def delete_dataset_label(key='label-0'):
     Function that delete the label in dataset menu on deep learning
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "label-i" where's "i" is a integer
+        key(str): string that represents the key to access the data. This key is always "label-i" where's "i" is a integer
 
     Returns:
         None
@@ -538,7 +535,7 @@ def set_dataset_weight(key='weight-0', weight: np.ndarray = None):
      Function that set the weight in dataset menu on deep learning
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "weight-i" where's "i" is a integer
+        key(str): string that represents the key to access the data. This key is always "weight-i" where's "i" is a integer
         weight(np.ndarray): np.ndarray that contains the weight information
 
     Returns:
@@ -554,7 +551,7 @@ def get_dataset_weight(key='weight-0'):
      Function that get the weight in dataset menu on deep learning
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "weight-i" where's "i" is a integer
+        key(str): string that represents the key to access the data. This key is always "weight-i" where's "i" is a integer
 
     Returns:
         (np.ndarray): np.ndarray that contains the weight information
@@ -579,7 +576,7 @@ def delete_dataset_weight(key='weight-0'):
     Function that delete the weight in dataset menu on deep learning
 
     Args:
-        key(str): key(str): string that represents the key to accesses the data. This key is always "weight-i" where's "i" is a integer
+        key(str): key(str): string that represents the key to access the data. This key is always "weight-i" where's "i" is a integer
 
     Returns:
         None
@@ -604,7 +601,7 @@ def set_inference_data(key="image-0", data: np.ndarray = None):
     Function that set an image in batch_inference menu on deep learning
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "image-i" where's "i" is a integer
+        key(str): string that represents the key to access the data. This key is always "image-i" where's "i" is a integer
         data(np.ndarray): np.ndarray that contains the image information
 
     Returns:
@@ -620,7 +617,7 @@ def get_inference_data(key="image-0"):
     Function that get an image in batch_inference menu on deep learning
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "image-i" where's "i" is a integer
+        key(str): string that represents the key to access the data. This key is always "image-i" where's "i" is a integer
 
     Returns:
         (np.ndarray): np.ndarray that contains the image information
@@ -656,7 +653,7 @@ def del_inference_data(key="image-0"):
     Function that delete an image in batch_inference menu on deep learning
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "image-i" where's "i" is a integer
+        key(str): string that represents the key to access the data. This key is always "image-i" where's "i" is a integer
 
     Returns:
         None
@@ -707,7 +704,7 @@ def set_classification_model(key="model_complete", model: dict = None):
     Function that set the classifier model in superpixel segmentation
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "model_complete"
+        key(str): string that represents the key to access the data. This key is always "model_complete"
         model(str): dict that contains information about the classification model
 
     Returns:
@@ -723,7 +720,7 @@ def get_classification_model(key="model_complete"):
     Function that get the classifier model in superpixel segmentation
 
     Args:
-        key(str): string that represents the key to accesses the data. This key is always "model_complete"
+        key(str): string that represents the key to access the data. This key is always "model_complete"
 
     Returns:
         (dict): returns a dict that contains information about the classification model
