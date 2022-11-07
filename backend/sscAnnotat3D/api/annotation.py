@@ -280,7 +280,6 @@ def get_annot_slice():
     """
     slice_num = request.json["slice"]
     axis = request.json["axis"]
-    axis_dim = utils.get_axis_num(axis)
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
     annot_module = module_repo.get_module('annotation')

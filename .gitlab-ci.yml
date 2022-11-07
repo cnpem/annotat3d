@@ -31,6 +31,7 @@ build:
     tags:
         - x86_64
         - cuda11
+        - docker
     artifacts:
       paths:
           - backend/dist/*whl
@@ -51,10 +52,12 @@ deploy:
         # --privileged is necessary to build singularity in docker (sind)
         - ls .
         - ./build_singularity.sh
-        - cp Annotat3DWeb.sif "${GCC_APPS}"/Annotat3D-web-dev.sif
+        - cp scripts/* "${GCC_APPS}"/
+        - cp Annotat3DWeb.sif "${GCC_APPS}"/Annotat3D-web-staging.sif
     tags:
         - x86_64
         - cuda11
+        - docker
     only:
         - tags
     dependencies:

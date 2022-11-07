@@ -1,5 +1,5 @@
 import {book, logoGithub, logoLinkedin, people} from "ionicons/icons";
-import {IonAccordion, IonIcon, IonItem, IonLabel, IonList, useIonToast} from "@ionic/react";
+import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
 
 const peopleList: Person[] = [
     {
@@ -76,8 +76,6 @@ interface Person {
  * @constructor
  */
 const People : React.FC = () => {
-
-    const [present,] = useIonToast();
 
     function renderPeople(person: Person) {
         return (

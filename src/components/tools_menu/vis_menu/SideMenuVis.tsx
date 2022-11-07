@@ -2,15 +2,39 @@ import React, {useEffect, useRef} from "react";
 import {IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonItem} from "@ionic/react";
 import {moon, sunny} from "ionicons/icons";
 import {dispatch, useEventBus} from "../../../utils/eventbus";
-import { useStorageState } from 'react-storage-hooks';
+import {useStorageState} from 'react-storage-hooks';
 import {isEqual} from "lodash";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Filler,
+    Legend,
+} from 'chart.js';
+import {Line} from "react-chartjs-2"
 
 //ignoring types for react-color, as it seems broken
 //TODO: investigate if this is fixed, otherwise declare the types manually
-// @ts-ignore
+// @ts-ignoreTooltip
 import { AlphaPicker, SliderPicker } from 'react-color';
 import CropMenu from "./CropMenu";
 import { ImageShapeInterface } from "../utils/ImageShapeInterface";
+import { HistogramInfoPayload } from "../../main_menu/file/utils/HistogramInfoInterface";
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Filler,
+    Legend
+  );
 
 function rgbToHex(r: number, g: number, b: number) {
     const bin = (r << 16) | (g << 8) | b;
@@ -34,6 +58,57 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
         setLockVisCards(changeDisableVis);
     })
 
+    let baseHistogram = {
+        labels: [0],
+        datasets: [
+          {
+            data: [0],
+            borderColor: 'rgb(53, 162, 235)',
+            backgroundColor: 'rgba(53, 162, 235, 0.5)',
+            normalized: true
+          },
+        ],
+    }
+
+    const histogramOptions = {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip:{
+                enabled: false
+            }
+        },
+    };
+
+    const [histogramData, setHistogramData] = useStorageState(sessionStorage, 'histogramData', baseHistogram);
+    const [contrastRangeRefMaxValue, setContrastRangeRefMaxValue] = useStorageState(sessionStorage, 'contrastRangeRefMaxValue', 100)
+    const [contrastRangeRefMinValue, setContrastRangeRefMinValue] = useStorageState(sessionStorage, 'contrastRangeRefMinValue', 0)
+
+    function updateContrastRangeLimitValues(){
+        contrastRangeRef.current!.max = contrastRangeRefMaxValue
+        contrastRangeRef.current!.min = contrastRangeRefMinValue
+    }
+
+    useEventBus('ImageHistogramLoaded', (loadedHistogram: HistogramInfoPayload) => {
+
+        // Update histogram data and labels
+        baseHistogram.datasets[0].data = loadedHistogram.data
+        baseHistogram.labels = Array.from(Array(baseHistogram.datasets[0].data.length).keys())
+
+        // Plot histogram
+        setHistogramData(baseHistogram)
+
+        // Store histogram max and min values
+        setContrastRangeRefMaxValue(loadedHistogram.maxValue)
+        setContrastRangeRefMinValue(loadedHistogram.minValue)
+
+        // Update range component
+        updateContrastRangeLimitValues()
+
+    })
+
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
     const [showSuperpixel, setShowSuperpixel] = useStorageState<boolean>(sessionStorage, 'showSuperpixel', true);
@@ -50,12 +125,18 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
     //so I am manually setting it.
     useEffect(() => {
         if (contrastRangeRef) {
+
+            updateContrastRangeLimitValues()
+
             if (!isEqual(contrastRangeRef.current!.value, contrast)) {
-                // this is used to  reposition the slider markers to the last values set on contrast
+                // this is used to reposition the slider markers to the last values set on contrast
                 setTimeout(() => {
                     contrastRangeRef.current!.value = contrast;
                 }, 20);
+
+                dispatch('contrastChanged', [contrast.lower/100, contrast.upper/100]);
             }
+
         }
         //now I am just dispatch all events on mount
         //(however, I should change canvas container to store this state properly)
@@ -74,9 +155,9 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
         <React.Fragment>
             <IonCard disabled={lockVisCards}>
                 <IonCardContent>
-                    <IonRange ref={contrastRangeRef} pin={true} debounce={300}
-                        dualKnobs={true} 
-                        onIonChange={ (e:CustomEvent) => {
+                    <IonRange ref={contrastRangeRef} pin={true}
+                        dualKnobs={true}
+                        onIonKnobMoveEnd={ (e:CustomEvent) => {
                             if (e.detail.value) {
                                 const range = e.detail.value as any;
                                 setContrast(range);
@@ -87,6 +168,7 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props:SideMenuVisProps) => {
                         <IonIcon slot='start' icon={sunny}></IonIcon>
                         <IonIcon slot='end' icon={moon}></IonIcon>
                     </IonRange>
+                    <Line options={histogramOptions} data={histogramData}/>
                 </IonCardContent>
             </IonCard>
             <IonCard disabled={lockVisCards}>
