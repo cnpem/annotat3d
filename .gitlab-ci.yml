@@ -1,20 +1,20 @@
-#gitlab extends is introduced only in gitlab 11.3
-#it means no templates now, sorry
-
-#TODO: check if we can upgrade gitlab
+variables:
+    GCC_PYPI_SERVER: http://gcc.lnls.br:3128
+    GCC_PYPI_HOST: gcc.lnls.br
+    GCC_APPS: /ibira/lnls/labs/tepui/apps/gcc
 
 stages:
     - build
     - deploy
 
-build:
+build-python-package:
     image: gccdockers/annotat3d:cuda-11.2
     stage: build
     script:
-        #frontend
+        # -- frontend
         - yarn install
         - yarn build
-        #backend
+        # -- backend
         - export MAKEFLAGS="-j64"
         - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
         - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
@@ -33,33 +33,61 @@ build:
         - cuda11
         - docker
     artifacts:
-      paths:
-          - backend/dist/*whl
-          - build/
-      expire_in: 1 day
+        paths:
+            - backend/dist/*whl
+            - build/
+        expire_in: 1 day
 
-deploy:
+deploy-to-dev:
     image: gccdockers/sind
-    stage: deploy
+    stage: build
     script:
-        - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
-        - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
-
-        - python3 -m pip install keyring==12.0.0 keyrings.alt
-        - python3 -m pip install twine==2.0.0 passlib
-        #- twine upload ./backend/dist/*.whl  --repository-url="$GCC_PYPI_SERVER"
-
-        # --privileged is necessary to build singularity in docker (sind)
-        - ls .
         - ./build_singularity.sh
-        - cp scripts/* "${GCC_APPS}"/
-        - cp Annotat3DWeb.sif "${GCC_APPS}"/Annotat3D-web-staging.sif
+        - ./deploy.sh Annotat3DWeb.sif dev $GCC_APPS
+    environment:
+        name: dev
     tags:
         - x86_64
         - cuda11
         - docker
     only:
-        - tags
-    dependencies:
-        - build
+        - dev
+    needs:
+        - job: build-python-package
+          artifacts: true
 
+deploy-to-staging:
+    image: gccdockers/sind
+    stage: build
+    script:
+        - ./build_singularity.sh
+        - ./deploy.sh Annotat3DWeb.sif staging $GCC_APPS
+    environment:
+        name: staging
+    tags:
+        - x86_64
+        - cuda11
+        - docker
+    only:
+        - staging
+    needs:
+        - job: build-python-package
+          artifacts: true
+
+deploy-to-production:
+    image: gccdockers/sind
+    stage: build
+    script:
+        - ./build_singularity.sh
+        - ./deploy.sh Annotat3DWeb.sif production $GCC_APPS
+    environment:
+        name: production
+    tags:
+        - x86_64
+        - cuda11
+        - docker
+    only:
+        - production
+    needs:
+        - job: build-python-package
+          artifacts: true
