@@ -87,7 +87,7 @@ deploy-to-production:
         - cuda11
         - docker
     only:
-        - production
+        - main
     needs:
         - job: build-python-package
           artifacts: true
