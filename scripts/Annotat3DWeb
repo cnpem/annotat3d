@@ -39,7 +39,7 @@ wait_signal()
 
 run_annotat3d_web()
 {
-   export IMAGE="Annotat3D-web.sif"
+   export IMAGE="Annotat3DWeb_production.sif"
    export BASEDIR=/ibira/lnls/labs/tepui/apps/;
    export ANNOTAT3D_PATH=$(pwd)
    export ANNOTAT3D_VOLUME_PATH=Foo.raw
