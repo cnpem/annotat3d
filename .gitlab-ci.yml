@@ -40,7 +40,7 @@ build-python-package:
 
 deploy-to-dev:
     image: gccdockers/sind
-    stage: build
+    stage: deploy
     script:
         - ./build_singularity.sh
         - ./deploy.sh Annotat3DWeb.sif dev $GCC_APPS
@@ -58,7 +58,7 @@ deploy-to-dev:
 
 deploy-to-staging:
     image: gccdockers/sind
-    stage: build
+    stage: deploy
     script:
         - ./build_singularity.sh
         - ./deploy.sh Annotat3DWeb.sif staging $GCC_APPS
@@ -76,7 +76,7 @@ deploy-to-staging:
 
 deploy-to-production:
     image: gccdockers/sind
-    stage: build
+    stage: deploy
     script:
         - ./build_singularity.sh
         - ./deploy.sh Annotat3DWeb.sif production $GCC_APPS
