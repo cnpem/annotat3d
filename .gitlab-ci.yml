@@ -70,6 +70,7 @@ deploy-to-staging:
         - docker
     only:
         - staging
+        - tags
     needs:
         - job: build-python-package
           artifacts: true
@@ -88,6 +89,7 @@ deploy-to-production:
         - docker
     only:
         - main
+        - tags
     needs:
         - job: build-python-package
           artifacts: true
