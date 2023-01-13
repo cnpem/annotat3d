@@ -125,7 +125,7 @@ run_annotat3d_web()
 
    export PYTHONIOENCODING=UTF-8
 
-   singularity run --nv --app Annotat3D -B /ibira,/tmp,/dev/shm $BASEDIR/$IMAGE -b "${ANNOTAT3D_LNLS_EXTENSION_NOTIF_HOST}.lnls.br:${ANNOTAT3D_PORT}" &
+   singularity run --nv --app Annotat3D -B /ibira,/tmp,/dev/shm $BASEDIR/$IMAGE -b "0.0.0.0:${ANNOTAT3D_PORT}" &
 
    FS_TREEVIEW_SERVER_PID=$!
    echo "FS TreeView Server PID $FS_TREEVIEW_SERVER_PID"
