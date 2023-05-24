@@ -1,0 +1,8 @@
+backend
+node_modules
+public
+scripts
+.prettierignore
+.stylelintignore
+package.json
+package-lock.json

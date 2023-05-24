@@ -1,0 +1,11 @@
+backend
+node_modules
+public
+scripts
+.prettierignore
+.stylelintignore
+package.json
+package-lock.json
+
+# It sometimes breaks SCSS (https://github.com/prettier/prettier/issues/6092)
+*.scss
