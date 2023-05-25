@@ -1,20 +1,77 @@
 {
     "env": {
         "browser": true,
-        "es2021": true
+        "es6": true
     },
     "extends": [
+        "eslint:recommended",
+        "airbnb/hooks",
+        "airbnb-typescript",
         "plugin:react/recommended",
-        "standard-with-typescript"
+        "plugin:react/jsx-runtime",
+        "plugin:react-hooks/recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:prettier/recommended",
+        "plugin:import/recommended"
     ],
-    "overrides": [
-    ],
+    // Specifying Parser
+    "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "ecmaVersion": "latest"
+        "ecmaFeatures": {
+            "jsx": true
+        },
+        "ecmaVersion": "latest",
+        "sourceType": "module",
+        "tsconfigRootDir": ".",
+        "project": ["./tsconfig.json"]
     },
-    "plugins": [
-        "react"
-    ],
+    // Configuring third-party plugins
+    "plugins": ["react", "@typescript-eslint", "react-hooks"],
+    // Resolve imports
+    "settings": {
+        "import/resolver": {
+            "typescript": {
+                "project": "./tsconfig.json"
+            }
+        },
+        "react": {
+            "version": "detect"
+        }
+    },
     "rules": {
+        "react/prop-types": "off",
+        "react/react-in-jsx-scope": "off",
+        "linebreak-style": "off",
+        // Configure prettier
+        "prettier/prettier": [
+            "error",
+            {
+                "printWidth": 120,
+                "endOfLine": "auto",
+                "useTabs": false,
+                "arrowParens": "always",
+                "singleQuote": true,
+                "semi": true,
+                "trailingComma": "es5",
+                "indentStyle": "space",
+                "tabWidth": 4
+            }
+        ],
+        // Disallow the `any` type.
+        "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/ban-types": [
+            "error",
+            {
+                "extendDefaults": true,
+                "types": {
+                    "{}": false
+                }
+            }
+        ],
+        "react-hooks/exhaustive-deps": "off",
+        // Enforce the use of the shorthand syntax.
+        "object-shorthand": "error",
+        "no-console": "warn"
     }
 }

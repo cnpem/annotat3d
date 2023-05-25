@@ -1,14 +1,10 @@
-// .prettierrc.json
 {
-  "$schema": "http://json.schemastore.org/prettierrc",
-  "printWidth": 120,
-  "endOfLine": "lf",
-  "useTabs": true,
-  "arrowParens": "always",
-  "quoteProps": "as-needed",
-  "bracketSpacing": true,
-  "singleQuote": true,
-  "semi": true,
-  "trailingComma": "es5",
-  "tabWidth": 4,
+    "printWidth": 120,
+    "endOfLine": "auto",
+    "useTabs": false,
+    "arrowParens": "always",
+    "singleQuote": true,
+    "semi": true,
+    "trailingComma": "es5",
+    "tabWidth": 4
 }

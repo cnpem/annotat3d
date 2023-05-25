@@ -6,3 +6,7 @@ scripts
 .stylelintignore
 package.json
 package-lock.json
+
+# Ignore artifacts:
+build
+Coverage

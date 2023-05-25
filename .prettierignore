@@ -7,5 +7,9 @@ scripts
 package.json
 package-lock.json
 
+# Ignore artifacts:
+build
+Coverage
+
 # It sometimes breaks SCSS (https://github.com/prettier/prettier/issues/6092)
 *.scss
