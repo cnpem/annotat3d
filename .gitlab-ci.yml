@@ -8,7 +8,7 @@ stages:
     - deploy
 
 build-python-package:
-    image: gccdockers/annotat3d:cuda-11.2
+    image: gitregistry.cnpem.br/gcd/data-science/segmentation/ssc-annotat3d:cuda-11.2
     stage: build
     script:
         # -- frontend

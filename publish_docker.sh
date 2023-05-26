@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-docker push gccdockers/annotat3d:cuda-11.2
+docker login gitregistry.cnpem.br
+docker push gitregistry.cnpem.br/gcd/data-science/segmentation/ssc-annotat3d:cuda-11.2

@@ -1,72 +1,66 @@
-from gccdockers/tensorflow:cuda-11.2_tf-2.7.0_trt-8.0.0.3
+FROM gccdockers/tensorflow:cuda-11.2_tf-2.7.0_trt-8.0.0.3
 
-#env MPI_DIR=/opt/ompi
-#env PATH="$MPI_DIR/bin:$HOME/.local/bin:$PATH"
-#env LD_LIBRARY_PATH="$MPI_DIR/lib:$LD_LIBRARY_PATH"
+ARG IMG_CUDA_VERSION="11.2"
+ARG GCC_PYPI_SERVER
+ARG GCC_PYPI_HOST
 
-arg img_cuda_version="11.2"
-#leave the following variables empty in the version we upload to dockerhub
-arg GCC_PYPI_SERVER
+ENV TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime && echo $TZ > /etc/timezone
 
-arg GCC_PYPI_HOST
+LABEL maintainer="Data Science and Management Group at LNLS/Sirius <gcd@lnls.br>"
 
-label maintainer="alan.peixinho@lnls.br"
+RUN echo "CUDA_VERSION: ${IMG_CUDA_VERSION}"
 
-run echo "CUDA_VERSION: ${img_cuda_version}"
+RUN export PATH=$PATH:/usr/local/cuda-${IMG_CUDA_VERSION}/bin:/usr/local/cuda-${IMG_CUDA_VERSION}/nvvm/bin
 
-run export PATH=$PATH:/usr/local/cuda-${img_cuda_version}/bin:/usr/local/cuda-${img_cuda_version}/nvvm/bin
+RUN ln -sf /usr/local/cuda/lib64/*.* /usr/lib/
+RUN ln -sf /usr/local/cuda/include/*.* /usr/include/
 
-run ln -sf /usr/local/cuda/lib64/*.* /usr/lib/
-run ln -sf /usr/local/cuda/include/*.* /usr/include/
+RUN apt-get -y update && apt-get -y upgrade && \
+    apt-get install -y gcc-8 g++-8 && \
+    apt-get autoclean && apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ~/.cache
 
-run apt-get -y update
-run apt-get -y upgrade
-run apt-get install -y gcc-8 g++-8
+RUN ls /usr/bin/gcc*
 
-run ls /usr/bin/gcc*
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 10
+RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 10
+RUN gcc --version
 
-run update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 10
-run update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 10
-run gcc --version
+RUN apt-get -y update && \
+    apt-get install -y -f curl netbase libnss3 nvidia-modprobe python3-numpy libhdf5-dev libpython3-dev libpython3-dev vim git python3 gdb python3-dev python3-pip build-essential virtualenvwrapper libglib2.0-0 fontconfig libxss1 wget libgl1 && \
+    apt-get autoclean && apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ~/.cache
 
-#run printf "deb mirror://mirrors.ubuntu.com/mirrors.txt bionic main restricted universe multiverse\ndeb mirror://mirrors.ubuntu.com/mirrors.txt bionic-updates main restricted universe multiverse\ndeb mirror://mirrors.ubuntu.com/mirrors.txt bionic-backports main restricted universe multiverse\ndeb mirror://mirrors.ubuntu.com/mirrors.txt bionic-security main restricted universe multiverse" > /etc/apt/sources.list
-env TZ=America/Sao_Paulo
-run ln -snf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime && echo $TZ > /etc/timezone
+RUN apt-get -y update && \
+    apt-get install -y -f doxygen libwebsockets-dev rdmacm-utils infiniband-diags libpsm-infinipath1-dev libibverbs-dev libibverbs1 librdmacm-dev ibacm mstflint opensm patch qperf pciutils && \
+    apt-get autoclean && apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ~/.cache
 
-#some packages broke dont know why
-#run dpkg --configure -a
-run apt-get -y update
-run apt-get -y -f upgrade
-run apt-get install -y -f curl netbase libnss3 nvidia-modprobe python3-numpy libhdf5-dev libpython3-dev libpython3-dev vim git python3 gdb python3-dev python3-pip build-essential virtualenvwrapper libglib2.0-0 fontconfig libxss1 wget libgl1
+RUN mkdir -p ~/.pip
+RUN printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOST\nextra-index-url = https://pypi.python.org/simple" > ~/.pip/pip.conf
 
-#RDMA stuff
-run apt-get install -y -f doxygen libwebsockets-dev rdmacm-utils infiniband-diags libpsm-infinipath1-dev libibverbs-dev libibverbs1 librdmacm-dev ibacm mstflint opensm patch qperf pciutils
+RUN conda install -c conda-forge mpi4py openmpi
 
-run mkdir -p ~/.pip
-run printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOST\nextra-index-url = https://pypi.python.org/simple" > ~/.pip/pip.conf
+RUN python3 -m pip install --upgrade pip==22.0.4 setuptools==60.10.0 wheel && \
+    python3 -m pip install --upgrade cmake==3.17.3 cython cmake-setuptools && \
+    python3 -m pip install --upgrade blinker nibabel scikit-image==0.18.3 SharedArray==3.2.0 #some dependencies fix later && \
+    rm -rf /root/.cache/pip
 
-run conda install -c conda-forge mpi4py openmpi
+ADD backend/requirements.txt /opt/Annotat3D/requirements.txt
+ADD backend/requirements.txt /opt/Annotat3D/requirements-dev.txt
 
-run python3 -m pip install --upgrade pip==22.0.4 setuptools==60.10.0 wheel
-run python3 -m pip install --upgrade cmake==3.17.3 cython cmake-setuptools
-run python3 -m pip install --upgrade blinker nibabel scikit-image==0.18.3 SharedArray==3.2.0 #some dependencies fix later
+RUN python3 -m pip install -r /opt/Annotat3D/requirements.txt && \
+    python3 -m pip install -r /opt/Annotat3D/requirements-dev.txt && \
+    rm -rf /root/.chache/pip
 
-add backend/requirements.txt /opt/Annotat3D/requirements.txt
+ENV CUDA_HOME=/usr/local/cuda-${IMG_CUDA_VERSION}
 
-#it is not working on CI
-run python3 -m pip uninstall -y numpy #numpy is duplicated for some reason
-run python3 -m pip install -r /opt/Annotat3D/requirements.txt
+RUN ls /usr/local/cuda-${IMG_CUDA_VERSION}
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+RUN python --version
 
-#rapids
-#run apt-get install -y libboost-all-dev
-env CUDA_HOME=/usr/local/cuda-${img_cuda_version}
+RUN curl -sL https://deb.nodesource.com/setup_16.x  | bash -
+RUN apt-get -y install nodejs
 
-run ls /usr/local/cuda-${img_cuda_version}
-run update-alternatives --install /usr/bin/python python /usr/bin/python3 10
-run python --version
-
-run curl -sL https://deb.nodesource.com/setup_16.x  | bash -
-run apt-get -y install nodejs
-
-run npm install -g ionic yarn serve
-
+RUN npm install -g ionic yarn serve
