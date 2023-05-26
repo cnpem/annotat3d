@@ -23,3 +23,12 @@ repos:
       hooks:
           - id: interrogate
             args: [-vv, -i, --fail-under=80, --ignore-module]
+    - repo: local
+      hooks:
+          - id: eslint
+            name: eslint
+            entry: npx lint-staged
+            files: ^src/
+            types_or: [javascript, jsx, ts, tsx]
+            always_run: true
+            language: system
