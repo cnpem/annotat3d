@@ -1,5 +1,5 @@
 Bootstrap: docker-daemon
-From: gccdockers/annotat3d:cuda-11.2
+From: gitregistry.cnpem.br/gcd/data-science/segmentation/ssc-annotat3d:cuda-11.2
 
 %files
     ./backend/dist/*whl /opt/Annotat3D/
