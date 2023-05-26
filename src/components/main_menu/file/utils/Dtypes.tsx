@@ -2,6 +2,6 @@
  * dtype
  */
 export default interface dataType {
-    value: string,
-    label: string
+    value: string;
+    label: string;
 }

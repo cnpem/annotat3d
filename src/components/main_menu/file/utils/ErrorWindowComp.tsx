@@ -1,8 +1,8 @@
-import React from "react";
-import {IonAlert} from "@ionic/react";
+import React from 'react';
+import { IonAlert } from '@ionic/react';
 
-export interface ErrorWindowInterface{
-    headerMsg: string
+export interface ErrorWindowInterface {
+    headerMsg: string;
 
     errorMsg: string;
     onErrorMsg: (msg: string) => void;
@@ -19,20 +19,21 @@ export interface ErrorWindowInterface{
  * @param {boolean} errorFlag - Boolean that opens the ErrorWindowComp if "true" and close otherwise
  * @param {(errorFlag: boolean)} onErrorFlag - errorFlag setter
  */
-const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg,
-                                                             headerMsg,
-                                                             onErrorMsg,
-                                                             errorFlag,
-                                                             onErrorFlag}) => {
-
+const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({
+    errorMsg,
+    headerMsg,
+    onErrorMsg,
+    errorFlag,
+    onErrorFlag,
+}) => {
     const resetErrorMsg = () => {
         onErrorFlag(false);
-        onErrorMsg("");
-    }
+        onErrorMsg('');
+    };
 
-    return(
+    return (
         <div>
-            {(errorMsg) ?
+            {errorMsg ? (
                 <IonAlert
                     isOpen={errorFlag}
                     backdropDismiss={false}
@@ -41,17 +42,19 @@ const ErrorWindowComp: React.FC<ErrorWindowInterface> = ({errorMsg,
                     message={errorMsg}
                     buttons={[
                         {
-                            text: "Okay",
-                            id: "confirm-button",
+                            text: 'Okay',
+                            id: 'confirm-button',
                             handler: () => {
                                 resetErrorMsg();
-                            }
-                        }
-                    ]}/> :
-                        <></>
-            }
+                            },
+                        },
+                    ]}
+                />
+            ) : (
+                <></>
+            )}
         </div>
-    )
+    );
 };
 
 export default ErrorWindowComp;

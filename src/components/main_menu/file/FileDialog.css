@@ -1,6 +1,8 @@
 /**
-Component used for "Load Files" menu
+ * Component used for "Load Files" menu
+ * 
  */
+
 .file-popover-load {
     --width: 400px;
     --min-width: 300px;

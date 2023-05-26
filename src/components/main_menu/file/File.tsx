@@ -1,10 +1,10 @@
-import React from "react";
-import {documentOutline, documentSharp} from "ionicons/icons";
-import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
+import React from 'react';
+import { documentOutline, documentSharp } from 'ionicons/icons';
+import { IonAccordion, IonIcon, IonItem, IonLabel, IonList } from '@ionic/react';
 
-import {MenuItem} from "../MenuItems";
-import FileLoadDialog from "./FileLoadDialog";
-import FileSaveDialog from "./FileSaveDialog";
+import { MenuItem } from '../MenuItems';
+import FileLoadDialog from './FileLoadDialog';
+import FileSaveDialog from './FileSaveDialog';
 
 /**
  * File I/O component
@@ -16,22 +16,19 @@ const File: React.FC = () => {
      */
     const items: MenuItem = {
         title: 'Files',
-        subItems: [
-            'Load Files',
-            'Save Files'
-        ],
+        subItems: ['Load Files', 'Save Files'],
         iosIcon: documentOutline,
-        mdIcon: documentSharp
+        mdIcon: documentSharp,
     };
     return (
         <IonAccordion>
-            <IonItem slot={"header"}>
-                <IonIcon slot={"start"} ios={items.iosIcon} md={items.mdIcon}/>
+            <IonItem slot={'header'}>
+                <IonIcon slot={'start'} ios={items.iosIcon} md={items.mdIcon} />
                 <IonLabel>{items.title}</IonLabel>
             </IonItem>
-            <IonList slot={"content"}>
-                    <FileLoadDialog name={items.subItems[0]}/>
-                    <FileSaveDialog name={items.subItems[1]}/>
+            <IonList slot={'content'}>
+                <FileLoadDialog name={items.subItems[0]} />
+                <FileSaveDialog name={items.subItems[1]} />
             </IonList>
         </IonAccordion>
     );
