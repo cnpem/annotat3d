@@ -27,7 +27,7 @@
         "project": ["./tsconfig.json"]
     },
     // Configuring third-party plugins
-    "plugins": ["react-app", "@typescript-eslint", "react-hooks"],
+    "plugins": ["react", "@typescript-eslint", "react-hooks"],
     // Resolve imports
     "settings": {
         "import/resolver": {
