@@ -1,0 +1,1072 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Framework Documentation components/main_menu/deep_learning_menu/dataset_comp/SamplingComp.tsx</title>
+
+  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./build/entry.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,400,700|Inconsolata,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://jmblog.github.io/color-themes-for-google-code-prettify/themes/tomorrow-night.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/app.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/iframe.css">
+  <link type="text/css" rel="stylesheet" href="">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  
+</head>
+
+
+
+<body class="layout small-header">
+    <div id="stickyNavbarOverlay"></div>
+    
+
+<div class="top-nav">
+    <div class="inner">
+        <a id="hamburger" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="logo">
+            
+             
+                <a href="index.html">
+                    <h1 class="navbar-item">framework documentation</h1>
+                </a>
+            
+        </div>
+        <div class="menu">
+            
+            <div class="navigation">
+                <a
+                    href="index.html"
+                    class="link"
+                >
+                    Documentation
+                </a>
+                
+                 
+                    
+                        <a
+                            class="link user-link "
+                            href="..."
+                        >
+                            Respository
+                        </a>
+                    
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="main">
+        <div
+            class="sidebar "
+            id="sidebarNav"
+        >
+            
+                <div class="search-wrapper">
+                    <input id="search" type="text" placeholder="Search docs..." class="input">
+                </div>
+            
+            <nav>
+                
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Namespaces</h3><ul><li><a href="PIXI.html">PIXI</a></li><li><a href="PIXI.filters.html">filters</a></li><li><a href="PIXI.graphicsUtils.html">graphicsUtils</a></li><li><a href="PIXI.groupD8.html">groupD8</a></li><li><a href="PIXI.resources.html">resources</a></li><li><a href="PIXI.settings.html">settings</a></li><li><a href="PIXI.systems.html">systems</a></li></ul><h3>Classes</h3><ul><li><a href="About.html">About</a></li><li><a href="Canvas.html">Canvas</a></li><li><a href="CropMenuProps.html">CropMenuProps</a></li><li><a href="File.html">File</a></li><li><a href="Menu.html">Menu</a></li><li><a href="PIXI.AbstractRenderer.html">AbstractRenderer</a></li><li><a href="PIXI.AccessibilityManager.html">AccessibilityManager</a></li><li><a href="PIXI.AppLoaderPlugin.html">AppLoaderPlugin</a></li><li><a href="PIXI.Application.html">Application</a></li><li><a href="PIXI.BaseRenderTexture.html">BaseRenderTexture</a></li><li><a href="PIXI.BaseTexture.html">BaseTexture</a></li><li><a href="PIXI.BlobResource.html">BlobResource</a></li><li><a href="PIXI.Bounds.html">Bounds</a></li><li><a href="PIXI.BufferSystem.html">BufferSystem</a></li><li><a href="PIXI.CompressedTextureLoader.html">CompressedTextureLoader</a></li><li><a href="PIXI.Container.html">Container</a></li><li><a href="PIXI.DDSLoader.html">DDSLoader</a></li><li><a href="PIXI.DisplayObject.html">DisplayObject</a></li><li><a href="PIXI.Extract.html">Extract</a></li><li><a href="PIXI.FillStyle.html">FillStyle</a></li><li><a href="PIXI.Framebuffer.html">Framebuffer</a></li><li><a href="PIXI.FramebufferSystem.html">FramebufferSystem</a></li><li><a href="PIXI.GLFramebuffer.html">GLFramebuffer</a></li><li><a href="PIXI.GLProgram.html">GLProgram</a></li><li><a href="PIXI.GLTexture.html">GLTexture</a></li><li><a href="PIXI.Graphics.html">Graphics</a></li><li><a href="PIXI.GraphicsData.html">GraphicsData</a></li><li><a href="PIXI.GraphicsGeometry.html">GraphicsGeometry</a></li><li><a href="PIXI.InteractionData.html">InteractionData</a></li><li><a href="PIXI.InteractionEvent.html">InteractionEvent</a></li><li><a href="PIXI.InteractionManager.html">InteractionManager</a></li><li><a href="PIXI.KTXLoader.html">KTXLoader</a></li><li><a href="PIXI.LineStyle.html">LineStyle</a></li><li><a href="PIXI.Loader.html">Loader</a></li><li><a href="PIXI.MeshBatchUvs.html">MeshBatchUvs</a></li><li><a href="PIXI.MeshGeometry.html">MeshGeometry</a></li><li><a href="PIXI.MeshMaterial.html">MeshMaterial</a></li><li><a href="PIXI.ParticleContainer.html">ParticleContainer</a></li><li><a href="PIXI.ParticleRenderer.html">ParticleRenderer</a></li><li><a href="PIXI.Point.html">Point</a></li><li><a href="PIXI.Quad.html">Quad</a></li><li><a href="PIXI.QuadUv.html">QuadUv</a></li><li><a href="PIXI.RopeGeometry.html">RopeGeometry</a></li><li><a href="PIXI.RoundedRectangle.html">RoundedRectangle</a></li><li><a href="PIXI.Texture.html">Texture</a></li><li><a href="PIXI.TextureGCSystem.html">TextureGCSystem</a></li><li><a href="PIXI.TextureMatrix.html">TextureMatrix</a></li><li><a href="PIXI.TextureSystem.html">TextureSystem</a></li><li><a href="PIXI.TextureUvs.html">TextureUvs</a></li><li><a href="PIXI.Ticker.html">Ticker</a></li><li><a href="PIXI.TickerPlugin.html">TickerPlugin</a></li><li><a href="PIXI.TilingSpriteRenderer.html">TilingSpriteRenderer</a></li><li><a href="PIXI.UniformGroup.html">UniformGroup</a></li><li><a href="PIXI.ViewableBuffer.html">ViewableBuffer</a></li><li><a href="PIXI.filters.BlurFilterPass.html">BlurFilterPass</a></li><li><a href="PIXI.graphicsUtils.BatchPart.html">BatchPart</a></li><li><a href="PIXI.utils.CanvasRenderTarget.html">CanvasRenderTarget</a></li><li><a href="People.html">People</a></li><li><a href="SamplingComp.html">SamplingComp</a></li><li><a href="SignalBinding.html">SignalBinding</a></li><li><a href="SlicesMenu.html">SlicesMenu</a></li><li><a href="ThemeToggle.html">ThemeToggle</a></li></ul><h3>Interfaces</h3><ul><li><a href="CropAxisInterface.html">CropAxisInterface</a></li><li><a href="ErrorInterface.html">ErrorInterface</a></li><li><a href="HistogramInfoPayload.html">HistogramInfoPayload</a></li><li><a href="ImageShapeInterface.html">ImageShapeInterface</a></li><li><a href="IonRangeElement.html">IonRangeElement</a></li><li><a href="LabelInterface.html">LabelInterface</a></li><li><a href="MenuItem.html">MenuItem</a></li><li><a href="MultiplesPath.html">MultiplesPath</a></li><li><a href="OffscreenCanvas.html">OffscreenCanvas</a></li><li><a href="PIXI.IHitArea.html">IHitArea</a></li><li><a href="PIXI.utils.DecomposedDataUri.html">DecomposedDataUri</a></li><li><a href="PatchesInterface.html">PatchesInterface</a></li><li><a href="QueueToast.html">QueueToast</a></li><li><a href="SamplingInterface.html">SamplingInterface</a></li><li><a href="SelectInterface.html">SelectInterface</a></li><li><a href="SharedArrayBuffer.html">SharedArrayBuffer</a></li><li><a href="TableElement.html">TableElement</a></li><li><a href="TableInterface.html">TableInterface</a></li><li><a href="dataType.html">dataType</a></li><li><a href="multiplesPath_.html">multiplesPath</a></li><li>{LabelEditProps}</li><li>{<a href="LabelInterface.html">LabelInterface</a>}</li><li>{LoadingComponentInterface}</li></ul><h3>Events</h3><ul><li><a href="PIXI.BaseRenderTexture.html#event:dispose">dispose</a></li><li><a href="PIXI.BaseRenderTexture.html#event:error">error</a></li><li><a href="PIXI.BaseRenderTexture.html#event:loaded">loaded</a></li><li><a href="PIXI.BaseRenderTexture.html#event:update">update</a></li><li><a href="PIXI.BaseTexture.html#event:dispose">dispose</a></li><li><a href="PIXI.BaseTexture.html#event:error">error</a></li><li><a href="PIXI.BaseTexture.html#event:loaded">loaded</a></li><li><a href="PIXI.BaseTexture.html#event:update">update</a></li><li><a href="PIXI.Container.html#event:click">click</a></li><li><a href="PIXI.Container.html#event:mousedown">mousedown</a></li><li><a href="PIXI.Container.html#event:mousemove">mousemove</a></li><li><a href="PIXI.Container.html#event:mouseout">mouseout</a></li><li><a href="PIXI.Container.html#event:mouseover">mouseover</a></li><li><a href="PIXI.Container.html#event:mouseup">mouseup</a></li><li><a href="PIXI.Container.html#event:mouseupoutside">mouseupoutside</a></li><li><a href="PIXI.Container.html#event:pointercancel">pointercancel</a></li><li><a href="PIXI.Container.html#event:pointerdown">pointerdown</a></li><li><a href="PIXI.Container.html#event:pointermove">pointermove</a></li><li><a href="PIXI.Container.html#event:pointerout">pointerout</a></li><li><a href="PIXI.Container.html#event:pointerover">pointerover</a></li><li><a href="PIXI.Container.html#event:pointertap">pointertap</a></li><li><a href="PIXI.Container.html#event:pointerup">pointerup</a></li><li><a href="PIXI.Container.html#event:pointerupoutside">pointerupoutside</a></li><li><a href="PIXI.Container.html#event:rightclick">rightclick</a></li><li><a href="PIXI.Container.html#event:rightdown">rightdown</a></li><li><a href="PIXI.Container.html#event:rightup">rightup</a></li><li><a href="PIXI.Container.html#event:rightupoutside">rightupoutside</a></li><li><a href="PIXI.Container.html#event:tap">tap</a></li><li><a href="PIXI.Container.html#event:touchcancel">touchcancel</a></li><li><a href="PIXI.Container.html#event:touchend">touchend</a></li><li><a href="PIXI.Container.html#event:touchendoutside">touchendoutside</a></li><li><a href="PIXI.Container.html#event:touchmove">touchmove</a></li><li><a href="PIXI.Container.html#event:touchstart">touchstart</a></li><li><a href="PIXI.DisplayObject.html#event:click">click</a></li><li><a href="PIXI.DisplayObject.html#event:mousedown">mousedown</a></li><li><a href="PIXI.DisplayObject.html#event:mousemove">mousemove</a></li><li><a href="PIXI.DisplayObject.html#event:mouseout">mouseout</a></li><li><a href="PIXI.DisplayObject.html#event:mouseover">mouseover</a></li><li><a href="PIXI.DisplayObject.html#event:mouseup">mouseup</a></li><li><a href="PIXI.DisplayObject.html#event:mouseupoutside">mouseupoutside</a></li><li><a href="PIXI.DisplayObject.html#event:pointercancel">pointercancel</a></li><li><a href="PIXI.DisplayObject.html#event:pointerdown">pointerdown</a></li><li><a href="PIXI.DisplayObject.html#event:pointermove">pointermove</a></li><li><a href="PIXI.DisplayObject.html#event:pointerout">pointerout</a></li><li><a href="PIXI.DisplayObject.html#event:pointerover">pointerover</a></li><li><a href="PIXI.DisplayObject.html#event:pointertap">pointertap</a></li><li><a href="PIXI.DisplayObject.html#event:pointerup">pointerup</a></li><li><a href="PIXI.DisplayObject.html#event:pointerupoutside">pointerupoutside</a></li><li><a href="PIXI.DisplayObject.html#event:rightclick">rightclick</a></li><li><a href="PIXI.DisplayObject.html#event:rightdown">rightdown</a></li><li><a href="PIXI.DisplayObject.html#event:rightup">rightup</a></li><li><a href="PIXI.DisplayObject.html#event:rightupoutside">rightupoutside</a></li><li><a href="PIXI.DisplayObject.html#event:tap">tap</a></li><li><a href="PIXI.DisplayObject.html#event:touchcancel">touchcancel</a></li><li><a href="PIXI.DisplayObject.html#event:touchend">touchend</a></li><li><a href="PIXI.DisplayObject.html#event:touchendoutside">touchendoutside</a></li><li><a href="PIXI.DisplayObject.html#event:touchmove">touchmove</a></li><li><a href="PIXI.DisplayObject.html#event:touchstart">touchstart</a></li><li><a href="PIXI.Graphics.html#event:click">click</a></li><li><a href="PIXI.Graphics.html#event:mousedown">mousedown</a></li><li><a href="PIXI.Graphics.html#event:mousemove">mousemove</a></li><li><a href="PIXI.Graphics.html#event:mouseout">mouseout</a></li><li><a href="PIXI.Graphics.html#event:mouseover">mouseover</a></li><li><a href="PIXI.Graphics.html#event:mouseup">mouseup</a></li><li><a href="PIXI.Graphics.html#event:mouseupoutside">mouseupoutside</a></li><li><a href="PIXI.Graphics.html#event:pointercancel">pointercancel</a></li><li><a href="PIXI.Graphics.html#event:pointerdown">pointerdown</a></li><li><a href="PIXI.Graphics.html#event:pointermove">pointermove</a></li><li><a href="PIXI.Graphics.html#event:pointerout">pointerout</a></li><li><a href="PIXI.Graphics.html#event:pointerover">pointerover</a></li><li><a href="PIXI.Graphics.html#event:pointertap">pointertap</a></li><li><a href="PIXI.Graphics.html#event:pointerup">pointerup</a></li><li><a href="PIXI.Graphics.html#event:pointerupoutside">pointerupoutside</a></li><li><a href="PIXI.Graphics.html#event:rightclick">rightclick</a></li><li><a href="PIXI.Graphics.html#event:rightdown">rightdown</a></li><li><a href="PIXI.Graphics.html#event:rightup">rightup</a></li><li><a href="PIXI.Graphics.html#event:rightupoutside">rightupoutside</a></li><li><a href="PIXI.Graphics.html#event:tap">tap</a></li><li><a href="PIXI.Graphics.html#event:touchcancel">touchcancel</a></li><li><a href="PIXI.Graphics.html#event:touchend">touchend</a></li><li><a href="PIXI.Graphics.html#event:touchendoutside">touchendoutside</a></li><li><a href="PIXI.Graphics.html#event:touchmove">touchmove</a></li><li><a href="PIXI.Graphics.html#event:touchstart">touchstart</a></li><li><a href="PIXI.InteractionManager.html#event:click">click</a></li><li><a href="PIXI.InteractionManager.html#event:mousedown">mousedown</a></li><li><a href="PIXI.InteractionManager.html#event:mousemove">mousemove</a></li><li><a href="PIXI.InteractionManager.html#event:mouseout">mouseout</a></li><li><a href="PIXI.InteractionManager.html#event:mouseover">mouseover</a></li><li><a href="PIXI.InteractionManager.html#event:mouseup">mouseup</a></li><li><a href="PIXI.InteractionManager.html#event:mouseupoutside">mouseupoutside</a></li><li><a href="PIXI.InteractionManager.html#event:pointercancel">pointercancel</a></li><li><a href="PIXI.InteractionManager.html#event:pointerdown">pointerdown</a></li><li><a href="PIXI.InteractionManager.html#event:pointermove">pointermove</a></li><li><a href="PIXI.InteractionManager.html#event:pointerout">pointerout</a></li><li><a href="PIXI.InteractionManager.html#event:pointerover">pointerover</a></li><li><a href="PIXI.InteractionManager.html#event:pointertap">pointertap</a></li><li><a href="PIXI.InteractionManager.html#event:pointerup">pointerup</a></li><li><a href="PIXI.InteractionManager.html#event:pointerupoutside">pointerupoutside</a></li><li><a href="PIXI.InteractionManager.html#event:rightclick">rightclick</a></li><li><a href="PIXI.InteractionManager.html#event:rightdown">rightdown</a></li><li><a href="PIXI.InteractionManager.html#event:rightup">rightup</a></li><li><a href="PIXI.InteractionManager.html#event:rightupoutside">rightupoutside</a></li><li><a href="PIXI.InteractionManager.html#event:tap">tap</a></li><li><a href="PIXI.InteractionManager.html#event:touchcancel">touchcancel</a></li><li><a href="PIXI.InteractionManager.html#event:touchend">touchend</a></li><li><a href="PIXI.InteractionManager.html#event:touchendoutside">touchendoutside</a></li><li><a href="PIXI.InteractionManager.html#event:touchmove">touchmove</a></li><li><a href="PIXI.InteractionManager.html#event:touchstart">touchstart</a></li><li><a href="PIXI.ParticleContainer.html#event:click">click</a></li><li><a href="PIXI.ParticleContainer.html#event:mousedown">mousedown</a></li><li><a href="PIXI.ParticleContainer.html#event:mousemove">mousemove</a></li><li><a href="PIXI.ParticleContainer.html#event:mouseout">mouseout</a></li><li><a href="PIXI.ParticleContainer.html#event:mouseover">mouseover</a></li><li><a href="PIXI.ParticleContainer.html#event:mouseup">mouseup</a></li><li><a href="PIXI.ParticleContainer.html#event:mouseupoutside">mouseupoutside</a></li><li><a href="PIXI.ParticleContainer.html#event:pointercancel">pointercancel</a></li><li><a href="PIXI.ParticleContainer.html#event:pointerdown">pointerdown</a></li><li><a href="PIXI.ParticleContainer.html#event:pointermove">pointermove</a></li><li><a href="PIXI.ParticleContainer.html#event:pointerout">pointerout</a></li><li><a href="PIXI.ParticleContainer.html#event:pointerover">pointerover</a></li><li><a href="PIXI.ParticleContainer.html#event:pointertap">pointertap</a></li><li><a href="PIXI.ParticleContainer.html#event:pointerup">pointerup</a></li><li><a href="PIXI.ParticleContainer.html#event:pointerupoutside">pointerupoutside</a></li><li><a href="PIXI.ParticleContainer.html#event:rightclick">rightclick</a></li><li><a href="PIXI.ParticleContainer.html#event:rightdown">rightdown</a></li><li><a href="PIXI.ParticleContainer.html#event:rightup">rightup</a></li><li><a href="PIXI.ParticleContainer.html#event:rightupoutside">rightupoutside</a></li><li><a href="PIXI.ParticleContainer.html#event:tap">tap</a></li><li><a href="PIXI.ParticleContainer.html#event:touchcancel">touchcancel</a></li><li><a href="PIXI.ParticleContainer.html#event:touchend">touchend</a></li><li><a href="PIXI.ParticleContainer.html#event:touchendoutside">touchendoutside</a></li><li><a href="PIXI.ParticleContainer.html#event:touchmove">touchmove</a></li><li><a href="PIXI.ParticleContainer.html#event:touchstart">touchstart</a></li><li><a href="PIXI.html#.Renderer#event:context">context</a></li><li><a href="PIXI.html#.Renderer#event:postrender">postrender</a></li><li><a href="PIXI.html#.Renderer#event:prerender">prerender</a></li><li><a href="PIXI.html#.Renderer#event:resize">resize</a></li><li><a href="global.html#event:added">added</a></li><li><a href="global.html#event:destroyed">destroyed</a></li><li><a href="global.html#event:removed">removed</a></li></ul><h3>Global</h3><ul><li><a href="global.html#AddNewFile">AddNewFile</a></li><li><a href="global.html#App">App</a></li><li><a href="global.html#AugmentationComp">AugmentationComp</a></li><li><a href="global.html#BatchInferenceComp">BatchInferenceComp</a></li><li><a href="global.html#Colormap">Colormap</a></li><li><a href="global.html#CreateDatasetH5">CreateDatasetH5</a></li><li><a href="global.html#DatasetComp">DatasetComp</a></li><li><a href="global.html#DeepLearning">DeepLearning</a></li><li><a href="global.html#DeepLoadingComp">DeepLoadingComp</a></li><li><a href="global.html#DeleteAllWindow">DeleteAllWindow</a></li><li><a href="global.html#EditLabelMenu">EditLabelMenu</a></li><li><a href="global.html#ErrorWindowComp">ErrorWindowComp</a></li><li><a href="global.html#FileLoadDialog">FileLoadDialog</a></li><li><a href="global.html#FileNameComp">FileNameComp</a></li><li><a href="global.html#FileSaveDialog">FileSaveDialog</a></li><li><a href="global.html#InferenceComp">InferenceComp</a></li><li><a href="global.html#InitAugmentationOptions">InitAugmentationOptions</a></li><li><a href="global.html#InputFileComp">InputFileComp</a></li><li><a href="global.html#InputLabel">InputLabel</a></li><li><a href="global.html#MenuContentRange">MenuContentRange</a></li><li><a href="global.html#OptionsIcons">OptionsIcons</a></li><li><a href="global.html#Page">Page</a></li><li><a href="global.html#Remote">Remote</a></li><li><a href="global.html#Settings">Settings</a></li><li><a href="global.html#SideMenuAnnot">SideMenuAnnot</a></li><li><a href="global.html#WarningWindow">WarningWindow</a></li><li><a href="global.html#WorkspaceComp">WorkspaceComp</a></li><li><a href="global.html#dispatch">dispatch</a></li><li><a href="global.html#dtypeList">dtypeList</a></li><li><a href="global.html#encodeBinary">encodeBinary</a></li><li><a href="global.html#extract">extract</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#initialOutput">initialOutput</a></li><li><a href="global.html#initialPatches">initialPatches</a></li><li><a href="global.html#punycode">punycode</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#sfetch">sfetch</a></li><li><a href="global.html#subscribe">subscribe</a></li><li><a href="global.html#typePM">typePM</a></li><li><a href="global.html#unsubscribe">unsubscribe</a></li><li><a href="global.html#useEventBus">useEventBus</a></li></ul></div>
+                
+            </nav>
+        </div>
+        <div class="core" id="main-content-wrapper">
+            <div class="content">
+                <header class="page-title">
+                    <p>Source</p>
+                    <h1>components/main_menu/deep_learning_menu/dataset_comp/SamplingComp.tsx</h1>
+                </header>
+                
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, {Fragment, useState} from "react";
+import {
+    IonAccordion,
+    IonAccordionGroup, IonAlert, IonButton, IonButtons, IonCol,
+    IonContent, IonIcon,
+    IonInput,
+    IonItem,
+    IonItemDivider,
+    IonLabel,
+    IonList, IonPopover, IonRow, IonSelect, IonSelectOption
+} from "@ionic/react";
+import {addOutline, closeOutline, construct, image, trashOutline} from "ionicons/icons";
+import {useStorageState} from "react-storage-hooks";
+import {currentEventValue, dispatch, useEventBus} from "../../../../utils/eventbus";
+import * as ReactBootStrap from "react-bootstrap";
+import {
+    dtype_type,
+    dtypeList,
+    InitFileStatus,
+    InitTables, SamplingInterface,
+    TableElement,
+    TableInterface,
+    type_operation
+} from "./DatasetInterfaces";
+import "./Tables.css";
+import "./Dataset.css";
+import {sfetch} from "../../../../utils/simplerequest";
+import ErrorInterface from "../../file/utils/ErrorInterface";
+import ErrorWindowComp from "../../file/utils/ErrorWindowComp";
+import DeepLoadingComp from "../Utils/DeepLoadingComp";
+
+interface MultiplesPath {
+    id: number,
+    workspacePath: string,
+    file: TableElement,
+}
+
+interface AddNewFileInterface {
+    idMenu: number,
+    onIdMenu: (newId: number, type: type_operation) => void,
+
+    onTableVec: (newFile: MultiplesPath, typeOperation: type_operation) => void,
+
+    typeOperation: type_operation,
+    trigger: string,
+
+    workspaceName: string,
+    onWorkspaceName: (workspace: string) => void
+}
+
+interface BackendPayload {
+    image_path: string,
+    image_dtype: dtype_type,
+    image_raw_shape: Array&lt;number>,
+    use_image_raw_parse: boolean,
+}
+
+/**
+ * React component that creates the add menu interface
+ * @param idMenu {number} - id used to create a new element in the table
+ * @param onIdMenu {(newId: number, type: type_operation)} - handler used to update the idMenu for a specific table
+ * @param onTableVec {(newFile: MultiplesPath) => void} - setter used to create a new element
+ * @param trigger {string} - string that contains the trigger to open the popup
+ * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
+ * @param workspaceName {string} - workspace path string
+ * @param onWorkspaceName {(workspace: string) => void} - setter for workspaceName
+ */
+const AddNewFile: React.FC&lt;AddNewFileInterface> = ({
+                                                       idMenu,
+                                                       onIdMenu,
+                                                       onTableVec,
+                                                       typeOperation,
+                                                       trigger,
+                                                       workspaceName,
+                                                       onWorkspaceName
+                                                   }) => {
+
+    const [showErrorWindow, setShowErrorWindow] = useState&lt;boolean>(false);
+    const [errorMsg, setErrorMsg] = useState&lt;string>("");
+    const [filePath, setFilePath] = useState&lt;string>("");
+    const [showLoadingComp, setShowLoadingComp] = useState&lt;boolean>(false);
+    let pathFiles: MultiplesPath = {
+        id: idMenu,
+        workspacePath: workspaceName,
+        file: InitFileStatus,
+    };
+
+    const handleErrorMsg = (workspace: string) => {
+        setErrorMsg(workspace);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
+
+    const readFile = () => {
+        setShowLoadingComp(true);
+        pathFiles.workspacePath = workspaceName;
+        pathFiles.file.filePath = filePath;
+        const params: BackendPayload = {
+            image_path: pathFiles.workspacePath + pathFiles.file.filePath,
+            image_dtype: pathFiles.file.type,
+            image_raw_shape: [pathFiles.file.shape[0] || 0, pathFiles.file.shape[1] || 0, pathFiles.file.shape[2] || 0],
+            use_image_raw_parse: (pathFiles.file.shape[0] == null &amp;&amp; pathFiles.file.shape[1] == null &amp;&amp; pathFiles.file.shape[2] == null)
+        }
+
+        sfetch("POST", `/open_files_dataset/${typeOperation.toLowerCase()}-${pathFiles.id}`, JSON.stringify(params), "json").then(
+            (element: TableElement) => {
+                console.log("Backend response");
+                console.table(element);
+                pathFiles.file = element
+                onTableVec(pathFiles, typeOperation);
+                pathFiles.id += 1;
+                onWorkspaceName(workspaceName);
+                setFilePath("");
+
+            }).catch((error: ErrorInterface) => {
+            console.log("error while trying to add an image")
+            console.log(error.error_msg);
+            setErrorMsg(error.error_msg);
+            setShowErrorWindow(true);
+        }).finally(() => setShowLoadingComp(false));
+    }
+
+    return (
+        &lt;IonPopover
+            trigger={trigger}
+            className={"add-menu"}
+            onDidDismiss={() => {
+                onIdMenu(pathFiles.id, typeOperation);
+            }}>
+            &lt;IonAccordionGroup multiple={true}>
+                {/*Load workspace menu*/}
+                &lt;IonAccordion>
+                    &lt;IonItem slot={"header"}>
+                        &lt;IonIcon slot={"start"} icon={construct}/>
+                        &lt;IonLabel>&lt;small>Load {typeOperation} workspace&lt;/small>&lt;/IonLabel>
+                    &lt;/IonItem>
+                    &lt;IonList slot={"content"}>
+                        &lt;IonItem>
+                            &lt;IonLabel position="stacked">Workspace Path&lt;/IonLabel>
+                            &lt;IonInput
+                                placeholder={"/path/to/workspace"}
+                                value={workspaceName}
+                                onIonChange={(e: CustomEvent) => {
+                                    onWorkspaceName(e.detail.value);
+                                }}/>
+                        &lt;/IonItem>
+                        &lt;IonItemDivider/>
+                    &lt;/IonList>
+                &lt;/IonAccordion>
+                {/*Load type menu*/}
+                &lt;IonAccordion>
+                    &lt;IonItem slot={"header"}>
+                        &lt;IonIcon slot={"start"} icon={image}/>
+                        &lt;IonLabel>&lt;small>Load {typeOperation}&lt;/small>&lt;/IonLabel>
+                    &lt;/IonItem>
+                    &lt;IonList slot={"content"}>
+                        &lt;IonItem>
+                            &lt;IonLabel position="stacked">{typeOperation} Path&lt;/IonLabel>
+                            &lt;IonInput
+                                placeholder={`/path/to/${typeOperation}.tif, .tiff, .raw or .b`}
+                                value={filePath}
+                                onIonChange={(e: CustomEvent) => {
+                                    setFilePath(e.detail.value);
+                                }}/>
+                        &lt;/IonItem>
+                        {/* Image Size Grid*/}
+                        &lt;IonItem>
+                            &lt;IonRow>
+                                &lt;IonCol>
+                                    &lt;IonLabel position="stacked">{typeOperation} Size&lt;/IonLabel>
+                                    &lt;div style={{display: 'flex', justifyContent: 'flex-start'}}>
+                                        &lt;IonInput
+                                            className={"ion-input"}
+                                            type="number"
+                                            min={"0"}
+                                            value={pathFiles.file.shape[0]}
+                                            placeholder="X"
+                                            onIonChange={(e: CustomEvent) => {
+                                                pathFiles.file.shape[0] = parseInt(e.detail.value!, 10);
+                                            }}
+                                        />
+                                        &lt;IonInput
+                                            className={"ion-input"}
+                                            type="number"
+                                            min={"0"}
+                                            value={pathFiles.file.shape[1]}
+                                            placeholder="Y"
+                                            onIonChange={(e: CustomEvent) => {
+                                                pathFiles.file.shape[1] = parseInt(e.detail.value!, 10);
+                                            }}
+                                        />
+                                        &lt;IonInput
+                                            className={"ion-input"}
+                                            type="number"
+                                            min={"0"}
+                                            value={pathFiles.file.shape[2]}
+                                            placeholder="Z"
+                                            onIonChange={(e: CustomEvent) => {
+                                                pathFiles.file.shape[3] = parseInt(e.detail.value!, 10);
+                                            }}
+                                        />
+                                    &lt;/div>
+                                &lt;/IonCol>
+                                &lt;IonCol>
+                                    {/* Select dtype */}
+                                    &lt;IonLabel position="stacked">{typeOperation} Type&lt;/IonLabel>
+                                    &lt;IonSelect
+                                        style={{maxWidth: '100%'}}
+                                        interface={"popover"}
+                                        value={pathFiles.file.type}
+                                        placeholder={"Select One"}
+                                        onIonChange={(e: CustomEvent) => {
+                                            pathFiles.file.type = e.detail.value;
+                                        }}>
+                                        {dtypeList.map((type) => {
+                                            return (
+                                                &lt;IonSelectOption
+                                                    value={type.value}>{type.label}&lt;/IonSelectOption>
+                                            );
+                                        })}
+                                    &lt;/IonSelect>
+                                &lt;/IonCol>
+                            &lt;/IonRow>
+                        &lt;/IonItem>
+                        &lt;IonItemDivider/>
+                    &lt;/IonList>
+                &lt;/IonAccordion>
+            &lt;/IonAccordionGroup>
+            &lt;IonButton
+                size={"default"}
+                color={"tertiary"}
+                onClick={() => {
+                    console.log("type operation : ", typeOperation);
+                    console.log("path");
+                    console.table(pathFiles);
+                    readFile();
+                }}>Load {typeOperation}&lt;/IonButton>
+            &lt;ErrorWindowComp
+                headerMsg={`Error trying to add an element in ${typeOperation} table`}
+                errorMsg={errorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
+            &lt;DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={`Reading ${pathFiles.file.fileName} as ${typeOperation}`}/>
+        &lt;/IonPopover>
+    );
+}
+
+interface WarningWindowInterface {
+    openWarningWindow: boolean,
+    onOpenWarningWindow: (flag: boolean) => void,
+
+    typeOperation: type_operation,
+    onTableList: (typeOperation: type_operation) => void,
+}
+
+/**
+ * Component used to create an ion-Alert to delete all elements of a table
+ * @param openWarningWindow {boolean} - boolean variable to open this window
+ * @param onOpenWarningWindow {(flag: boolean) => void} - handler for openWarningWindow
+ * @param typeOperation {type_operation} - type of operation to delete
+ * @param onTableList {(typeOperation: type_operation) => void} - handler to delete all elements of a table
+ */
+const DeleteAllWindow: React.FC&lt;WarningWindowInterface> = ({
+                                                               openWarningWindow,
+                                                               onOpenWarningWindow,
+                                                               typeOperation,
+                                                               onTableList
+                                                           }) => {
+    const [showErrorWindow, setShowErrorWindow] = useState&lt;boolean>(false);
+    const [showLoadingComp, setShowLoadingComp] = useState&lt;boolean>(false);
+    const [errorMsg, setErrorMsg] = useState&lt;string>("");
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
+
+    return (
+        &lt;Fragment>
+            &lt;IonAlert
+                isOpen={openWarningWindow}
+                onDidDismiss={() => onOpenWarningWindow(false)}
+                header={`Deleting all ${typeOperation}s`}
+                message={`Do you wish to delete all ${typeOperation}s ?`}
+                buttons={[
+                    {
+                        text: "No",
+                        id: "no-button",
+                        handler: () => {
+                            onOpenWarningWindow(false);
+                        }
+                    },
+                    {
+                        text: "Yes",
+                        id: "yes-button",
+                        handler: () => {
+                            setShowLoadingComp(true);
+                            sfetch("POST", `/close_all_files_dataset/${typeOperation.toLowerCase()}`).then(() => {
+                                onTableList(typeOperation);
+                                onOpenWarningWindow(false);
+                            }).catch((error: ErrorInterface) => {
+                                console.log(`error in delete all ${typeOperation}`);
+                                console.log(error.error_msg);
+                                setErrorMsg(error.error_msg);
+                                setShowErrorWindow(true);
+                            }).finally(() => setShowLoadingComp(false));
+                        }
+                    }
+                ]}/>
+            &lt;ErrorWindowComp
+                headerMsg={`Error trying to delete all files in ${typeOperation} table`}
+                errorMsg={errorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
+            &lt;DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={`Deleting all ${typeOperation}`}/>
+        &lt;/Fragment>
+    )
+}
+
+interface DeleteMenuInterface {
+    labelElement: TableInterface,
+    removeLabelElement: (labelElement: TableInterface) => void,
+}
+
+/**
+ * Component used in Filename in each bootstrap-table map. This table can be for Data, Label or Weight.
+ * @param labelElement {TableInterface} - element of a bootstrap-table
+ * @param removeLabelElement {(labelElement: TableInterface) => void} - function to delete an element of a bootstrap-table
+ */
+const FileNameComp: React.FC&lt;DeleteMenuInterface> = ({labelElement, removeLabelElement}) => {
+    const [showAlert, setShowAlert] = useState&lt;boolean>(false);
+    const [showErrorWindow, setShowErrorWindow] = useState&lt;boolean>(false);
+    const [showLoadingComp, setShowLoadingComp] = useState&lt;boolean>(false);
+    const [errorMsg, setErrorMsg] = useState&lt;string>("");
+
+    const handleErrorMsg = (msg: string) => {
+        setErrorMsg(msg);
+    }
+
+    const handleErrorWindow = (flag: boolean) => {
+        setShowErrorWindow(flag);
+    }
+
+    return (
+        &lt;IonItem className={"ion-item-table"}
+                 id={"file-name-comp"}>
+            &lt;IonButtons>
+                &lt;IonButton id={`delete-${labelElement.typeOperation}-button-${labelElement.id}`}
+                           size="small"
+                           onClick={() => {
+                               console.log("label to delete : ", labelElement);
+                               console.table(labelElement);
+                               setShowAlert(true);
+                           }}>
+                    &lt;IonIcon icon={closeOutline}/>
+                &lt;/IonButton>
+                {/*Delete popUp*/}
+                &lt;IonAlert
+                    isOpen={showAlert}
+                    onDidDismiss={() => setShowAlert(false)}
+                    message={`Do you wish to delete the ${labelElement.typeOperation} with name "${labelElement.element.fileName}" ?`}
+                    buttons={[
+                        {
+                            text: "No",
+                            id: "no-button",
+                            handler: () => {
+                                setShowAlert(false);
+                            }
+                        },
+                        {
+                            text: "Yes",
+                            id: "yes-button",
+                            handler: () => {
+                                setShowLoadingComp(true);
+                                sfetch("POST", `/close_files_dataset/${labelElement.typeOperation.toLowerCase()}-${labelElement.id}`, "json").then(
+                                    () => {
+                                        removeLabelElement(labelElement);
+                                        setShowAlert(false);
+                                    }
+                                ).catch((error: ErrorInterface) => {
+                                    console.log("Error while deleting an element");
+                                    console.log("error msg : ", error.error_msg);
+                                    setErrorMsg(error.error_msg);
+                                    setShowErrorWindow(true);
+                                }).finally(() => setShowLoadingComp(false));
+                            }
+                        }
+                    ]}/>
+            &lt;/IonButtons>
+            {labelElement.element.fileName}
+            &lt;ErrorWindowComp
+                headerMsg={`Error trying to delete ${labelElement.element.fileName} files in ${labelElement.typeOperation} table`}
+                errorMsg={errorMsg}
+                onErrorMsg={handleErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={handleErrorWindow}/>
+            &lt;DeepLoadingComp
+                openLoadingWindow={showLoadingComp}
+                loadingText={`Deleting the ${labelElement.typeOperation} with name "${labelElement.element.fileName}.`}/>
+        &lt;/IonItem>
+    );
+}
+
+interface SamplingCompInterface {
+    sampleElement: SamplingInterface,
+    onSampling: (sample: SamplingInterface) => void,
+
+    workspacePath: string,
+    onWorkspacePath: (workspace: string) => void
+}
+
+/**
+ * Component that creates the Sampling menu
+ * @param sampleElement {SamplingInterface} - sampleElement object
+ * @param onSampling {(sample: SamplingInterface) => void} - setter for sampleElement
+ * @param workspacePath {string} - workspace path string
+ * @param onWorkspacePath {(workspace: string) => void} - setter for workspacePath
+ * @constructor
+ */
+const SamplingComp: React.FC&lt;SamplingCompInterface> = ({sampleElement, onSampling, workspacePath, onWorkspacePath}) => {
+
+    const [darkMode, setDarkMode] = useState&lt;boolean>(currentEventValue('toggleMode'));
+    const [openDeleteAll, setOpenDeleteAll] = useState&lt;boolean>(false);
+    const [typeOperation, setTypeOperation] = useState&lt;type_operation>("Data");
+
+    const [dataTable, setDataTable] = useStorageState&lt;TableInterface[]>(sessionStorage, 'dataTable', InitTables);
+    const [labelTable, setLabelTable] = useStorageState&lt;TableInterface[]>(sessionStorage, 'labelTableDataset', InitTables);
+    const [weightTable, setWeightTable] = useStorageState&lt;TableInterface[]>(sessionStorage, 'WeightTable', InitTables);
+    const [idTableData, setIdTableData] = useStorageState&lt;number>(sessionStorage, "idTableData", 0);
+    const [idTableLabel, setIdTableLabel] = useStorageState&lt;number>(sessionStorage, "idTableLabel", 0);
+    const [idTableWeight, setIdTableWeight] = useStorageState&lt;number>(sessionStorage, "idTableWeight", 0);
+
+    useEventBus('toggleMode', (darkMode: boolean) => {
+        setDarkMode(darkMode);
+    });
+
+    const handleOpenDeleteAll = (flag: boolean) => {
+        setOpenDeleteAll(flag);
+    }
+
+    const handleDataTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
+        if (newFile.id === 0) {
+            setDataTable([{
+                id: newFile.id,
+                typeOperation: typeOperation,
+                element: {
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
+                }
+            }]);
+        } else {
+            setDataTable([...dataTable, {
+                id: newFile.id,
+                typeOperation: typeOperation,
+                element: {
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.type,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
+                }
+            }]);
+        }
+        setIdTableData(newFile.id + 1);
+    }
+
+    const handleLabelTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
+        if (newFile.id === 0) {
+            setLabelTable([{
+                id: newFile.id,
+                typeOperation: typeOperation,
+                element: {
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
+                }
+            }]);
+        } else {
+            setLabelTable([...labelTable, {
+                id: newFile.id,
+                typeOperation: typeOperation,
+                element: {
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
+                }
+            }]);
+        }
+        setIdTableLabel(newFile.id + 1);
+    }
+
+    const handleWeightTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
+        if (newFile.id === 0) {
+            setWeightTable([{
+                id: newFile.id,
+                typeOperation: typeOperation,
+                element: {
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
+                }
+            }]);
+        } else {
+            setWeightTable([...weightTable, {
+                id: newFile.id,
+                typeOperation: typeOperation,
+                element: {
+                    fileName: newFile.file.fileName,
+                    shape: newFile.file.shape,
+                    type: newFile.file.type,
+                    scan: newFile.file.scan,
+                    time: newFile.file.time,
+                    size: newFile.file.size,
+                    filePath: newFile.file.filePath
+                }
+            }]);
+        }
+        setIdTableWeight(newFile.id + 1);
+    }
+
+    const handleIdValues = (newId: number, type: type_operation) => {
+        if (type === "Data") {
+            setIdTableData(newId);
+        } else if (type === "Label") {
+            setIdTableLabel(newId);
+        } else if (type === "Weight") {
+            setIdTableWeight(newId);
+        }
+    }
+
+    const resetTable = (typeOperation: type_operation) => {
+        if (typeOperation === "Data") {
+            setDataTable([]);
+            setIdTableData(0);
+        } else if (typeOperation === "Label") {
+            setLabelTable([]);
+            setIdTableLabel(0);
+        } else if (typeOperation === "Weight") {
+            setWeightTable([]);
+            setIdTableWeight(0);
+        }
+    }
+
+    const [selectedLabel, setSelectedLabel] = useStorageState&lt;number>(sessionStorage, 'selectedLabel', 0);
+
+    const removeLabelElement = (labelElement: TableInterface) => {
+        if (labelElement.typeOperation === "Data") {
+            const newVec = dataTable!.filter(l => l.id !== labelElement.id);
+            if (newVec.length === 0) {
+                setIdTableData(0);
+            }
+            setDataTable(newVec);
+        } else if (labelElement.typeOperation === "Label") {
+            const newVec = labelTable!.filter(l => l.id !== labelElement.id);
+            if (newVec.length === 0) {
+                setIdTableLabel(0);
+            }
+            setLabelTable(newVec);
+        } else if (labelElement.typeOperation === "Weight") {
+            const newVec = weightTable!.filter(l => l.id !== labelElement.id);
+            if (newVec.length === 0) {
+                setIdTableWeight(0);
+            }
+            setWeightTable(newVec);
+        }
+    }
+
+    const selectLabel = (id: number) => {
+        setSelectedLabel(id);
+        dispatch('selectedElement', {
+            id: id
+        });
+    }
+
+    const renderLabel = (labelElement: TableInterface) => {
+        const isActive = labelElement.id === selectedLabel;
+        return (
+            &lt;tr key={labelElement.id} className={isActive ? "label-table-active" : ""}
+                onClick={() => selectLabel(labelElement.id)}>
+                {/*Table Content*/}
+                &lt;td>
+                    &lt;FileNameComp
+                        labelElement={labelElement}
+                        removeLabelElement={removeLabelElement}/>
+                &lt;/td>
+                &lt;td>
+                    &lt;IonItem className={"ion-item-table"}>
+                        {`${labelElement.element.shape[0]} x ${labelElement.element.shape[1]} x ${labelElement.element.shape[2]}`}
+                    &lt;/IonItem>
+                &lt;/td>
+                &lt;td>
+                    &lt;IonItem className={"ion-item-table"}>
+                        {labelElement.element.type}
+                    &lt;/IonItem>
+                &lt;/td>
+                &lt;td>
+                    &lt;IonItem className={"ion-item-table"}>
+                        {labelElement.element.scan}
+                    &lt;/IonItem>
+                &lt;/td>
+                &lt;td>
+                    &lt;IonItem className={"ion-item-table"}>
+                        {`${labelElement.element.time} s`}
+                    &lt;/IonItem>
+                &lt;/td>
+                &lt;td>
+                    &lt;IonItem className={"ion-item-table"}>
+                        {`${labelElement.element.size} MB`}
+                    &lt;/IonItem>
+                &lt;/td>
+                &lt;td>
+                    &lt;IonItem className={"ion-item-table"}>
+                        {labelElement.element.filePath}
+                    &lt;/IonItem>
+                &lt;/td>
+            &lt;/tr>
+        );
+
+    };
+
+    const NAME_WIDTH = "col-3";
+
+    return (
+        &lt;small>
+            &lt;IonContent
+                scrollEvents={true}>
+                {/*Sampling menu option*/}
+                &lt;IonAccordionGroup multiple={true}>
+                    {/*Data menu option*/}
+                    &lt;IonAccordion>
+                        &lt;IonItem slot={"header"}>
+                            &lt;IonLabel>&lt;small>Data&lt;/small>&lt;/IonLabel>
+                        &lt;/IonItem>
+                        &lt;IonList slot={"content"}>
+                            &lt;div style={{display: "flex", justifyContent: "flex-end"}}>
+                                &lt;IonButton
+                                    id={"data-menu"}
+                                    size={"default"}>
+                                    &lt;IonIcon
+                                        icon={addOutline}
+                                        slot={"end"}/>
+                                    Add
+                                &lt;/IonButton>
+                                &lt;IonButton
+                                    color={"danger"}
+                                    size={"default"}
+                                    slot={"end"}
+                                    disabled={dataTable.length &lt;= 0}
+                                    onClick={() => {
+                                        setTypeOperation("Data");
+                                        setOpenDeleteAll(true);
+                                    }}>
+                                    &lt;IonIcon icon={trashOutline} slot={"end"}/>
+                                    Delete all
+                                &lt;/IonButton>
+                            &lt;/div>
+                            {/*Data table*/}
+                            &lt;div className={"label-table-dataset table-responsive text-nowrap"}>
+                                &lt;ReactBootStrap.Table
+                                    striped bordered hover
+                                    className={darkMode ? 'table-dark table-sm' : ''}>
+                                    &lt;thead>
+                                    &lt;tr>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>File Name&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Shape&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Type&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Scan&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Time&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Size&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Full Path&lt;/IonLabel>&lt;/th>
+                                    &lt;/tr>
+                                    &lt;/thead>
+                                    &lt;tbody>
+                                    {dataTable!.map(renderLabel)}
+                                    &lt;/tbody>
+                                &lt;/ReactBootStrap.Table>
+                            &lt;/div>
+                            &lt;AddNewFile
+                                idMenu={idTableData}
+                                onIdMenu={handleIdValues}
+                                onTableVec={handleDataTable}
+                                trigger={"data-menu"}
+                                typeOperation={"Data"}
+                                workspaceName={workspacePath}
+                                onWorkspaceName={onWorkspacePath}/>
+                            &lt;IonItemDivider/>
+                        &lt;/IonList>
+                    &lt;/IonAccordion>
+                    {/*Label menu option*/}
+                    &lt;IonAccordion>
+                        &lt;IonItem slot={"header"}>
+                            &lt;IonLabel>&lt;small>Label&lt;/small>&lt;/IonLabel>
+                        &lt;/IonItem>
+                        &lt;IonList slot={"content"}>
+                            &lt;div style={{display: "flex", justifyContent: "flex-end"}}>
+                                &lt;IonButton
+                                    id={"label-menu"}
+                                    size={"default"}>
+                                    &lt;IonIcon
+                                        icon={addOutline}
+                                        slot={"end"}/>
+                                    Add
+                                &lt;/IonButton>
+                                &lt;IonButton
+                                    color={"danger"}
+                                    size={"default"}
+                                    slot={"end"}
+                                    disabled={labelTable.length &lt;= 0}
+                                    onClick={() => {
+                                        setTypeOperation("Label");
+                                        setOpenDeleteAll(true);
+                                    }}>
+                                    &lt;IonIcon icon={trashOutline} slot={"end"}/>
+                                    Delete all
+                                &lt;/IonButton>
+                            &lt;/div>
+                            &lt;div className={"label-table-dataset table-responsive text-nowrap"}>
+                                &lt;ReactBootStrap.Table striped bordered hover
+                                                      className={darkMode ? 'table-dark w-auto' : 'w-auto'}>
+                                    &lt;thead>
+                                    &lt;tr>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>File Name&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Shape&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Type&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Scan&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Time&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Size&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Full Path&lt;/IonLabel>&lt;/th>
+                                    &lt;/tr>
+                                    &lt;/thead>
+                                    &lt;tbody>
+                                    {labelTable!.map(renderLabel)}
+                                    &lt;/tbody>
+                                &lt;/ReactBootStrap.Table>
+                            &lt;/div>
+                            &lt;AddNewFile
+                                idMenu={idTableLabel}
+                                onIdMenu={handleIdValues}
+                                onTableVec={handleLabelTable}
+                                trigger={"label-menu"}
+                                typeOperation={"Label"}
+                                workspaceName={workspacePath}
+                                onWorkspaceName={onWorkspacePath}/>
+                            &lt;IonItemDivider/>
+                        &lt;/IonList>
+                    &lt;/IonAccordion>
+                    {/*Weight menu option*/}
+                    &lt;IonAccordion>
+                        &lt;IonItem slot={"header"}>
+                            &lt;IonLabel>&lt;small>Weight&lt;/small>&lt;/IonLabel>
+                        &lt;/IonItem>
+                        &lt;IonList slot={"content"}>
+                            &lt;div style={{display: "flex", justifyContent: "flex-end"}}>
+                                &lt;IonButton
+                                    id={"weight-menu"}
+                                    size={"default"}>
+                                    &lt;IonIcon
+                                        icon={addOutline}
+                                        slot={"end"}/>
+                                    Add
+                                &lt;/IonButton>
+                                &lt;IonButton
+                                    color={"danger"}
+                                    size={"default"}
+                                    slot={"end"}
+                                    disabled={weightTable.length &lt;= 0}
+                                    onClick={() => {
+                                        setTypeOperation("Weight");
+                                        setOpenDeleteAll(true);
+                                    }}>
+                                    &lt;IonIcon icon={trashOutline} slot={"end"}/>
+                                    Delete all
+                                &lt;/IonButton>
+                            &lt;/div>
+                            &lt;div className={"label-table-dataset table-responsive text-nowrap"}>
+                                &lt;ReactBootStrap.Table striped bordered hover
+                                                      className={darkMode ? 'table-dark' : ''}>
+                                    &lt;thead>
+                                    &lt;tr>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>File Name&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Shape&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Type&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Scan&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Time&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Size&lt;/IonLabel>&lt;/th>
+                                        &lt;th className={NAME_WIDTH}>&lt;IonLabel>Full Path&lt;/IonLabel>&lt;/th>
+                                    &lt;/tr>
+                                    &lt;/thead>
+                                    &lt;tbody>
+                                    {weightTable!.map(renderLabel)}
+                                    &lt;/tbody>
+                                &lt;/ReactBootStrap.Table>
+                            &lt;/div>
+                            &lt;AddNewFile
+                                idMenu={idTableWeight}
+                                onIdMenu={handleIdValues}
+                                onTableVec={handleWeightTable}
+                                trigger={"weight-menu"}
+                                typeOperation={"Weight"}
+                                workspaceName={workspacePath}
+                                onWorkspaceName={onWorkspacePath}/>
+                            &lt;IonItemDivider/>
+                        &lt;/IonList>
+                    &lt;/IonAccordion>
+                    {/*Sampling menu option*/}
+                    &lt;IonAccordion>
+                        &lt;IonItem slot={"header"}>
+                            &lt;IonLabel>&lt;small>Sampling&lt;/small>&lt;/IonLabel>
+                        &lt;/IonItem>
+                        &lt;IonList slot={"content"}>
+                            {/*# Classes*/}
+                            &lt;IonItem>
+                                &lt;IonRow>
+                                    &lt;IonCol>
+                                        &lt;IonLabel># Classes&lt;/IonLabel>
+                                        &lt;div style={{display: "flex", justifyContent: "flex-start"}}>
+                                            &lt;IonInput
+                                                type={"number"}
+                                                min={"0"}
+                                                max={"99"}
+                                                value={sampleElement.nClasses}
+                                                onIonChange={(e: CustomEvent) => {
+                                                    if (e.detail.value &lt;= 99) {
+                                                        onSampling({
+                                                            ...sampleElement,
+                                                            nClasses: parseInt(e.detail.value!, 10)
+                                                        })
+                                                    }
+                                                }}/>
+                                        &lt;/div>
+                                    &lt;/IonCol>
+                                &lt;/IonRow>
+                            &lt;/IonItem>
+                            {/*Sample Size*/}
+                            &lt;IonItem>
+                                &lt;IonRow>
+                                    &lt;IonCol>
+                                        &lt;IonLabel>Sample Size&lt;/IonLabel>
+                                        &lt;div style={{display: "flex", justifyContent: "flex-start"}}>
+                                            &lt;IonInput
+                                                type={"number"}
+                                                min={"0"} value={sampleElement.sampleSize}
+                                                onIonChange={(e: CustomEvent) => {
+                                                    onSampling({
+                                                        ...sampleElement,
+                                                        sampleSize: parseInt(e.detail.value!, 10)
+                                                    })
+                                                }}/>
+                                        &lt;/div>
+                                    &lt;/IonCol>
+                                &lt;/IonRow>
+                            &lt;/IonItem>
+                            {/*Patch Size*/}
+                            &lt;IonItem>
+                                &lt;IonRow>
+                                    &lt;IonCol>
+                                        &lt;IonLabel>Patch Size (X, Y, Z)&lt;/IonLabel>
+                                        &lt;div style={{display: 'flex', justifyContent: 'flex-start'}}>
+                                            &lt;IonInput
+                                                type="number"
+                                                min={"0"}
+                                                value={sampleElement.patchSize[0]}
+                                                placeholder="X"
+                                                onIonChange={(e: CustomEvent) => onSampling({
+                                                    ...sampleElement,
+                                                    patchSize: [parseInt(e.detail.value!, 10), sampleElement.patchSize[1], sampleElement.patchSize[2]]
+                                                })}
+                                            />
+                                            &lt;IonInput
+                                                type="number"
+                                                min={"0"}
+                                                value={sampleElement.patchSize[1]}
+                                                placeholder="Y"
+                                                onIonChange={(e: CustomEvent) => onSampling({
+                                                    ...sampleElement,
+                                                    patchSize: [sampleElement.patchSize[0], parseInt(e.detail.value!, 10), sampleElement.patchSize[2]]
+                                                })}
+                                            />
+                                            &lt;IonInput
+                                                type="number"
+                                                min={"0"}
+                                                value={sampleElement.patchSize[2]}
+                                                placeholder="Z"
+                                                onIonChange={(e: CustomEvent) => onSampling({
+                                                    ...sampleElement,
+                                                    patchSize: [sampleElement.patchSize[0], sampleElement.patchSize[1], parseInt(e.detail.value!, 10)]
+                                                })}
+                                            />
+                                        &lt;/div>
+                                    &lt;/IonCol>
+                                &lt;/IonRow>
+                            &lt;/IonItem>
+                            &lt;IonItemDivider/>
+                        &lt;/IonList>
+                    &lt;/IonAccordion>
+                &lt;/IonAccordionGroup>
+                &lt;DeleteAllWindow
+                    openWarningWindow={openDeleteAll}
+                    onOpenWarningWindow={handleOpenDeleteAll}
+                    typeOperation={typeOperation}
+                    onTableList={resetTable}/>
+            &lt;/IonContent>
+        &lt;/small>
+    );
+}
+
+export default SamplingComp;</code></pre>
+        </article>
+    </section>
+
+
+
+
+            </div>
+            
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a></p>
+                    <p class="sidebar-created-by">
+                        <a href="https://github.com/SoftwareBrothers/better-docs" target="_blank">BetterDocs theme</a> provided with <i class="fas fa-heart"></i> by
+                        <a href="http://softwarebrothers.co" target="_blank">SoftwareBrothers - JavaScript Development Agency</a>
+                    </p>
+                </div>
+            </footer>
+            
+        </div>
+        <div id="side-nav" class="side-nav">
+        </div>
+    </div>
+<script src="scripts/app.min.js"></script>
+<script>PR.prettyPrint();</script>
+<script src="scripts/linenumber.js"> </script>
+
+<script src="scripts/search.js"> </script>
+
+
+</body>
+</html>

@@ -1,0 +1,6160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Framework Documentation ParticleContainer</title>
+
+  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./build/entry.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,400,700|Inconsolata,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://jmblog.github.io/color-themes-for-google-code-prettify/themes/tomorrow-night.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/app.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/iframe.css">
+  <link type="text/css" rel="stylesheet" href="">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  
+</head>
+
+
+
+<body class="layout small-header">
+    <div id="stickyNavbarOverlay"></div>
+    
+
+<div class="top-nav">
+    <div class="inner">
+        <a id="hamburger" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="logo">
+            
+             
+                <a href="index.html">
+                    <h1 class="navbar-item">framework documentation</h1>
+                </a>
+            
+        </div>
+        <div class="menu">
+            
+            <div class="navigation">
+                <a
+                    href="index.html"
+                    class="link"
+                >
+                    Documentation
+                </a>
+                
+                 
+                    
+                        <a
+                            class="link user-link "
+                            href="..."
+                        >
+                            Respository
+                        </a>
+                    
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="main">
+        <div
+            class="sidebar "
+            id="sidebarNav"
+        >
+            
+                <div class="search-wrapper">
+                    <input id="search" type="text" placeholder="Search docs..." class="input">
+                </div>
+            
+            <nav>
+                
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Namespaces</h3><ul><li><a href="PIXI.html">PIXI</a></li><li><a href="PIXI.filters.html">filters</a></li><li><a href="PIXI.graphicsUtils.html">graphicsUtils</a></li><li><a href="PIXI.groupD8.html">groupD8</a></li><li><a href="PIXI.resources.html">resources</a></li><li><a href="PIXI.settings.html">settings</a></li><li><a href="PIXI.systems.html">systems</a></li></ul><h3>Classes</h3><ul><li><a href="About.html">About</a></li><li><a href="Canvas.html">Canvas</a></li><li><a href="CropMenuProps.html">CropMenuProps</a></li><li><a href="File.html">File</a></li><li><a href="Menu.html">Menu</a></li><li><a href="PIXI.AbstractRenderer.html">AbstractRenderer</a></li><li><a href="PIXI.AccessibilityManager.html">AccessibilityManager</a></li><li><a href="PIXI.AppLoaderPlugin.html">AppLoaderPlugin</a></li><li><a href="PIXI.Application.html">Application</a></li><li><a href="PIXI.BaseRenderTexture.html">BaseRenderTexture</a></li><li><a href="PIXI.BaseTexture.html">BaseTexture</a></li><li><a href="PIXI.BlobResource.html">BlobResource</a></li><li><a href="PIXI.Bounds.html">Bounds</a></li><li><a href="PIXI.BufferSystem.html">BufferSystem</a></li><li><a href="PIXI.CompressedTextureLoader.html">CompressedTextureLoader</a></li><li><a href="PIXI.Container.html">Container</a></li><li><a href="PIXI.DDSLoader.html">DDSLoader</a></li><li><a href="PIXI.DisplayObject.html">DisplayObject</a></li><li><a href="PIXI.Extract.html">Extract</a></li><li><a href="PIXI.FillStyle.html">FillStyle</a></li><li><a href="PIXI.Framebuffer.html">Framebuffer</a></li><li><a href="PIXI.FramebufferSystem.html">FramebufferSystem</a></li><li><a href="PIXI.GLFramebuffer.html">GLFramebuffer</a></li><li><a href="PIXI.GLProgram.html">GLProgram</a></li><li><a href="PIXI.GLTexture.html">GLTexture</a></li><li><a href="PIXI.Graphics.html">Graphics</a></li><li><a href="PIXI.GraphicsData.html">GraphicsData</a></li><li><a href="PIXI.GraphicsGeometry.html">GraphicsGeometry</a></li><li><a href="PIXI.InteractionData.html">InteractionData</a></li><li><a href="PIXI.InteractionEvent.html">InteractionEvent</a></li><li><a href="PIXI.InteractionManager.html">InteractionManager</a></li><li><a href="PIXI.KTXLoader.html">KTXLoader</a></li><li><a href="PIXI.LineStyle.html">LineStyle</a></li><li><a href="PIXI.Loader.html">Loader</a></li><li><a href="PIXI.MeshBatchUvs.html">MeshBatchUvs</a></li><li><a href="PIXI.MeshGeometry.html">MeshGeometry</a></li><li><a href="PIXI.MeshMaterial.html">MeshMaterial</a></li><li><a href="PIXI.ParticleContainer.html">ParticleContainer</a></li><li><a href="PIXI.ParticleRenderer.html">ParticleRenderer</a></li><li><a href="PIXI.Point.html">Point</a></li><li><a href="PIXI.Quad.html">Quad</a></li><li><a href="PIXI.QuadUv.html">QuadUv</a></li><li><a href="PIXI.RopeGeometry.html">RopeGeometry</a></li><li><a href="PIXI.RoundedRectangle.html">RoundedRectangle</a></li><li><a href="PIXI.Texture.html">Texture</a></li><li><a href="PIXI.TextureGCSystem.html">TextureGCSystem</a></li><li><a href="PIXI.TextureMatrix.html">TextureMatrix</a></li><li><a href="PIXI.TextureSystem.html">TextureSystem</a></li><li><a href="PIXI.TextureUvs.html">TextureUvs</a></li><li><a href="PIXI.Ticker.html">Ticker</a></li><li><a href="PIXI.TickerPlugin.html">TickerPlugin</a></li><li><a href="PIXI.TilingSpriteRenderer.html">TilingSpriteRenderer</a></li><li><a href="PIXI.UniformGroup.html">UniformGroup</a></li><li><a href="PIXI.ViewableBuffer.html">ViewableBuffer</a></li><li><a href="PIXI.filters.BlurFilterPass.html">BlurFilterPass</a></li><li><a href="PIXI.graphicsUtils.BatchPart.html">BatchPart</a></li><li><a href="PIXI.utils.CanvasRenderTarget.html">CanvasRenderTarget</a></li><li><a href="People.html">People</a></li><li><a href="SamplingComp.html">SamplingComp</a></li><li><a href="SignalBinding.html">SignalBinding</a></li><li><a href="SlicesMenu.html">SlicesMenu</a></li><li><a href="ThemeToggle.html">ThemeToggle</a></li></ul><h3>Interfaces</h3><ul><li><a href="CropAxisInterface.html">CropAxisInterface</a></li><li><a href="ErrorInterface.html">ErrorInterface</a></li><li><a href="HistogramInfoPayload.html">HistogramInfoPayload</a></li><li><a href="ImageShapeInterface.html">ImageShapeInterface</a></li><li><a href="IonRangeElement.html">IonRangeElement</a></li><li><a href="LabelInterface.html">LabelInterface</a></li><li><a href="MenuItem.html">MenuItem</a></li><li><a href="MultiplesPath.html">MultiplesPath</a></li><li><a href="OffscreenCanvas.html">OffscreenCanvas</a></li><li><a href="PIXI.IHitArea.html">IHitArea</a></li><li><a href="PIXI.utils.DecomposedDataUri.html">DecomposedDataUri</a></li><li><a href="PatchesInterface.html">PatchesInterface</a></li><li><a href="QueueToast.html">QueueToast</a></li><li><a href="SamplingInterface.html">SamplingInterface</a></li><li><a href="SelectInterface.html">SelectInterface</a></li><li><a href="SharedArrayBuffer.html">SharedArrayBuffer</a></li><li><a href="TableElement.html">TableElement</a></li><li><a href="TableInterface.html">TableInterface</a></li><li><a href="dataType.html">dataType</a></li><li><a href="multiplesPath_.html">multiplesPath</a></li><li>{LabelEditProps}</li><li>{<a href="LabelInterface.html">LabelInterface</a>}</li><li>{LoadingComponentInterface}</li></ul><h3>Events</h3><ul><li><a href="PIXI.BaseRenderTexture.html#event:dispose">dispose</a></li><li><a href="PIXI.BaseRenderTexture.html#event:error">error</a></li><li><a href="PIXI.BaseRenderTexture.html#event:loaded">loaded</a></li><li><a href="PIXI.BaseRenderTexture.html#event:update">update</a></li><li><a href="PIXI.BaseTexture.html#event:dispose">dispose</a></li><li><a href="PIXI.BaseTexture.html#event:error">error</a></li><li><a href="PIXI.BaseTexture.html#event:loaded">loaded</a></li><li><a href="PIXI.BaseTexture.html#event:update">update</a></li><li><a href="PIXI.Container.html#event:click">click</a></li><li><a href="PIXI.Container.html#event:mousedown">mousedown</a></li><li><a href="PIXI.Container.html#event:mousemove">mousemove</a></li><li><a href="PIXI.Container.html#event:mouseout">mouseout</a></li><li><a href="PIXI.Container.html#event:mouseover">mouseover</a></li><li><a href="PIXI.Container.html#event:mouseup">mouseup</a></li><li><a href="PIXI.Container.html#event:mouseupoutside">mouseupoutside</a></li><li><a href="PIXI.Container.html#event:pointercancel">pointercancel</a></li><li><a href="PIXI.Container.html#event:pointerdown">pointerdown</a></li><li><a href="PIXI.Container.html#event:pointermove">pointermove</a></li><li><a href="PIXI.Container.html#event:pointerout">pointerout</a></li><li><a href="PIXI.Container.html#event:pointerover">pointerover</a></li><li><a href="PIXI.Container.html#event:pointertap">pointertap</a></li><li><a href="PIXI.Container.html#event:pointerup">pointerup</a></li><li><a href="PIXI.Container.html#event:pointerupoutside">pointerupoutside</a></li><li><a href="PIXI.Container.html#event:rightclick">rightclick</a></li><li><a href="PIXI.Container.html#event:rightdown">rightdown</a></li><li><a href="PIXI.Container.html#event:rightup">rightup</a></li><li><a href="PIXI.Container.html#event:rightupoutside">rightupoutside</a></li><li><a href="PIXI.Container.html#event:tap">tap</a></li><li><a href="PIXI.Container.html#event:touchcancel">touchcancel</a></li><li><a href="PIXI.Container.html#event:touchend">touchend</a></li><li><a href="PIXI.Container.html#event:touchendoutside">touchendoutside</a></li><li><a href="PIXI.Container.html#event:touchmove">touchmove</a></li><li><a href="PIXI.Container.html#event:touchstart">touchstart</a></li><li><a href="PIXI.DisplayObject.html#event:click">click</a></li><li><a href="PIXI.DisplayObject.html#event:mousedown">mousedown</a></li><li><a href="PIXI.DisplayObject.html#event:mousemove">mousemove</a></li><li><a href="PIXI.DisplayObject.html#event:mouseout">mouseout</a></li><li><a href="PIXI.DisplayObject.html#event:mouseover">mouseover</a></li><li><a href="PIXI.DisplayObject.html#event:mouseup">mouseup</a></li><li><a href="PIXI.DisplayObject.html#event:mouseupoutside">mouseupoutside</a></li><li><a href="PIXI.DisplayObject.html#event:pointercancel">pointercancel</a></li><li><a href="PIXI.DisplayObject.html#event:pointerdown">pointerdown</a></li><li><a href="PIXI.DisplayObject.html#event:pointermove">pointermove</a></li><li><a href="PIXI.DisplayObject.html#event:pointerout">pointerout</a></li><li><a href="PIXI.DisplayObject.html#event:pointerover">pointerover</a></li><li><a href="PIXI.DisplayObject.html#event:pointertap">pointertap</a></li><li><a href="PIXI.DisplayObject.html#event:pointerup">pointerup</a></li><li><a href="PIXI.DisplayObject.html#event:pointerupoutside">pointerupoutside</a></li><li><a href="PIXI.DisplayObject.html#event:rightclick">rightclick</a></li><li><a href="PIXI.DisplayObject.html#event:rightdown">rightdown</a></li><li><a href="PIXI.DisplayObject.html#event:rightup">rightup</a></li><li><a href="PIXI.DisplayObject.html#event:rightupoutside">rightupoutside</a></li><li><a href="PIXI.DisplayObject.html#event:tap">tap</a></li><li><a href="PIXI.DisplayObject.html#event:touchcancel">touchcancel</a></li><li><a href="PIXI.DisplayObject.html#event:touchend">touchend</a></li><li><a href="PIXI.DisplayObject.html#event:touchendoutside">touchendoutside</a></li><li><a href="PIXI.DisplayObject.html#event:touchmove">touchmove</a></li><li><a href="PIXI.DisplayObject.html#event:touchstart">touchstart</a></li><li><a href="PIXI.Graphics.html#event:click">click</a></li><li><a href="PIXI.Graphics.html#event:mousedown">mousedown</a></li><li><a href="PIXI.Graphics.html#event:mousemove">mousemove</a></li><li><a href="PIXI.Graphics.html#event:mouseout">mouseout</a></li><li><a href="PIXI.Graphics.html#event:mouseover">mouseover</a></li><li><a href="PIXI.Graphics.html#event:mouseup">mouseup</a></li><li><a href="PIXI.Graphics.html#event:mouseupoutside">mouseupoutside</a></li><li><a href="PIXI.Graphics.html#event:pointercancel">pointercancel</a></li><li><a href="PIXI.Graphics.html#event:pointerdown">pointerdown</a></li><li><a href="PIXI.Graphics.html#event:pointermove">pointermove</a></li><li><a href="PIXI.Graphics.html#event:pointerout">pointerout</a></li><li><a href="PIXI.Graphics.html#event:pointerover">pointerover</a></li><li><a href="PIXI.Graphics.html#event:pointertap">pointertap</a></li><li><a href="PIXI.Graphics.html#event:pointerup">pointerup</a></li><li><a href="PIXI.Graphics.html#event:pointerupoutside">pointerupoutside</a></li><li><a href="PIXI.Graphics.html#event:rightclick">rightclick</a></li><li><a href="PIXI.Graphics.html#event:rightdown">rightdown</a></li><li><a href="PIXI.Graphics.html#event:rightup">rightup</a></li><li><a href="PIXI.Graphics.html#event:rightupoutside">rightupoutside</a></li><li><a href="PIXI.Graphics.html#event:tap">tap</a></li><li><a href="PIXI.Graphics.html#event:touchcancel">touchcancel</a></li><li><a href="PIXI.Graphics.html#event:touchend">touchend</a></li><li><a href="PIXI.Graphics.html#event:touchendoutside">touchendoutside</a></li><li><a href="PIXI.Graphics.html#event:touchmove">touchmove</a></li><li><a href="PIXI.Graphics.html#event:touchstart">touchstart</a></li><li><a href="PIXI.InteractionManager.html#event:click">click</a></li><li><a href="PIXI.InteractionManager.html#event:mousedown">mousedown</a></li><li><a href="PIXI.InteractionManager.html#event:mousemove">mousemove</a></li><li><a href="PIXI.InteractionManager.html#event:mouseout">mouseout</a></li><li><a href="PIXI.InteractionManager.html#event:mouseover">mouseover</a></li><li><a href="PIXI.InteractionManager.html#event:mouseup">mouseup</a></li><li><a href="PIXI.InteractionManager.html#event:mouseupoutside">mouseupoutside</a></li><li><a href="PIXI.InteractionManager.html#event:pointercancel">pointercancel</a></li><li><a href="PIXI.InteractionManager.html#event:pointerdown">pointerdown</a></li><li><a href="PIXI.InteractionManager.html#event:pointermove">pointermove</a></li><li><a href="PIXI.InteractionManager.html#event:pointerout">pointerout</a></li><li><a href="PIXI.InteractionManager.html#event:pointerover">pointerover</a></li><li><a href="PIXI.InteractionManager.html#event:pointertap">pointertap</a></li><li><a href="PIXI.InteractionManager.html#event:pointerup">pointerup</a></li><li><a href="PIXI.InteractionManager.html#event:pointerupoutside">pointerupoutside</a></li><li><a href="PIXI.InteractionManager.html#event:rightclick">rightclick</a></li><li><a href="PIXI.InteractionManager.html#event:rightdown">rightdown</a></li><li><a href="PIXI.InteractionManager.html#event:rightup">rightup</a></li><li><a href="PIXI.InteractionManager.html#event:rightupoutside">rightupoutside</a></li><li><a href="PIXI.InteractionManager.html#event:tap">tap</a></li><li><a href="PIXI.InteractionManager.html#event:touchcancel">touchcancel</a></li><li><a href="PIXI.InteractionManager.html#event:touchend">touchend</a></li><li><a href="PIXI.InteractionManager.html#event:touchendoutside">touchendoutside</a></li><li><a href="PIXI.InteractionManager.html#event:touchmove">touchmove</a></li><li><a href="PIXI.InteractionManager.html#event:touchstart">touchstart</a></li><li><a href="PIXI.ParticleContainer.html#event:click">click</a></li><li><a href="PIXI.ParticleContainer.html#event:mousedown">mousedown</a></li><li><a href="PIXI.ParticleContainer.html#event:mousemove">mousemove</a></li><li><a href="PIXI.ParticleContainer.html#event:mouseout">mouseout</a></li><li><a href="PIXI.ParticleContainer.html#event:mouseover">mouseover</a></li><li><a href="PIXI.ParticleContainer.html#event:mouseup">mouseup</a></li><li><a href="PIXI.ParticleContainer.html#event:mouseupoutside">mouseupoutside</a></li><li><a href="PIXI.ParticleContainer.html#event:pointercancel">pointercancel</a></li><li><a href="PIXI.ParticleContainer.html#event:pointerdown">pointerdown</a></li><li><a href="PIXI.ParticleContainer.html#event:pointermove">pointermove</a></li><li><a href="PIXI.ParticleContainer.html#event:pointerout">pointerout</a></li><li><a href="PIXI.ParticleContainer.html#event:pointerover">pointerover</a></li><li><a href="PIXI.ParticleContainer.html#event:pointertap">pointertap</a></li><li><a href="PIXI.ParticleContainer.html#event:pointerup">pointerup</a></li><li><a href="PIXI.ParticleContainer.html#event:pointerupoutside">pointerupoutside</a></li><li><a href="PIXI.ParticleContainer.html#event:rightclick">rightclick</a></li><li><a href="PIXI.ParticleContainer.html#event:rightdown">rightdown</a></li><li><a href="PIXI.ParticleContainer.html#event:rightup">rightup</a></li><li><a href="PIXI.ParticleContainer.html#event:rightupoutside">rightupoutside</a></li><li><a href="PIXI.ParticleContainer.html#event:tap">tap</a></li><li><a href="PIXI.ParticleContainer.html#event:touchcancel">touchcancel</a></li><li><a href="PIXI.ParticleContainer.html#event:touchend">touchend</a></li><li><a href="PIXI.ParticleContainer.html#event:touchendoutside">touchendoutside</a></li><li><a href="PIXI.ParticleContainer.html#event:touchmove">touchmove</a></li><li><a href="PIXI.ParticleContainer.html#event:touchstart">touchstart</a></li><li><a href="PIXI.html#.Renderer#event:context">context</a></li><li><a href="PIXI.html#.Renderer#event:postrender">postrender</a></li><li><a href="PIXI.html#.Renderer#event:prerender">prerender</a></li><li><a href="PIXI.html#.Renderer#event:resize">resize</a></li><li><a href="global.html#event:added">added</a></li><li><a href="global.html#event:destroyed">destroyed</a></li><li><a href="global.html#event:removed">removed</a></li></ul><h3>Global</h3><ul><li><a href="global.html#AddNewFile">AddNewFile</a></li><li><a href="global.html#App">App</a></li><li><a href="global.html#AugmentationComp">AugmentationComp</a></li><li><a href="global.html#BatchInferenceComp">BatchInferenceComp</a></li><li><a href="global.html#Colormap">Colormap</a></li><li><a href="global.html#CreateDatasetH5">CreateDatasetH5</a></li><li><a href="global.html#DatasetComp">DatasetComp</a></li><li><a href="global.html#DeepLearning">DeepLearning</a></li><li><a href="global.html#DeepLoadingComp">DeepLoadingComp</a></li><li><a href="global.html#DeleteAllWindow">DeleteAllWindow</a></li><li><a href="global.html#EditLabelMenu">EditLabelMenu</a></li><li><a href="global.html#ErrorWindowComp">ErrorWindowComp</a></li><li><a href="global.html#FileLoadDialog">FileLoadDialog</a></li><li><a href="global.html#FileNameComp">FileNameComp</a></li><li><a href="global.html#FileSaveDialog">FileSaveDialog</a></li><li><a href="global.html#InferenceComp">InferenceComp</a></li><li><a href="global.html#InitAugmentationOptions">InitAugmentationOptions</a></li><li><a href="global.html#InputFileComp">InputFileComp</a></li><li><a href="global.html#InputLabel">InputLabel</a></li><li><a href="global.html#MenuContentRange">MenuContentRange</a></li><li><a href="global.html#OptionsIcons">OptionsIcons</a></li><li><a href="global.html#Page">Page</a></li><li><a href="global.html#Remote">Remote</a></li><li><a href="global.html#Settings">Settings</a></li><li><a href="global.html#SideMenuAnnot">SideMenuAnnot</a></li><li><a href="global.html#WarningWindow">WarningWindow</a></li><li><a href="global.html#WorkspaceComp">WorkspaceComp</a></li><li><a href="global.html#dispatch">dispatch</a></li><li><a href="global.html#dtypeList">dtypeList</a></li><li><a href="global.html#encodeBinary">encodeBinary</a></li><li><a href="global.html#extract">extract</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#initialOutput">initialOutput</a></li><li><a href="global.html#initialPatches">initialPatches</a></li><li><a href="global.html#punycode">punycode</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#sfetch">sfetch</a></li><li><a href="global.html#subscribe">subscribe</a></li><li><a href="global.html#typePM">typePM</a></li><li><a href="global.html#unsubscribe">unsubscribe</a></li><li><a href="global.html#useEventBus">useEventBus</a></li></ul></div>
+                
+            </nav>
+        </div>
+        <div class="core" id="main-content-wrapper">
+            <div class="content">
+                <header class="page-title">
+                    <p>Class</p>
+                    <h1>ParticleContainer</h1>
+                </header>
+                
+
+
+
+
+<section>
+
+<header>
+    
+        <h2><span class="attribs"><span class="type-signature"></span></span>
+            <span class="ancestors"><a href="PIXI.html">PIXI</a>.</span>ParticleContainer<span class="signature">()</span><span class="type-signature"></span></h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class='vertical-section'>
+                <div class="members">
+                    <div class="member">
+                        <div class=name>
+                            <span class="tag">Constructor</span>
+                        </div>
+                        
+
+
+    
+    <h4 class="name" id="ParticleContainer">
+        <a class="href-link" href="#ParticleContainer">#</a>
+        
+        <span class="code-name">
+            
+                new ParticleContainer<span class="signature">()</span><span class="type-signature"></span>
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>The ParticleContainer class is a really fast version of the Container built solely for speed,
+so use when you need a lot of sprites or particles.</p>
+<p>The tradeoff of the ParticleContainer is that most advanced functionality will not work.
+ParticleContainer implements the basic object transform (position, scale, rotation)
+and some advanced functionality like tint (as of v4.5.6).</p>
+<p>Other more advanced functionality like masking, children, filters, etc will not work on sprites in this batch.</p>
+<p>It's extremely easy to use:</p>
+<pre class="prettyprint source lang-js"><code>let container = new ParticleContainer();
+
+for (let i = 0; i &lt; 100; ++i)
+{
+    let sprite = PIXI.Sprite.from(&quot;myImage.png&quot;);
+    container.addChild(sprite);
+}
+</code></pre>
+<p>And here you have a hundred sprites that will be rendered at the speed of light.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line28335">line 28335</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+        
+    
+    </div>
+    
+    
+        <h3 class="subsection-title">Extends</h3>
+
+        
+
+
+    <ul>
+        <li><a href="PIXI.Container.html">PIXI.Container</a></li>
+    </ul>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <div class='vertical-section'>
+            <h1>Members</h1>
+            <div class="members">
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">boolean</code>
+
+
+    </span>
+
+<h4 class="name" id="_accessibleActive">
+    <a class="href-link" href="#_accessibleActive">#</a>
+    
+    <span class="code-name">
+        _accessibleActive
+    </span>
+    
+</h4>
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#_accessibleActive">PIXI.DisplayObject#_accessibleActive</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+    <dt class="tag-todo">To Do:</dt>
+    <dd class="tag-todo">
+        <ul>
+            <li>Needs docs.</li>
+        </ul>
+    </dd>
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line9893">line 9893</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">boolean</code>
+
+
+    </span>
+
+<h4 class="name" id="_accessibleDiv">
+    <a class="href-link" href="#_accessibleDiv">#</a>
+    
+    <span class="code-name">
+        _accessibleDiv
+    </span>
+    
+</h4>
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#_accessibleDiv">PIXI.DisplayObject#_accessibleDiv</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+    <dt class="tag-todo">To Do:</dt>
+    <dd class="tag-todo">
+        <ul>
+            <li>Needs docs.</li>
+        </ul>
+    </dd>
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line9899">line 9899</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">boolean</code>
+
+
+    </span>
+
+<h4 class="name" id="accessible">
+    <a class="href-link" href="#accessible">#</a>
+    
+    <span class="code-name">
+        accessible
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>Flag for if the object is accessible. If true AccessibilityManager will overlay a
+shadow div with attributes set</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#accessible">PIXI.DisplayObject#accessible</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line9865">line 9865</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">boolean</code>
+
+
+    </span>
+
+<h4 class="name" id="accessibleChildren">
+    <a class="href-link" href="#accessibleChildren">#</a>
+    
+    <span class="code-name">
+        accessibleChildren
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>Setting to false will prevent any children inside this container to
+be accessible. Defaults to true.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#accessibleChildren">PIXI.DisplayObject#accessibleChildren</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-default">Default Value:</dt>
+    <dd class="tag-default"><ul class="dummy">
+            <li>true</li>
+        </ul></dd>
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line9926">line 9926</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">string</code>
+
+
+    </span>
+
+<h4 class="name" id="accessibleHint">
+    <a class="href-link" href="#accessibleHint">#</a>
+    
+    <span class="code-name">
+        accessibleHint
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>Sets the aria-label attribute of the shadow div</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#accessibleHint">PIXI.DisplayObject#accessibleHint</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line9880">line 9880</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">string</code>
+
+
+    </span>
+
+<h4 class="name" id="accessiblePointerEvents">
+    <a class="href-link" href="#accessiblePointerEvents">#</a>
+    
+    <span class="code-name">
+        accessiblePointerEvents
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>Specify the pointer-events the accessible div will use
+Defaults to auto.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#accessiblePointerEvents">PIXI.DisplayObject#accessiblePointerEvents</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-default">Default Value:</dt>
+    <dd class="tag-default"><ul class="dummy">
+            <li>'auto'</li>
+        </ul></dd>
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line9917">line 9917</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">string</code>
+
+
+    </span>
+
+<h4 class="name" id="accessibleTitle">
+    <a class="href-link" href="#accessibleTitle">#</a>
+    
+        
+            <span class='tag'>nullable</span>
+        
+    
+    <span class="code-name">
+        accessibleTitle
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>Sets the title attribute of the shadow div
+If accessibleTitle AND accessibleHint has not been this will default to 'displayObject [tabIndex]'</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#accessibleTitle">PIXI.DisplayObject#accessibleTitle</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line9873">line 9873</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">string</code>
+
+
+    </span>
+
+<h4 class="name" id="accessibleType">
+    <a class="href-link" href="#accessibleType">#</a>
+    
+    <span class="code-name">
+        accessibleType
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>Specify the type of div the accessible layer is. Screen readers treat the element differently
+depending on this type. Defaults to button.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#accessibleType">PIXI.DisplayObject#accessibleType</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-default">Default Value:</dt>
+    <dd class="tag-default"><ul class="dummy">
+            <li>'button'</li>
+        </ul></dd>
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line9908">line 9908</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">boolean</code>
+
+
+    </span>
+
+<h4 class="name" id="buttonMode">
+    <a class="href-link" href="#buttonMode">#</a>
+    
+    <span class="code-name">
+        buttonMode
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>If enabled, the mouse cursor use the pointer behavior when hovered over the displayObject if it is interactive
+Setting this changes the 'cursor' property to <code>'pointer'</code>.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#buttonMode">PIXI.DisplayObject#buttonMode</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line11753">line 11753</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+    <h5>Example</h5>
+    
+    
+        <pre class="prettyprint"><code>const sprite = new PIXI.Sprite(texture);
+sprite.interactive = true;
+sprite.buttonMode = true;</code></pre>
+    
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">boolean</code>
+
+
+    </span>
+
+<h4 class="name" id="cacheAsBitmap">
+    <a class="href-link" href="#cacheAsBitmap">#</a>
+    
+    <span class="code-name">
+        cacheAsBitmap
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>Set this to true if you want this display object to be cached as a bitmap.
+This basically takes a snap shot of the display object as it is at that moment. It can
+provide a performance benefit for complex static displayObjects.
+To remove simply set this property to <code>false</code></p>
+<p>IMPORTANT GOTCHA - Make sure that all your textures are preloaded BEFORE setting this property to true
+as it will take a snapshot of what is currently there. If the textures have not loaded then they will not appear.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#cacheAsBitmap">PIXI.DisplayObject#cacheAsBitmap</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line40339">line 40339</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">number</code>
+
+
+    </span>
+
+<h4 class="name" id="cacheAsBitmapMultisample">
+    <a class="href-link" href="#cacheAsBitmapMultisample">#</a>
+    
+    <span class="code-name">
+        cacheAsBitmapMultisample
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>The number of samples to use for cacheAsBitmap. If set to <code>null</code>, the renderer's
+sample count is used.
+If <code>cacheAsBitmap</code> is set to <code>true</code>, this will re-render with the new number of samples.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#cacheAsBitmapMultisample">PIXI.DisplayObject#cacheAsBitmapMultisample</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-default">Default Value:</dt>
+    <dd class="tag-default"><ul class="dummy">
+            <li>PIXI.MSAA_QUALITY.NONE</li>
+        </ul></dd>
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line40302">line 40302</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">number</code>
+
+
+    </span>
+
+<h4 class="name" id="cacheAsBitmapResolution">
+    <a class="href-link" href="#cacheAsBitmapResolution">#</a>
+    
+    <span class="code-name">
+        cacheAsBitmapResolution
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>The resolution to use for cacheAsBitmap. By default this will use the renderer's resolution
+but can be overriden for performance. Lower values will reduce memory usage at the expense
+of render quality. A falsey value of <code>null</code> or <code>0</code> will default to the renderer's resolution.
+If <code>cacheAsBitmap</code> is set to <code>true</code>, this will re-render with the new resolution.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#cacheAsBitmapResolution">PIXI.DisplayObject#cacheAsBitmapResolution</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-default">Default Value:</dt>
+    <dd class="tag-default"><ul class="dummy">
+            <li>null</li>
+        </ul></dd>
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line40276">line 40276</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">string</code>
+
+
+    </span>
+
+<h4 class="name" id="cursor">
+    <a class="href-link" href="#cursor">#</a>
+    
+    <span class="code-name">
+        cursor
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>This defines what cursor mode is used when the mouse cursor
+is hovered over the displayObject.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#cursor">PIXI.DisplayObject#cursor</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li><a href="https://developer.mozilla.org/en/docs/Web/CSS/cursor">https://developer.mozilla.org/en/docs/Web/CSS/cursor</a></li>
+        </ul>
+    </dd>
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line11777">line 11777</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+    <h5>Example</h5>
+    
+    
+        <pre class="prettyprint"><code>const sprite = new PIXI.Sprite(texture);
+sprite.interactive = true;
+sprite.cursor = 'wait';</code></pre>
+    
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<code class="param-type">string</code>
+
+
+    </span>
+
+<h4 class="name" id="name">
+    <a class="href-link" href="#name">#</a>
+    
+    <span class="code-name">
+        name
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    <p>The instance name of the object.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#name">PIXI.DisplayObject#name</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line40630">line 40630</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+            </div>
+        </div>
+    
+
+    
+        <div class='vertical-section'>
+            <h1>Methods</h1>
+            <div class="members">
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id="containerUpdateTransform">
+        <a class="href-link" href="#containerUpdateTransform">#</a>
+        
+        <span class="code-name">
+            
+                containerUpdateTransform<span class="signature">()</span><span class="type-signature"></span>
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Container default updateTransform, does update children of container.
+Will crash if there's no parent element.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.Container.html#containerUpdateTransform">PIXI.Container#containerUpdateTransform</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line9824">line 9824</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id="displayObjectUpdateTransform">
+        <a class="href-link" href="#displayObjectUpdateTransform">#</a>
+        
+        <span class="code-name">
+            
+                displayObjectUpdateTransform<span class="signature">()</span><span class="type-signature"></span>
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>DisplayObject default updateTransform, does not update children of container.
+Will crash if there's no parent element.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#displayObjectUpdateTransform">PIXI.DisplayObject#displayObjectUpdateTransform</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line8712">line 8712</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id="getChildByName">
+        <a class="href-link" href="#getChildByName">#</a>
+        
+        <span class="code-name">
+            
+                getChildByName<span class="signature">(name, deep<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="PIXI.DisplayObject.html">PIXI.DisplayObject</a>}</span>
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Returns the display object in the container.</p>
+<p>Recursive searches are done in a preorder traversal.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+            <th>Attributes</th>
+            
+
+            
+            <th>Default</th>
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>name</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">string</code>
+
+
+  
+  </td>
+
+  
+      <td class="attributes">
+      
+
+      
+
+      
+      </td>
+  
+
+  
+      <td class="default">
+      
+      </td>
+  
+
+  <td class="description last"><p>Instance name.</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>deep</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">boolean</code>
+
+
+  
+  </td>
+
+  
+      <td class="attributes">
+      
+          &lt;optional><br>
+      
+
+      
+
+      
+      </td>
+  
+
+  
+      <td class="default">
+      
+          false
+      
+      </td>
+  
+
+  <td class="description last"><p>Whether to search recursively</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.Container.html#getChildByName">PIXI.Container#getChildByName</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line40637">line 40637</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Returns:</label></div>
+        <div class="column is-10">
+            
+                    
+
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>The child with the specified name.</p></div>
+    
+    
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+        
+<code class="param-type"><a href="PIXI.DisplayObject.html">PIXI.DisplayObject</a></code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+
+</div>
+            
+                <div class="member">
+
+
+    
+    <h4 class="name" id="getGlobalPosition">
+        <a class="href-link" href="#getGlobalPosition">#</a>
+        
+        <span class="code-name">
+            
+                getGlobalPosition<span class="signature">(point<span class="signature-attributes">opt</span>, skipUpdate<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="PIXI.Point.html">PIXI.Point</a>}</span>
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Returns the global position of the displayObject. Does not depend on object scale, rotation and pivot.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+            <th>Attributes</th>
+            
+
+            
+            <th>Default</th>
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>point</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.Point.html">PIXI.Point</a></code>
+
+
+  
+  </td>
+
+  
+      <td class="attributes">
+      
+          &lt;optional><br>
+      
+
+      
+
+      
+      </td>
+  
+
+  
+      <td class="default">
+      
+          new PIXI.Point()
+      
+      </td>
+  
+
+  <td class="description last"><p>The point to write the global value to.</p></td>
+</tr>
+
+
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>skipUpdate</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type">boolean</code>
+
+
+  
+  </td>
+
+  
+      <td class="attributes">
+      
+          &lt;optional><br>
+      
+
+      
+
+      
+      </td>
+  
+
+  
+      <td class="default">
+      
+          false
+      
+      </td>
+  
+
+  <td class="description last"><p>Setting to true will stop the transforms of the scene graph from
+being updated. This means the calculation returned MAY be out of date BUT will give you a
+nice performance boost.</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#getGlobalPosition">PIXI.DisplayObject#getGlobalPosition</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line40677">line 40677</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class='columns method-parameter'>
+        <div class="column is-2"><label>Returns:</label></div>
+        <div class="column is-10">
+            
+                    
+
+<div class="columns">
+    
+    <div class='param-desc column is-7'><p>The updated point.</p></div>
+    
+    
+    <div class='column is-5 has-text-left'>
+        <label>Type: </label>
+        
+<code class="param-type"><a href="PIXI.Point.html">PIXI.Point</a></code>
+
+
+    </div>
+    
+</div>
+
+                
+        </div>
+    </div>
+
+
+
+
+</div>
+            
+            </div>
+        </div>
+    
+
+    
+
+    
+        <div class='vertical-section'>
+            <h1>Events</h1>
+            <div class="members">
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:click">
+        <a class="href-link" href="#event:click">#</a>
+        
+        <span class="code-name">
+            
+                click
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device button (usually a mouse left-button) is pressed and released on
+the display object. DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:click">PIXI.DisplayObject#event:click</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12240">line 12240</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:mousedown">
+        <a class="href-link" href="#event:mousedown">#</a>
+        
+        <span class="code-name">
+            
+                mousedown
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device button (usually a mouse left-button) is pressed on the display.
+object. DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:mousedown">PIXI.DisplayObject#event:mousedown</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12204">line 12204</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:mousemove">
+        <a class="href-link" href="#event:mousemove">#</a>
+        
+        <span class="code-name">
+            
+                mousemove
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device (usually a mouse) is moved while over the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:mousemove">PIXI.DisplayObject#event:mousemove</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12280">line 12280</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:mouseout">
+        <a class="href-link" href="#event:mouseout">#</a>
+        
+        <span class="code-name">
+            
+                mouseout
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device (usually a mouse) is moved off the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:mouseout">PIXI.DisplayObject#event:mouseout</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12298">line 12298</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:mouseover">
+        <a class="href-link" href="#event:mouseover">#</a>
+        
+        <span class="code-name">
+            
+                mouseover
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device (usually a mouse) is moved onto the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:mouseover">PIXI.DisplayObject#event:mouseover</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12289">line 12289</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:mouseup">
+        <a class="href-link" href="#event:mouseup">#</a>
+        
+        <span class="code-name">
+            
+                mouseup
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device button (usually a mouse left-button) is released over the display
+object. DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:mouseup">PIXI.DisplayObject#event:mouseup</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12222">line 12222</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:mouseupoutside">
+        <a class="href-link" href="#event:mouseupoutside">#</a>
+        
+        <span class="code-name">
+            
+                mouseupoutside
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device button (usually a mouse left-button) is released outside the
+display object that initially registered a
+<a href="PIXI.DisplayObject.html#event:mousedown">mousedown</a>.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:mouseupoutside">PIXI.DisplayObject#event:mouseupoutside</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12258">line 12258</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:pointercancel">
+        <a class="href-link" href="#event:pointercancel">#</a>
+        
+        <span class="code-name">
+            
+                pointercancel
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when the operating system cancels a pointer event.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:pointercancel">PIXI.DisplayObject#event:pointercancel</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12325">line 12325</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:pointerdown">
+        <a class="href-link" href="#event:pointerdown">#</a>
+        
+        <span class="code-name">
+            
+                pointerdown
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device button is pressed on the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:pointerdown">PIXI.DisplayObject#event:pointerdown</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12307">line 12307</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:pointermove">
+        <a class="href-link" href="#event:pointermove">#</a>
+        
+        <span class="code-name">
+            
+                pointermove
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device is moved while over the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:pointermove">PIXI.DisplayObject#event:pointermove</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12353">line 12353</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:pointerout">
+        <a class="href-link" href="#event:pointerout">#</a>
+        
+        <span class="code-name">
+            
+                pointerout
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device is moved off the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:pointerout">PIXI.DisplayObject#event:pointerout</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12371">line 12371</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:pointerover">
+        <a class="href-link" href="#event:pointerover">#</a>
+        
+        <span class="code-name">
+            
+                pointerover
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device is moved onto the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:pointerover">PIXI.DisplayObject#event:pointerover</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12362">line 12362</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:pointertap">
+        <a class="href-link" href="#event:pointertap">#</a>
+        
+        <span class="code-name">
+            
+                pointertap
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device button is pressed and released on the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:pointertap">PIXI.DisplayObject#event:pointertap</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12334">line 12334</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:pointerup">
+        <a class="href-link" href="#event:pointerup">#</a>
+        
+        <span class="code-name">
+            
+                pointerup
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device button is released over the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:pointerup">PIXI.DisplayObject#event:pointerup</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12316">line 12316</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:pointerupoutside">
+        <a class="href-link" href="#event:pointerupoutside">#</a>
+        
+        <span class="code-name">
+            
+                pointerupoutside
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device button is released outside the display object that initially
+registered a <a href="PIXI.DisplayObject.html#event:pointerdown">pointerdown</a>.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:pointerupoutside">PIXI.DisplayObject#event:pointerupoutside</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12343">line 12343</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:rightclick">
+        <a class="href-link" href="#event:rightclick">#</a>
+        
+        <span class="code-name">
+            
+                rightclick
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device secondary button (usually a mouse right-button) is pressed
+and released on the display object. DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:rightclick">PIXI.DisplayObject#event:rightclick</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12249">line 12249</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:rightdown">
+        <a class="href-link" href="#event:rightdown">#</a>
+        
+        <span class="code-name">
+            
+                rightdown
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device secondary button (usually a mouse right-button) is pressed
+on the display object. DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:rightdown">PIXI.DisplayObject#event:rightdown</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12213">line 12213</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:rightup">
+        <a class="href-link" href="#event:rightup">#</a>
+        
+        <span class="code-name">
+            
+                rightup
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device secondary button (usually a mouse right-button) is released
+over the display object. DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:rightup">PIXI.DisplayObject#event:rightup</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12231">line 12231</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:rightupoutside">
+        <a class="href-link" href="#event:rightupoutside">#</a>
+        
+        <span class="code-name">
+            
+                rightupoutside
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a pointer device secondary button (usually a mouse right-button) is released
+outside the display object that initially registered a
+<a href="PIXI.DisplayObject.html#event:rightdown">rightdown</a>.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:rightupoutside">PIXI.DisplayObject#event:rightupoutside</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12269">line 12269</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:tap">
+        <a class="href-link" href="#event:tap">#</a>
+        
+        <span class="code-name">
+            
+                tap
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a touch point is placed and removed from the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:tap">PIXI.DisplayObject#event:tap</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12407">line 12407</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:touchcancel">
+        <a class="href-link" href="#event:touchcancel">#</a>
+        
+        <span class="code-name">
+            
+                touchcancel
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when the operating system cancels a touch.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:touchcancel">PIXI.DisplayObject#event:touchcancel</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12398">line 12398</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:touchend">
+        <a class="href-link" href="#event:touchend">#</a>
+        
+        <span class="code-name">
+            
+                touchend
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a touch point is removed from the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:touchend">PIXI.DisplayObject#event:touchend</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12389">line 12389</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:touchendoutside">
+        <a class="href-link" href="#event:touchendoutside">#</a>
+        
+        <span class="code-name">
+            
+                touchendoutside
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a touch point is removed outside of the display object that initially
+registered a <a href="PIXI.DisplayObject.html#event:touchstart">touchstart</a>.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:touchendoutside">PIXI.DisplayObject#event:touchendoutside</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12416">line 12416</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:touchmove">
+        <a class="href-link" href="#event:touchmove">#</a>
+        
+        <span class="code-name">
+            
+                touchmove
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a touch point is moved along the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:touchmove">PIXI.DisplayObject#event:touchmove</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12426">line 12426</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+                <div class="member">
+                    
+
+
+    
+    <h4 class="name" id="event:touchstart">
+        <a class="href-link" href="#event:touchstart">#</a>
+        
+        <span class="code-name">
+            
+                touchstart
+            
+        </span>
+    </h4>
+    
+
+    
+    
+    <div class="description">
+        <p>Fired when a touch point is placed on the display object.
+DisplayObject's <code>interactive</code> property must be set to <code>true</code> to fire event.</p>
+<p>This comes from the @pixi/interaction package.</p>
+    </div>
+    
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+<div class="table-container">
+    <table class="params table">
+        <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        
+
+            
+<tr class="deep-level-0">
+  
+      <td class="name"><code>event</code></td>
+  
+
+  <td class="type">
+  
+      
+<code class="param-type"><a href="PIXI.InteractionEvent.html">PIXI.InteractionEvent</a></code>
+
+
+  
+  </td>
+
+  
+
+  
+
+  <td class="description last"><p>Interaction event</p></td>
+</tr>
+
+
+        
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+    <dt class="inherited-from">Inherited From:</dt>
+    <dd class="inherited-from"><ul class="dummy"><li>
+        <a href="PIXI.DisplayObject.html#event:touchstart">PIXI.DisplayObject#event:touchstart</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="utils_pixi.js.html" class="button">View Source</a>
+            <span>
+                <a href="utils_pixi.js.html">utils/pixi.js</a>, <a href="utils_pixi.js.html#line12380">line 12380</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </div>
+            
+            </div>
+        </div>
+    
+</article>
+
+</section>
+
+
+
+
+            </div>
+            
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a></p>
+                    <p class="sidebar-created-by">
+                        <a href="https://github.com/SoftwareBrothers/better-docs" target="_blank">BetterDocs theme</a> provided with <i class="fas fa-heart"></i> by
+                        <a href="http://softwarebrothers.co" target="_blank">SoftwareBrothers - JavaScript Development Agency</a>
+                    </p>
+                </div>
+            </footer>
+            
+        </div>
+        <div id="side-nav" class="side-nav">
+        </div>
+    </div>
+<script src="scripts/app.min.js"></script>
+<script>PR.prettyPrint();</script>
+<script src="scripts/linenumber.js"> </script>
+
+<script src="scripts/search.js"> </script>
+
+
+</body>
+</html>
