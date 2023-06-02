@@ -483,7 +483,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
                                                 >
                                                     {dtypeList.map((type) => {
                                                         return (
-                                                            <IonSelectOption value={type.value}>
+                                                            <IonSelectOption key={type.value} value={type.value}>
                                                                 {type.label}
                                                             </IonSelectOption>
                                                         );
