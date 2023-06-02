@@ -60,6 +60,8 @@
         ],
         // Disallow the `any` type.
         "@typescript-eslint/no-explicit-any": "warn",
+        // Disallow assigning a value with type any to variables and properties.
+        "@typescript-eslint/no-unsafe-assignment": "warn",
         "@typescript-eslint/ban-types": [
             "error",
             {
