@@ -1,10 +1,10 @@
-import React from "react";
-import {MenuItem} from "../MenuItems";
-import {layersOutline, layersSharp} from "ionicons/icons";
-import {IonAccordion, IonIcon, IonItem, IonLabel, IonList} from "@ionic/react";
-import WorkspaceComp from "./workspace_comp/WorkspaceComp";
-import DatasetDialog from "./dataset_comp/DatasetComp";
-import BatchInferenceComp from "./batch_inference_comp/BatchInferenceComp";
+import React from 'react';
+import { MenuItem } from '../MenuItems';
+import { layersOutline, layersSharp } from 'ionicons/icons';
+import { IonAccordion, IonIcon, IonItem, IonLabel, IonList } from '@ionic/react';
+import WorkspaceComp from './workspace_comp/WorkspaceComp';
+import DatasetDialog from './dataset_comp/DatasetComp';
+import BatchInferenceComp from './batch_inference_comp/BatchInferenceComp';
 
 /**
  * Deep Learning component menu
@@ -15,32 +15,27 @@ const DeepLearning: React.FC = () => {
      */
     const items: MenuItem = {
         title: 'Deep Learning',
-        subItems: [
-            'Workspace',
-            'Dataset',
-            'Network',
-            'Batch Inference'
-        ],
+        subItems: ['Workspace', 'Dataset', 'Network', 'Batch Inference'],
         iosIcon: layersOutline,
-        mdIcon: layersSharp
+        mdIcon: layersSharp,
     };
     return (
         <IonAccordion>
-            <IonItem slot={"header"}>
-                <IonIcon slot={"start"} ios={items.iosIcon} md={items.mdIcon}/>
+            <IonItem slot={'header'}>
+                <IonIcon slot={'start'} ios={items.iosIcon} md={items.mdIcon} />
                 <IonLabel>{items.title}</IonLabel>
             </IonItem>
-            <IonList slot={"content"}>
+            <IonList slot={'content'}>
                 {/*Workspace menu*/}
-                <WorkspaceComp/>
+                <WorkspaceComp />
 
                 {/*Dataset menu*/}
-                <DatasetDialog/>
+                <DatasetDialog />
 
                 {/*Network menu*/}
 
                 {/*Batch Inference menu*/}
-                <BatchInferenceComp/>
+                <BatchInferenceComp />
             </IonList>
         </IonAccordion>
     );

@@ -1,10 +1,9 @@
-import npyjs from "npyjs";
-import pako from "pako"; 
+import npyjs from 'npyjs';
+import pako from 'pako';
 
-const BACKEND_HOST = (process.env.NODE_ENV === 'development') ? 'http://0.0.0.0:5000/' : window.location.href;
+const BACKEND_HOST = process.env.NODE_ENV === 'development' ? 'http://0.0.0.0:5000/' : window.location.href;
 
 function sxhr(method, url, callback, data = '', responseType = '') {
-
     let fullURL;
 
     try {
@@ -14,10 +13,9 @@ function sxhr(method, url, callback, data = '', responseType = '') {
     }
 
     var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200)
-            callback(xhr.response);
-    }
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) callback(xhr.response);
+    };
     xhr.open(method, fullURL.href, true);
     xhr.setRequestHeader('content-type', 'application/json');
     xhr.responseType = responseType;
@@ -70,7 +68,6 @@ async function responseToNdArray(response) {
  * @return {Promise(responseType)}: The processed response
  */
 function sfetch(method, url, data = '', responseType = '') {
-
     let fullURL;
 
     try {
@@ -80,20 +77,19 @@ function sfetch(method, url, data = '', responseType = '') {
     }
 
     return fetch(fullURL.href, {
-        method: method,
+        method,
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
-        body: data
-    }).then(async function(response) {
-
+        body: data,
+    }).then(async function (response) {
         if (!response.ok) {
             let error = await response.text();
             try {
                 error = JSON.parse(error);
             } catch {
                 error = {
-                    error: error
+                    error,
                 };
             }
             error.status = response.status;
@@ -123,4 +119,4 @@ function sfetch(method, url, data = '', responseType = '') {
     });
 }
 
-export {sxhr, sfetch};
+export { sxhr, sfetch };

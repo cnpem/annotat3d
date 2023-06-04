@@ -2,19 +2,24 @@ import {
     IonContent,
     IonMenu,
     IonHeader,
-    IonSearchbar, IonToolbar, IonAccordionGroup, IonCard, IonCardTitle, IonCardSubtitle
+    IonSearchbar,
+    IonToolbar,
+    IonAccordionGroup,
+    IonCard,
+    IonCardTitle,
+    IonCardSubtitle,
 } from '@ionic/react';
 
-import {useLocation} from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import './Menu.css';
 
-import ThemeToggle from "./ThemeToggle";
-import File from "./file/File";
+import ThemeToggle from './ThemeToggle';
+import File from './file/File';
 // import Colormap from "./Colormap";
-import DeepLearning from "./deep_learning_menu/DeepLearning";
+import DeepLearning from './deep_learning_menu/DeepLearning';
 // import Remote from "./Remote";
 
-import React, {useState} from "react";
+import React, { useState } from 'react';
 import About from './About';
 import People from './People';
 
@@ -34,26 +39,28 @@ const Menu: React.FC = () => {
         <IonMenu contentId="main" type="overlay" side="start">
             <IonHeader>
                 <IonToolbar>
-                    <IonCard color="primary" style={ {padding: '1em', fontFamily: 'monospace'} }>
-                        <IonCardTitle className={"ion-text-center"}><big>Annotat3D</big></IonCardTitle>
-                    <IonCardSubtitle className={"ion-text-center"}>Web Version</IonCardSubtitle>
-                        </IonCard>
+                    <IonCard color="primary" style={{ padding: '1em', fontFamily: 'monospace' }}>
+                        <IonCardTitle className={'ion-text-center'}>
+                            <big>Annotat3D</big>
+                        </IonCardTitle>
+                        <IonCardSubtitle className={'ion-text-center'}>Web Version</IonCardSubtitle>
+                    </IonCard>
                 </IonToolbar>
             </IonHeader>
             <IonToolbar>
-                <IonSearchbar value={searchText} onIonChange={e => setSearchText(e.detail.value!)}></IonSearchbar>
+                <IonSearchbar value={searchText} onIonChange={(e) => setSearchText(e.detail.value!)}></IonSearchbar>
             </IonToolbar>
             <IonContent>
                 <IonAccordionGroup>
-                    <File/>
+                    <File />
                     {/*<Colormap/>*/}
-                    <DeepLearning/>
+                    <DeepLearning />
                     {/*<Remote/>*/}
                     <About />
                     <People />
                 </IonAccordionGroup>
             </IonContent>
-            <ThemeToggle/>
+            <ThemeToggle />
         </IonMenu>
     );
 };

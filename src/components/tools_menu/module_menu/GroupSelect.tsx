@@ -1,6 +1,6 @@
-import {IonItem, IonLabel, IonIcon, IonPopover} from "@ionic/react";
-import {caretDown, caretForward} from "ionicons/icons";
-import {Fragment, useState} from "react";
+import { IonItem, IonLabel, IonIcon, IonPopover } from '@ionic/react';
+import { caretDown, caretForward } from 'ionicons/icons';
+import { Fragment, useState } from 'react';
 
 interface OptionInterface {
     label: string;
@@ -16,7 +16,6 @@ interface GroupSelectOptions {
 }
 
 const GroupSelect: React.FC<GroupSelectOptions> = (props) => {
-
     const [curOption, setCurOption] = useState<OptionInterface>(getDefault(props.options) || props.options[0]);
     const [curGroup, setCurGroup] = useState<OptionInterface[]>(props.options);
     const [showPopover, setShowPopover] = useState<boolean>(false);
@@ -26,11 +25,11 @@ const GroupSelect: React.FC<GroupSelectOptions> = (props) => {
     }
 
     function getDefault(options: OptionInterface[]): OptionInterface | null {
-        for(let i=0; i<options.length; ++i) {
+        for (let i = 0; i < options.length; ++i) {
             const option = options[i];
             if (option.id === props.value) {
                 return option;
-            } else if(option.options) {
+            } else if (option.options) {
                 const defaultOption = getDefault(option.options);
                 if (defaultOption) {
                     return defaultOption;
@@ -41,54 +40,56 @@ const GroupSelect: React.FC<GroupSelectOptions> = (props) => {
     }
 
     function renderOption(option: OptionInterface) {
-
         const hasOptions = !!option.options;
 
         return (
             <IonItem>
-                <IonLabel style={ {userSelect: 'none'} }
+                <IonLabel
+                    style={{ userSelect: 'none' }}
                     key={option.id}
                     onClick={() => {
                         if (hasOptions) {
-                            setCurGroup(option.options!!);
+                            setCurGroup(option.options!);
                         } else {
                             setCurOption(option);
                             props.onChange(option);
                             setShowPopover(false);
                         }
-                    }}>
+                    }}
+                >
                     {option.label}
-                    <IonIcon hidden={!hasOptions} icon={caretForward}/>
+                    <IonIcon hidden={!hasOptions} icon={caretForward} />
                 </IonLabel>
             </IonItem>
         );
     }
 
     function renderSelect(options: OptionInterface[]) {
-
-        return (
-            <Fragment>
-                { options.map(renderOption) }
-            </Fragment>
-        );
+        return <Fragment>{options.map(renderOption)}</Fragment>;
     }
 
     return (
-        <div style={ {display: 'inline-flex', justifyContent: 'end'} }>
-            <IonLabel style={ {userSelect: 'none'} }
-                id={props.id+'-button'} onClick={()=>{ setShowPopover(true) }}>
-                { curOption.label }
-                <IonIcon icon={caretDown}/>
+        <div style={{ display: 'inline-flex', justifyContent: 'end' }}>
+            <IonLabel
+                style={{ userSelect: 'none' }}
+                id={props.id + '-button'}
+                onClick={() => {
+                    setShowPopover(true);
+                }}
+            >
+                {curOption.label}
+                <IonIcon icon={caretDown} />
             </IonLabel>
             <IonPopover
-                style={ {'--offset-x': '-100px'} }
-                trigger={props.id+'-button'}
+                style={{ '--offset-x': '-100px' }}
+                trigger={props.id + '-button'}
                 isOpen={showPopover}
-                onIonPopoverDidDismiss={() => reset()}>
+                onIonPopoverDidDismiss={() => reset()}
+            >
                 {renderSelect(curGroup)}
             </IonPopover>
         </div>
     );
-}
+};
 
 export default GroupSelect;

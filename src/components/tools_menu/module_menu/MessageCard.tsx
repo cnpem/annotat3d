@@ -1,11 +1,10 @@
-import {IonItem, IonList} from '@ionic/react';
-import {ModuleCard, ModuleCardItem} from './ModuleCard';
-import {useEventBus} from '../../../utils/eventbus';
-import React, {useState} from "react";
+import { IonItem, IonList } from '@ionic/react';
+import { ModuleCard, ModuleCardItem } from './ModuleCard';
+import { useEventBus } from '../../../utils/eventbus';
+import React, { useState } from 'react';
 
 const MessageCard: React.FC = () => {
-
-    const [featureNamesList, setFeatureNamesList] = useState <string[]> ([]);
+    const [featureNamesList, setFeatureNamesList] = useState<string[]>([]);
 
     useEventBus('selectedFeaturesNames', (feature_names_list: string[]) => {
         setFeatureNamesList(feature_names_list);
@@ -21,7 +20,6 @@ const MessageCard: React.FC = () => {
                 </IonList>
             </ModuleCardItem>
         </ModuleCard>
-
     );
 };
 

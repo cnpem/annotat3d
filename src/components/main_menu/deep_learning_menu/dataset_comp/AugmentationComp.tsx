@@ -1,29 +1,31 @@
-import React, {Fragment, useEffect, useRef} from "react";
+import React, { Fragment, useEffect, useRef } from 'react';
 import {
     IonAccordion,
     IonAccordionGroup,
-    IonCheckbox, IonContent,
+    IonCheckbox,
+    IonContent,
     IonInput,
     IonItem,
     IonItemDivider,
     IonLabel,
-    IonList, IonRange
-} from "@ionic/react";
-import {AugmentationInterface, IonRangeElement} from "./DatasetInterfaces";
-import {isEqual} from "lodash";
+    IonList,
+    IonRange,
+} from '@ionic/react';
+import { AugmentationInterface, IonRangeElement } from './DatasetInterfaces';
+import { isEqual } from 'lodash';
 
 interface CheckedElements {
     checkedVector: AugmentationInterface[];
     onCheckedVector: (index: number) => void;
 
     ionRangeVec: IonRangeElement[];
-    onIonRangeVec: (newRangeVal: { lower: number, upper: number }, index: number) => void;
+    onIonRangeVec: (newRangeVal: { lower: number; upper: number }, index: number) => void;
 }
 
 interface MenuContentRangeInterface {
-    index: number
+    index: number;
     ionRangeVec: IonRangeElement[];
-    onIonRangeVec: (newRangeVal: { lower: number, upper: number }, index: number) => void;
+    onIonRangeVec: (newRangeVal: { lower: number; upper: number }, index: number) => void;
 }
 
 /**
@@ -32,8 +34,7 @@ interface MenuContentRangeInterface {
  * @param {(newRangeVal: number, index: number) => void} onIonRangeVec - setter for ionRangeVec
  * @param {number} index - number that represents the element index to use
  */
-const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onIonRangeVec, index}) => {
-
+const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ ionRangeVec, onIonRangeVec, index }) => {
     const contrastRangeRef = useRef<HTMLIonRangeElement | null>(null);
     /**
      * This useEffect is important to always update the ion-range every time he changes
@@ -60,41 +61,44 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onI
                     debounce={300}
                     step={0.01}
                     onIonKnobMoveEnd={(e: CustomEvent) => {
-                        console.log("value in ion-range : ", e.detail.value);
-                        onIonRangeVec(e.detail.value as { lower: number, upper: number }, index);
-                    }}/>
+                        console.log('value in ion-range : ', e.detail.value);
+                        onIonRangeVec(e.detail.value as { lower: number; upper: number }, index);
+                    }}
+                />
             </IonItem>
             <IonItem>
                 <IonInput
-                    type={"number"}
+                    type={'number'}
                     max={ionRangeVec[index].ionRangeLimit.maxRange}
                     clearInput={true}
                     value={Math.round(ionRangeVec[index].actualRangeVal.lower * 100) / 100}
-                    step={"0.01"}
+                    step={'0.01'}
                     onIonChange={(e: CustomEvent) => {
                         const value = {
                             lower: e.detail.value,
-                            upper: ionRangeVec[index].actualRangeVal.upper
-                        } as { lower: number, upper: number };
+                            upper: ionRangeVec[index].actualRangeVal.upper,
+                        } as { lower: number; upper: number };
                         onIonRangeVec(value, index);
-                    }}/>
+                    }}
+                />
                 <IonInput
-                    type={"number"}
+                    type={'number'}
                     max={ionRangeVec[index].ionRangeLimit.maxRange}
                     clearInput={true}
                     value={Math.round(ionRangeVec[index].actualRangeVal.upper * 100) / 100}
-                    step={"0.01"}
+                    step={'0.01'}
                     onIonChange={(e: CustomEvent) => {
                         const value = {
                             lower: ionRangeVec[index].actualRangeVal.lower,
-                            upper: e.detail.value
-                        } as { lower: number, upper: number };
+                            upper: e.detail.value,
+                        } as { lower: number; upper: number };
                         onIonRangeVec(value, index);
-                    }}/>
+                    }}
+                />
             </IonItem>
         </Fragment>
     );
-}
+};
 
 // TODO : Create a component like this to create the canvas for this component
 // const CanvasPopupComp: React.FC<CanvasPopupInterface> = ({trigger}) => {
@@ -164,240 +168,252 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ionRangeVec, onI
  * TODO : need to create a info card for each argumentation preview
  * Component that hold all the Argumentation options
  */
-const AugmentationComp: React.FC<CheckedElements> = ({checkedVector, onCheckedVector, ionRangeVec, onIonRangeVec}) => {
+const AugmentationComp: React.FC<CheckedElements> = ({
+    checkedVector,
+    onCheckedVector,
+    ionRangeVec,
+    onIonRangeVec,
+}) => {
     return (
         <small>
-            <IonContent
-                scrollEvents={true}>
+            <IonContent scrollEvents={true}>
                 <IonAccordionGroup multiple={true}>
                     {/*Argumentation menu option*/}
                     {/*Vertical Flip menu option*/}
                     <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Vertical Flip</small></IonLabel>
+                        <IonItem slot={'header'}>
+                            <IonLabel>
+                                <small>Vertical Flip</small>
+                            </IonLabel>
                         </IonItem>
-                        <IonList slot={"content"}>
+                        <IonList slot={'content'}>
                             <IonItem>
                                 <IonLabel>Augment with Vertical Flip</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[0].isChecked}
-                                    onIonChange={() => onCheckedVector(0)}/>
+                                    onIonChange={() => onCheckedVector(0)}
+                                />
                             </IonItem>
-                            <IonItemDivider/>
+                            <IonItemDivider />
                         </IonList>
                     </IonAccordion>
                     {/*Horizontal Flip menu option*/}
                     <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Horizontal Flip</small></IonLabel>
+                        <IonItem slot={'header'}>
+                            <IonLabel>
+                                <small>Horizontal Flip</small>
+                            </IonLabel>
                         </IonItem>
-                        <IonList slot={"content"}>
+                        <IonList slot={'content'}>
                             <IonItem>
                                 <IonLabel>Augment with Horizontal Flip</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[1].isChecked}
-                                    onIonChange={() => onCheckedVector(1)}/>
+                                    onIonChange={() => onCheckedVector(1)}
+                                />
                             </IonItem>
-                            <IonItemDivider/>
+                            <IonItemDivider />
                         </IonList>
                     </IonAccordion>
                     {/*Rotate 90 Degrees menu option*/}
                     <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Rotate 90 Degrees</small></IonLabel>
+                        <IonItem slot={'header'}>
+                            <IonLabel>
+                                <small>Rotate 90 Degrees</small>
+                            </IonLabel>
                         </IonItem>
-                        <IonList slot={"content"}>
+                        <IonList slot={'content'}>
                             <IonItem>
                                 <IonLabel>Augment with Vertical Flip</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[2].isChecked}
-                                    onIonChange={() => onCheckedVector(2)}/>
+                                    onIonChange={() => onCheckedVector(2)}
+                                />
                             </IonItem>
-                            <IonItemDivider/>
+                            <IonItemDivider />
                         </IonList>
                     </IonAccordion>
                     {/*Rotate -90 Degrees menu option*/}
                     <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Rotate -90 Degrees</small></IonLabel>
+                        <IonItem slot={'header'}>
+                            <IonLabel>
+                                <small>Rotate -90 Degrees</small>
+                            </IonLabel>
                         </IonItem>
-                        <IonList slot={"content"}>
+                        <IonList slot={'content'}>
                             <IonItem>
                                 <IonLabel>Augment with Rotate -90 Degrees</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[3].isChecked}
-                                    onIonChange={() => onCheckedVector(3)}/>
+                                    onIonChange={() => onCheckedVector(3)}
+                                />
                             </IonItem>
-                            <IonItemDivider/>
+                            <IonItemDivider />
                         </IonList>
                     </IonAccordion>
                     {/*Contrast menu option*/}
                     <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Contrast</small></IonLabel>
+                        <IonItem slot={'header'}>
+                            <IonLabel>
+                                <small>Contrast</small>
+                            </IonLabel>
                         </IonItem>
-                        <IonList slot={"content"}>
+                        <IonList slot={'content'}>
                             <IonItem>
                                 <IonLabel>Augment with Contrast</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[4].isChecked}
-                                    onIonChange={() => onCheckedVector(4)}/>
+                                    onIonChange={() => onCheckedVector(4)}
+                                />
                             </IonItem>
                             <IonItem>
                                 <IonLabel>{ionRangeVec[0].ionRangeName}</IonLabel>
                             </IonItem>
-                            <MenuContentRange
-                                ionRangeVec={ionRangeVec}
-                                onIonRangeVec={onIonRangeVec}
-                                index={0}/>
-                            <IonItemDivider/>
+                            <MenuContentRange ionRangeVec={ionRangeVec} onIonRangeVec={onIonRangeVec} index={0} />
+                            <IonItemDivider />
                         </IonList>
                     </IonAccordion>
                     {/*Linear Contrast menu option*/}
                     <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Linear Contrast</small></IonLabel>
+                        <IonItem slot={'header'}>
+                            <IonLabel>
+                                <small>Linear Contrast</small>
+                            </IonLabel>
                         </IonItem>
-                        <IonList slot={"content"}>
+                        <IonList slot={'content'}>
                             <IonItem>
                                 <IonLabel>Augment with Linear Contrast</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[5].isChecked}
-                                    onIonChange={() => onCheckedVector(5)}/>
+                                    onIonChange={() => onCheckedVector(5)}
+                                />
                             </IonItem>
                             <IonItem>
                                 <IonLabel>{ionRangeVec[1].ionRangeName}</IonLabel>
                             </IonItem>
-                            <MenuContentRange
-                                ionRangeVec={ionRangeVec}
-                                onIonRangeVec={onIonRangeVec}
-                                index={1}/>
-                            <IonItemDivider/>
+                            <MenuContentRange ionRangeVec={ionRangeVec} onIonRangeVec={onIonRangeVec} index={1} />
+                            <IonItemDivider />
                         </IonList>
                     </IonAccordion>
                     {/*Dropout menu option*/}
                     <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Dropout</small></IonLabel>
+                        <IonItem slot={'header'}>
+                            <IonLabel>
+                                <small>Dropout</small>
+                            </IonLabel>
                         </IonItem>
-                        <IonList slot={"content"}>
+                        <IonList slot={'content'}>
                             <IonItem>
                                 <IonLabel>Augment with Dropout</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[6].isChecked}
-                                    onIonChange={() => onCheckedVector(6)}/>
+                                    onIonChange={() => onCheckedVector(6)}
+                                />
                             </IonItem>
                             <IonItem>
                                 <IonLabel>{ionRangeVec[2].ionRangeName}</IonLabel>
                             </IonItem>
-                            <MenuContentRange
-                                ionRangeVec={ionRangeVec}
-                                onIonRangeVec={onIonRangeVec}
-                                index={2}/>
-                            <IonItemDivider/>
+                            <MenuContentRange ionRangeVec={ionRangeVec} onIonRangeVec={onIonRangeVec} index={2} />
+                            <IonItemDivider />
                         </IonList>
                     </IonAccordion>
                     {/*Gaussian Blur menu option*/}
                     <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Gaussian Blur</small></IonLabel>
+                        <IonItem slot={'header'}>
+                            <IonLabel>
+                                <small>Gaussian Blur</small>
+                            </IonLabel>
                         </IonItem>
-                        <IonList slot={"content"}>
+                        <IonList slot={'content'}>
                             <IonItem>
                                 <IonLabel>Augment with Gaussian Blur</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[7].isChecked}
-                                    onIonChange={() => onCheckedVector(7)}/>
+                                    onIonChange={() => onCheckedVector(7)}
+                                />
                             </IonItem>
                             <IonItem>
                                 <IonLabel>{ionRangeVec[3].ionRangeName}</IonLabel>
                             </IonItem>
-                            <MenuContentRange
-                                ionRangeVec={ionRangeVec}
-                                onIonRangeVec={onIonRangeVec}
-                                index={3}/>
-                            <IonItemDivider/>
+                            <MenuContentRange ionRangeVec={ionRangeVec} onIonRangeVec={onIonRangeVec} index={3} />
+                            <IonItemDivider />
                         </IonList>
                     </IonAccordion>
                     {/*Average Blur menu option*/}
                     <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Average Blur</small></IonLabel>
+                        <IonItem slot={'header'}>
+                            <IonLabel>
+                                <small>Average Blur</small>
+                            </IonLabel>
                         </IonItem>
-                        <IonList slot={"content"}>
+                        <IonList slot={'content'}>
                             <IonItem>
                                 <IonLabel>Augment with Average Blur</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[8].isChecked}
-                                    onIonChange={() => onCheckedVector(8)}/>
+                                    onIonChange={() => onCheckedVector(8)}
+                                />
                             </IonItem>
                             <IonItem>
                                 <IonLabel>{ionRangeVec[4].ionRangeName}</IonLabel>
                             </IonItem>
-                            <MenuContentRange
-                                ionRangeVec={ionRangeVec}
-                                onIonRangeVec={onIonRangeVec}
-                                index={4}/>
-                            <IonItemDivider/>
+                            <MenuContentRange ionRangeVec={ionRangeVec} onIonRangeVec={onIonRangeVec} index={4} />
+                            <IonItemDivider />
                         </IonList>
                     </IonAccordion>
                     {/*Additive Poisson menu option*/}
                     <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Additive Poisson</small></IonLabel>
+                        <IonItem slot={'header'}>
+                            <IonLabel>
+                                <small>Additive Poisson</small>
+                            </IonLabel>
                         </IonItem>
-                        <IonList slot={"content"}>
+                        <IonList slot={'content'}>
                             <IonItem>
                                 <IonLabel>Augment with Additive Poisson</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[9].isChecked}
-                                    onIonChange={() => onCheckedVector(9)}/>
+                                    onIonChange={() => onCheckedVector(9)}
+                                />
                             </IonItem>
                             <IonItem>
                                 <IonLabel>{ionRangeVec[5].ionRangeName}</IonLabel>
                             </IonItem>
-                            <MenuContentRange
-                                ionRangeVec={ionRangeVec}
-                                onIonRangeVec={onIonRangeVec}
-                                index={5}/>
-                            <IonItemDivider/>
+                            <MenuContentRange ionRangeVec={ionRangeVec} onIonRangeVec={onIonRangeVec} index={5} />
+                            <IonItemDivider />
                         </IonList>
                     </IonAccordion>
                     {/*Elastic Deformation menu option*/}
                     <IonAccordion>
-                        <IonItem slot={"header"}>
-                            <IonLabel><small>Elastic Deformation</small></IonLabel>
+                        <IonItem slot={'header'}>
+                            <IonLabel>
+                                <small>Elastic Deformation</small>
+                            </IonLabel>
                         </IonItem>
-                        <IonList slot={"content"}>
+                        <IonList slot={'content'}>
                             <IonItem>
                                 <IonLabel>Augment with Elastic Deformation</IonLabel>
                                 <IonCheckbox
                                     checked={checkedVector[10].isChecked}
-                                    onIonChange={() => onCheckedVector(10)}/>
+                                    onIonChange={() => onCheckedVector(10)}
+                                />
                             </IonItem>
                             <IonItem>
                                 <IonLabel>{ionRangeVec[6].ionRangeName}</IonLabel>
                             </IonItem>
-                            <MenuContentRange
-                                ionRangeVec={ionRangeVec}
-                                onIonRangeVec={onIonRangeVec}
-                                index={6}/>
+                            <MenuContentRange ionRangeVec={ionRangeVec} onIonRangeVec={onIonRangeVec} index={6} />
                             <IonItem>
                                 <IonLabel>{ionRangeVec[7].ionRangeName}</IonLabel>
                             </IonItem>
-                            <MenuContentRange
-                                ionRangeVec={ionRangeVec}
-                                onIonRangeVec={onIonRangeVec}
-                                index={7}/>
-                            <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                            </div>
-                            <IonItemDivider/>
+                            <MenuContentRange ionRangeVec={ionRangeVec} onIonRangeVec={onIonRangeVec} index={7} />
+                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}></div>
+                            <IonItemDivider />
                         </IonList>
                     </IonAccordion>
                 </IonAccordionGroup>
             </IonContent>
         </small>
     );
-}
+};
 
 export default AugmentationComp;

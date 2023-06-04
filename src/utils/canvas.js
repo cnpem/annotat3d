@@ -68,12 +68,12 @@ class Brush {
     }
 
     #rgbToHex(r, g, b) {
-        const bin = r << 16 | g << 8 | b;
+        const bin = (r << 16) | (g << 8) | b;
         return bin;
     }
 
     update() {
-        const color = this.colors[(this.label) % this.colors.length];
+        const color = this.colors[this.label % this.colors.length];
         this.context.fillStyle = 'rgb(' + color[0] + ',' + color[1] + ',' + color[2] + ')';
 
         this.context.rect(0, 0, this.size, this.size);
@@ -81,10 +81,8 @@ class Brush {
 
         this.color = this.#rgbToHex(...color);
         this.#updateBrush();
-
     }
 }
-
 
 class Annotation {
     constructor() {
@@ -121,7 +119,7 @@ class Annotation {
         const data = imageData.data;
         for (let i = 0; i < slice.length; i++) {
             if (slice[i] >= 0) {
-                const color = colors[(slice[i]) % colors.length];
+                const color = colors[slice[i] % colors.length];
                 data[i * 4] = color[0];
                 data[i * 4 + 1] = color[1];
                 data[i * 4 + 2] = color[2];
@@ -133,7 +131,6 @@ class Annotation {
         this.sprite.texture.update();
     }
 }
-
 
 class Canvas {
     constructor(div) {
@@ -157,7 +154,7 @@ class Canvas {
         this.labelSlice = new PIXI.Sprite();
 
         this.superpixelSlice = new PIXI.Sprite();
-        this.superpixelSlice.tint = 0xff00ff
+        this.superpixelSlice.tint = 0xff00ff;
         this.superpixelSlice.alpha = 0.3;
         this.superpixelSlice.blendMode = PIXI.BLEND_MODES.ADD;
         //this.superpixelSlice.scale = 0.5;
@@ -199,9 +196,7 @@ class Canvas {
             const y = Math.round(this.prevPosition.y - this.brush.size / 2);
             this.annotation.context.drawImage(this.brush.canvas, x, y, this.brush.size, this.brush.size);
             this.annotation.sprite.texture.update();
-            return [
-                [x, y],
-            ];
+            return [[x, y]];
         }
 
         const coords = [];
@@ -254,8 +249,7 @@ class Canvas {
         for (let i = 0; i < len; ++i) {
             const idx = i * 4;
             const label = labelSlice.data[i];
-            if (label <= 0)
-                continue;
+            if (label <= 0) continue;
             const color = colors[label];
             rgbaData[idx] = color[0];
             rgbaData[idx + 1] = color[1];
@@ -264,11 +258,9 @@ class Canvas {
         }
         const texture = this.#textureFromSlice(rgbaData, x, y, PIXI.FORMATS.RGBA);
         this.labelSlice.texture = texture;
-
     }
 
     setImage(img_slice) {
-
         let uint8data;
 
         if (img_slice.dtype == 'uint8') {
@@ -290,13 +282,13 @@ class Canvas {
     }
 
     setSuperpixelImage(superpixel_slice) {
-        const uint8data = superpixel_slice.data.map(x => x * 255);
+        const uint8data = superpixel_slice.data.map((x) => x * 255);
         const x = superpixel_slice.shape[1];
         const y = superpixel_slice.shape[0];
-        console.log("I am setting superpixel hue hue huei: ", x, y);
+        console.log('I am setting superpixel hue hue huei: ', x, y);
         console.log(mean(uint8data), std(uint8data));
         const texture = this.#textureFromSlice(uint8data, x, y);
-        this.superpixelSlice.texture = texture;    
+        this.superpixelSlice.texture = texture;
     }
 
     destroyImage() {

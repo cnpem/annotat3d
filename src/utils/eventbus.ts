@@ -10,7 +10,7 @@
  * or people might think I am crazy. Even tough I am a little.
  */
 
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 interface Dictionary<T> {
     [Key: string]: T;
@@ -31,7 +31,7 @@ const currentValue: Dictionary<any> = {};
  * @param callback: The operation to be performed when the event occurs. A payload of information is passed as parameter.
  */
 function subscribe(evt: string, callback: (payload: any) => void) {
-    const newSub: Subscriber = { event: evt, callback: callback };
+    const newSub: Subscriber = { event: evt, callback };
     const curSubs = subscribers[evt] || [];
     subscribers[evt] = [...curSubs, newSub];
     console.log('subscribe');
@@ -44,7 +44,7 @@ function subscribe(evt: string, callback: (payload: any) => void) {
  */
 function unsubscribe(evt: string, callback: (payload: any) => void) {
     const curSubs = subscribers[evt] || [];
-    subscribers[evt] = curSubs.filter(sub => sub.callback !== callback);
+    subscribers[evt] = curSubs.filter((sub) => sub.callback !== callback);
     console.log('unsubscribe');
 }
 
@@ -55,7 +55,7 @@ function unsubscribe(evt: string, callback: (payload: any) => void) {
  */
 function dispatch(evt: string, payload: any) {
     const curSubs = subscribers[evt] || [];
-    curSubs.forEach(sub => {
+    curSubs.forEach((sub) => {
         sub.callback(payload);
     });
     currentValue[evt] = payload;
@@ -68,12 +68,11 @@ function dispatch(evt: string, payload: any) {
  */
 function useEventBus(evt: string, callback: (payload: any) => void) {
     useEffect(() => {
-
         subscribe(evt, callback); // run on mount
 
         return () => {
             unsubscribe(evt, callback); // run on unmount
-        }
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 }

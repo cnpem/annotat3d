@@ -1,9 +1,9 @@
-import React from "react";
-import {IonContent, IonLoading} from "@ionic/react";
+import React from 'react';
+import { IonContent, IonLoading } from '@ionic/react';
 
 interface LoadingComponentInterface {
-    openLoadingWindow: boolean,
-    loadingText: string,
+    openLoadingWindow: boolean;
+    loadingText: string;
 }
 
 /**
@@ -11,15 +11,12 @@ interface LoadingComponentInterface {
  * @param openLoadingWindow {boolean} - boolean variable to open this menu
  * @param loadingText {string} - string variable used as the loading message to display
  */
-const DeepLoadingComp: React.FC<LoadingComponentInterface> = ({openLoadingWindow, loadingText}) => {
+const DeepLoadingComp: React.FC<LoadingComponentInterface> = ({ openLoadingWindow, loadingText }) => {
     return (
         <IonContent>
-            <IonLoading
-                isOpen={openLoadingWindow}
-                message={loadingText + " Please, wait a moment..."}/>
+            <IonLoading isOpen={openLoadingWindow} message={loadingText + ' Please, wait a moment...'} />
         </IonContent>
     );
+};
 
-}
-
-export default DeepLoadingComp
+export default DeepLoadingComp;

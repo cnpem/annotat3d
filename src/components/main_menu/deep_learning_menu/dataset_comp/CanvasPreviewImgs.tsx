@@ -1,45 +1,49 @@
-import * as PIXI from "pixi.js";
-import * as pixi_viewport from "pixi-viewport";
-import {NdArray, TypedArray} from "ndarray";
-import {sfetch} from "../../../../utils/simplerequest";
-import {dispatch, subscribe, unsubscribe} from "../../../../utils/eventbus";
-import {clamp} from "../../../../utils/math";
-import {Component, Fragment} from "react";
-import {debounce, isEqual} from "lodash";
-import {IonCol, IonItem, IonItemDivider, IonRow} from "@ionic/react";
+import * as PIXI from 'pixi.js';
+import * as pixi_viewport from 'pixi-viewport';
+import { NdArray, TypedArray } from 'ndarray';
+import { sfetch } from '../../../../utils/simplerequest';
+import { dispatch, subscribe, unsubscribe } from '../../../../utils/eventbus';
+import { clamp } from '../../../../utils/math';
+import { Component, Fragment } from 'react';
+import { debounce, isEqual } from 'lodash';
+import { IonCol, IonItem, IonItemDivider, IonRow } from '@ionic/react';
 
 /**
  * This component creates the canvas for preview canvas
  */
 
 class Canvas {
-
     app: PIXI.Application;
+
     viewport: pixi_viewport.Viewport;
 
     div: HTMLDivElement;
 
     canvas: HTMLCanvasElement;
+
     context: CanvasRenderingContext2D;
 
     slice: PIXI.Sprite;
 
     x: number;
+
     y: number;
 
     imgData?: NdArray<TypedArray>;
 
-    imgMin: number = 0.0;
-    imgMax: number = 1.0;
+    imgMin = 0.0;
+
+    imgMax = 1.0;
 
     axis: 'XY' | 'XZ' | 'YZ';
+
     sliceNum: number;
 
     constructor(div: HTMLDivElement, axis: 'XY' | 'XZ' | 'YZ', sliceNum: number) {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
         this.app = new PIXI.Application({
-            backgroundColor: 0x303030
+            backgroundColor: 0x303030,
         });
 
         this.viewport = new pixi_viewport.Viewport({
@@ -79,11 +83,11 @@ class Canvas {
 
     recenter(w: number = this.x, h: number = this.y) {
         const test = {
-            w: w,
+            w,
             x: this.x,
-            h: h,
-            y: this.y
-        }
+            h,
+            y: this.y,
+        };
         console.table(test);
         this.viewport.moveCenter(w / 2, h / 2);
         this.viewport.fit(true, w, h);
@@ -99,7 +103,6 @@ class Canvas {
 
     //TODO : This function is very important. Because this display the image
     private toUint8Array(img: NdArray<TypedArray>): Uint8Array {
-
         let uint8data: Uint8Array;
 
         const x = img.shape[1];
@@ -133,7 +136,6 @@ class Canvas {
     }
 
     setImage(imgSlice: NdArray<TypedArray>) {
-
         this.imgData = imgSlice;
 
         const uint8data = this.toUint8Array(imgSlice);
@@ -155,7 +157,6 @@ class Canvas {
 
         this.viewport.moveCenter(center);
     }
-
 }
 
 interface IPreviewProps {
@@ -165,8 +166,11 @@ interface IPreviewProps {
 
 class PreviewContainer extends Component<IPreviewProps> {
     pixi_container: HTMLDivElement | null;
+
     pixi_container_preview: HTMLDivElement | null;
+
     canvas: Canvas | null;
+
     canvas_preview: Canvas | null;
 
     constructor(props: IPreviewProps) {
@@ -177,33 +181,31 @@ class PreviewContainer extends Component<IPreviewProps> {
         this.canvas_preview = null;
     }
 
-    fetchAll = (recenter: boolean = false) => {
-        console.log("update ...", this.props.slice);
-        return this.getImageSlice().then(
-            () => {
-                if (recenter) {
-                    this.canvas!.recenter()
-                    this.canvas_preview!.recenter()
-                }
+    fetchAll = (recenter = false) => {
+        console.log('update ...', this.props.slice);
+        return this.getImageSlice().then(() => {
+            if (recenter) {
+                this.canvas!.recenter();
+                this.canvas_preview!.recenter();
             }
-        );
-    }
+        });
+    };
 
     fetchAllDebounced = debounce(this.fetchAll, 250);
 
     getImageSlice() {
-
         const params = {
-            'axis': this.props.axis,
-            'slice': this.props.slice,
+            axis: this.props.axis,
+            slice: this.props.slice,
         };
 
         //TODO : need to edit this part to receive the the preview image
-        return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
-            .then(imgSlice => {
-                this.canvas!!.setImage(imgSlice);
-                this.canvas_preview!!.setImage(imgSlice);
-            });
+        return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray').then(
+            (imgSlice) => {
+                this.canvas!.setImage(imgSlice);
+                this.canvas_preview!.setImage(imgSlice);
+            }
+        );
     }
 
     componentDidMount() {
@@ -214,7 +216,7 @@ class PreviewContainer extends Component<IPreviewProps> {
             this.canvas_preview = new Canvas(elem, this.props.axis, this.props.slice);
             setTimeout(() => {
                 this.canvas!.resize();
-                this.canvas_preview!.resize()
+                this.canvas_preview!.resize();
             }, 200);
             console.log(this.canvas.viewport);
             console.log(this.pixi_container);
@@ -239,7 +241,7 @@ class PreviewContainer extends Component<IPreviewProps> {
     }
 
     componentDidUpdate() {
-        this.setState({...this.state, future_sight_on: false});
+        this.setState({ ...this.state, future_sight_on: false });
         this.canvas?.setSliceNum(this.props.slice);
         this.canvas?.setAxis(this.props.axis);
         this.canvas_preview?.setSliceNum(this.props.slice);
@@ -254,23 +256,24 @@ class PreviewContainer extends Component<IPreviewProps> {
                     <IonRow>
                         <IonCol>
                             <div
-                                id={"preview-root"}
-                                style={{"backgroundColor": "transparent"}}
-                                ref={elem => this.pixi_container = elem}/>
+                                id={'preview-root'}
+                                style={{ backgroundColor: 'transparent' }}
+                                ref={(elem) => (this.pixi_container = elem)}
+                            />
                         </IonCol>
-                        <IonItemDivider/>
+                        <IonItemDivider />
                         <IonCol>
                             <div
-                                id={"preview-root-2"}
-                                style={{"backgroundColor": "transparent"}}
-                                ref={elem => this.pixi_container_preview = elem}/>
+                                id={'preview-root-2'}
+                                style={{ backgroundColor: 'transparent' }}
+                                ref={(elem) => (this.pixi_container_preview = elem)}
+                            />
                         </IonCol>
                     </IonRow>
                 </IonItem>
             </Fragment>
         );
     }
-
 }
 
 export default PreviewContainer;

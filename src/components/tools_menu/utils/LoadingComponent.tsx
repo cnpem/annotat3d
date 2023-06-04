@@ -1,9 +1,9 @@
-import React from "react";
-import {IonLabel, IonPopover, IonProgressBar} from "@ionic/react";
+import React from 'react';
+import { IonLabel, IonPopover, IonProgressBar } from '@ionic/react';
 
-interface LoadingComponentInterface{
-    openLoadingWindow: boolean
-    loadingText: string
+interface LoadingComponentInterface {
+    openLoadingWindow: boolean;
+    loadingText: string;
 }
 
 /**
@@ -12,19 +12,14 @@ interface LoadingComponentInterface{
  * @param {string} loadingText message to display while in the loading
  * @interface {LoadingComponentInterface} the interface contains the loadingText and openLoadingWindow
  */
-const LoadingComponent: React.FC<LoadingComponentInterface> = ({openLoadingWindow,
-                                                               loadingText}) => {
-
-    return(
-        <IonPopover
-            isOpen={openLoadingWindow}
-            className={"loading-popover"}
-            backdropDismiss={false}>
-
+const LoadingComponent: React.FC<LoadingComponentInterface> = ({ openLoadingWindow, loadingText }) => {
+    return (
+        <IonPopover isOpen={openLoadingWindow} className={'loading-popover'} backdropDismiss={false}>
             <IonLabel>{loadingText}</IonLabel>
             <IonLabel>Please, wait a moment...</IonLabel>
-            <IonProgressBar type={"indeterminate"}/><br />
+            <IonProgressBar type={'indeterminate'} />
+            <br />
         </IonPopover>
-    )
-}
-export default LoadingComponent
+    );
+};
+export default LoadingComponent;

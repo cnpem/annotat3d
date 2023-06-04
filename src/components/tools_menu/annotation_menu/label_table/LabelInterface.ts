@@ -5,9 +5,8 @@
 /**
  * Child component for the ToolbarComp
  */
-export interface LabelInterface{
+export interface LabelInterface {
     id: number;
     color: [number, number, number];
     labelName: string;
 }
-

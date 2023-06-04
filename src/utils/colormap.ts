@@ -65535,13 +65535,13 @@ const defaultColormap: colormapType = [
     [76, 162, 46],
     [118, 45, 170],
     [60, 105, 97],
-    [246, 209, 115]
+    [246, 209, 115],
 ];
 
 function colorFromId(colormap: colormapType, id: number): [number, number, number] {
     const ncolors = colormap.length;
-    const colorId = (id % ncolors);
+    const colorId = id % ncolors;
     return colormap[colorId];
 }
 
-export {defaultColormap, colorFromId};
+export { defaultColormap, colorFromId };
