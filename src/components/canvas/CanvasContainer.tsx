@@ -1,7 +1,8 @@
 import { Component } from 'react';
 import { IonFab, IonFabButton, IonIcon } from '@ionic/react';
 import { expand, brush, browsers, add, remove, eye, eyeOff } from 'ionicons/icons';
-import { debounce, isEqual } from 'lodash';
+import * as isEqual from 'lodash/isEqual';
+import * as debounce from 'lodash/debounce';
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 // https://stackoverflow.com/questions/42789896/webgl-error-arraybuffer-not-big-enough-for-request-in-case-of-gl-luminance
@@ -30,7 +31,7 @@ class Brush {
 
     radius = 0;
 
-    mode: brush_mode_type = 'draw_brush';
+    mode: BrushModeType = 'draw_brush';
 
     maintainExtendLabel: boolean;
 
@@ -60,7 +61,7 @@ class Brush {
         this.update();
     }
 
-    setMode(mode: brush_mode_type) {
+    setMode(mode: BrushModeType) {
         console.log('set mode: ', mode);
         this.mode = mode;
         this.update();
@@ -212,7 +213,7 @@ class Canvas {
 
     div: HTMLDivElement;
 
-    prevPosition: any;
+    prevPosition: PIXI.Point;
 
     isPainting: boolean;
 
@@ -226,7 +227,7 @@ class Canvas {
 
     brush: Brush;
 
-    brush_mode: brush_mode_type;
+    brush_mode: BrushModeType;
 
     canvas: HTMLCanvasElement;
 
@@ -378,7 +379,7 @@ class Canvas {
     }
 
     setImageShape() {
-        sfetch('POST', '/get_image_info/image_info', '', 'json').then((imgInfo: ImageInfoInterface) => {
+        void sfetch('POST', '/get_image_info/image_info', '', 'json').then((imgInfo: ImageInfoInterface) => {
             const imageShape: ImageShapeInterface = {
                 x: imgInfo.imageShape.x,
                 y: imgInfo.imageShape.y,
@@ -454,7 +455,7 @@ class Canvas {
             label: this.brush.label,
             mode: this.brush_mode,
         };
-        sfetch('POST', '/draw', JSON.stringify(data)).then((success) => {
+        void sfetch('POST', '/draw', JSON.stringify(data)).then((success) => {
             console.log(success);
             dispatch('annotationChanged', null);
         });
@@ -510,7 +511,7 @@ class Canvas {
             };
 
             console.log('Finding label by click');
-            sfetch('POST', '/find_label_by_click', JSON.stringify(data), 'json').then((labelId: number) => {
+            void sfetch('POST', '/find_label_by_click', JSON.stringify(data), 'json').then((labelId: number) => {
                 console.log('label ID found : ', labelId);
                 if (labelId >= 0) {
                     this.brush.setLabel(labelId);
@@ -554,7 +555,7 @@ class Canvas {
         return coords;
     }
 
-    setBrushMode(mode: brush_mode_type) {
+    setBrushMode(mode: BrushModeType) {
         this.brush_mode = mode;
         this.brush.setMode(mode);
     }
@@ -693,7 +694,7 @@ class Canvas {
             if (this.cropShape === undefined) {
                 error = 'Canvas.setCropPreviewMaskImage: cropShape is undefined';
             } else {
-                error = 'Canvas.setCropPreviewMaskImage: error setting dimensions in axis: ' + this.axis;
+                error = 'Canvas.setCropPreviewMaskImage: error setting dimensions in axis: ' + String(this.axis);
             }
             console.log(error);
             return;
@@ -743,14 +744,14 @@ class Canvas {
             uint8data = new Uint8Array(len);
             for (let i = 0; i < len; ++i) {
                 const val = clamp(min, img.data[i], max);
-                const x = 255 * (1.0 - (max - val) / range);
+                x = 255 * (1.0 - (max - val) / range);
                 uint8data[i] = x;
             }
         } else {
             uint8data = new Uint8Array(len);
             for (let i = 0; i < len; ++i) {
                 const val = clamp(0.0, img.data[i], 1.0);
-                const x = 255 * val;
+                x = 255 * val;
                 uint8data[i] = x;
             }
         }
@@ -852,7 +853,7 @@ class Canvas {
     }
 }
 
-type brush_mode_type = 'draw_brush' | 'erase_brush' | 'no_brush';
+type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush';
 
 interface ICanvasProps {
     slice: number;
@@ -861,7 +862,7 @@ interface ICanvasProps {
 }
 
 interface ICanvasState {
-    brush_mode: brush_mode_type;
+    brush_mode: BrushModeType;
     label_contour: boolean;
     future_sight_on: boolean;
 }
@@ -912,7 +913,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     onFutureChanged!: (hasPreview: boolean) => void;
 
-    onChangeStateBrush: (mode: brush_mode_type) => void = () => {};
+    onChangeStateBrush: (mode: BrushModeType) => void = () => {};
 
     onExtendLabel: (flag: boolean) => void = () => {};
 
@@ -958,7 +959,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     fetchAllDebounced = debounce(this.fetchAll, 250);
 
     newAnnotation() {
-        sfetch('POST', '/new_annot/annotation');
+        void sfetch('POST', '/new_annot/annotation');
         console.log('new annotation_menu, hue');
     }
 
@@ -968,7 +969,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             slice: this.props.slice,
         };
 
-        sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray')
+        void sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray')
             .then((superpixelSlice) => {
                 this.canvas!.setSuperpixelImage(superpixelSlice);
             })
@@ -998,11 +999,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             slice: 0,
         };
 
-        sfetch('POST', '/get_image_slice/future', JSON.stringify(params), 'gzip/numpyndarray').then((previewSlice) => {
-            this.canvas?.setFutureImage(previewSlice);
-            this.canvas?.setPreviewVisibility(true);
-            this.setState({ ...this.state, future_sight_on: true });
-        });
+        void sfetch('POST', '/get_image_slice/future', JSON.stringify(params), 'gzip/numpyndarray').then(
+            (previewSlice) => {
+                this.canvas?.setFutureImage(previewSlice);
+                this.canvas?.setPreviewVisibility(true);
+                this.setState({ ...this.state, future_sight_on: true });
+            }
+        );
     }
 
     getAnnotSlice() {
@@ -1012,7 +1015,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         console.log('get annot slice', params);
-        sfetch('POST', '/get_annot_slice', JSON.stringify(params), 'gzip/numpyndarray').then((slice) => {
+        void sfetch('POST', '/get_annot_slice', JSON.stringify(params), 'gzip/numpyndarray').then((slice) => {
             console.log('annot slice');
             this.canvas!.annotation.draw(slice);
         });
@@ -1025,12 +1028,14 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             contour: this.state.label_contour,
         };
 
-        sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray').then((labelSlice) => {
-            this.canvas!.setLabelImage(labelSlice);
-        });
+        void sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray').then(
+            (labelSlice) => {
+                this.canvas!.setLabelImage(labelSlice);
+            }
+        );
     }
 
-    setBrushMode(brush_mode: brush_mode_type) {
+    setBrushMode(brush_mode: BrushModeType) {
         this.setState({ brush_mode });
         this.canvas!.setBrushMode(brush_mode);
     }
@@ -1049,7 +1054,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas!.resize();
             });
 
-            this.fetchAll(true);
+            void this.fetchAll(true);
 
             this.onLabelSelected = (payload: { id: number }) => {
                 console.log(payload);
@@ -1059,8 +1064,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
             this.onImageLoaded = (payload) => {
                 const promise = this.fetchAll(true);
-                promise?.then(() => {
-                    sfetch('POST', '/is_annotation_empty', '', 'json').then((createNewAnnot: boolean) => {
+                void promise?.then(() => {
+                    void sfetch('POST', '/is_annotation_empty', '', 'json').then((createNewAnnot: boolean) => {
                         if (createNewAnnot) {
                             this.newAnnotation();
                         }
@@ -1135,7 +1140,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 }
             };
 
-            this.onChangeStateBrush = (mode: brush_mode_type) => {
+            this.onChangeStateBrush = (mode: BrushModeType) => {
                 this.setBrushMode(mode);
             };
 
@@ -1239,7 +1244,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.setState({ ...this.state, future_sight_on: false });
         this.canvas?.setSliceNum(this.props.slice);
         this.canvas?.setAxis(this.props.axis);
-        this.fetchAllDebounced(true);
+        void this.fetchAllDebounced(true);
     }
 
     adjustContrast(minimum: number, maximum: number) {
@@ -1293,7 +1298,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                         buttonsList={brushList}
                         onChange={(b) => {
                             console.log('change icon : ', b.id);
-                            this.setBrushMode(b.id as brush_mode_type);
+                            this.setBrushMode(b.id as BrushModeType);
                         }}
                     />
                 </IonFab>
