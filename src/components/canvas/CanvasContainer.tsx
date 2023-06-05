@@ -329,7 +329,7 @@ class Canvas {
         this.colors = colors;
 
         this.isPainting = false;
-        this.prevPosition = null;
+        this.prevPosition = new PIXI.Point();
 
         this.app.stage.addChild(this.viewport);
         this.viewport.addChild(this.slice);
@@ -729,7 +729,7 @@ class Canvas {
     private toUint8Array(img: NdArray<TypedArray>): Uint8Array {
         let uint8data: Uint8Array;
 
-        const x = img.shape[1];
+        let x = img.shape[1];
         const y = img.shape[0];
 
         const len = x * y;
