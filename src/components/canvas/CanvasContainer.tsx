@@ -14,7 +14,7 @@ import { NdArray, TypedArray } from 'ndarray';
 import { clamp } from '../../utils/math';
 import { sfetch } from '../../utils/simplerequest';
 
-import './CanvasContainer.css';
+import '../../styles/CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
 import { dispatch, subscribe, unsubscribe } from '../../utils/eventbus';
 import { defaultColormap } from '../../utils/colormap';
