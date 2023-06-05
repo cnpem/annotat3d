@@ -1,7 +1,7 @@
 /**
  * dtype
  */
-export default interface dataType {
+export default interface DataType {
     value: string;
     label: string;
 }

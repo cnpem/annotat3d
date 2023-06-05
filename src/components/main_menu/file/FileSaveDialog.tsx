@@ -15,7 +15,7 @@ import {
     IonContent,
     IonToast,
 } from '@ionic/react';
-import './FileDialog.css';
+import '../../../styles/FileDialog.css';
 import { barChart, construct, create, extensionPuzzle, image, images, information } from 'ionicons/icons';
 import { sfetch } from '../../../utils/simplerequest';
 import { dispatch, useEventBus } from '../../../utils/eventbus';
@@ -24,7 +24,7 @@ import { ImageInfoInterface } from './utils/ImageInfoInterface';
 import ErrorInterface from './utils/ErrorInterface';
 import LoadingComponent from '../../tools_menu/utils/LoadingComponent';
 import { useStorageState } from 'react-storage-hooks';
-import { dtype_type, dtypeList, img_operation, multiplesPath, QueueToast } from './utils/FileLoadInterface';
+import { DtypeType, dtypeList, ImgOperation, MultiplesPath, QueueToast } from './utils/FileLoadInterface';
 
 /**
  * Save Image dialog
@@ -36,7 +36,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
         event: undefined,
     });
 
-    const [pathFiles, setPathFiles] = useStorageState<multiplesPath>(sessionStorage, 'savedPathFiles', {
+    const [pathFiles, setPathFiles] = useStorageState<MultiplesPath>(sessionStorage, 'savedPathFiles', {
         workspacePath: '',
         imagePath: '',
         superpixelPath: '',
@@ -49,7 +49,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
     const [showToast, setShowToast] = useState<boolean>(false);
     const [toastMsg, setToastMsg] = useState<string>('');
     const toastTime = 10000;
-    const [dtype, setDtype] = useState<dtype_type>('uint16');
+    const [dtype, setDtype] = useState<DtypeType>('uint16');
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [useSuperpixelModule, setUseSuperpixelModule] = useStorageState<boolean>(
         sessionStorage,
@@ -59,7 +59,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [headerErrorMsg, setHeaderErrorMsg] = useState<string>('');
 
-    useEventBus('setDefaultValuesLoad', (loadedPaths: multiplesPath) => {
+    useEventBus('setDefaultValuesLoad', (loadedPaths: MultiplesPath) => {
         const setDefaultStringPath = (pathStr: string) => {
             if (pathStr !== '') {
                 const splintedPath = pathStr.split('.', 2);
@@ -93,9 +93,9 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
     /**
      * Function that save the image and dispatch to the backend
      * @param {string} imgPath - string that contains the file path
-     * @param {img_operation} saveImgOp - image operation to read. It can be "image", "superpixel" or "label"
+     * @param {ImgOperation} saveImgOp - image operation to read. It can be "image", "superpixel" or "label"
      */
-    const handleSaveImageAction = async (imgPath: string, saveImgOp: img_operation) => {
+    const handleSaveImageAction = async (imgPath: string, saveImgOp: ImgOperation) => {
         const params = {
             image_path: imgPath,
             image_dtype: dtype,
@@ -104,16 +104,16 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
         let msgReturned = '';
         let isError = false;
         await sfetch('POST', '/save_image/' + saveImgOp, JSON.stringify(params), 'json')
-            .then((image: ImageInfoInterface) => {
+            .then((img: ImageInfoInterface) => {
                 const imgName = imgPath.split('/');
                 msgReturned = `${imgName[imgName.length - 1]} saved as ${saveImgOp}`;
 
                 const info: ImageInfoInterface = {
-                    imageShape: image.imageShape,
-                    imageDtype: image.imageDtype,
-                    imageName: image.imageName,
-                    imageExt: image.imageExt,
-                    imageFullPath: image.imageFullPath,
+                    imageShape: img.imageShape,
+                    imageDtype: img.imageDtype,
+                    imageName: img.imageName,
+                    imageExt: img.imageExt,
+                    imageFullPath: img.imageFullPath,
                 };
 
                 setShowErrorWindow(false);
@@ -395,7 +395,9 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         >
                                             {dtypeList.map((type) => {
                                                 return (
-                                                    <IonSelectOption value={type.value}>{type.label}</IonSelectOption>
+                                                    <IonSelectOption key={type.value} value={type.value}>
+                                                        {type.label}
+                                                    </IonSelectOption>
                                                 );
                                             })}
                                         </IonSelect>
@@ -510,7 +512,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                         </IonAccordionGroup>
                     </IonContent>
                 </small>
-                <IonButton color={'tertiary'} slot={'end'} onClick={handleLoadImageAction}>
+                <IonButton color={'tertiary'} slot={'end'} onClick={void handleLoadImageAction}>
                     Save!
                 </IonButton>
             </IonPopover>

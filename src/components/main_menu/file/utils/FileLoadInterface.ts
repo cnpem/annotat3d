@@ -1,9 +1,9 @@
-import dataType from './Dtypes';
+import DataType from './Dtypes';
 
 /**
  * dtypes array
  */
-export const dtypeList: dataType[] = [
+export const dtypeList: DataType[] = [
     {
         value: 'uint8',
         label: '8-bit',
@@ -49,7 +49,7 @@ export const dtypeList: dataType[] = [
 /**
  * Macro for all dtypes
  */
-export type dtype_type =
+export type DtypeType =
     | 'uint8'
     | 'int16'
     | 'uint16'
@@ -64,12 +64,12 @@ export type dtype_type =
 /**
  * Macro for all images load/save operations
  */
-export type img_operation = 'image' | 'superpixel' | 'label';
+export type ImgOperation = 'image' | 'superpixel' | 'label';
 
 /**
  * Interface used for load/save menu to load the files
  */
-export interface multiplesPath {
+export interface MultiplesPath {
     workspacePath: string;
     imagePath: string;
     superpixelPath: string;

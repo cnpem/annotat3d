@@ -18,7 +18,7 @@ import {
     IonContent,
     IonToast,
 } from '@ionic/react';
-import './FileDialog.css';
+import '../../../styles/FileDialog.css';
 import { barChart, construct, create, extensionPuzzle, image, images, information } from 'ionicons/icons';
 import { sfetch } from '../../../utils/simplerequest';
 import { dispatch } from '../../../utils/eventbus';
@@ -29,7 +29,7 @@ import ErrorInterface from './utils/ErrorInterface';
 import { LabelInterface } from '../../tools_menu/annotation_menu/label_table/LabelInterface';
 import LoadingComponent from '../../tools_menu/utils/LoadingComponent';
 import { useStorageState } from 'react-storage-hooks';
-import { dtype_type, dtypeList, img_operation, multiplesPath, QueueToast } from './utils/FileLoadInterface';
+import { DtypeType, dtypeList, ImgOperation, MultiplesPath, QueueToast } from './utils/FileLoadInterface';
 import { BackEndLoadClassifier } from '../../tools_menu/module_menu/SuperpixelSegInterface';
 
 /**
@@ -43,7 +43,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         event: undefined,
     });
 
-    const [pathFiles, setPathFiles] = useStorageState<multiplesPath>(sessionStorage, 'loadedPathFiles', {
+    const [pathFiles, setPathFiles] = useStorageState<MultiplesPath>(sessionStorage, 'loadedPathFiles', {
         workspacePath: '',
         imagePath: '',
         superpixelPath: '',
@@ -57,7 +57,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
     const [toastMsg, setToastMsg] = useState<string>('');
     const toastTime = 10000;
     const [imgShapeRaw, setImageShapeRaw] = useState(new Array(3));
-    const [dtype, setDtype] = useState<dtype_type>('uint16');
+    const [dtype, setDtype] = useState<DtypeType>('uint16');
     const [xRange, setXRange] = useState([0, -1]);
     const [yRange, setYRange] = useState([0, -1]);
     const [zRange, setZRange] = useState([0, -1]);
@@ -76,12 +76,12 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
     /**
      * Function that does the dispatch
      * @param {string} imgPath - string that contains the file path
-     * @param {img_operation} loadImgOp - image operation to read. It can be "image", "superpixel" or "label"
+     * @param {ImgOperation} loadImgOp - image operation to read. It can be "image", "superpixel" or "label"
      */
-    const dispatchOpenImage = async (imgPath: string, loadImgOp: img_operation) => {
+    const dispatchOpenImage = async (imgPath: string, loadImgOp: ImgOperation) => {
         const params = {
             image_path: imgPath,
-            image_dtype: dtype,
+            imageDtype: dtype,
             image_raw_shape: [imgShapeRaw[0] || 0, imgShapeRaw[1] || 0, imgShapeRaw[2] || 0],
             use_image_raw_parse: imgShapeRaw[0] == null && imgShapeRaw[1] == null && imgShapeRaw[2] == null,
         };
@@ -89,26 +89,26 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         let msgReturned = '';
         let isError = false;
 
-        let image_dtype = '';
+        let imageDtype = '';
 
         await sfetch('POST', '/open_image/' + loadImgOp, JSON.stringify(params), 'json')
-            .then((image: ImageInfoPayload) => {
+            .then((img: ImageInfoPayload) => {
                 const imgName = imgPath.split('/');
                 msgReturned = `${imgName[imgName.length - 1]} loaded as ${loadImgOp}`;
 
                 const info: ImageInfoInterface = {
-                    imageShape: image.imageShape,
-                    imageDtype: image.imageDtype,
-                    imageName: image.imageName,
-                    imageExt: image.imageExt,
-                    imageFullPath: image.imageFullPath,
+                    imageShape: img.imageShape,
+                    imageDtype: img.imageDtype,
+                    imageName: img.imageName,
+                    imageExt: img.imageExt,
+                    imageFullPath: img.imageFullPath,
                 };
 
                 // Just buffering image dtype to pass for histogram API request
-                image_dtype = info.imageDtype;
+                imageDtype = info.imageDtype;
 
                 if (loadImgOp === 'label') {
-                    const labelTable = image.labelList;
+                    const labelTable = img.labelList;
                     console.table(labelTable);
                     dispatch('LabelLoaded', labelTable);
                     dispatch('annotationChanged', null);
@@ -132,7 +132,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
 
         // Histogram calculaton must not be called when getting superpixel or label images
         if (loadImgOp === 'image') {
-            await sfetch('POST', '/get_image_histogram/' + image_dtype, '', 'json')
+            await sfetch('POST', '/get_image_histogram/' + imageDtype, '', 'json')
                 .then((histogram: HistogramInfoPayload) => {
                     dispatch('ImageHistogramLoaded', histogram);
                 })
@@ -708,7 +708,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
                         </IonAccordionGroup>
                     </IonContent>
                 </small>
-                <IonButton color={'tertiary'} slot={'end'} onClick={handleLoadImageAction}>
+                <IonButton color={'tertiary'} slot={'end'} onClick={void handleLoadImageAction}>
                     Load!
                 </IonButton>
             </IonPopover>
