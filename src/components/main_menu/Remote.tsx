@@ -25,7 +25,11 @@ const Remote: React.FC = () => {
             </IonItem>
             <IonList slot={'content'}>
                 {items.subItems.map((subItem) => {
-                    return <IonItem button>{subItem}</IonItem>;
+                    return (
+                        <IonItem key={'_'} button>
+                            {subItem}
+                        </IonItem>
+                    );
                 })}
             </IonList>
         </IonAccordion>

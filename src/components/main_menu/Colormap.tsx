@@ -35,7 +35,7 @@ const Colormap: React.FC = () => {
                 <IonRadioGroup value={selected} onIonChange={(e) => setSelected(e.detail.value)}>
                     {items.subItems.map((subItem) => {
                         return (
-                            <IonItem>
+                            <IonItem slot={'content'} key={'_'}>
                                 <IonLabel>{subItem}</IonLabel>
                                 <IonRadio slot={'end'} value={subItem}></IonRadio>
                             </IonItem>

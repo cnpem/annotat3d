@@ -16,17 +16,17 @@ const About: React.FC = () => {
     const [software, setSoftware] = useState<Software[]>([]);
 
     useEffect(() => {
-        sfetch('POST', '/versions', '', 'json').then((response) => {
+        void sfetch('POST', '/versions', '', 'json').then((response) => {
             setSoftware(response as Software[]);
         });
     }, []);
 
-    function renderSoftware(software: Software) {
+    function renderSoftware(softw: Software) {
         return (
             <IonItem>
-                <IonLabel style={{ fontFamily: 'monospace' }}>{software.name}</IonLabel>
+                <IonLabel style={{ fontFamily: 'monospace' }}>{softw.name}</IonLabel>
                 <IonChip style={{ fontFamily: 'monospace' }} color="tertiary">
-                    {software.version}
+                    {softw.version}
                 </IonChip>
             </IonItem>
         );
