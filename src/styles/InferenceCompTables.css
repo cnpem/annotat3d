@@ -2,7 +2,7 @@
 This script is used for the css components for bootstrap-tables used in InferenceComp.tsx
 */
 
-@import '../../../../theme/variables.css';
+@import '../theme/variables.css';
 
 /**
 css for data

@@ -2,7 +2,7 @@
 This script is used for the css components for bootstrap-tables used in SamplingComp.tsx
  */
 
-@import '../../../../theme/variables.css';
+@import '../theme/variables.css';
 
 /**
 css for Data, Label and Weight bootstrap-table

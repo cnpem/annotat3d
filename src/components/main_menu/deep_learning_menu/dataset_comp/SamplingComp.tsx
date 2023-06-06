@@ -32,7 +32,7 @@ import {
     TableInterface,
     TypeOperation,
 } from './DatasetInterfaces';
-import '../../../../styles/Tables.css';
+import '../../../../styles/SamplingCompTables.css';
 import '../../../../styles/Dataset.css';
 import { sfetch } from '../../../../utils/simplerequest';
 import ErrorInterface from '../../file/utils/ErrorInterface';

@@ -43,7 +43,7 @@ import { currentEventValue, dispatch, useEventBus } from '../../../../utils/even
 import { sfetch } from '../../../../utils/simplerequest';
 import ErrorInterface from '../../file/utils/ErrorInterface';
 import * as ReactBootStrap from 'react-bootstrap';
-import './Table.css';
+import '../../../../styles/InferenceCompTables.css';
 import DeepLoadingComp from '../Utils/DeepLoadingComp';
 
 interface WarningWindowInterface {
