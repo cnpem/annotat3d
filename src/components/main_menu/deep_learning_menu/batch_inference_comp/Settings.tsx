@@ -52,7 +52,7 @@ const Settings: React.FC<SettingsInterface> = ({
                         </IonItem>
                         <IonList slot={'content'}>
                             <IonItem>
-                                <IonLabel>Available GPU's</IonLabel>
+                                <IonLabel>Available GPU&apos;s</IonLabel>
                                 <IonList>
                                     {availableGpus.map((gpu) => {
                                         return <IonItem key={gpu.key}>{gpu.value}</IonItem>;

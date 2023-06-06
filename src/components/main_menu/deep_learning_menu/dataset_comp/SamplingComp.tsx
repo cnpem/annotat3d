@@ -23,17 +23,17 @@ import { useStorageState } from 'react-storage-hooks';
 import { currentEventValue, dispatch, useEventBus } from '../../../../utils/eventbus';
 import * as ReactBootStrap from 'react-bootstrap';
 import {
-    dtype_type,
+    DtypeType,
     dtypeList,
     InitFileStatus,
     InitTables,
     SamplingInterface,
     TableElement,
     TableInterface,
-    type_operation,
+    TypeOperation,
 } from './DatasetInterfaces';
-import './Tables.css';
-import './Dataset.css';
+import '../../../../styles/Tables.css';
+import '../../../../styles/Dataset.css';
 import { sfetch } from '../../../../utils/simplerequest';
 import ErrorInterface from '../../file/utils/ErrorInterface';
 import ErrorWindowComp from '../../file/utils/ErrorWindowComp';
@@ -47,11 +47,11 @@ interface MultiplesPath {
 
 interface AddNewFileInterface {
     idMenu: number;
-    onIdMenu: (newId: number, type: type_operation) => void;
+    onIdMenu: (newId: number, type: TypeOperation) => void;
 
-    onTableVec: (newFile: MultiplesPath, typeOperation: type_operation) => void;
+    onTableVec: (newFile: MultiplesPath, typeOperation: TypeOperation) => void;
 
-    typeOperation: type_operation;
+    typeOperation: TypeOperation;
     trigger: string;
 
     workspaceName: string;
@@ -60,7 +60,7 @@ interface AddNewFileInterface {
 
 interface BackendPayload {
     image_path: string;
-    image_dtype: dtype_type;
+    image_dtype: DtypeType;
     image_raw_shape: Array<number>;
     use_image_raw_parse: boolean;
 }
@@ -68,10 +68,10 @@ interface BackendPayload {
 /**
  * React component that creates the add menu interface
  * @param idMenu {number} - id used to create a new element in the table
- * @param onIdMenu {(newId: number, type: type_operation)} - handler used to update the idMenu for a specific table
+ * @param onIdMenu {(newId: number, type: TypeOperation)} - handler used to update the idMenu for a specific table
  * @param onTableVec {(newFile: MultiplesPath) => void} - setter used to create a new element
  * @param trigger {string} - string that contains the trigger to open the popup
- * @param typeOperation {type_operation} - string variable that contains the information if the menu is for Data, label or Weight
+ * @param typeOperation {TypeOperation} - string variable that contains the information if the menu is for Data, label or Weight
  * @param workspaceName {string} - workspace path string
  * @param onWorkspaceName {(workspace: string) => void} - setter for workspaceName
  */
@@ -239,7 +239,11 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({
                                         }}
                                     >
                                         {dtypeList.map((type) => {
-                                            return <IonSelectOption value={type.value}>{type.label}</IonSelectOption>;
+                                            return (
+                                                <IonSelectOption key={type.value} value={type.value}>
+                                                    {type.label}
+                                                </IonSelectOption>
+                                            );
                                         })}
                                     </IonSelect>
                                 </IonCol>
@@ -280,16 +284,16 @@ interface WarningWindowInterface {
     openWarningWindow: boolean;
     onOpenWarningWindow: (flag: boolean) => void;
 
-    typeOperation: type_operation;
-    onTableList: (typeOperation: type_operation) => void;
+    typeOperation: TypeOperation;
+    onTableList: (typeOperation: TypeOperation) => void;
 }
 
 /**
  * Component used to create an ion-Alert to delete all elements of a table
  * @param openWarningWindow {boolean} - boolean variable to open this window
  * @param onOpenWarningWindow {(flag: boolean) => void} - handler for openWarningWindow
- * @param typeOperation {type_operation} - type of operation to delete
- * @param onTableList {(typeOperation: type_operation) => void} - handler to delete all elements of a table
+ * @param typeOperation {TypeOperation} - type of operation to delete
+ * @param onTableList {(typeOperation: TypeOperation) => void} - handler to delete all elements of a table
  */
 const DeleteAllWindow: React.FC<WarningWindowInterface> = ({
     openWarningWindow,
@@ -476,7 +480,7 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({
 }) => {
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
     const [openDeleteAll, setOpenDeleteAll] = useState<boolean>(false);
-    const [typeOperation, setTypeOperation] = useState<type_operation>('Data');
+    const [typeOperation, setTypeOperation] = useState<TypeOperation>('Data');
 
     const [dataTable, setDataTable] = useStorageState<TableInterface[]>(sessionStorage, 'dataTable', InitTables);
     const [labelTable, setLabelTable] = useStorageState<TableInterface[]>(
@@ -489,20 +493,20 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({
     const [idTableLabel, setIdTableLabel] = useStorageState<number>(sessionStorage, 'idTableLabel', 0);
     const [idTableWeight, setIdTableWeight] = useStorageState<number>(sessionStorage, 'idTableWeight', 0);
 
-    useEventBus('toggleMode', (darkMode: boolean) => {
-        setDarkMode(darkMode);
+    useEventBus('toggleMode', (isDarkMode: boolean) => {
+        setDarkMode(isDarkMode);
     });
 
     const handleOpenDeleteAll = (flag: boolean) => {
         setOpenDeleteAll(flag);
     };
 
-    const handleDataTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
+    const handleDataTable = (newFile: MultiplesPath, typeOper: TypeOperation) => {
         if (newFile.id === 0) {
             setDataTable([
                 {
                     id: newFile.id,
-                    typeOperation,
+                    typeOperation: typeOper,
                     element: {
                         fileName: newFile.file.fileName,
                         shape: newFile.file.shape,
@@ -519,7 +523,7 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({
                 ...dataTable,
                 {
                     id: newFile.id,
-                    typeOperation,
+                    typeOperation: typeOper,
                     element: {
                         fileName: newFile.file.fileName,
                         shape: newFile.file.shape,
@@ -535,12 +539,12 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({
         setIdTableData(newFile.id + 1);
     };
 
-    const handleLabelTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
+    const handleLabelTable = (newFile: MultiplesPath, typeOper: TypeOperation) => {
         if (newFile.id === 0) {
             setLabelTable([
                 {
                     id: newFile.id,
-                    typeOperation,
+                    typeOperation: typeOper,
                     element: {
                         fileName: newFile.file.fileName,
                         shape: newFile.file.shape,
@@ -557,7 +561,7 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({
                 ...labelTable,
                 {
                     id: newFile.id,
-                    typeOperation,
+                    typeOperation: typeOper,
                     element: {
                         fileName: newFile.file.fileName,
                         shape: newFile.file.shape,
@@ -573,12 +577,12 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({
         setIdTableLabel(newFile.id + 1);
     };
 
-    const handleWeightTable = (newFile: MultiplesPath, typeOperation: type_operation) => {
+    const handleWeightTable = (newFile: MultiplesPath, typeOper: TypeOperation) => {
         if (newFile.id === 0) {
             setWeightTable([
                 {
                     id: newFile.id,
-                    typeOperation,
+                    typeOperation: typeOper,
                     element: {
                         fileName: newFile.file.fileName,
                         shape: newFile.file.shape,
@@ -595,7 +599,7 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({
                 ...weightTable,
                 {
                     id: newFile.id,
-                    typeOperation,
+                    typeOperation: typeOper,
                     element: {
                         fileName: newFile.file.fileName,
                         shape: newFile.file.shape,
@@ -611,7 +615,7 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({
         setIdTableWeight(newFile.id + 1);
     };
 
-    const handleIdValues = (newId: number, type: type_operation) => {
+    const handleIdValues = (newId: number, type: TypeOperation) => {
         if (type === 'Data') {
             setIdTableData(newId);
         } else if (type === 'Label') {
@@ -621,14 +625,14 @@ const SamplingComp: React.FC<SamplingCompInterface> = ({
         }
     };
 
-    const resetTable = (typeOperation: type_operation) => {
-        if (typeOperation === 'Data') {
+    const resetTable = (typeOper: TypeOperation) => {
+        if (typeOper === 'Data') {
             setDataTable([]);
             setIdTableData(0);
-        } else if (typeOperation === 'Label') {
+        } else if (typeOper === 'Label') {
             setLabelTable([]);
             setIdTableLabel(0);
-        } else if (typeOperation === 'Weight') {
+        } else if (typeOper === 'Weight') {
             setWeightTable([]);
             setIdTableWeight(0);
         }

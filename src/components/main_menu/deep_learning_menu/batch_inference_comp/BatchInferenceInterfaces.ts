@@ -1,7 +1,7 @@
 /**
  * Dtype for files loaded into the input images
  */
-export type dtype_type =
+export type DtypeType =
     | 'uint8'
     | 'int16'
     | 'uint16'
@@ -28,7 +28,7 @@ export interface MultiplesPath {
 interface TableElement {
     fileName: string;
     shape: Array<number>;
-    type: dtype_type;
+    type: DtypeType;
     scan: string;
     time: number;
     size: number;
@@ -64,19 +64,19 @@ export interface OutputInterface {
     outputPath: string;
     probabilityMap: boolean;
     label: boolean;
-    outputBits: dtype_pm;
-    outputExt: extension_file;
+    outputBits: DtypePm;
+    outputExt: ExtensionFile;
 }
 
 /**
  * Export dtype for pm
  */
-export type dtype_pm = '16-bits' | '32-bits';
+export type DtypePm = '16-bits' | '32-bits';
 
 /**
  * Export extension file to user save the output
  */
-export type extension_file = '.raw' | '.tif';
+export type ExtensionFile = '.raw' | '.tif';
 
 /**
  * Interface for the component output used in InterfaceComp.tsx

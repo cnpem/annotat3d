@@ -91,12 +91,13 @@ const BatchInferenceComp: React.FC = () => {
         setShowErrorWindow(flag);
     };
 
-    const handlePatches = (patches: PatchesInterface) => {
-        setPatches(patches);
+    const handlePatches = (ptchs: PatchesInterface) => {
+        setPatches(ptchs);
     };
 
     const menus = [
         <InferenceComp
+            key={'_'}
             output={output}
             onOutput={handleOutput}
             network={network}
@@ -104,6 +105,7 @@ const BatchInferenceComp: React.FC = () => {
             onNetwork={handleNetwork}
         />,
         <Settings
+            key={'_'}
             patches={patches}
             onPatches={handlePatches}
             isInferenceOpChecked={isInferenceOpChecked}
@@ -191,7 +193,7 @@ const BatchInferenceComp: React.FC = () => {
 
                         sfetch('POST', '/run_inference', JSON.stringify(payload), 'json')
                             .then(() => {
-                                showToast('Inference Done !', toastTimer);
+                                void showToast('Inference Done !', toastTimer);
                             })
                             .catch((error: ErrorInterface) => {
                                 console.log('error in run_inference');

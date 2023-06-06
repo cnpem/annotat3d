@@ -23,7 +23,7 @@ import ErrorWindowComp from '../../file/utils/ErrorWindowComp';
 import { useStorageState } from 'react-storage-hooks';
 import { addOutline, closeOutline, construct, image, trashOutline } from 'ionicons/icons';
 import {
-    dtype_type,
+    DtypeType,
     dtypeList,
     InitFileStatus,
     InitTables,
@@ -31,8 +31,8 @@ import {
     TableInterface,
 } from '../dataset_comp/DatasetInterfaces';
 import {
-    dtype_pm,
-    extension_file,
+    DtypePm,
+    ExtensionFile,
     MultiplesPath,
     OutputInterface,
     SelectInterface,
@@ -129,7 +129,7 @@ interface AddNewFileInterface {
 
 interface BackendPayload {
     image_path: string;
-    image_dtype: dtype_type;
+    image_dtype: DtypeType;
     image_raw_shape: Array<number>;
     use_image_raw_parse: boolean;
 }
@@ -293,7 +293,11 @@ const AddNewFile: React.FC<AddNewFileInterface> = ({ idMenu, onIdMenu, onTableVe
                                         }}
                                     >
                                         {dtypeList.map((type) => {
-                                            return <IonSelectOption value={type.value}>{type.label}</IonSelectOption>;
+                                            return (
+                                                <IonSelectOption key={type.value} value={type.value}>
+                                                    {type.label}
+                                                </IonSelectOption>
+                                            );
                                         })}
                                     </IonSelect>
                                 </IonCol>
@@ -443,8 +447,8 @@ const InferenceComp: React.FC<InferenceInterface> = ({ output, onOutput, network
     const [darkMode, setDarkMode] = useState<boolean>(currentEventValue('toggleMode'));
     const [openDeleteAll, setOpenDeleteAll] = useState<boolean>(false);
 
-    useEventBus('toggleMode', (darkMode: boolean) => {
-        setDarkMode(darkMode);
+    useEventBus('toggleMode', (isDarkMode: boolean) => {
+        setDarkMode(isDarkMode);
     });
 
     const handleIdTable = (newId: number) => {
@@ -697,7 +701,7 @@ const InferenceComp: React.FC<InferenceInterface> = ({ output, onOutput, network
                                     onIonChange={(e: CustomEvent) =>
                                         onOutput({
                                             ...output,
-                                            outputBits: e.detail.value as dtype_pm,
+                                            outputBits: e.detail.value as DtypePm,
                                         })
                                     }
                                 >
@@ -719,7 +723,7 @@ const InferenceComp: React.FC<InferenceInterface> = ({ output, onOutput, network
                                     onIonChange={(e: CustomEvent) =>
                                         onOutput({
                                             ...output,
-                                            outputExt: e.detail.value as extension_file,
+                                            outputExt: e.detail.value as ExtensionFile,
                                         })
                                     }
                                 >

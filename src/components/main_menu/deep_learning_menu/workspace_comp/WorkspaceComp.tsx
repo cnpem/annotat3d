@@ -16,7 +16,7 @@ import ErrorWindowComp from '../../file/utils/ErrorWindowComp';
 import { sfetch } from '../../../../utils/simplerequest';
 import ErrorInterface from '../../file/utils/ErrorInterface';
 import { construct, folder } from 'ionicons/icons';
-import './Workspace.css';
+import '../../../../styles/Workspace.css';
 import { dispatch } from '../../../../utils/eventbus';
 import { SelectInterface } from '../batch_inference_comp/BatchInferenceInterfaces';
 import DeepLoadingComp from '../Utils/DeepLoadingComp';
@@ -53,6 +53,17 @@ const WorkspaceComp: React.FC = () => {
         setShowErrorWindow(flag);
     };
 
+    /**
+     * Clean up popover dialog
+     */
+    const cleanUp = () => {
+        setShowPopover({ open: false, event: undefined });
+        setUserInput({ workspacePath: '', folderName: 'workspace/' });
+        setShowErrorWindow(false);
+        setErrorMsg('');
+        setErrorMsg('');
+    };
+
     const handleLoadWorkspace = () => {
         setLoadingMsg(`Loading the workspace in ${userInput.workspacePath + userInput.folderName}`);
         setShowLoadingComp(true);
@@ -63,7 +74,7 @@ const WorkspaceComp: React.FC = () => {
         sfetch('POST', '/load_workspace', JSON.stringify(params), 'json')
             .then((workspace_path: string) => {
                 console.log('Loaded a Workspace in the path ', workspace_path);
-                showToast(`loaded a Workspace in the path "${params.workspace_path}"`, toastTime);
+                void showToast(`loaded a Workspace in the path "${params.workspace_path}"`, toastTime);
                 cleanUp();
             })
             .catch((error: ErrorInterface) => {
@@ -72,7 +83,7 @@ const WorkspaceComp: React.FC = () => {
                 setShowErrorWindow(true);
             })
             .finally(() => {
-                sfetch('POST', '/get_available_gpus', '', 'json').then((gpus: SelectInterface[]) => {
+                void sfetch('POST', '/get_available_gpus', '', 'json').then((gpus: SelectInterface[]) => {
                     console.log('payload in get_available_gpus');
                     dispatch('workspaceLoaded', { isDisabled: false, gpus });
                     setShowLoadingComp(false);
@@ -90,17 +101,17 @@ const WorkspaceComp: React.FC = () => {
         sfetch('POST', '/open_new_workspace', JSON.stringify(params), 'json')
             .then((workspace_path: string) => {
                 console.log('Create a Workspace in the path ', workspace_path);
-                showToast(`Create a Workspace in the path "${params.workspace_path}"`, toastTime);
+                void showToast(`Create a Workspace in the path "${params.workspace_path}"`, toastTime);
                 dispatch('workspaceLoaded', false);
                 cleanUp();
             })
-            .catch((errorMsg: ErrorInterface) => {
-                console.log('Error message while trying to open a new Workspace', errorMsg.error_msg);
-                setErrorMsg(errorMsg.error_msg);
+            .catch((eMsg: ErrorInterface) => {
+                console.log('Error message while trying to open a new Workspace', eMsg.error_msg);
+                setErrorMsg(eMsg.error_msg);
                 setShowErrorWindow(true);
             })
             .finally(() => {
-                sfetch('POST', '/get_available_gpus', '', 'json').then((gpus: SelectInterface[]) => {
+                void sfetch('POST', '/get_available_gpus', '', 'json').then((gpus: SelectInterface[]) => {
                     console.log('payload in get_available_gpus');
                     dispatch('workspaceLoaded', { isDisabled: false, gpus });
                     setShowLoadingComp(false);
@@ -108,16 +119,6 @@ const WorkspaceComp: React.FC = () => {
             });
     };
 
-    /**
-     * Clean up popover dialog
-     */
-    const cleanUp = () => {
-        setShowPopover({ open: false, event: undefined });
-        setUserInput({ workspacePath: '', folderName: 'workspace/' });
-        setShowErrorWindow(false);
-        setErrorMsg('');
-        setErrorMsg('');
-    };
     return (
         <>
             <IonPopover

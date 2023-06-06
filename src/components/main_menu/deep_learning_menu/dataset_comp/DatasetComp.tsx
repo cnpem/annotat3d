@@ -1,4 +1,4 @@
-import './Dataset.css';
+import '../../../../styles/Dataset.css';
 import React, { Fragment, useState } from 'react';
 import {
     IonAccordion,
@@ -105,7 +105,7 @@ const CreateDatasetH5: React.FC<H5InputInterface> = ({
             .finally(() => {
                 setShowLoadingComp(false);
                 if (datasetPath.datasetFilename !== '') {
-                    showToast(`success creating the dataset ${datasetPath.datasetFilename}`, timeToast);
+                    void showToast(`success creating the dataset ${datasetPath.datasetFilename}`, timeToast);
                 }
             });
     };
@@ -248,12 +248,14 @@ const DatasetComp: React.FC = () => {
 
     const menus = [
         <SamplingComp
+            key={'_'}
             sampleElement={sampleElement}
             onSampling={handleSampleElement}
             workspacePath={workspaceName}
             onWorkspacePath={handleWorkspaceName}
         />,
         <AugmentationComp
+            key={'_'}
             checkedVector={augmentationOpSelected}
             onCheckedVector={changeCheckedStatus}
             ionRangeVec={ionRangeVec}

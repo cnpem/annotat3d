@@ -1,4 +1,4 @@
-import dataType from '../../file/utils/Dtypes';
+import DataType from '../../file/utils/Dtypes';
 
 /**
  * This script contains all the interfaces for dataset_comp directory
@@ -211,12 +211,12 @@ export const InitIonRangeVec: IonRangeElement[] = [
  * Interfaces used on SamplingComp.tsx
  */
 
-export type type_operation = 'Data' | 'Label' | 'Weight';
+export type TypeOperation = 'Data' | 'Label' | 'Weight';
 
 /**
  * dtypes array
  */
-export const dtypeList: dataType[] = [
+export const dtypeList: DataType[] = [
     {
         value: 'uint8',
         label: '8-bit',
@@ -259,7 +259,7 @@ export const dtypeList: dataType[] = [
     },
 ];
 
-export type dtype_type =
+export type DtypeType =
     | 'uint8'
     | 'int16'
     | 'uint16'
@@ -277,7 +277,7 @@ export type dtype_type =
 export interface TableElement {
     fileName: string;
     shape: Array<number>;
-    type: dtype_type;
+    type: DtypeType;
     scan: string;
     time: number;
     size: number;
@@ -299,7 +299,7 @@ export const InitFileStatus: TableElement = {
  */
 export interface TableInterface {
     id: number;
-    typeOperation: type_operation;
+    typeOperation: TypeOperation;
     element: TableElement;
 }
 

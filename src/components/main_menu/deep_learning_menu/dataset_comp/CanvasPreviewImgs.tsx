@@ -5,7 +5,7 @@ import { sfetch } from '../../../../utils/simplerequest';
 import { dispatch, subscribe, unsubscribe } from '../../../../utils/eventbus';
 import { clamp } from '../../../../utils/math';
 import { Component, Fragment } from 'react';
-import { debounce, isEqual } from 'lodash';
+import * as debounce from 'lodash/debounce';
 import { IonCol, IonItem, IonItemDivider, IonRow } from '@ionic/react';
 
 /**
@@ -105,7 +105,7 @@ class Canvas {
     private toUint8Array(img: NdArray<TypedArray>): Uint8Array {
         let uint8data: Uint8Array;
 
-        const x = img.shape[1];
+        let x = img.shape[1];
         const y = img.shape[0];
 
         const len = x * y;
@@ -120,14 +120,14 @@ class Canvas {
             uint8data = new Uint8Array(len);
             for (let i = 0; i < len; ++i) {
                 const val = clamp(min, img.data[i], max);
-                const x = 255 * (1.0 - (max - val) / range);
+                x = 255 * (1.0 - (max - val) / range);
                 uint8data[i] = x;
             }
         } else {
             uint8data = new Uint8Array(len);
             for (let i = 0; i < len; ++i) {
                 const val = clamp(0.0, img.data[i], 1.0);
-                const x = 255 * val;
+                x = 255 * val;
                 uint8data[i] = x;
             }
         }
@@ -230,7 +230,7 @@ class PreviewContainer extends Component<IPreviewProps> {
             //Maybe i'll need to use this commands later
             // this.canvas?.setSliceNum(this.props.slice);
             // this.canvas?.setAxis(this.props.axis);
-            this.fetchAll(true);
+            void this.fetchAll(true);
 
             // Place the subscribed events here
         }
@@ -246,7 +246,7 @@ class PreviewContainer extends Component<IPreviewProps> {
         this.canvas?.setAxis(this.props.axis);
         this.canvas_preview?.setSliceNum(this.props.slice);
         this.canvas_preview?.setAxis(this.props.axis);
-        this.fetchAllDebounced(true);
+        void this.fetchAllDebounced(true);
     }
 
     render() {

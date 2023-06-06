@@ -23,7 +23,8 @@ repos:
       hooks:
           - id: interrogate
             args: [-vv, -i, --fail-under=80, --ignore-module]
-    - repo: local
+    - repo: https://github.com/pre-commit/mirrors-eslint
+      rev: ''  # Use the sha / tag you want to point at
       hooks:
           - id: eslint
             name: eslint
@@ -31,4 +32,4 @@ repos:
             files: ^src/
             types_or: [javascript, jsx, ts, tsx]
             always_run: true
-            language: system
+            language: node

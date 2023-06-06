@@ -12,7 +12,7 @@ import {
     IonRange,
 } from '@ionic/react';
 import { AugmentationInterface, IonRangeElement } from './DatasetInterfaces';
-import { isEqual } from 'lodash';
+import * as isEqual from 'lodash/isEqual';
 
 interface CheckedElements {
     checkedVector: AugmentationInterface[];
@@ -55,7 +55,7 @@ const MenuContentRange: React.FC<MenuContentRangeInterface> = ({ ionRangeVec, on
                 <IonRange
                     dualKnobs={true}
                     ref={contrastRangeRef}
-                    name={ionRangeVec[index].ionNameMenu + ionRangeVec[index].ionRangeId}
+                    name={ionRangeVec[index].ionNameMenu + String(ionRangeVec[index].ionRangeId)}
                     min={ionRangeVec[index].ionRangeLimit.minRange}
                     max={ionRangeVec[index].ionRangeLimit.maxRange}
                     debounce={300}
