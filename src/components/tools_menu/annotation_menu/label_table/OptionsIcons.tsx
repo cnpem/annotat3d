@@ -5,7 +5,6 @@ import { IonButton, IonButtons, IonContent, IonIcon, IonInput, IonItem, IonPopov
 import { closeOutline, colorPalette, pencilOutline } from 'ionicons/icons';
 
 import { LabelInterface } from './LabelInterface';
-// @ts-ignore
 import { ChromePicker } from 'react-color';
 import { useStorageState } from 'react-storage-hooks';
 import { defaultColormap } from '../../../../utils/colormap';
@@ -93,7 +92,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
     const [color, setColor] = useStorageState<[number, number, number]>(
         sessionStorage,
-        'labelColor.' + props.label.id,
+        'labelColor.' + String(props.label.id),
         defaultColormap[props.label.id]
     );
 
@@ -108,7 +107,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
     return (
         <IonButtons>
             <IonButton
-                id={'delete-label-button-' + props.label.id}
+                id={'delete-label-button-' + String(props.label.id)}
                 size="small"
                 onClick={() => setShowDeletePopUp(true)}
                 disabled={lockMenu || props.isSLActivated}
@@ -116,7 +115,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                 <IonIcon icon={closeOutline} />
             </IonButton>
             <IonButton
-                id={'edit-label-button-' + props.label.id}
+                id={'edit-label-button-' + String(props.label.id)}
                 onClick={handleNameEditClickButton}
                 disabled={lockMenu || props.isSLActivated}
             >
@@ -124,7 +123,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
             </IonButton>
 
             <IonButton
-                id={'edit-color-button-' + props.label.id}
+                id={'edit-color-button-' + String(props.label.id)}
                 onClick={() => setShowColorPopover(true)}
                 disabled={lockMenu || props.isSLActivated}
             >
@@ -132,11 +131,11 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
             </IonButton>
 
             {/*Color popUp*/}
-            <IonPopover trigger={'edit-color-button-' + props.label.id} isOpen={showColorPopover}>
+            <IonPopover trigger={'edit-color-button-' + String(props.label.id)} isOpen={showColorPopover}>
                 <ChromePicker
                     color={`rgb(${color[0]},${color[1]},${color[2]})`}
-                    onChange={(color: any) => {
-                        const colorTuple: [number, number, number] = [color.rgb.r, color.rgb.g, color.rgb.b];
+                    onChange={(clr: any) => {
+                        const colorTuple: [number, number, number] = [clr.rgb.r, clr.rgb.g, clr.rgb.b];
                         props.onChangeLabel(props.label.labelName, props.label.id, colorTuple);
                         setColor(colorTuple);
                     }}
@@ -146,7 +145,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
 
             {/*Delete popUp*/}
             <IonPopover
-                trigger={'delete-label-button-' + props.label.id}
+                trigger={'delete-label-button-' + String(props.label.id)}
                 isOpen={showDeletePopUp}
                 onDidDismiss={() => setShowDeletePopUp(false)}
             >
@@ -183,7 +182,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
             {/*Edit Label component*/}
             <EditLabelNameComp
                 label={props.label}
-                labelNameTrigger={'edit-label-button-' + props.label.id}
+                labelNameTrigger={'edit-label-button-' + String(props.label.id)}
                 showPopover={showNamePopover}
                 onChangeLabelName={(name, id) => props.onChangeLabel(name, id, props.label.color)}
                 onShowPopover={handleNameEditShowPopover}

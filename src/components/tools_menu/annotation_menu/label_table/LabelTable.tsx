@@ -19,7 +19,7 @@ import { dispatch, useEventBus, currentEventValue } from '../../../../utils/even
 
 import './LabelTable.css';
 import { useStorageState } from 'react-storage-hooks';
-import { isEqual } from 'lodash';
+import * as isEqual from 'lodash/isEqual';
 import { arrowUndoOutline, eyedrop, trashOutline } from 'ionicons/icons';
 import { sfetch } from '../../../../utils/simplerequest';
 
@@ -75,7 +75,7 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({
             .finally(() => {
                 closeWarningWindow();
             });
-        sfetch('POST', '/delete_info/anot_backup', '');
+        void sfetch('POST', '/delete_info/anot_backup', '');
     };
 
     return (
@@ -147,8 +147,8 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         setOpenWarningWindow(flag);
     };
 
-    useEventBus('toggleMode', (darkMode: boolean) => {
-        setDarkMode(darkMode);
+    useEventBus('toggleMode', (isDarkMode: boolean) => {
+        setDarkMode(isDarkMode);
     });
 
     useEventBus('changeSelectedLabel', (labelId: number) => {
@@ -156,9 +156,9 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         console.log('Value : ', labelId);
         if (labelId >= 0) {
             setSelectedLabel(labelId);
-            ionToastLabelFounded(`"${labelList[labelId].labelName}" found !`, toastTimer);
+            void ionToastLabelFounded(`"${labelList[labelId].labelName}" found !`, toastTimer);
         } else {
-            ionToastLabelFounded(`Cannot find a label by click !`, toastTimer);
+            void ionToastLabelFounded(`Cannot find a label by click !`, toastTimer);
         }
     });
 
@@ -241,7 +241,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     }
 
     const undoAnnotation = () => {
-        sfetch('POST', '/undo_annot', '').then(() => {
+        void sfetch('POST', '/undo_annot', '').then(() => {
             dispatch('annotationChanged', null);
         });
     };
@@ -250,7 +250,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         dispatch('ExtendLabel', e.detail.checked);
         if (e.detail.checked) {
             console.log('Doing dispatch for ExtendLabel');
-            ionToastActivateExtendOp(`Extend label operation activated !`, timeToast);
+            void ionToastActivateExtendOp(`Extend label operation activated !`, timeToast);
             setActivateSL(!e.detail.checked);
         }
         setIsExtendActivated(e.detail.checked);

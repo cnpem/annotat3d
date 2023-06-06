@@ -53,7 +53,7 @@ const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     const addNewLabel = () => {
         const newColor = colorFromId(props.colors, props.newLabelId);
         const newLabel = {
-            labelName: 'Label ' + props.newLabelId,
+            labelName: 'Label ' + String(props.newLabelId),
             color: newColor,
             id: props.newLabelId,
         };
