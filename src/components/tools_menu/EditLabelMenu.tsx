@@ -4,10 +4,10 @@ import { dispatch, useEventBus } from '../../utils/eventbus';
 import { sfetch } from '../../utils/simplerequest';
 import ErrorInterface from '../main_menu/file/utils/ErrorInterface';
 
-type payloadKey = 'is_merge_activated' | 'is_split_activated';
+type PayLoadKey = 'is_merge_activated' | 'is_split_activated';
 
 interface EditLabelPayload {
-    payload_key: payloadKey;
+    payload_key: PayLoadKey;
     payload_flag: boolean;
 }
 

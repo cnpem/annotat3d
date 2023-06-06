@@ -55,7 +55,11 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
         });
     });
 
-    const toolsMenuList = [<SideMenuVis imageShape={imageShape} />, <SideMenuAnnot />, <ProcessingMenu />];
+    const toolsMenuList = [
+        <SideMenuVis key="first" imageShape={imageShape} />,
+        <SideMenuAnnot key="second" />,
+        <ProcessingMenu key="third" />,
+    ];
     const toolsMenuChoices = ['visualization', 'annotation', 'processing'] as const;
 
     type InputMenuChoicesType = (typeof toolsMenuChoices)[number];
