@@ -9,13 +9,12 @@ import {
     IonToggle,
     useIonToast,
 } from '@ionic/react';
-import { isEqual } from 'lodash';
+import * as isEqual from 'lodash/isEqual';
 import { Fragment, useEffect, useRef } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 //ignoring types for react-color, as it seems broken
 //TODO: investigate if this is fixed, otherwise declare the types manually
 // same problem in SideMenuVis.tsx
-// @ts-ignore
 import { SliderPicker } from 'react-color';
 
 import { dispatch } from '../../../utils/eventbus';
@@ -128,7 +127,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
         // send change to outside event listeners
         dispatch('cropPreviewMode', true);
         // setToggleCropMode(true);
-        showToast('On Crop Preview Mode! Click Reset to deactivate.', toastTime);
+        void showToast('On Crop Preview Mode! Click Reset to deactivate.', toastTime);
     };
 
     const handleSliderChangeY = (e: CustomEvent) => {
@@ -150,7 +149,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
         // send change to outside event listeners
         dispatch('cropPreviewMode', true);
         // setToggleCropMode(true);
-        showToast('On Crop Preview Mode! Click Reset to deactivate.', toastTime);
+        void showToast('On Crop Preview Mode! Click Reset to deactivate.', toastTime);
     };
 
     const handleSliderChangeZ = (e: CustomEvent) => {
@@ -172,7 +171,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
         // send change to outside event listeners
         dispatch('cropPreviewMode', true);
         // setToggleCropMode(true);
-        showToast('On Crop Preview Mode! Click Reset to deactivate.', toastTime);
+        void showToast('On Crop Preview Mode! Click Reset to deactivate.', toastTime);
     };
 
     /**
@@ -191,7 +190,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
             cropZ: cropSliderZ,
         };
         console.log('CropMenu: onApply', cropShape);
-        sfetch('POST', '/crop_apply', JSON.stringify(cropShape), 'json').then((img_info: ImageInfoInterface) => {
+        void sfetch('POST', '/crop_apply', JSON.stringify(cropShape), 'json').then((img_info: ImageInfoInterface) => {
             console.log('CropMenu: onApply Success! ', img_info);
             // loads crop image
             dispatch('ImageLoaded', img_info);
@@ -201,8 +200,9 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
             dispatch('annotationChanged', null);
             // deactivates crop preview mode on canvas
             dispatch('cropPreviewMode', false);
-            const msg: string = 'Crop Applied cropShape: ' + cropShape + ' new imageShape:' + img_info.imageShape;
-            showToast(msg, toastTime);
+            const msg: string =
+                'Crop Applied cropShape: ' + String(cropShape) + ' new imageShape:' + String(img_info.imageShape);
+            void showToast(msg, toastTime);
         });
     }
     /**
@@ -212,7 +212,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
      */
     function onMerge() {
         setToggleCropMode(false);
-        sfetch('POST', '/crop_merge', '', 'json').then((img_info: ImageInfoInterface) => {
+        void sfetch('POST', '/crop_merge', '', 'json').then((img_info: ImageInfoInterface) => {
             console.log('CropMenu: onMerge Success! ', img_info);
             // informs canvas that the original (bigger) image was loaded
             dispatch('ImageLoaded', img_info);
@@ -224,7 +224,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
             dispatch('annotationChanged', null);
             // deactivates crop preview mode on canvas
             dispatch('cropPreviewMode', false);
-            showToast('Crop Merged', toastTime);
+            void showToast('Crop Merged', toastTime);
         });
     }
 

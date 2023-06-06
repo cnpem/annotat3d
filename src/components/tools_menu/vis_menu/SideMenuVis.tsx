@@ -3,7 +3,7 @@ import { IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonIte
 import { moon, sunny } from 'ionicons/icons';
 import { dispatch, useEventBus } from '../../../utils/eventbus';
 import { useStorageState } from 'react-storage-hooks';
-import { isEqual } from 'lodash';
+import * as isEqual from 'lodash/isEqual';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -19,7 +19,6 @@ import { Line } from 'react-chartjs-2';
 
 //ignoring types for react-color, as it seems broken
 //TODO: investigate if this is fixed, otherwise declare the types manually
-// @ts-ignoreTooltip
 import { AlphaPicker, SliderPicker } from 'react-color';
 import CropMenu from './CropMenu';
 import { ImageShapeInterface } from '../utils/ImageShapeInterface';
@@ -84,6 +83,8 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         0
     );
 
+    const contrastRangeRef = useRef<HTMLIonRangeElement | null>(null);
+
     function updateContrastRangeLimitValues() {
         contrastRangeRef.current!.max = contrastRangeRefMaxValue;
         contrastRangeRef.current!.min = contrastRangeRefMinValue;
@@ -114,8 +115,6 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     const [markerAlpha, setMarkerAlpha] = useStorageState<number>(sessionStorage, 'markerAlpha', 0.5);
     const [showAnnotations, setShowAnnotations] = useStorageState<boolean>(sessionStorage, 'showAnnotations', true);
     const [annotationAlpha, setAnnotationAlpha] = useStorageState<number>(sessionStorage, 'annotationAlpha', 0.75);
-
-    const contrastRangeRef = useRef<HTMLIonRangeElement | null>(null);
 
     //for some weird reason, IonRange is ignoring value when using the value property,
     //so I am manually setting it.
