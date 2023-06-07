@@ -52,7 +52,7 @@ const BM3DFilteringModuleCard: React.FC = () => {
             .finally(() => {
                 setDisabled(false);
                 setShowLoadingComp(false);
-                showToast(toastMessages.onPreview, timeToast);
+                void showToast(toastMessages.onPreview, timeToast);
             });
     }
 
@@ -78,7 +78,7 @@ const BM3DFilteringModuleCard: React.FC = () => {
             .finally(() => {
                 setDisabled(false);
                 setShowLoadingComp(false);
-                showToast(toastMessages.onApply, timeToast);
+                void showToast(toastMessages.onApply, timeToast);
             });
     }
 
@@ -140,7 +140,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
             .finally(() => {
                 setDisabled(false);
                 setShowLoadingComp(false);
-                showToast(toastMessages.onPreview, timeToast);
+                void showToast(toastMessages.onPreview, timeToast);
             });
     }
 
@@ -167,7 +167,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
             .finally(() => {
                 setDisabled(false);
                 setShowLoadingComp(false);
-                showToast(toastMessages.onApply, timeToast);
+                void showToast(toastMessages.onApply, timeToast);
             });
     }
 
@@ -237,7 +237,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
             .finally(() => {
                 setDisabled(false);
                 setShowLoadingComp(false);
-                showToast(toastMessages.onPreview, timeToast);
+                void showToast(toastMessages.onPreview, timeToast);
             });
     }
 
@@ -265,7 +265,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
             .finally(() => {
                 setDisabled(false);
                 setShowLoadingComp(false);
-                showToast(toastMessages.onApply, timeToast);
+                void showToast(toastMessages.onApply, timeToast);
             });
     }
 
@@ -292,7 +292,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
                         onIonChange={(e) =>
                             Number.isInteger(+e.detail.value!)
                                 ? setNlmStep(+e.detail.value!)
-                                : showToast('Please insert an integer value!', timeToast)
+                                : void showToast('Please insert an integer value!', timeToast)
                         }
                     ></IonInput>
                 </IonItem>
@@ -306,7 +306,7 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
                         onIonChange={(e) =>
                             Number.isInteger(+e.detail.value!)
                                 ? setGaussianStep(+e.detail.value!)
-                                : showToast('Please insert an integer value!', timeToast)
+                                : void showToast('Please insert an integer value!', timeToast)
                         }
                     ></IonInput>
                 </IonItem>

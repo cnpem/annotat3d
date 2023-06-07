@@ -5,7 +5,7 @@ import { dispatch, useEventBus } from '../../../utils/eventbus';
 import { useStorageState } from 'react-storage-hooks';
 import LoadingComponent from '../utils/LoadingComponent';
 import { useState } from 'react';
-import { superpixel_type, SuperpixelState } from './SuperpixelSegInterface';
+import { SuperpixelType, SuperpixelState } from './SuperpixelSegInterface';
 
 const SuperpixelModuleCard: React.FC = () => {
     const [superpixelParams, setSuperpixelParams] = useStorageState<SuperpixelState>(
@@ -39,7 +39,7 @@ const SuperpixelModuleCard: React.FC = () => {
         setSuperpixelParams(superpixel);
     });
 
-    function onApply() {
+    function onApply(): void {
         setLockMenu(true);
         setShowLoadingComp(true);
         const params = {
@@ -56,7 +56,7 @@ const SuperpixelModuleCard: React.FC = () => {
             .finally(() => {
                 setLockMenu(false);
                 setShowLoadingComp(false);
-                showToast('Superpixel successfully applied !', timeToast);
+                void showToast('Superpixel successfully applied !', timeToast);
             });
     }
 
@@ -71,7 +71,7 @@ const SuperpixelModuleCard: React.FC = () => {
                         onIonChange={(e: CustomEvent) => {
                             setSuperpixelParams({
                                 ...superpixelParams,
-                                method: e.detail.value as superpixel_type,
+                                method: e.detail.value as SuperpixelType,
                             });
                         }}
                     >

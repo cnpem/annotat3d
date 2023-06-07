@@ -1,4 +1,4 @@
-import { TextFieldTypes } from '@ionic/core';
+import type { TextFieldTypes } from '@ionic/core';
 
 // TODO : i think it's a good idea to document this file if i need time
 
@@ -10,6 +10,13 @@ export const classifiers = [
     { id: 'adaboost', name: 'AdaBoost' },
 ];
 
+export interface ModelClassifierParams {
+    id: string;
+    label: string;
+    value: any;
+    input: TextFieldTypes;
+}
+
 export const InitDefaultModelClassifierParams: Record<string, ModelClassifierParams[]> = {
     rf: [{ id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number' }],
     svm: [{ id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number' }],
@@ -17,6 +24,14 @@ export const InitDefaultModelClassifierParams: Record<string, ModelClassifierPar
     adaboost: [{ id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number' }],
     knn: [{ id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number' }],
 };
+
+export interface Feature {
+    id: string;
+    name: string;
+    type: string;
+    description: string;
+    active?: boolean;
+}
 
 export const defaultFeatures: Feature[] = [
     {
@@ -115,20 +130,7 @@ export const defaultFeatures: Feature[] = [
     },
 ];
 
-export interface ModelClassifierParams {
-    id: string;
-    label: string;
-    value: any;
-    input: TextFieldTypes;
-}
-
 export const defaultMultiscale = [1, 2, 4, 8];
-
-export const defaultPooling: Pooling[] = [
-    { id: 'min', name: 'Minimum', active: false },
-    { id: 'max', name: 'Maximum', active: false },
-    { id: 'mean', name: 'Mean', active: true },
-];
 
 export interface Pooling {
     id: string;
@@ -136,13 +138,11 @@ export interface Pooling {
     active: boolean;
 }
 
-export interface Feature {
-    id: string;
-    name: string;
-    type: string;
-    description: string;
-    active?: boolean;
-}
+export const defaultPooling: Pooling[] = [
+    { id: 'min', name: 'Minimum', active: false },
+    { id: 'max', name: 'Maximum', active: false },
+    { id: 'mean', name: 'Mean', active: true },
+];
 
 export interface Classifier {
     id: string;
@@ -161,10 +161,12 @@ export interface FeatureParams {
     thresholdSelection?: number;
 }
 
+export type SuperpixelType = 'waterpixels' | 'waterpixels3d';
+
 export interface SuperpixelState {
     compactness: number;
     seedsSpacing: number;
-    method: superpixel_type;
+    method: SuperpixelType;
 }
 
 export const initialParamsValues: FeatureParams = {
@@ -173,8 +175,6 @@ export const initialParamsValues: FeatureParams = {
     multiscale: defaultMultiscale,
     thresholdSelection: 0.01,
 };
-
-export type superpixel_type = 'waterpixels' | 'waterpixels3d';
 
 export interface BackEndLoadClassifier {
     superpixel_parameters: SuperpixelState;

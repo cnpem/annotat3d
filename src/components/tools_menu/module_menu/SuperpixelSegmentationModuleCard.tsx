@@ -16,7 +16,7 @@ import {
     useIonToast,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
-import { isEqual } from 'lodash';
+import * as isEqual from 'lodash/isEqual';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 import { currentEventValue, useEventBus, dispatch } from '../../../utils/eventbus';
@@ -104,7 +104,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     };
 
     useEffect(() => {
-        sfetch('POST', 'is_available_image/superpixel', '', 'json').then((response) => {
+        void sfetch('POST', 'is_available_image/superpixel', '', 'json').then((response) => {
             setDisabled(!response.available);
         });
     });
@@ -240,7 +240,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 dispatch('labelChanged', '');
                 setShowLoadingCompSpS(false);
                 setDisabled(false);
-                showToast(toastMessages.onApply, timeToast);
+                void showToast(toastMessages.onApply, timeToast);
                 dispatch('useSuperpixelModule', true);
             })
             .catch((error: ErrorInterface) => {
@@ -271,7 +271,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 setDisabled(false);
                 setShowLoadingCompSpS(false);
                 setHasPreprocessed(true);
-                showToast(toastMessages.onPreview, timeToast);
+                void showToast(toastMessages.onPreview, timeToast);
             })
             .catch((error: ErrorInterface) => {
                 setDisabled(false);
@@ -295,7 +295,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
             .then(() => {
                 setPrevFeatParams(featParams);
                 setPrevClassParams(classParams);
-                showToast(toastMessages.onPreprocess, timeToast);
+                void showToast(toastMessages.onPreprocess, timeToast);
                 setHasPreprocessed(true);
                 setDisabled(false);
                 setShowLoadingCompSpS(false);

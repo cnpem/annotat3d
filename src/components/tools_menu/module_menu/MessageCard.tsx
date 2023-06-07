@@ -15,7 +15,7 @@ const MessageCard: React.FC = () => {
             <ModuleCardItem name="Selected Features">
                 <IonList>
                     {featureNamesList.map((feature_name_id: string) => (
-                        <IonItem>{feature_name_id}</IonItem>
+                        <IonItem key={feature_name_id}>{feature_name_id}</IonItem>
                     ))}
                 </IonList>
             </ModuleCardItem>

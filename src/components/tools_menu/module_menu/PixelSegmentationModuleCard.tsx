@@ -16,7 +16,7 @@ import {
     useIonToast,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
-import { isEqual } from 'lodash';
+import * as isEqual from 'lodash/isEqual';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 import { currentEventValue, useEventBus, dispatch } from '../../../utils/eventbus';
@@ -226,8 +226,8 @@ const PixelSegmentationModuleCard: React.FC = () => {
             .then(() => {
                 dispatch('labelChanged', '');
                 setDisabled(false);
-                setShowLoadingCompPS(false);
-                showToast(toastMessages.onApply, timeToast);
+                void setShowLoadingCompPS(false);
+                void showToast(toastMessages.onApply, timeToast);
                 dispatch('useSuperpixelModule', false);
             })
             .catch((error: ErrorInterface) => {
@@ -259,7 +259,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
                 setDisabled(false);
                 setShowLoadingCompPS(false);
                 setHasPreprocessed(true);
-                showToast(toastMessages.onPreview, timeToast);
+                void showToast(toastMessages.onPreview, timeToast);
             })
             .catch((error: ErrorInterface) => {
                 setDisabled(false);
@@ -283,7 +283,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
             .then(() => {
                 setPrevFeatParams(featParams);
                 setPrevClassParams(classParams);
-                showToast(toastMessages.onPreprocess, timeToast);
+                void showToast(toastMessages.onPreprocess, timeToast);
                 setHasPreprocessed(true);
                 setDisabled(false);
                 setShowLoadingCompPS(false);
