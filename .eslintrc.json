@@ -42,6 +42,24 @@
     "rules": {
         "react/prop-types": "off",
         "react/react-in-jsx-scope": "off",
+        "no-use-before-define": [
+            "error",
+            {
+                "functions": false,
+                "classes": false,
+                "variables": true,
+                "allowNamedExports": false
+            }
+        ],
+        "@typescript-eslint/no-use-before-define": [
+            "error",
+            {
+                "functions": false,
+                "classes": false,
+                "variables": true,
+                "allowNamedExports": false
+            }
+        ],
         "linebreak-style": "off",
         // Configure prettier
         "prettier/prettier": [
