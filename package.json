@@ -43,7 +43,7 @@
     "react-router-dom": "^5.2.0",
     "react-storage-hooks": "^4.0.1",
     "taffydb": "^2.7.3",
-    "typescript": "^5.0.4",
+    "typescript": "5.0.4",
     "web-vitals": "^0.2.4",
     "workbox-background-sync": "^5.1.4",
     "workbox-broadcast-update": "^5.1.4",
