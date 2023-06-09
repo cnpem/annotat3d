@@ -5,7 +5,7 @@ import { sfetch } from '../../../../utils/simplerequest';
 import { dispatch, subscribe, unsubscribe } from '../../../../utils/eventbus';
 import { clamp } from '../../../../utils/math';
 import { Component, Fragment } from 'react';
-import * as debounce from 'lodash.debounce';
+import debounce from 'lodash.debounce';
 import { IonCol, IonItem, IonItemDivider, IonRow } from '@ionic/react';
 
 /**
