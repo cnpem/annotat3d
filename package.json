@@ -29,6 +29,8 @@
     "ionicons": "^5.4.0",
     "jsdoc": "^4.0.2",
     "lodash": "^4.17.21",
+    "lodash.debounce": "^4.0.8",
+    "lodash.isequal": "^4.5.0",
     "ndarray": "^1.0.19",
     "npyjs": "^0.2.1",
     "pako": "^2.0.4",
