@@ -16,7 +16,7 @@ import {
     useIonToast,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
-import * as isEqual from 'lodash/isEqual';
+import * as isEqual from 'lodash.isequal';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 import { currentEventValue, useEventBus, dispatch } from '../../../utils/eventbus';

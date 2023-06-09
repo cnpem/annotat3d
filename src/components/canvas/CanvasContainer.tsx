@@ -1,7 +1,7 @@
 import { Component } from 'react';
 import { IonFab, IonFabButton, IonIcon } from '@ionic/react';
 import { expand, brush, browsers, add, remove, eye, eyeOff } from 'ionicons/icons';
-import * as isEqual from 'lodash/isEqual';
+import * as isEqual from 'lodash.isequal';
 import * as debounce from 'lodash.debounce';
 import * as PIXI from 'pixi.js';
 //warning: this pixi.js version is modified to use a custom loader on webgl with gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);

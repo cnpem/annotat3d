@@ -19,7 +19,7 @@ import { dispatch, useEventBus, currentEventValue } from '../../../../utils/even
 
 import './LabelTable.css';
 import { useStorageState } from 'react-storage-hooks';
-import * as isEqual from 'lodash/isEqual';
+import * as isEqual from 'lodash.isequal';
 import { arrowUndoOutline, eyedrop, trashOutline } from 'ionicons/icons';
 import { sfetch } from '../../../../utils/simplerequest';
 
