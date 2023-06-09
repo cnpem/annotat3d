@@ -22,6 +22,8 @@ import { CropAxisInterface, CropShapeInterface } from '../tools_menu/utils/CropI
 import { ImageShapeInterface } from '../tools_menu/utils/ImageShapeInterface';
 import { ImageInfoInterface } from '../main_menu/file/utils/ImageInfoInterface';
 
+type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush';
+
 class Brush {
     label: number;
 
@@ -852,8 +854,6 @@ class Canvas {
         this.viewport.fit(true, w, h);
     }
 }
-
-type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush';
 
 interface ICanvasProps {
     slice: number;
