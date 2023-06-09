@@ -1,5 +1,10 @@
 {
+    "globals": {
+        "process": true
+    },
     "env": {
+        "node": true,
+        "commonjs": true,
         "browser": true,
         "es6": true
     },
@@ -86,6 +91,7 @@
         "@typescript-eslint/no-unsafe-argument": "warn",
         // Disallow calling a value with type `any`.
         "@typescript-eslint/no-unsafe-call": "warn",
+        "@typescript-eslint/restrict-plus-operands": "error",
         "@typescript-eslint/no-unsafe-return": "warn",
         "@typescript-eslint/ban-types": [
             "error",
