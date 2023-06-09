@@ -14,15 +14,6 @@ export type DtypeType =
     | 'complex64';
 
 /**
- * Interface used for add files in the table
- */
-export interface MultiplesPath {
-    id: number;
-    workspacePath: string;
-    file: TableElement;
-}
-
-/**
  * Table row for loaded files in input Image
  */
 interface TableElement {
@@ -33,6 +24,15 @@ interface TableElement {
     time: number;
     size: number;
     filePath: string;
+}
+
+/**
+ * Interface used for add files in the table
+ */
+export interface MultiplesPath {
+    id: number;
+    workspacePath: string;
+    file: TableElement;
 }
 
 /**
@@ -60,14 +60,6 @@ export interface SelectInterface {
     label: string;
 }
 
-export interface OutputInterface {
-    outputPath: string;
-    probabilityMap: boolean;
-    label: boolean;
-    outputBits: DtypePm;
-    outputExt: ExtensionFile;
-}
-
 /**
  * Export dtype for pm
  */
@@ -77,6 +69,14 @@ export type DtypePm = '16-bits' | '32-bits';
  * Export extension file to user save the output
  */
 export type ExtensionFile = '.raw' | '.tif';
+
+export interface OutputInterface {
+    outputPath: string;
+    probabilityMap: boolean;
+    label: boolean;
+    outputBits: DtypePm;
+    outputExt: ExtensionFile;
+}
 
 /**
  * Interface for the component output used in InterfaceComp.tsx

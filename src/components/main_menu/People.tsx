@@ -1,6 +1,13 @@
 import { book, logoGithub, logoLinkedin, people } from 'ionicons/icons';
 import { IonAccordion, IonIcon, IonItem, IonLabel, IonList } from '@ionic/react';
 
+interface Person {
+    name: string;
+    linkedin?: string;
+    github?: string;
+    lattes?: string;
+}
+
 const peopleList: Person[] = [
     {
         name: 'Alan Peixinho',
@@ -63,13 +70,6 @@ const peopleList: Person[] = [
         lattes: 'http://lattes.cnpq.br/5243670807170633',
     },
 ];
-
-interface Person {
-    name: string;
-    linkedin?: string;
-    github?: string;
-    lattes?: string;
-}
 
 /**
  * Colormap selector component
