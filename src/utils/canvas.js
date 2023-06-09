@@ -1,3 +1,7 @@
+import { mean, std } from './math';
+import * as pixi_viewport from 'pixi-viewport';
+import * as PIXI from 'pixi.js';
+
 class Brush {
     constructor() {
         this.label = 0;
@@ -74,7 +78,7 @@ class Brush {
 
     update() {
         const color = this.colors[this.label % this.colors.length];
-        this.context.fillStyle = 'rgb(' + color[0] + ',' + color[1] + ',' + color[2] + ')';
+        this.context.fillStyle = `rgb(' + ${color[0]} + ',' + ${color[1]} + ',' + ${color[2]} + ')`;
 
         this.context.rect(0, 0, this.size, this.size);
         this.context.fill();
@@ -163,7 +167,7 @@ class Canvas {
         this.brush = new Brush();
 
         this.isPainting = false;
-        this.prevPosition = null;
+        this.prevPosition = PIXI.Point();
 
         this.app.stage.addChild(this.viewport);
         this.viewport.addChild(this.slice);
@@ -203,8 +207,8 @@ class Canvas {
         const dist = this.distanceBetween(this.prevPosition, currPosition);
         const angle = this.angleBetween(this.prevPosition, currPosition);
         for (let i = 0; i < dist; i++) {
-            const x = Math.round(this.prevPosition.x + Math.sin(angle) * i - this.brush.size / 2);
-            const y = Math.round(this.prevPosition.y + Math.cos(angle) * i - this.brush.size / 2);
+            const x = Math.round(Number(this.prevPosition.x) + Math.sin(angle) * i - this.brush.size / 2);
+            const y = Math.round(Number(this.prevPosition.y) + Math.cos(angle) * i - this.brush.size / 2);
             this.annotation.context.drawImage(this.brush.canvas, x, y, this.brush.size, this.brush.size);
             coords.push([x, y]);
         }
@@ -298,7 +302,7 @@ class Canvas {
 
     destroySuperpixelImage() {
         this.superpixelSlice.texture.destroy();
-        this.superpixelSlice.texture = PIXI.texture.EMPTY;
+        this.superpixelSlice.texture = PIXI.Texture.EMPTY;
     }
 
     resize() {
@@ -315,3 +319,5 @@ class Canvas {
         this.viewport.fit(true, w, h);
     }
 }
+
+export { Canvas, Brush, Annotation };

@@ -1,6 +1,6 @@
-type colormapType = [number, number, number][];
+type ColormapType = [number, number, number][];
 
-const defaultColormap: colormapType = [
+const defaultColormap: ColormapType = [
     [246, 10, 246],
     [10, 10, 239],
     [46, 193, 69],
@@ -65538,7 +65538,7 @@ const defaultColormap: colormapType = [
     [246, 209, 115],
 ];
 
-function colorFromId(colormap: colormapType, id: number): [number, number, number] {
+function colorFromId(colormap: ColormapType, id: number): [number, number, number] {
     const ncolors = colormap.length;
     const colorId = id % ncolors;
     return colormap[colorId];

@@ -10,6 +10,10 @@
 // remove cursor on mobile
 // disable things
 
+import * as PIXI from 'pixi.js';
+import Canvas from './canvas';
+import { sfetch, sxhr } from './simplerequest';
+
 const imagePathElm = document.getElementById('image_path');
 const dtypeElm = document.getElementById('dtype');
 const openXElm = document.getElementById('open_x');
@@ -91,21 +95,21 @@ window.addEventListener('resize', function () {
 
 document.getElementById('brush_size').value = canvas.brush.size;
 document.getElementById('brush_size').addEventListener('change', function () {
-    const brush_size = parseInt(document.getElementById('brush_size').value);
-    canvas.brush.setSize(brush_size);
+    const brushSize = parseInt(document.getElementById('brush_size').value);
+    canvas.brush.setSize(brushSize);
 });
 
 document.getElementById('brush_label').value = canvas.brush.label;
 document.getElementById('brush_label').addEventListener('change', function () {
-    const brush_label = parseInt(document.getElementById('brush_label').value);
-    canvas.brush.setLabel(brush_label);
+    const brushLabel = parseInt(document.getElementById('brush_label').value);
+    canvas.brush.setLabel(brushLabel);
 });
 
 zElm.addEventListener('change', function () {
-    get_image_slice();
-    get_annot_slice();
-    get_superpixel_slice();
-    get_label_slice();
+    getImageSlice();
+    getAnnotSlice();
+    getSuperpixelSlice();
+    getLabelSlice();
 });
 
 canvas.viewport.on('pointerdown', onPointerDown);
@@ -128,20 +132,20 @@ sxhr('GET', '/reconnect_session', function (response) {
 
         zElm.value = Math.round(parseInt(openZElm.value) / 2);
 
-        get_image_slice();
-        recenter_canvas();
+        getImageSlice();
+        recenterCanvas();
     }
 
     if ('annot_path' in r) {
         annotPathElm.value = r.annot_path;
-        get_annot_slice();
+        getAnnotSlice();
     }
 
-    get_superpixel_slice();
-    get_label_slice();
+    getSuperpixelSlice();
+    getLabelSlice();
 });
 
-function open_image() {
+function openImage() {
     const data = {
         image_path: imagePathElm.value,
         dtype: dtypeElm.value,
@@ -156,14 +160,14 @@ function open_image() {
         function () {
             zElm.value = Math.round(parseInt(openZElm.value) / 2);
 
-            get_image_slice();
-            recenter_canvas();
+            getImageSlice();
+            recenterCanvas();
         },
         JSON.stringify(data)
     );
 }
 
-function close_image() {
+function closeImage() {
     sxhr('POST', '/close_image', function () {
         imagePathElm.value = '';
         dtypeElm.value = 'dtype';
@@ -177,7 +181,7 @@ function close_image() {
     });
 }
 
-function get_label_slice() {
+function getLabelSlice() {
     const z = zElm.value;
 
     document.getElementById('brush_z').value = z;
@@ -186,12 +190,12 @@ function get_label_slice() {
         z: parseInt(z),
     };
 
-    sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray').then((labelSlice) => {
+    void sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray').then((labelSlice) => {
         canvas.setLabelImage(labelSlice);
     });
 }
 
-function get_image_slice() {
+function getImageSlice() {
     const z = zElm.value;
 
     document.getElementById('brush_z').value = z;
@@ -200,16 +204,16 @@ function get_image_slice() {
         z: parseInt(z),
     };
 
-    sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray').then((imgSlice) => {
+    void sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray').then((imgSlice) => {
         canvas.setImage(imgSlice);
     });
 }
 
-function new_annot() {
+function newAnnot() {
     sxhr('POST', '/new_annot', () => {});
 }
 
-function open_annot() {
+function openAnnot() {
     const data = {
         annot_path: annotPathElm.value,
     };
@@ -217,13 +221,13 @@ function open_annot() {
         'POST',
         '/open_annot',
         function () {
-            get_annot_slice();
+            getAnnotSlice();
         },
         JSON.stringify(data)
     );
 }
 
-function close_annot() {
+function closeAnnot() {
     sxhr('POST', '/close_annot', function () {
         annotPathElm.value = '';
         canvas.annotation.sprite.texture.destroy();
@@ -231,14 +235,14 @@ function close_annot() {
     });
 }
 
-function save_annot() {
+function saveAnnot() {
     const data = {
         annot_path: annotPathElm.value,
     };
     sxhr('POST', '/save_annot', () => {}, JSON.stringify(data));
 }
 
-function get_superpixel_slice() {
+function getSuperpixelSlice() {
     canvas.superpixelSlice.width = openXElm.value;
     canvas.superpixelSlice.height = openYElm.value;
 
@@ -250,12 +254,14 @@ function get_superpixel_slice() {
         z: parseInt(zElm.value),
     };
 
-    sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray').then((superpixelSlice) => {
-        canvas.setSuperpixelImage(superpixelSlice);
-    });
+    void sfetch('POST', '/get_superpixel_slice', JSON.stringify(params), 'gzip/numpyndarray').then(
+        (superpixelSlice) => {
+            canvas.setSuperpixelImage(superpixelSlice);
+        }
+    );
 }
 
-function get_annot_slice() {
+function getAnnotSlice() {
     canvas.annotation.canvas.width = openXElm.value;
     canvas.annotation.canvas.height = openYElm.value;
 
@@ -263,17 +269,17 @@ function get_annot_slice() {
         z: parseInt(zElm.value),
     };
 
-    sfetch('POST', '/get_annot_slice', JSON.stringify(data), 'gzip/float64array').then((slice) => {
+    void sfetch('POST', '/get_annot_slice', JSON.stringify(data), 'gzip/float64array').then((slice) => {
         canvas.annotation.draw(slice);
     });
 }
 
-function recenter_canvas() {
+function recenterCanvas() {
     canvas.recenter(openXElm.value, openYElm.value);
 }
 
 function createSegmentationModule() {
-    sfetch('POST', '/superpixel_segmentation_module/create');
+    void sfetch('POST', '/superpixel_segmentation_module/create');
 }
 
 function preview() {
@@ -281,10 +287,10 @@ function preview() {
         z: parseInt(zElm.value),
     };
 
-    sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(params)).then(() => {
+    void sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(params)).then(() => {
         canvas.setLabelVisibility(true);
         canvas.setSuperpixelVisibility(false);
-        get_label_slice();
+        getLabelSlice();
     });
 }
 
@@ -294,11 +300,11 @@ async function computeSuperpixels() {
         seed_spacing: 4,
         compactness: 10,
     };
-    sfetch('POST', '/superpixel', JSON.stringify(superpixelParams)).then(() => {
+    await sfetch('POST', '/superpixel', JSON.stringify(superpixelParams)).then(() => {
         console.log('gonna get superpixel slices yay');
         canvas.setLabelVisibility(false);
         canvas.setSuperpixelVisibility(true);
-        get_superpixel_slice();
+        getSuperpixelSlice();
     });
 }
 
@@ -316,6 +322,8 @@ function onPointerDown(event) {
 }
 
 function onPointerMove(event) {
+    let currPosition = null;
+
     if (event.type == 'wheel') {
         canvas.viewport.plugins.resume('drag');
         currPosition = canvas.viewport.toWorld(event.offsetX, event.offsetY);

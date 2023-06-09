@@ -36,7 +36,7 @@ const Page: React.FC = () => {
 
     useEventBus('sliceChanged', (payload: SliceInfoInterface) => {
         setSliceInfo(payload);
-        sfetch('POST', '/close_image/future').then(() => {
+        void sfetch('POST', '/close_image/future').then(() => {
             dispatch('futureChanged', null);
         });
     });
@@ -71,7 +71,7 @@ const Page: React.FC = () => {
             </IonContent>
 
             <IonFooter>
-                <span>{sliceInfo.axis + ' : ' + sliceInfo.slice}</span>
+                <span>{`${sliceInfo.axis} + ' : ' + ${sliceInfo.slice}`}</span>
             </IonFooter>
         </IonPage>
     );

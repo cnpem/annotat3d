@@ -100,9 +100,7 @@ function sfetch(method, url, data = '', responseType = '') {
         console.log('sfetch.then: ', response);
         switch (responseType) {
             case 'gzip/numpyndarray':
-                const responseNumpy = responseToNdArray(response);
-                console.log(responseNumpy);
-                return responseNumpy;
+                return responseToNdArray(response);
             case 'gzip/uint8array':
                 return responseToUint8Array(response);
             case 'gzip/float64array':
