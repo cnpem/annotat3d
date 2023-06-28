@@ -127,7 +127,7 @@ deploy-to-dev:
     only:
         - dev
     needs:
-        - job: build-python-package
+        - job: build-to-dev
           artifacts: true
 
 deploy-to-staging:
@@ -146,7 +146,7 @@ deploy-to-staging:
         - staging
         - tags
     needs:
-        - job: build-python-package
+        - job: build-to-staging
           artifacts: true
 
 deploy-to-production:
@@ -165,5 +165,5 @@ deploy-to-production:
         - main
         - tags
     needs:
-        - job: build-python-package
+        - job: build-to-production
           artifacts: true
