@@ -3,7 +3,7 @@ import { IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonIte
 import { moon, sunny } from 'ionicons/icons';
 import { dispatch, useEventBus } from '../../../utils/eventbus';
 import { useStorageState } from 'react-storage-hooks';
-import * as isEqual from 'lodash.isequal';
+import isEqual from 'lodash.isequal';
 import {
     Chart as ChartJS,
     CategoryScale,
