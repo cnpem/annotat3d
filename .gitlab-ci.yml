@@ -13,7 +13,7 @@ build-python-package:
     script:
         # -- frontend
         - yarn install
-        - yarn build
+        - CI=false yarn build
         # -- backend
         - export MAKEFLAGS="-j64"
         - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
