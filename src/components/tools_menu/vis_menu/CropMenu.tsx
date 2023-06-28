@@ -9,7 +9,7 @@ import {
     IonToggle,
     useIonToast,
 } from '@ionic/react';
-import * as isEqual from 'lodash.isequal';
+import isEqual from 'lodash.isequal';
 import { Fragment, useEffect, useRef } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 //ignoring types for react-color, as it seems broken

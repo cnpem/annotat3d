@@ -12,7 +12,7 @@ import {
     IonRange,
 } from '@ionic/react';
 import { AugmentationInterface, IonRangeElement } from './DatasetInterfaces';
-import * as isEqual from 'lodash.isequal';
+import isEqual from 'lodash.isequal';
 
 interface CheckedElements {
     checkedVector: AugmentationInterface[];
