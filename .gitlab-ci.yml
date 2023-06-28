@@ -7,7 +7,7 @@ stages:
     - build
     - deploy
 
-build-python-package:
+build-to-dev:
     image: gitregistry.cnpem.br/gcd/data-science/segmentation/ssc-annotat3d:cuda-11.2
     stage: build
     script:
@@ -28,6 +28,80 @@ build-python-package:
         - cd backend
         - python3 -m pip install -r requirements.txt
         - python3 setup.py build_ext -j64 bdist_wheel
+    environment:
+        name: dev
+    only:
+        - dev
+    tags:
+        - x86_64
+        - cuda11
+        - docker
+    artifacts:
+        paths:
+            - backend/dist/*whl
+            - build/
+        expire_in: 1 day
+
+build-to-staging:
+    image: gitregistry.cnpem.br/gcd/data-science/segmentation/ssc-annotat3d:cuda-11.2
+    stage: build
+    script:
+        # -- frontend
+        - yarn install
+        - CI=false yarn build
+        # -- backend
+        - export MAKEFLAGS="-j64"
+        - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
+        - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
+        - mkdir -p ~/.pip/
+        - printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOST\nextra-index-url = https://pypi.python.org/simple" > ~/.pip/pip.conf
+        - cat ~/.pip/pip.conf
+        - mkdir -p backend/sscAnnotat3D/static/
+        - mkdir -p backend/sscAnnotat3D/templates/
+        - cp -rf build/static/* backend/sscAnnotat3D/static/
+        - cp -rf build/index.html backend/sscAnnotat3D/templates/
+        - cd backend
+        - python3 -m pip install -r requirements.txt
+        - python3 setup.py build_ext -j64 bdist_wheel
+    environment:
+        name: staging
+    only:
+        - staging
+    tags:
+        - x86_64
+        - cuda11
+        - docker
+    artifacts:
+        paths:
+            - backend/dist/*whl
+            - build/
+        expire_in: 1 day
+
+build-to-production:
+    image: gitregistry.cnpem.br/gcd/data-science/segmentation/ssc-annotat3d:cuda-11.2
+    stage: build
+    script:
+        # -- frontend
+        - yarn install
+        - CI=false yarn build
+        # -- backend
+        - export MAKEFLAGS="-j64"
+        - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
+        - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
+        - mkdir -p ~/.pip/
+        - printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOST\nextra-index-url = https://pypi.python.org/simple" > ~/.pip/pip.conf
+        - cat ~/.pip/pip.conf
+        - mkdir -p backend/sscAnnotat3D/static/
+        - mkdir -p backend/sscAnnotat3D/templates/
+        - cp -rf build/static/* backend/sscAnnotat3D/static/
+        - cp -rf build/index.html backend/sscAnnotat3D/templates/
+        - cd backend
+        - python3 -m pip install -r requirements.txt
+        - python3 setup.py build_ext -j64 bdist_wheel
+    environment:
+        name: production
+    only:
+        - main
     tags:
         - x86_64
         - cuda11
