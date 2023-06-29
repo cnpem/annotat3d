@@ -40,7 +40,7 @@ run-backend:
 
 run-frontend:
 	@echo "Running the frontend application"
-	yarn start	#serve -s build --debug
+	serve -s build --debug
 
 run-app: run-backend run-frontend 
 
