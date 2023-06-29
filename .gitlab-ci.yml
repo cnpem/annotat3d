@@ -1,7 +1,7 @@
 variables:
     GCC_PYPI_SERVER: http://gcc.lnls.br:3128
     GCC_PYPI_HOST: gcc.lnls.br
-    GCC_APPS: /ibira/lnls/labs/tepui/apps/gcc
+    GCC_APPS: /ibira/lnls/labs/tepui/apps/gcd
 
 stages:
     - build
