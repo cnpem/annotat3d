@@ -10,3 +10,4 @@ ssc-remotevis
 sentry-sdk
 opencv-python
 cython==0.29.30
+setuptools==69.0.3
