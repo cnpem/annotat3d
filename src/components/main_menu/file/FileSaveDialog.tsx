@@ -512,7 +512,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                         </IonAccordionGroup>
                     </IonContent>
                 </small>
-                <IonButton color={'tertiary'} slot={'end'} onClick={void handleLoadImageAction}>
+                <IonButton color={'tertiary'} slot={'end'} onClick={() => void handleLoadImageAction()}>
                     Save!
                 </IonButton>
             </IonPopover>

@@ -81,7 +81,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
     const dispatchOpenImage = async (imgPath: string, loadImgOp: ImgOperation) => {
         const params = {
             image_path: imgPath,
-            imageDtype: dtype,
+            image_dtype: dtype,
             image_raw_shape: [imgShapeRaw[0] || 0, imgShapeRaw[1] || 0, imgShapeRaw[2] || 0],
             use_image_raw_parse: imgShapeRaw[0] == null && imgShapeRaw[1] == null && imgShapeRaw[2] == null,
         };
@@ -708,7 +708,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
                         </IonAccordionGroup>
                     </IonContent>
                 </small>
-                <IonButton color={'tertiary'} slot={'end'} onClick={void handleLoadImageAction}>
+                <IonButton color={'tertiary'} slot={'end'} onClick={() => void handleLoadImageAction()}>
                     Load!
                 </IonButton>
             </IonPopover>
