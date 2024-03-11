@@ -6,6 +6,7 @@ import {
     BM3DFilteringModuleCard,
     GaussianFilteringModuleCard,
     NonLocalMeansFilteringModuleCard,
+    UMFilteringModuleCard,
 } from './FilteringModuleCard';
 import GroupSelect from './GroupSelect';
 import PixelSegmentationModuleCard from './PixelSegmentationModuleCard';
@@ -23,6 +24,7 @@ const moduleOptions = [
             { id: 'bm3d_filter', label: 'BM3D Smoothing Filter' },
             { id: 'gaussian_filter', label: 'Gaussian Filter' },
             { id: 'nlm_filter', label: 'Non Local Means Filter' },
+            { id: 'um_filter', label: 'Unsharp Mask Filter' },
         ],
     },
 ];
@@ -34,6 +36,7 @@ const canvas: Record<string, 'drawing' | 'imaging'> = {
     bm3d_filter: 'imaging',
     gaussian_filter: 'imaging',
     nlm_filter: 'imaging',
+    um_filter: 'imaging',
 };
 
 const ProcessingMenu: React.FC = () => {
@@ -51,7 +54,7 @@ const ProcessingMenu: React.FC = () => {
     useEffect(() => {
         dispatch('canvasModeChanged', canvas[curModule]);
     }, [curModule]);
-
+    console.log('curModule', curModule);
     return (
         <Fragment>
             <IonCard disabled={lockMenu}>
@@ -82,6 +85,9 @@ const ProcessingMenu: React.FC = () => {
             </IonList>
             <IonList hidden={curModule !== 'nlm_filter'}>
                 <NonLocalMeansFilteringModuleCard />
+            </IonList>
+            <IonList hidden={curModule !== 'um_filter'}>
+                <UMFilteringModuleCard />
             </IonList>
             <MessageCard />
         </Fragment>

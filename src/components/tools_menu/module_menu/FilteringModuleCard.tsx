@@ -181,7 +181,7 @@ const GaussianFilteringModuleCard: React.FC = () => {
                         type="number"
                         step="0.1"
                         min={0.1}
-                        onIonChange={(e) => setSigma(+e.detail.value!)}
+                        onIonChange={(e) => setSigma(e.detail.value as unknown as number)}
                     ></IonInput>
                 </IonItem>
                 <IonRadioGroup value={convType} onIonChange={(e) => setConvType(e.detail.value)}>
@@ -316,4 +316,104 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
     );
 };
 
-export { BM3DFilteringModuleCard, GaussianFilteringModuleCard, NonLocalMeansFilteringModuleCard };
+const UMFilteringModuleCard: React.FC = () => {
+    const [showToast] = useIonToast();
+
+    const [disabled, setDisabled] = useState<boolean>(false);
+
+    const [sigma, setSigma] = useStorageState<number>(sessionStorage, 'UMSigma', 2);
+    const [ammount, setAmmount] = useStorageState<number>(sessionStorage, 'UMAmmount', 2);
+
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
+    const [loadingMsg, setLoadingMsg] = useState<string>('');
+
+    function onPreview() {
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number;
+            axis: string;
+        };
+
+        const params = {
+            sigma,
+            ammount,
+            axis: curSlice.axis,
+            slice: curSlice.slice,
+        };
+
+        setDisabled(true);
+        setShowLoadingComp(true);
+        setLoadingMsg('Creating the preview');
+
+        sfetch('POST', '/filters/unsharp_mask/preview/image/future', JSON.stringify(params))
+            .then(() => {
+                dispatch('futureChanged', curSlice);
+            })
+            .finally(() => {
+                setDisabled(false);
+                setShowLoadingComp(false);
+                void showToast(toastMessages.onPreview, timeToast);
+            });
+    }
+
+    function onApply() {
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number;
+            axis: string;
+        };
+
+        const params = {
+            sigma,
+            ammount,
+            axis: curSlice.axis,
+        };
+
+        setDisabled(true);
+        setShowLoadingComp(true);
+        setLoadingMsg('Applying');
+
+        sfetch('POST', '/filters/unsharp_mask/apply/image', JSON.stringify(params))
+            .then(() => {
+                onApplyThen(curSlice);
+            })
+            .finally(() => {
+                setDisabled(false);
+                setShowLoadingComp(false);
+                void showToast(toastMessages.onApply, timeToast);
+            });
+    }
+
+    return (
+        <ModuleCard disabled={disabled} name="Unsharp Mask Filtering" onPreview={onPreview} onApply={onApply}>
+            <ModuleCardItem name="Filter Parameters">
+                <IonItem>
+                    <IonLabel>Sigma</IonLabel>
+                    <IonInput
+                        value={sigma}
+                        type="number"
+                        step="1"
+                        min={2}
+                        onIonChange={(e) => setSigma(+e.detail.value!)}
+                    ></IonInput>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>Ammount</IonLabel>
+                    <IonInput
+                        value={ammount}
+                        type="number"
+                        step="1"
+                        min={2}
+                        onIonChange={(e) => setAmmount(+e.detail.value!)}
+                    ></IonInput>
+                </IonItem>
+            </ModuleCardItem>
+            <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={loadingMsg} />
+        </ModuleCard>
+    );
+};
+
+export {
+    BM3DFilteringModuleCard,
+    GaussianFilteringModuleCard,
+    NonLocalMeansFilteringModuleCard,
+    UMFilteringModuleCard,
+};
