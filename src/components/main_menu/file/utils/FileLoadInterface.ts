@@ -1,9 +1,9 @@
-import DataType from './Dtypes';
+import dataType from './Dtypes';
 
 /**
  * dtypes array
  */
-export const dtypeList: DataType[] = [
+export const dtypeList: dataType[] = [
     {
         value: 'uint8',
         label: '8-bit',
