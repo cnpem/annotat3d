@@ -6,6 +6,7 @@ from sscAnnotat3D import utils
 
 from sscPySpin.filters import filter_bm3d as spin_bm3d
 from sscPySpin.filters import non_local_means as spin_nlm
+from sscPySpin.filters import spin_filter_unsharp_mask as spin_unsharp_mask
 from skimage.filters import gaussian as skimage_gaussian
 
 from flask_cors import cross_origin
@@ -155,5 +156,47 @@ def nlm_apply(input_id: str, output_id: str):
     spin_nlm(output_img, input_img, sigma, nlmStep, gaussianStep)
 
     data_repo.set_image(output_id, data=output_img)
+
+    return 'success', 200
+
+@app.route('/filters/unsharp_mask/preview/<input_id>/<output_id>', methods=['POST'])
+@cross_origin()
+def unsharp_mask_preview(input_id: str, output_id: str):
+    input_img = data_repo.get_image(input_id)
+    print('input_img', input_img.dtype)
+    if input_img is None:
+        return f"Image {input_id} not found.", 400
+
+    sigma = request.json['sigma']
+    ammount = request.json['ammount']
+
+    slice_num = request.json["slice"]
+    axis = request.json["axis"]
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    input_img_slice = input_img[slice_range]
+    input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)))
+
+    output_img = spin_unsharp_mask(input_img_3d.astype(np.int32), sigma, ammount).astype(np.uint16)
+
+    data_repo.set_image(output_id, data=output_img)
+
+    return 'success', 200
+
+@app.route('/filters/unsharp_mask/apply/<input_id>', methods=['POST'])
+@cross_origin()
+def unsharp_mask_apply(input_id: str):
+    input_img = data_repo.get_image(input_id)
+
+    if input_img is None:
+        return f"Image {input_id} not found.", 400
+
+    sigma = request.json['sigma']
+    ammount = request.json['ammount']
+
+    input_img = spin_unsharp_mask(input_img.astype(np.int32), sigma, ammount).astype(np.uint16)
+
+    data_repo.set_image(input_id, data=input_img)
+    data_repo.set_image('future', data=input_img)
 
     return 'success', 200
