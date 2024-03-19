@@ -913,6 +913,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     onFutureChanged!: (hasPreview: boolean) => void;
 
+    onImageChanged!: (hasPreview: boolean) => void;
+
     onChangeStateBrush: (mode: BrushModeType) => void = () => {};
 
     onExtendLabel: (flag: boolean) => void = () => {};
@@ -1140,6 +1142,14 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 }
             };
 
+            this.onImageChanged = (hasSlice: boolean) => {
+                if (hasSlice) {
+                    const hatch = this.getImageSlice().then(() => {
+                        console.log('Image Filtered.');
+                    });
+                }
+            };
+
             this.onChangeStateBrush = (mode: BrushModeType) => {
                 this.setBrushMode(mode);
             };
@@ -1178,6 +1188,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             };
 
             subscribe('futureChanged', this.onFutureChanged);
+            subscribe('imageChanged', this.onImageChanged);
             subscribe('labelColorsChanged', this.onLabelColorsChanged);
             subscribe('labelContourChanged', this.onLabelContourChanged);
             subscribe('annotationChanged', this.onAnnotationChanged);
@@ -1205,6 +1216,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     componentWillUnmount() {
         unsubscribe('futureChanged', this.onFutureChanged);
+        unsubscribe('imageChanged', this.onImageChanged);
         unsubscribe('labelColorsChanged', this.onLabelColorsChanged);
         unsubscribe('labelContourChanged', this.onLabelContourChanged);
         unsubscribe('labelColorsChanged', this.onLabelColorsChanged);
