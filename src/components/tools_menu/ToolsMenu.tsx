@@ -8,7 +8,7 @@ import {
     IonSegmentButton,
     SegmentChangeEventDetail,
 } from '@ionic/react';
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 import { ImageShapeInterface } from './utils/ImageShapeInterface';
 import ProcessingMenu from './module_menu/ProcessingMenu';
@@ -18,7 +18,7 @@ import SlicesMenu from './SlicesMenu';
 
 import { eyeOutline, brushOutline, colorWandOutline } from 'ionicons/icons';
 import { ImageInfoInterface } from '../main_menu/file/utils/ImageInfoInterface';
-import { useEventBus } from '../../utils/eventbus';
+import { useEventBus, dispatch } from '../../utils/eventbus';
 
 interface SideMenuProps {
     hideMenu: boolean;
@@ -93,6 +93,12 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
             </Fragment>
         );
     };
+    // useEffect hook for reacting to menuOp changes, change to drawing when not in processing (to show the brushs)
+    useEffect(() => {
+        if (menuOp !== 'processing') {
+            dispatch('canvasModeChanged', 'drawing');
+        }
+    }, [menuOp]); // This effect depends on menuOp, so it runs whenever menuOp changes.
 
     return (
         <React.Fragment>
