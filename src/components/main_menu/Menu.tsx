@@ -16,7 +16,6 @@ import '../../styles/Menu.css';
 import ThemeToggle from './ThemeToggle';
 import File from './file/File';
 // import Colormap from "./Colormap";
-import DeepLearning from './deep_learning_menu/DeepLearning';
 // import Remote from "./Remote";
 
 import React, { useState } from 'react';
@@ -54,7 +53,6 @@ const Menu: React.FC = () => {
                 <IonAccordionGroup>
                     <File />
                     {/*<Colormap/>*/}
-                    <DeepLearning />
                     {/*<Remote/>*/}
                     <About />
                     <People />
