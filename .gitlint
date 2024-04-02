@@ -2,7 +2,7 @@
 
 [general]
 # Ignore rules, reference them by id or name (comma-separated)
-ignore=title-trailing-punctuation, T3
+ignore=title-trailing-punctuation, T3, B6
 
 # Enable specific community contributed rules
 contrib=contrib-title-conventional-commits
@@ -18,3 +18,5 @@ line-length=80
 [title-min-length]
 min-length=5
 
+[body-max-line-length]
+line-length=240
