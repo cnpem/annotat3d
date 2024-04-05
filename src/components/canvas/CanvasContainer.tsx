@@ -13,6 +13,7 @@ import * as pixi_viewport from 'pixi-viewport';
 import { NdArray, TypedArray } from 'ndarray';
 import { clamp } from '../../utils/math';
 import { sfetch } from '../../utils/simplerequest';
+import { HistogramInfoPayload } from '../../components/main_menu/file/utils/HistogramInfoInterface';
 
 import '../../styles/CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
@@ -729,33 +730,39 @@ class Canvas {
     }
 
     private toUint8Array(img: NdArray<TypedArray>): Uint8Array {
-        let uint8data: Uint8Array;
+        const len = img.shape[1] * img.shape[0];
+        console.log('toUint8Array exec');
+        let scaleFunc: (value: number) => number;
+        console.log(img.dtype);
+        // Generalized function to extract bit depth and determine if it's unsigned
+        const getBitDepthAndUnsigned = (dtype: string): [number, boolean] => {
+            const isUnsigned = dtype.startsWith('u');
+            const bitDepth = parseInt(dtype.replace(/\D/g, ''), 10);
+            return [bitDepth, isUnsigned];
+        };
 
-        let x = img.shape[1];
-        const y = img.shape[0];
-
-        const len = x * y;
-
-        //TODO: implement for another dtypes
-        if (img.dtype === 'uint8') {
-            uint8data = img.data as Uint8Array;
-        } else if (img.dtype === 'uint16') {
-            const max = 65535.0 * this.imgMax;
-            const min = 65535.0 * this.imgMin;
+        const [bitDepth, isUnsigned] = getBitDepthAndUnsigned(img.dtype);
+        const maxDataTypeValue = isUnsigned ? Math.pow(2, bitDepth) - 1 : Math.pow(2, bitDepth - 1) - 1;
+        console.log('imgminmax', this.imgMin, this.imgMax);
+        // General scaling function bazsed on whether it's signed or unsigned
+        if (isUnsigned) {
+            // Assuming imgMax and imgMin are for normalized scaling within the unsigned range
+            const max = this.imgMax;
+            const min = this.imgMin;
             const range = max - min;
-            uint8data = new Uint8Array(len);
-            for (let i = 0; i < len; ++i) {
-                const val = clamp(min, img.data[i], max);
-                x = 255 * (1.0 - (max - val) / range);
-                uint8data[i] = x;
-            }
+            scaleFunc = (value: number) => 255 * (1.0 - (max - clamp(min, value, max)) / range);
         } else {
-            uint8data = new Uint8Array(len);
-            for (let i = 0; i < len; ++i) {
-                const val = clamp(0.0, img.data[i], 1.0);
-                x = 255 * val;
-                uint8data[i] = x;
-            }
+            // For signed types, adjust min and max if necessary based on expected range adjustments
+            const max = this.imgMax;
+            const min = this.imgMin;
+            const range = max - min;
+            scaleFunc = (value: number) => 255 * (1.0 - Math.abs((max - clamp(min, value, max)) / range));
+        }
+
+        // Apply the scaling function to each pixel
+        const uint8data = new Uint8Array(len);
+        for (let i = 0; i < len; ++i) {
+            uint8data[i] = Math.round(scaleFunc(img.data[i]));
         }
 
         return uint8data;
@@ -980,12 +987,27 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             });
     }
 
+    getHistogram() {
+        const params = {
+            axis: this.props.axis,
+            slice: this.props.slice,
+        };
+        sfetch('POST', '/get_image_histogram/image', JSON.stringify(params), 'json')
+            .then((histogram: HistogramInfoPayload) => {
+                dispatch('ImageHistogramLoaded', histogram);
+            })
+            .catch((error) => {
+                console.log('Error while acquiring histogram');
+                console.log(error.error_msg);
+            });
+    }
+
     getImageSlice() {
         const params = {
             axis: this.props.axis,
             slice: this.props.slice,
         };
-
+        console.log('Slice changed', this.props.axis, this.props.slice);
         return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray').then(
             (imgSlice) => {
                 this.canvas!.setImage(imgSlice);
@@ -1066,6 +1088,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
             this.onImageLoaded = (payload) => {
                 const promise = this.fetchAll(true);
+                this.getHistogram();
                 void promise?.then(() => {
                     void sfetch('POST', '/is_annotation_empty', '', 'json').then((createNewAnnot: boolean) => {
                         if (createNewAnnot) {
@@ -1251,6 +1274,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             } else {
                 this.setBrushMode('draw_brush');
             }
+        }
+
+        if (this.props.axis !== prevProps.axis || this.props.slice !== prevProps.slice) {
+            // Get histogram if slice or axis changes, should add to the fetchAllDebounced function?
+            this.getHistogram();
         }
 
         this.setState({ ...this.state, future_sight_on: false });

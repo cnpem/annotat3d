@@ -4,6 +4,7 @@
 
 export interface HistogramInfoPayload {
     data: number[];
+    bins: number[];
     maxValue: number;
     minValue: number;
 }

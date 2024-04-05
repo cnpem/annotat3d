@@ -86,14 +86,16 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     const contrastRangeRef = useRef<HTMLIonRangeElement | null>(null);
 
     function updateContrastRangeLimitValues() {
+        console.log('Range Updated:', contrastRangeRefMaxValue, contrastRangeRefMinValue);
         contrastRangeRef.current!.max = contrastRangeRefMaxValue;
         contrastRangeRef.current!.min = contrastRangeRefMinValue;
+        setContrast({ lower: contrastRangeRefMinValue, upper: contrastRangeRefMaxValue });
     }
 
     useEventBus('ImageHistogramLoaded', (loadedHistogram: HistogramInfoPayload) => {
         // Update histogram data and labels
         baseHistogram.datasets[0].data = loadedHistogram.data;
-        baseHistogram.labels = Array.from(Array(baseHistogram.datasets[0].data.length).keys());
+        baseHistogram.labels = loadedHistogram.bins;
 
         // Plot histogram
         setHistogramData(baseHistogram);
@@ -101,10 +103,14 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         // Store histogram max and min values
         setContrastRangeRefMaxValue(loadedHistogram.maxValue);
         setContrastRangeRefMinValue(loadedHistogram.minValue);
-
-        // Update range component
-        updateContrastRangeLimitValues();
+        setContrast({ lower: 20, upper: 80 });
+        console.log('I, the ImageHistogramLoaded event finished the execution');
     });
+
+    useEffect(() => {
+        // This code runs after contrastRangeRefMaxValue and contrastRangeRefMinValue have been updated
+        updateContrastRangeLimitValues();
+    }, [contrastRangeRefMaxValue, contrastRangeRefMinValue]); // Dependencies
 
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
@@ -120,15 +126,13 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     //so I am manually setting it.
     useEffect(() => {
         if (contrastRangeRef) {
-            updateContrastRangeLimitValues();
-
             if (!isEqual(contrastRangeRef.current!.value, contrast)) {
                 // this is used to reposition the slider markers to the last values set on contrast
                 setTimeout(() => {
                     contrastRangeRef.current!.value = contrast;
                 }, 20);
 
-                dispatch('contrastChanged', [contrast.lower / 100, contrast.upper / 100]);
+                dispatch('contrastChanged', [contrast.lower, contrast.upper]);
             }
         }
         //now I am just dispatch all events on mount
@@ -156,12 +160,11 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
                             if (e.detail.value) {
                                 const range = e.detail.value;
                                 setContrast(range);
-                                dispatch('contrastChanged', [range.lower / 100, range.upper / 100]);
+                                dispatch('contrastChanged', [range.lower, range.upper]);
                             }
                         }}
                     >
                         <IonIcon slot="start" icon={sunny}></IonIcon>
-                        <IonIcon slot="end" icon={moon}></IonIcon>
                     </IonRange>
                     <Line options={histogramOptions} data={histogramData} />
                 </IonCardContent>

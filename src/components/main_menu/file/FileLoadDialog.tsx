@@ -24,7 +24,6 @@ import { sfetch } from '../../../utils/simplerequest';
 import { dispatch } from '../../../utils/eventbus';
 import ErrorWindowComp from './utils/ErrorWindowComp';
 import { ImageInfoInterface, ImageInfoPayload } from './utils/ImageInfoInterface';
-import { HistogramInfoPayload } from './utils/HistogramInfoInterface';
 import ErrorInterface from './utils/ErrorInterface';
 import { LabelInterface } from '../../tools_menu/annotation_menu/label_table/LabelInterface';
 import LoadingComponent from '../../tools_menu/utils/LoadingComponent';
@@ -104,7 +103,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
                     imageFullPath: img.imageFullPath,
                 };
 
-                // Just buffering image dtype to pass for histogram API request
+                // Just buffering image dtype to pass for histogram API request (depracated)
                 imageDtype = info.imageDtype;
 
                 if (loadImgOp === 'label') {
@@ -129,24 +128,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
                 setHeaderErrorMsg(`error while loading the ${loadImgOp}`);
                 setErrorMsg(error.error_msg);
             });
-
-        // Histogram calculaton must not be called when getting superpixel or label images
-        if (loadImgOp === 'image') {
-            await sfetch('POST', '/get_image_histogram/' + imageDtype, '', 'json')
-                .then((histogram: HistogramInfoPayload) => {
-                    dispatch('ImageHistogramLoaded', histogram);
-                })
-                .catch((error) => {
-                    msgReturned = error.error_msg;
-                    isError = true;
-                    console.log('error while acquiring image histogram ');
-                    console.log(error.error_msg);
-                    setShowErrorWindow(true);
-                    setHeaderErrorMsg(`error while acquiring image histogram`);
-                    setErrorMsg(error.error_msg);
-                });
-        }
-
         const returnedObj: QueueToast = { message: msgReturned, isError };
         return returnedObj;
     };
