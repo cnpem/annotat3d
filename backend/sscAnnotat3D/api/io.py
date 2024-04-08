@@ -1,4 +1,3 @@
-import logging
 import os
 import os.path
 import time
@@ -270,13 +269,24 @@ def get_image_histogram(image_id):
 
     end = time.process_time()
     print(f"Elapsed time during histogram calculation: {end-start} seconds")
+    # it is necessary to convert the numpy datatype to a numpy datatype for json
+    data_type = img_slice.dtype
+    if data_type == float:
+
+        def python_typer(x):
+            return float(x)
+
+    else:
+
+        def python_typer(x):
+            return int(x)
 
     # Mount response following HistogramInfoInterface.ts definition
     histogram_info = {}
-    histogram_info["data"] = histogram.astype("uint32").tolist()
-    histogram_info["maxValue"] = int(np.max(bin_centers))
-    histogram_info["minValue"] = int(np.min(bin_centers))
-    histogram_info["bins"] = bin_centers.astype("uint32").tolist()
+    histogram_info["data"] = histogram.tolist()
+    histogram_info["maxValue"] = python_typer(np.max(bin_centers))
+    histogram_info["minValue"] = python_typer(np.min(bin_centers))
+    histogram_info["bins"] = bin_centers.tolist()
 
     return jsonify(histogram_info)
 

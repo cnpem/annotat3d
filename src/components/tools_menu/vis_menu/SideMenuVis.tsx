@@ -93,17 +93,23 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     }
 
     useEventBus('ImageHistogramLoaded', (loadedHistogram: HistogramInfoPayload) => {
-        // Update histogram data and labels
-        baseHistogram.datasets[0].data = loadedHistogram.data;
-        baseHistogram.labels = loadedHistogram.bins;
-
-        // Plot histogram
-        setHistogramData(baseHistogram);
+        // Update histogram data and labels (it is necessary to update a unique variable)
+        const updatedHistogram = {
+            labels: loadedHistogram.bins,
+            datasets: [
+                {
+                    data: loadedHistogram.data,
+                    borderColor: 'rgb(53, 162, 235)',
+                    backgroundColor: 'rgba(53, 162, 235, 0.5)',
+                    normalized: true,
+                },
+            ],
+        };
+        setHistogramData(updatedHistogram);
 
         // Store histogram max and min values
         setContrastRangeRefMaxValue(loadedHistogram.maxValue);
         setContrastRangeRefMinValue(loadedHistogram.minValue);
-        setContrast({ lower: 20, upper: 80 });
         console.log('I, the ImageHistogramLoaded event finished the execution');
     });
 
