@@ -2,7 +2,7 @@ default_language_version:
     python: python3
 repos:
     - repo: https://github.com/psf/black
-      rev: 22.1.0
+      rev: 24.3.0
       hooks:
           - id: black
             args: ['--line-length=120']
@@ -10,25 +10,25 @@ repos:
             additional_dependencies: ['click==8.0.4']
             stages: [pre-commit]
     - repo: https://github.com/pycqa/flake8
-      rev: 6.0.0
+      rev: 7.0.0
       hooks:
           - id: flake8
             args: ['--config', '.flake8']
             stages: [pre-commit]
     - repo: https://github.com/timothycrosley/isort
-      rev: 5.12.0
+      rev: 5.13.2
       hooks:
           - id: isort
             args: ['--profile', 'black']
             stages: [pre-commit]
     - repo: https://github.com/econchick/interrogate
-      rev: 1.4.0
+      rev: 1.7.0
       hooks:
           - id: interrogate
             args: [-vv, -i, --fail-under=80, --ignore-module]
             stages: [pre-commit]
     - repo: https://github.com/pre-commit/mirrors-eslint
-      rev: ''  # Use the sha / tag you want to point at
+      rev: 'v9.0.0'  # Use the sha / tag you want to point at
       hooks:
           - id: eslint
             name: eslint
@@ -56,7 +56,7 @@ repos:
               "eslint-plugin-react-hooks@^4.6.0"]
             stages: [pre-commit]
     - repo: https://github.com/jorisroovers/gitlint
-      rev: ''
+      rev: 'v0.19.1'
       hooks:
             - id: gitlint
               name: gitlint
