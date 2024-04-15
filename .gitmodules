@@ -1,3 +1,0 @@
-[submodule "backend/sscAnnotat3D/sscDeepsirius"]
-	path = backend/sscAnnotat3D/sscDeepsirius
-	url = https://gitlab.cnpem.br/GCC/segmentation/sscDeepsirius.git
