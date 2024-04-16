@@ -181,6 +181,18 @@ def get_image(key="image"):
     return contiguous(__images.get(key, None))
 
 
+def get_images_keys():
+    """
+    Function that get all availables keys.
+    Possible keys: image, superpixel, label and annotation.
+
+    Returns:
+        list: list of avaible keys
+
+    """
+    return list(__images.keys())  # + list(__annotations.keys())
+
+
 def delete_image(key="image"):
     """
     Function that deletes an image, superpixel or label

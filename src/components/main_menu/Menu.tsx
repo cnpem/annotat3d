@@ -38,7 +38,7 @@ const Menu: React.FC = () => {
         <IonMenu contentId="main" type="overlay" side="start">
             <IonHeader>
                 <IonToolbar>
-                    <IonCard color="primary" style={{ padding: '1em', fontFamily: 'monospace' }}>
+                    <IonCard color="tertiary" style={{ padding: '1em', fontFamily: 'monospace' }}>
                         <IonCardTitle className={'ion-text-center'}>
                             <big>Annotat3D</big>
                         </IonCardTitle>
