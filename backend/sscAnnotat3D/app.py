@@ -23,6 +23,7 @@ from sscAnnotat3D.api.modules import (
 from sscAnnotat3D.modules import superpixel_segmentation_module
 from sscAnnotat3D.repository import data_repo
 
+
 app = Flask(__name__)
 # import pdb
 
@@ -30,7 +31,6 @@ CORS(app)
 
 app.config["CORS_HEADERS"] = "Content-Type"
 
-# pdb.set_trace()
 app.register_blueprint(apiio.app)
 app.register_blueprint(annotation.app)
 app.register_blueprint(superpixel.app)
@@ -111,17 +111,13 @@ def versions():
 if __name__ == "__main__":
 
     import logging
+    from dotenv import load_dotenv
+
+    load_dotenv()
 
     LOG_LEVEL = os.getenv("ANNOTAT3D_LOG_LEVEL", "DEBUG")
     logging.root.setLevel(LOG_LEVEL)
 
     # WARNING: only one process can be used, as we store images in memory
     # to be able to use more processes we should find a better way to store data
-    app.run("0.0.0.0", 5000, True, processes=1, threaded=True)
-
-    # address = socket.gethostbyname(socket.gethostname())
-    # with socket.socket() as s:
-    #     s.bind(("", 0))
-    #     port = s.getsockname()[1]
-    # print(f"Running on http://{address}:{port}/ (Press CTRL+C to quit)")
-    # server = waitress.serve(app, host="0.0.0.0", port=port)
+    app.run(host=os.getenv('FLASK_RUN_HOST'), port=os.getenv('FLASK_RUN_PORT'), debug=True, processes=1, threaded=True)
