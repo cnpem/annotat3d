@@ -1,1 +1,1 @@
-from . import annotation, image, io, remotevis, superpixel
+from . import annotation, image, io, superpixel

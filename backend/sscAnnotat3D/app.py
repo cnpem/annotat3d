@@ -13,7 +13,7 @@ from sscAnnotat3D.__version__ import __version__
 from sscAnnotat3D.api import annotation, filters
 from sscAnnotat3D.api import image as apiimage
 from sscAnnotat3D.api import io as apiio
-from sscAnnotat3D.api import remotevis, superpixel
+from sscAnnotat3D.api import superpixel
 from sscAnnotat3D.api.modules import (
     pixel_segmentation_module as apipixel_segmentation_module,
 )
@@ -34,7 +34,6 @@ app.config["CORS_HEADERS"] = "Content-Type"
 app.register_blueprint(apiio.app)
 app.register_blueprint(annotation.app)
 app.register_blueprint(superpixel.app)
-app.register_blueprint(remotevis.app)
 app.register_blueprint(apiimage.app)
 app.register_blueprint(apisuperpixel_segmentation_module.app)
 app.register_blueprint(apipixel_segmentation_module.app)
@@ -94,13 +93,11 @@ def test():
 @app.route("/versions", methods=["POST", "GET"])
 @cross_origin()
 def versions():
-    import ssc_remotevis
     import sscIO
     import sscPySpin
 
     return jsonify(
         [
-            dict(name="sscRemoteVis", version=ssc_remotevis.__version__),
             dict(name="sscPySpin", version=sscPySpin.__version__),
             dict(name="sscIO", version=sscIO.__version__),
             dict(name="sscAnnotat3D", version=__version__),
