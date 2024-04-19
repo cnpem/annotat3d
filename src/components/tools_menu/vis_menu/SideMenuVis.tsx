@@ -23,6 +23,7 @@ import { AlphaPicker, SliderPicker } from 'react-color';
 import CropMenu from './CropMenu';
 import { ImageShapeInterface } from '../utils/ImageShapeInterface';
 import { HistogramInfoPayload } from '../../main_menu/file/utils/HistogramInfoInterface';
+import ColorPicker from './ColorPicker';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Filler, Legend);
 
@@ -158,6 +159,7 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         <React.Fragment>
             <IonCard disabled={lockVisCards}>
                 <IonCardContent>
+                    <ColorPicker />
                     <IonRange
                         ref={contrastRangeRef}
                         pin={true}

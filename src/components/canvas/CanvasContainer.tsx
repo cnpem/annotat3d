@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import { IonFab, IonFabButton, IonIcon } from '@ionic/react';
-import { expand, brush, browsers, add, remove, eye, eyeOff } from 'ionicons/icons';
+import { expand, brush, browsers, add, remove, eye, eyeOff, cogOutline } from 'ionicons/icons';
 import isEqual from 'lodash.isequal';
 import debounce from 'lodash.debounce';
 import * as PIXI from 'pixi.js';
@@ -9,6 +9,7 @@ import * as PIXI from 'pixi.js';
 // this fix is on the import on utils/pixibufferloader
 import '../../utils/pixibufferloader';
 import * as pixi_viewport from 'pixi-viewport';
+import colormap from 'colormap';
 
 import { NdArray, TypedArray } from 'ndarray';
 import { clamp } from '../../utils/math';
@@ -22,6 +23,7 @@ import { defaultColormap } from '../../utils/colormap';
 import { CropAxisInterface, CropShapeInterface } from '../tools_menu/utils/CropInterface';
 import { ImageShapeInterface } from '../tools_menu/utils/ImageShapeInterface';
 import { ImageInfoInterface } from '../main_menu/file/utils/ImageInfoInterface';
+import { ColorOptions } from '../../utils/colormaplist';
 
 type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush';
 
@@ -246,6 +248,8 @@ class Canvas {
 
     cropSlice: PIXI.Sprite;
 
+    cmap: ColorOptions;
+
     superpixelColor = 0xff0000;
 
     cropColor = 0xff0000;
@@ -330,6 +334,7 @@ class Canvas {
         this.brush_mode = 'draw_brush';
 
         this.colors = colors;
+        this.cmap = 'greys';
 
         this.isPainting = false;
         this.prevPosition = new PIXI.Point();
@@ -621,6 +626,14 @@ class Canvas {
         return texture;
     }
 
+    private colortextureFromSlice(slice: Float32Array, x: number, y: number, pformat = PIXI.FORMATS.RGBA) {
+        const texture = PIXI.Texture.fromBuffer(slice, x, y, {
+            type: PIXI.TYPES.FLOAT,
+            format: pformat,
+        });
+        return texture;
+    }
+
     setLabelImage(labelSlice: NdArray<TypedArray>) {
         this.labelData = labelSlice;
 
@@ -638,10 +651,10 @@ class Canvas {
             if (label <= 0) continue;
 
             const color = colors[label];
-            rgbaData[idx] = color[0];
-            rgbaData[idx + 1] = color[1];
-            rgbaData[idx + 2] = color[2];
-            rgbaData[idx + 3] = 128;
+            rgbaData[idx] = color[0]; //R
+            rgbaData[idx + 1] = color[1]; //G
+            rgbaData[idx + 2] = color[2]; //B
+            rgbaData[idx + 3] = 128; //A
         }
 
         const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
@@ -729,7 +742,7 @@ class Canvas {
         this.cropSlice.texture = texture;
     }
 
-    private toUint8Array(img: NdArray<TypedArray>): Uint8Array {
+    /*     private toUint8Array(img: NdArray<TypedArray>): Uint8Array {
         const len = img.shape[1] * img.shape[0];
         console.log('toUint8Array exec');
         let scaleFunc: (value: number) => number;
@@ -766,6 +779,56 @@ class Canvas {
         }
 
         return uint8data;
+    } */
+
+    private toFloat32ColorArray(img: NdArray<TypedArray>, colorname: ColorOptions): Float32Array {
+        const len = img.shape[1] * img.shape[0];
+        console.log('toUint8ColorArray exec');
+        let scaleFunc: (value: number) => number;
+        console.log(img.dtype);
+        // Generalized function to extract bit depth and determine if it's unsigned
+        const getBitDepthAndUnsigned = (dtype: string): [number, boolean] => {
+            const isUnsigned = dtype.startsWith('u');
+            const bitDepth = parseInt(dtype.replace(/\D/g, ''), 10);
+            return [bitDepth, isUnsigned];
+        };
+
+        const [bitDepth, isUnsigned] = getBitDepthAndUnsigned(img.dtype);
+        const maxDataTypeValue = isUnsigned ? Math.pow(2, bitDepth) - 1 : Math.pow(2, bitDepth - 1) - 1;
+        console.log('imgminmax', this.imgMin, this.imgMax);
+        // General scaling function bazsed on whether it's signed or unsigned
+        if (isUnsigned) {
+            // Assuming imgMax and imgMin are for normalized scaling within the unsigned range
+            const max = this.imgMax;
+            const min = this.imgMin;
+            const range = max - min;
+            scaleFunc = (value: number) => 1.0 - (max - clamp(min, value, max)) / range;
+        } else {
+            // For signed types, adjust min and max if necessary based on expected range adjustments
+            const max = this.imgMax;
+            const min = this.imgMin;
+            const range = max - min;
+            scaleFunc = (value: number) => 1.0 - Math.abs((max - clamp(min, value, max)) / range);
+        }
+        // Generate a colormap, using float for only losting info in the final conversion, not during map
+        const colors = colormap({
+            colormap: colorname,
+            nshades: 256,
+            format: 'float',
+        });
+        // Apply the scaling function to each pixel
+        const rgbaData = new Float32Array(len * 4);
+        for (let i = 0; i < len; ++i) {
+            const intensity = scaleFunc(img.data[i]);
+            const color = colors[Math.floor(intensity * 255)];
+            const baseIndex = i * 4;
+            rgbaData[baseIndex] = color[0]; // R
+            rgbaData[baseIndex + 1] = color[1]; // G
+            rgbaData[baseIndex + 2] = color[2]; // B
+            rgbaData[baseIndex + 3] = 1; // A
+        }
+
+        return rgbaData;
     }
 
     setFutureImage(futureSlice: NdArray<TypedArray>) {
@@ -774,8 +837,8 @@ class Canvas {
         const x = futureSlice.shape[1];
         const y = futureSlice.shape[0];
 
-        const uint8data = this.toUint8Array(futureSlice);
-        const texture = this.textureFromSlice(uint8data, x, y);
+        const floatdata = this.toFloat32ColorArray(futureSlice, this.cmap);
+        const texture = this.colortextureFromSlice(floatdata, x, y, PIXI.FORMATS.RGBA);
 
         this.futureSlice.texture = texture;
     }
@@ -792,7 +855,28 @@ class Canvas {
     setImage(imgSlice: NdArray<TypedArray>) {
         this.imgData = imgSlice;
 
-        const uint8data = this.toUint8Array(imgSlice);
+        const x = imgSlice.shape[1];
+        const y = imgSlice.shape[0];
+
+        this.x = x;
+        this.y = y;
+
+        this.annotation.setSize(x, y);
+
+        const floatdata = this.toFloat32ColorArray(imgSlice, this.cmap);
+        const texture = this.colortextureFromSlice(floatdata, x, y, PIXI.FORMATS.RGBA);
+        this.slice.texture = texture;
+        // console.log('Image exists: Unlocking components.');
+        // dispatch('LockComponents', false);
+    }
+
+    setColorMap(cmap: ColorOptions) {
+        this.cmap = cmap;
+        const imgSlice = this.imgData;
+        if (imgSlice === undefined) {
+            console.error('Image is not open yet');
+            return;
+        }
 
         const x = imgSlice.shape[1];
         const y = imgSlice.shape[0];
@@ -802,11 +886,9 @@ class Canvas {
 
         this.annotation.setSize(x, y);
 
-        const texture = this.textureFromSlice(uint8data, x, y);
+        const floatdata = this.toFloat32ColorArray(imgSlice, this.cmap);
+        const texture = this.colortextureFromSlice(floatdata, x, y, PIXI.FORMATS.RGBA);
         this.slice.texture = texture;
-
-        // console.log('Image exists: Unlocking components.');
-        // dispatch('LockComponents', false);
     }
 
     increaseBrushSize() {
@@ -894,6 +976,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     onImageLoaded: (payload: any) => void = () => {};
 
+    onColorMapChanged: (payload: any) => void = () => {};
+
     onContrastChanged: (payload: number[]) => void = () => {};
 
     onSuperpixelChanged: () => void = () => {};
@@ -950,6 +1034,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     fetchAll = (recenter = false) => {
+        console.log(colormap);
         console.log('update ...', this.props.slice);
         return this.getImageSlice().then(() => {
             console.log('Canvas: ImageSlice exists: Unlocking components.');
@@ -1098,6 +1183,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 });
             };
 
+            this.onColorMapChanged = (payload) => {
+                this.canvas!.setColorMap(payload);
+                console.log('Canvas cmap changed to:', payload);
+            };
+
             this.onSuperpixelChanged = () => {
                 this.getSuperpixelSlice();
             };
@@ -1212,6 +1302,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
             subscribe('futureChanged', this.onFutureChanged);
             subscribe('imageChanged', this.onImageChanged);
+            subscribe('ColorMapChanged', this.onColorMapChanged);
             subscribe('labelColorsChanged', this.onLabelColorsChanged);
             subscribe('labelContourChanged', this.onLabelContourChanged);
             subscribe('annotationChanged', this.onAnnotationChanged);
@@ -1240,6 +1331,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     componentWillUnmount() {
         unsubscribe('futureChanged', this.onFutureChanged);
         unsubscribe('imageChanged', this.onImageChanged);
+        unsubscribe('ColorMapChanged', this.onColorMapChanged);
         unsubscribe('labelColorsChanged', this.onLabelColorsChanged);
         unsubscribe('labelContourChanged', this.onLabelContourChanged);
         unsubscribe('labelColorsChanged', this.onLabelColorsChanged);
