@@ -783,7 +783,7 @@ class Canvas {
 
     private toFloat32ColorArray(img: NdArray<TypedArray>, colorname: ColorOptions): Float32Array {
         const len = img.shape[1] * img.shape[0];
-        console.log('toUint8ColorArray exec');
+        console.log('toFloat32ColorArray exec');
         let scaleFunc: (value: number) => number;
         console.log(img.dtype);
         // Generalized function to extract bit depth and determine if it's unsigned

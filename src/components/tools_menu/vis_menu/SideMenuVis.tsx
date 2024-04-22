@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonItem } from '@ionic/react';
 import { moon, sunny } from 'ionicons/icons';
 import { dispatch, useEventBus } from '../../../utils/eventbus';
@@ -16,7 +16,7 @@ import {
     Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-
+import colormap from 'colormap';
 //ignoring types for react-color, as it seems broken
 //TODO: investigate if this is fixed, otherwise declare the types manually
 import { AlphaPicker, SliderPicker } from 'react-color';
@@ -32,6 +32,31 @@ function rgbToHex(r: number, g: number, b: number) {
     return bin;
 }
 
+// Define an interface for the input to ensure type safety
+interface ColormapData {
+    data: number[];
+    colormapName: string;
+    nshades: number;
+}
+
+// Function to generate background colors based on data and colormap settings
+function generateBackgroundColors({ data, colormapName, nshades }: ColormapData): string[] {
+    // Generate a colormap based on the given range and colormap name
+    const cmap = colormap({
+        colormap: colormapName,
+        nshades,
+        format: 'rgbaString', // Ensure the format is 'float' for RGB values between 0 and 1
+    });
+
+    // Create a background color array based on the colormap
+    const backgroundColors = data.map((_, index) => {
+        // Ensure the index is properly scaled to the range of available colors
+        const color = cmap[Math.floor((index / data.length) * (nshades - 1))];
+        return color;
+    });
+
+    return backgroundColors;
+}
 interface SideMenuVisProps {
     imageShape: ImageShapeInterface;
 }
@@ -52,9 +77,9 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         labels: [0],
         datasets: [
             {
-                data: [0],
-                borderColor: 'rgb(53, 162, 235)',
-                backgroundColor: 'rgba(53, 162, 235, 0.5)',
+                data: [0, 0],
+                borderColor: ['rgba(53, 162, 235, 0.5)', 'rgba(53, 162, 235, 0.5)'],
+                backgroundColor: ['rgba(53, 162, 235, 0.5)', 'rgba(53, 162, 235, 0.5)'],
                 normalized: true,
             },
         ],
@@ -69,8 +94,15 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
             tooltip: {
                 enabled: false,
             },
+            hover: {
+                mode: null, // Disable hover effects
+            },
+            events: [],
         },
     };
+
+    const [selectedColor, setSelectedColor] = useStorageState<string>(sessionStorage, 'cmapname', 'greys');
+    const selectedColorRef = useRef(selectedColor); // Had to add this useRef otherwise it will get old values of cmap when slice changes
 
     const [histogramData, setHistogramData] = useStorageState(sessionStorage, 'histogramData', baseHistogram);
     const [contrastRangeRefMaxValue, setContrastRangeRefMaxValue] = useStorageState(
@@ -95,13 +127,22 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
 
     useEventBus('ImageHistogramLoaded', (loadedHistogram: HistogramInfoPayload) => {
         // Update histogram data and labels (it is necessary to update a unique variable)
+
+        // Create a constant instance of ColormapData
+        const updateColormapData: ColormapData = {
+            data: loadedHistogram.data,
+            colormapName: selectedColorRef.current,
+            nshades: loadedHistogram.data.length,
+        };
+
+        console.log('Histogram Loding color', selectedColor);
         const updatedHistogram = {
             labels: loadedHistogram.bins,
             datasets: [
                 {
                     data: loadedHistogram.data,
-                    borderColor: 'rgb(53, 162, 235)',
-                    backgroundColor: 'rgba(53, 162, 235, 0.5)',
+                    borderColor: generateBackgroundColors(updateColormapData),
+                    backgroundColor: generateBackgroundColors(updateColormapData),
                     normalized: true,
                 },
             ],
@@ -118,6 +159,34 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         // This code runs after contrastRangeRefMaxValue and contrastRangeRefMinValue have been updated
         updateContrastRangeLimitValues();
     }, [contrastRangeRefMaxValue, contrastRangeRefMinValue]); // Dependencies
+
+    useEffect(() => {
+        console.log('Selected color has changed to: ', selectedColor);
+        setSelectedColor(selectedColor);
+        selectedColorRef.current = selectedColor;
+        // Create a constant instance of ColormapData
+        const newBackgroundColors: ColormapData = {
+            data: histogramData.datasets[0].data,
+            colormapName: selectedColor,
+            nshades: histogramData.datasets[0].data.length,
+        };
+        // Update the backgroundColor for the single dataset
+        const updatedDataset = [
+            {
+                ...histogramData.datasets[0],
+                borderColor: generateBackgroundColors(newBackgroundColors), // Apply the new borderColor array
+                backgroundColor: generateBackgroundColors(newBackgroundColors), // Apply the new background colors array
+            },
+        ];
+
+        // Update the state with the new dataset
+        setHistogramData((prev) => ({
+            ...prev,
+            datasets: updatedDataset,
+        }));
+
+        dispatch('ColorMapChanged', selectedColor); // Change rendering in canvas
+    }, [selectedColor]);
 
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
@@ -159,7 +228,7 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         <React.Fragment>
             <IonCard disabled={lockVisCards}>
                 <IonCardContent>
-                    <ColorPicker />
+                    <ColorPicker selectedColor={selectedColor} setSelectedColor={setSelectedColor} />
                     <IonRange
                         ref={contrastRangeRef}
                         pin={true}

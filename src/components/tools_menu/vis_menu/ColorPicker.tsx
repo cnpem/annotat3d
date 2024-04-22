@@ -49,13 +49,12 @@ const colorOptions = [
     'cubehelix',
 ];
 
-const ColorPicker: React.FC = () => {
-    const [selectedColor, setSelectedColor] = useState(colorOptions[0]);
-    useEffect(() => {
-        console.log('Selected color has changed to: ', selectedColor);
-        dispatch('ColorMapChanged', selectedColor);
-    }, [selectedColor]);
+interface ColorPickerProps {
+    selectedColor: string;
+    setSelectedColor: (color: string) => void;
+}
 
+const ColorPicker: React.FC<ColorPickerProps> = ({ selectedColor, setSelectedColor }) => {
     return (
         <Fragment>
             <IonList>
