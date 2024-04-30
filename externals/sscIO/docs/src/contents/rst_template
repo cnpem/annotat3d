@@ -1,0 +1,24 @@
+Python sscIO
+============
+
+sscIO is composed mostly by python input/output routines such as open various sorts of files, e.g. TIFF and HDF5.
+
+{% for folder, modules in structure.items() %}
+
+*************************************************************
+{{ folder }}
+*************************************************************
+
+{% for module in modules -%}
+
+{{ module.title }}
+*************************************************************
+
+.. automodule:: {{ module.file }}
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+{% endfor %}
+
+{% endfor %}
