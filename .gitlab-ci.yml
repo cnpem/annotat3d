@@ -1,4 +1,5 @@
 variables:
+    GIT_SUBMODULE_STRATEGY: recursive
     GCD_APPS: /ibira/lnls/labs/tepui/apps/gcd
 
 stages:
