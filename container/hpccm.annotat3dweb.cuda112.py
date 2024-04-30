@@ -167,8 +167,7 @@ def main():
         commands=[
             'python3 -m pip config set global.extra-index-url https://gitlab.cnpem.br/api/v4/projects/3702/packages/pypi/simple',
             'python3 -m pip config set global.trusted-host gitlab.cnpem.br',
-            'conda install -c conda-forge -y mpi4py==3.1.4',
-            'conda clean -afy',
+            'conda config --set channel_priority false',
         ],
         chdir=False,
     )
@@ -216,7 +215,6 @@ def main():
     stage += hpccm.primitives.shell(
         commands=[
             'cd /opt/sscIO/python',
-            'python3 -m pip install --upgrade pip',
             'python3 -m pip install -r requirements.txt',
             'python3 setup.py bdist_wheel',
         ],
