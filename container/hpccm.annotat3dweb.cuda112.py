@@ -71,11 +71,11 @@ def main():
     # Base image definition
     stage += hpccm.primitives.baseimage(image="nvcr.io/nvidia/pytorch:22.02-py3", _distro=args.distro)
 
-    # stage += hpccm.primitives.label(
-    #     metadata={
-    #         "br.lnls.gcd.mantainer": "GCD Group <gcd.lnls.br>",
-    #         "br.lnls.gcd.version": "22.02-py3",
-    # })
+    stage += hpccm.primitives.label(
+        metadata={
+            "br.lnls.gcd.mantainer": "GCD Group <gcd.lnls.br>",
+            "br.lnls.gcd.version": "22.02-py3",
+    })
 
     # variables
     stage += hpccm.primitives.comment("GCD package repository ID")

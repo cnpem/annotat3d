@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
 
-docker build -t gitregistry.cnpem.br/gcd/data-science/segmentation/ssc-annotat3d:cuda-11.2 --build-arg GCC_PYPI_SERVER="$GCC_PYPI_SERVER" --build-arg GCC_PYPI_HOST="$GCC_PYPI_HOST" .
+# WARNING: This script must be executed from project root directory
 
+# -- Create a Dockerfile from the HPCCM recipe
+python3 container/hpccm.annotat3dweb.cuda112.py --format docker > container/Dockerfile.annotat3dweb.cuda112
+
+# -- Build a Docker Image
+docker build -t gitregistry.cnpem.br/gcd/data-science/segmentation/annotat3dweb:cuda-11.2 .

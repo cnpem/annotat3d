@@ -27,6 +27,10 @@ From: nvcr.io/nvidia/pytorch:22.02-py3
 %post
     . /.singularity.d/env/10-docker*.sh
 
+%labels
+    br.lnls.gcd.mantainer "GCD Group <gcd.lnls.br>"
+    br.lnls.gcd.version "22.02-py3"
+
 # GCD package repository ID
 
 %environment

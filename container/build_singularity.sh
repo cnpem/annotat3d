@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-echo $GCC_PYPI_HOST
+# WARNING: This script must be executed from project root directory
 
-SINGULARITYENV_GCC_PYPI_HOST=$GCC_PYPI_HOST SINGULARITYENV_GCC_PYPI_SERVER=$GCC_PYPI_SERVER sudo singularity build container/hpcbase-Annotat3DWeb.sif container/hpcbase-Annotat3DWeb.def
+# -- Create a Singularity Recipe from the HPCCM recipe
+python3 container/hpccm.annotat3dweb.cuda112.py > container/Singularity.annotat3dweb.cuda112.def
 
+# -- Build a Singularity Image
+sudo singularity build annotat3dweb:cuda-11.2.sif annotat3dweb:cuda-11.2.def
