@@ -25,7 +25,7 @@
 FROM nvcr.io/nvidia/pytorch:22.02-py3
 
 LABEL br.lnls.gcd.mantainer='Data Science and Management Group <gcd.lnls.br>' \
-    br.lnls.gcd.version=22.02-py3
+    br.lnls.gcd.version='22.02-py3'
 
 # GCD package repository ID
 
@@ -124,15 +124,8 @@ RUN pip3 --no-cache-dir install build cmake-setuptools cmake>=3.18.0 cmake_setup
 # pip
 RUN pip3 --no-cache-dir install blinker cbf nibabel SharedArray==3.2.0 sysv_ipc
 
-RUN conda config --set channel_priority false && \
-    conda install -c conda-forge -y mpi4py==3.1.4 && \
+RUN conda install -c conda-forge -y mpi4py==3.1.4 && \
     conda clean -afy
-
-COPY externals/sscIO /opt/sscIO
-
-RUN cd /opt/sscIO/python && \
-    python3 -m pip install -r requirements.txt && \
-    python3 setup.py bdist_wheel
 
 # pip
 COPY backend/requirements.txt /opt/Annotat3DWeb/requirements.txt

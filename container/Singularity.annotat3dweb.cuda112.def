@@ -28,8 +28,8 @@ From: nvcr.io/nvidia/pytorch:22.02-py3
     . /.singularity.d/env/10-docker*.sh
 
 %labels
-    br.lnls.gcd.mantainer "GCD Group <gcd.lnls.br>"
-    br.lnls.gcd.version "22.02-py3"
+    br.lnls.gcd.mantainer 'Data Science and Management Group <gcd.lnls.br>'
+    br.lnls.gcd.version '22.02-py3'
 
 # GCD package repository ID
 
@@ -144,8 +144,6 @@ From: nvcr.io/nvidia/pytorch:22.02-py3
 %post
     python3 -m pip config set global.extra-index-url https://gitlab.cnpem.br/api/v4/projects/3702/packages/pypi/simple
     python3 -m pip config set global.trusted-host gitlab.cnpem.br
-    conda install -c conda-forge -y mpi4py==3.1.4
-    conda clean -afy
 
 # pip
 %post
@@ -160,15 +158,6 @@ From: nvcr.io/nvidia/pytorch:22.02-py3
 %post
     conda install -c conda-forge -y mpi4py==3.1.4
     conda clean -afy
-
-%files
-    externals/sscIO /opt/sscIO
-
-%post
-    cd /opt/sscIO/python
-    python3 -m pip install --upgrade pip
-    python3 -m pip install -r requirements.txt
-    python3 setup.py bdist_wheel
 
 # pip
 %files
@@ -187,10 +176,14 @@ From: nvcr.io/nvidia/pytorch:22.02-py3
     rm -rf /opt/Annotat3DWeb/requirements-dev.txt
 
 %post
-    . $NVM_DIR/nvm.sh
+    source $NVM_DIR/nvm.sh
     nvm install v$NODE_VERSION
     nvm alias default v$NODE_VERSION
     nvm use default
+
+%post
+    source $NVM_DIR/nvm.sh
+    npm install -g ionic yarn serve
 
 %post
     npm install -g ionic yarn serve

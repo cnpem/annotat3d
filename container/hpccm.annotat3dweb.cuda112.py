@@ -74,7 +74,7 @@ def main():
     stage += hpccm.primitives.label(
         metadata={
             'br.lnls.gcd.mantainer': "'Data Science and Management Group <gcd.lnls.br>'",
-            'br.lnls.gcd.version': '22.02-py3',
+            'br.lnls.gcd.version': "'22.02-py3'",
     })
 
     # variables
@@ -167,7 +167,6 @@ def main():
         commands=[
             'python3 -m pip config set global.extra-index-url https://gitlab.cnpem.br/api/v4/projects/3702/packages/pypi/simple',
             'python3 -m pip config set global.trusted-host gitlab.cnpem.br',
-            'conda config --set channel_priority false',
         ],
         chdir=False,
     )
@@ -205,18 +204,6 @@ def main():
         commands=[
             'conda install -c conda-forge -y mpi4py==3.1.4',
             'conda clean -afy',
-        ],
-        chdir=False,
-    )
-
-    # Install sscIO
-    stage += hpccm.primitives.copy(src='externals/sscIO', dest='/opt/sscIO')
-
-    stage += hpccm.primitives.shell(
-        commands=[
-            'cd /opt/sscIO/python',
-            'python3 -m pip install -r requirements.txt',
-            'python3 setup.py bdist_wheel',
         ],
         chdir=False,
     )
