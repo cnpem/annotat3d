@@ -6,4 +6,4 @@
 python3 container/hpccm.annotat3dweb.cuda112.py > container/Singularity.annotat3dweb.cuda112.def
 
 # -- Build a Singularity Image
-sudo singularity build annotat3dweb:cuda-11.2.sif annotat3dweb:cuda-11.2.def
+sudo singularity build annotat3dweb.cuda112.sif container/Singularity.annotat3dweb.cuda112.def
