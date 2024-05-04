@@ -137,6 +137,7 @@ def main():
         'libhdf5-*',
         'libnetcdf-dev',
         'libnss3',
+        'openmpi-bin',
         'libopenmpi-dev',
         'libssl-dev',
         'libtool',
@@ -171,19 +172,14 @@ def main():
         chdir=False,
     )
 
-
     # Install python build dependencies
     stage += hpccm.building_blocks.pip(
         ospackages=[],
         packages=[
-            'build',
             'cmake-setuptools',
-            'cmake>=3.18.0',
+            'cmake==3.17.3',
             'cmake_setup',
             'cython==0.29.30',
-            'pip>=22.0.4',
-            'setuptools>=69.0.3',
-            'wheel',
         ],
         pip='pip3',
     )
@@ -208,14 +204,28 @@ def main():
         chdir=False,
     )
 
-    # Install requirements
+    # Install Annotat3DWeb's backend
+    stage += hpccm.primitives.shell(
+        commands=[
+            'python3 -m pip install --upgrade pip setuptools wheel build',
+        ],
+        chdir=False,
+    )
+
     stage += hpccm.building_blocks.pip(ospackages=[], requirements='backend/requirements.txt', pip='pip3')
     stage += hpccm.building_blocks.pip(ospackages=[], requirements='backend/requirements-dev.txt', pip='pip3')
+    stage += hpccm.primitives.shell(
+        commands=[
+            'cd backend',
+            'python3 setup.py bdist_wheel',
+        ],
+        chdir=False,
+    )
 
     # Install frontend dep    # Install frontend dependencies
     stage += hpccm.primitives.shell(
         commands=[
-            'source $NVM_DIR/nvm.sh',
+            '. $NVM_DIR/nvm.sh',
             'nvm install v$NODE_VERSION',
             'nvm alias default v$NODE_VERSION',
             'nvm use default',
@@ -225,16 +235,14 @@ def main():
 
     stage += hpccm.primitives.shell(
         commands=[
-            'source $NVM_DIR/nvm.sh',
+            '. $NVM_DIR/nvm.sh',
             'npm install -g ionic yarn serve',
         ],
         chdir=False,
     )
 
-    stage += hpccm.primitives.shell(commands=['npm install -g ionic yarn serve'], chdir=False)
-
     # setup NVM environment
-    stage += hpccm.primitives.shell(commands=["echo 'source $NVM_DIR/nvm.sh' >> /etc/bash.bashrc"], chdir=False)
+    stage += hpccm.primitives.shell(commands=["echo '. $NVM_DIR/nvm.sh' >> /etc/bash.bashrc"], chdir=False)
 
     # Output container specification
     print(stage)

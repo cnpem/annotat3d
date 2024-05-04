@@ -77,6 +77,7 @@ RUN apt-get update -y && \
         libxss1 \
         make \
         openjdk-8-jdk \
+        openmpi-bin \
         openssh-client \
         patch \
         pciutils \
@@ -119,13 +120,15 @@ RUN python3 -m pip config set global.extra-index-url https://gitlab.cnpem.br/api
     python3 -m pip config set global.trusted-host gitlab.cnpem.br
 
 # pip
-RUN pip3 --no-cache-dir install build cmake-setuptools cmake>=3.18.0 cmake_setup cython==0.29.30 pip>=22.0.4 setuptools>=69.0.3 wheel
+RUN pip3 --no-cache-dir install cmake-setuptools cmake==3.17.3 cmake_setup cython==0.29.30
 
 # pip
 RUN pip3 --no-cache-dir install blinker cbf nibabel SharedArray==3.2.0 sysv_ipc
 
 RUN conda install -c conda-forge -y mpi4py==3.1.4 && \
     conda clean -afy
+
+RUN python3 -m pip install --upgrade pip setuptools wheel build
 
 # pip
 COPY backend/requirements.txt /opt/Annotat3DWeb/requirements.txt
@@ -137,14 +140,15 @@ COPY backend/requirements-dev.txt /opt/Annotat3DWeb/requirements-dev.txt
 RUN pip3 --no-cache-dir install -r /opt/Annotat3DWeb/requirements-dev.txt && \
     rm -rf /opt/Annotat3DWeb/requirements-dev.txt
 
-RUN source $NVM_DIR/nvm.sh && \
+RUN cd backend && \
+    python3 setup.py bdist_wheel
+
+RUN . $NVM_DIR/nvm.sh && \
     nvm install v$NODE_VERSION && \
     nvm alias default v$NODE_VERSION && \
     nvm use default
 
-RUN source $NVM_DIR/nvm.sh && \
+RUN . $NVM_DIR/nvm.sh && \
     npm install -g ionic yarn serve
 
-RUN npm install -g ionic yarn serve
-
-RUN echo 'source $NVM_DIR/nvm.sh' >> /etc/bash.bashrc
+RUN echo '. $NVM_DIR/nvm.sh' >> /etc/bash.bashrc

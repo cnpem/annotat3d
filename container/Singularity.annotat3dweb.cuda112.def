@@ -101,6 +101,7 @@ From: nvcr.io/nvidia/pytorch:22.02-py3
         libxss1 \
         make \
         openjdk-8-jdk \
+        openmpi-bin \
         openssh-client \
         patch \
         pciutils \
@@ -148,7 +149,7 @@ From: nvcr.io/nvidia/pytorch:22.02-py3
 # pip
 %post
     cd /
-    pip3 --no-cache-dir install build cmake-setuptools cmake>=3.18.0 cmake_setup cython==0.29.30 pip>=22.0.4 setuptools>=69.0.3 wheel
+    pip3 --no-cache-dir install cmake-setuptools cmake==3.17.3 cmake_setup cython==0.29.30
 
 # pip
 %post
@@ -158,6 +159,9 @@ From: nvcr.io/nvidia/pytorch:22.02-py3
 %post
     conda install -c conda-forge -y mpi4py==3.1.4
     conda clean -afy
+
+%post
+    python3 -m pip install --upgrade pip setuptools wheel build
 
 # pip
 %files
@@ -176,17 +180,18 @@ From: nvcr.io/nvidia/pytorch:22.02-py3
     rm -rf /opt/Annotat3DWeb/requirements-dev.txt
 
 %post
-    source $NVM_DIR/nvm.sh
+    cd backend
+    python3 setup.py bdist_wheel
+
+%post
+    . $NVM_DIR/nvm.sh
     nvm install v$NODE_VERSION
     nvm alias default v$NODE_VERSION
     nvm use default
 
 %post
-    source $NVM_DIR/nvm.sh
+    . $NVM_DIR/nvm.sh
     npm install -g ionic yarn serve
 
 %post
-    npm install -g ionic yarn serve
-
-%post
-    echo 'source $NVM_DIR/nvm.sh' >> /etc/bash.bashrc
+    echo '. $NVM_DIR/nvm.sh' >> /etc/bash.bashrc
