@@ -274,3 +274,28 @@ From: nvcr.io/nvidia/cuda:11.2.2-cudnn8-devel-ubuntu20.04
 %post
     cd /opt/annotat3dweb/backend
     python3 setup.py bdist_wheel
+
+%environment
+    export NODE_VERSION=20.12.2
+    export NVM_DIR=/usr/local/nvm
+%post
+    export NODE_VERSION=20.12.2
+    export NVM_DIR=/usr/local/nvm
+
+%environment
+    export NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
+    export PATH=$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+%post
+    export NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
+    export PATH=$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+
+%post
+    mkdir -p $NVM_DIR
+    wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+    . $NVM_DIR/nvm.sh
+    nvm install v$NODE_VERSION
+    nvm alias default v$NODE_VERSION
+    nvm use default
+
+%post
+    npm install -g ionic yarn serve

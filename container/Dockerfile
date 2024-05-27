@@ -104,10 +104,10 @@ RUN apt-get update -y && \
         make \
         wget && \
     rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp https://github.com/Kitware/CMake/releases/download/v3.23.3/cmake-3.23.3-linux-x86_64.sh && \
+RUN mkdir -p /opt/annotat3dweb && wget -q -nc --no-check-certificate -P /opt/annotat3dweb https://github.com/Kitware/CMake/releases/download/v3.23.3/cmake-3.23.3-linux-x86_64.sh && \
     mkdir -p /usr/local && \
-    /bin/sh /var/tmp/cmake-3.23.3-linux-x86_64.sh --prefix=/usr/local --skip-license && \
-    rm -rf /var/tmp/cmake-3.23.3-linux-x86_64.sh
+    /bin/sh /opt/annotat3dweb/cmake-3.23.3-linux-x86_64.sh --prefix=/usr/local --skip-license && \
+    rm -rf /opt/annotat3dweb/cmake-3.23.3-linux-x86_64.sh
 ENV PATH=/usr/local/bin:$PATH
 
 # Mellanox OFED version 5.1-2.5.8.0
@@ -146,12 +146,12 @@ RUN apt-get update -y && \
         tar \
         wget && \
     rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp https://www.open-mpi.org/software/ompi/v4.1/downloads/openmpi-4.1.0.tar.bz2 && \
-    mkdir -p /var/tmp && tar -x -f /var/tmp/openmpi-4.1.0.tar.bz2 -C /var/tmp -j && \
-    cd /var/tmp/openmpi-4.1.0 &&  CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/openmpi --disable-getpwuid --enable-orterun-prefix-by-default --with-cuda --with-verbs && \
+RUN mkdir -p /opt/annotat3dweb && wget -q -nc --no-check-certificate -P /opt/annotat3dweb https://www.open-mpi.org/software/ompi/v4.1/downloads/openmpi-4.1.0.tar.bz2 && \
+    mkdir -p /opt/annotat3dweb && tar -x -f /opt/annotat3dweb/openmpi-4.1.0.tar.bz2 -C /opt/annotat3dweb -j && \
+    cd /opt/annotat3dweb/openmpi-4.1.0 &&  CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/openmpi --disable-getpwuid --enable-orterun-prefix-by-default --with-cuda --with-verbs && \
     make -j$(nproc) && \
     make -j$(nproc) install && \
-    rm -rf /var/tmp/openmpi-4.1.0 /var/tmp/openmpi-4.1.0.tar.bz2
+    rm -rf /opt/annotat3dweb/openmpi-4.1.0 /opt/annotat3dweb/openmpi-4.1.0.tar.bz2
 ENV LD_LIBRARY_PATH=/usr/local/openmpi/lib:$LD_LIBRARY_PATH \
     PATH=/usr/local/openmpi/bin:$PATH
 
@@ -164,12 +164,12 @@ RUN apt-get update -y && \
         wget \
         zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.bz2 && \
-    mkdir -p /var/tmp && tar -x -f /var/tmp/hdf5-1.10.7.tar.bz2 -C /var/tmp -j && \
-    cd /var/tmp/hdf5-1.10.7 &&  CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/hdf5 --enable-cxx --enable-fortran && \
+RUN mkdir -p /opt/annotat3dweb && wget -q -nc --no-check-certificate -P /opt/annotat3dweb http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.bz2 && \
+    mkdir -p /opt/annotat3dweb && tar -x -f /opt/annotat3dweb/hdf5-1.10.7.tar.bz2 -C /opt/annotat3dweb -j && \
+    cd /opt/annotat3dweb/hdf5-1.10.7 &&  CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/hdf5 --enable-cxx --enable-fortran && \
     make -j$(nproc) && \
     make -j$(nproc) install && \
-    rm -rf /var/tmp/hdf5-1.10.7 /var/tmp/hdf5-1.10.7.tar.bz2
+    rm -rf /opt/annotat3dweb/hdf5-1.10.7 /opt/annotat3dweb/hdf5-1.10.7.tar.bz2
 ENV CPATH=/usr/local/hdf5/include:$CPATH \
     HDF5_DIR=/usr/local/hdf5 \
     LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH \
@@ -182,15 +182,15 @@ RUN apt-get update -y && \
         ca-certificates \
         wget && \
     rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://repo.anaconda.com/miniconda/Miniconda3-py39_24.3.0-0-Linux-x86_64.sh && \
-    bash /var/tmp/Miniconda3-py39_24.3.0-0-Linux-x86_64.sh -b -p /opt/conda && \
+RUN mkdir -p /opt/annotat3dweb && wget -q -nc --no-check-certificate -P /opt/annotat3dweb http://repo.anaconda.com/miniconda/Miniconda3-py39_24.3.0-0-Linux-x86_64.sh && \
+    bash /opt/annotat3dweb/Miniconda3-py39_24.3.0-0-Linux-x86_64.sh -b -p /opt/conda && \
     /opt/conda/bin/conda init && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     . /opt/conda/etc/profile.d/conda.sh && \
     conda activate base && \
     conda config --add channels conda-forge --add channels nvidia && \
     /opt/conda/bin/conda clean -afy && \
-    rm -rf /var/tmp/Miniconda3-py39_24.3.0-0-Linux-x86_64.sh
+    rm -rf /opt/annotat3dweb/Miniconda3-py39_24.3.0-0-Linux-x86_64.sh
 
 RUN python3 -m pip config set global.extra-index-url https://gitlab.cnpem.br/api/v4/projects/3702/packages/pypi/simple && \
     python3 -m pip config set global.trusted-host gitlab.cnpem.br
@@ -200,14 +200,29 @@ RUN python3 -m pip install --upgrade pip setuptools wheel build pyclean
 COPY . /opt/annotat3dweb
 
 # pip
-COPY backend/requirements.txt /var/tmp/requirements.txt
-RUN pip3 --no-cache-dir install -r /var/tmp/requirements.txt && \
-    rm -rf /var/tmp/requirements.txt
+COPY backend/requirements.txt /opt/annotat3dweb/requirements.txt
+RUN pip3 --no-cache-dir install -r /opt/annotat3dweb/requirements.txt && \
+    rm -rf /opt/annotat3dweb/requirements.txt
 
 # pip
-COPY backend/requirements-dev.txt /var/tmp/requirements-dev.txt
-RUN pip3 --no-cache-dir install -r /var/tmp/requirements-dev.txt && \
-    rm -rf /var/tmp/requirements-dev.txt
+COPY backend/requirements-dev.txt /opt/annotat3dweb/requirements-dev.txt
+RUN pip3 --no-cache-dir install -r /opt/annotat3dweb/requirements-dev.txt && \
+    rm -rf /opt/annotat3dweb/requirements-dev.txt
 
 RUN cd /opt/annotat3dweb/backend && \
     python3 setup.py bdist_wheel
+
+ENV NODE_VERSION=20.12.2 \
+    NVM_DIR=/usr/local/nvm
+
+ENV NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules \
+    PATH=$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+
+RUN mkdir -p $NVM_DIR && \
+    wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && \
+    . $NVM_DIR/nvm.sh && \
+    nvm install v$NODE_VERSION && \
+    nvm alias default v$NODE_VERSION && \
+    nvm use default
+
+RUN npm install -g ionic yarn serve

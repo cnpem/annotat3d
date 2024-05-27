@@ -185,7 +185,7 @@ stage += hpccm.primitives.shell(
     chdir=False,
 )
 
-# Install Annotat3DWeb
+# Install backend
 stage += hpccm.primitives.copy(src='.', dest='/opt/annotat3dweb')
 stage += hpccm.building_blocks.pip(ospackages=[], requirements='backend/requirements.txt', pip='pip3')
 stage += hpccm.building_blocks.pip(ospackages=[], requirements='backend/requirements-dev.txt', pip='pip3')
@@ -197,11 +197,38 @@ stage += hpccm.primitives.shell(
     chdir=False,
 )
 
+# Install frontend dependencies
+stage += hpccm.primitives.environment(
+    variables={
+        'NODE_VERSION': '20.12.2',
+        'NVM_DIR': '/usr/local/nvm',
+    }
+)
+
+stage += hpccm.primitives.environment(
+    variables={
+        'NODE_PATH': '$NVM_DIR/v$NODE_VERSION/lib/node_modules',
+        'PATH': '$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH',
+    }
+)
+stage += hpccm.primitives.shell(
+    commands=[
+        'mkdir -p $NVM_DIR',
+        'wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash',
+        '. $NVM_DIR/nvm.sh',
+        'nvm install v$NODE_VERSION',
+        'nvm alias default v$NODE_VERSION',
+        'nvm use default',
+    ],
+    chdir=False,
+)
+
+stage += hpccm.primitives.shell(
+    commands=[
+        'npm install -g ionic yarn serve',
+    ],
+    chdir=False,
+)
+
 # Output container specification
 print(stage)
-
-# # Install python build dependencies
-# stage += hpccm.building_blocks.pip(ospackages=[], requirements='python/requirements.txt', pip='pip3')
-
-# # Output container specification
-# print(stage)
