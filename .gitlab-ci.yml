@@ -1,18 +1,17 @@
 variables:
-    GIT_SUBMODULE_STRATEGY: recursive
     GCD_APPS: /ibira/lnls/labs/tepui/apps/gcd
+    GIT_SUBMODULE_STRATEGY: recursive
+    IMAGE_TAG: $CI_REGISTRY_IMAGE
 
 stages:
     - build
     - deploy
 
-build-docker-image:
+build-container:
     image: docker:20.10.16
     stage: build
     services:
         - docker:20.10.16-dind
-    variables:
-        IMAGE_TAG: $CI_REGISTRY_IMAGE
     script:
         - docker login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN
         - docker build -t $IMAGE_TAG -f container/Dockerfile .
@@ -24,164 +23,51 @@ build-docker-image:
         - cuda11
         - docker
 
+build-to-production:
+    image: $IMAGE_TAG
+    stage: build
+    script:
+        # -- frontend
+        - yarn install
+        - CI=false yarn build
+        # -- backend
+        - export MAKEFLAGS="-j64"
+        - mkdir -p backend/sscAnnotat3D/static/
+        - mkdir -p backend/sscAnnotat3D/templates/
+        - cp -rf build/static/* backend/sscAnnotat3D/static/
+        - cp -rf build/index.html backend/sscAnnotat3D/templates/
+        - cd backend
+        - python3 -m pip install -r requirements.txt
+        - python3 setup.py build_ext -j64 bdist_wheel
+    environment:
+        name: production
+    # only:
+    #     - main
+    tags:
+        - x86_64
+        - cuda11
+        - docker
+    artifacts:
+        paths:
+            - backend/dist/*whl
+            - build/
+        expire_in: 1 day
 
-# build-to-dev:
-#     image: gitregistry.cnpem.br/gcd/data-science/segmentation/ssc-annotat3d:cuda-11.2
-#     stage: build
-#     script:
-#         # -- frontend
-#         - yarn install
-#         - CI=false yarn build
-#         # -- backend
-#         - export MAKEFLAGS="-j64"
-#         - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
-#         - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
-#         - mkdir -p ~/.pip/
-#         - printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOST\nextra-index-url = https://pypi.python.org/simple" > ~/.pip/pip.conf
-#         - cat ~/.pip/pip.conf
-#         - mkdir -p backend/sscAnnotat3D/static/
-#         - mkdir -p backend/sscAnnotat3D/templates/
-#         - cp -rf build/static/* backend/sscAnnotat3D/static/
-#         - cp -rf build/index.html backend/sscAnnotat3D/templates/
-#         - cd backend
-#         - python3 -m pip install -r requirements.txt
-#         - python3 setup.py build_ext -j64 bdist_wheel
-#     environment:
-#         name: dev
-#     only:
-#         - dev
-#     tags:
-#         - x86_64
-#         - cuda11
-#         - docker
-#     artifacts:
-#         paths:
-#             - backend/dist/*whl
-#             - build/
-#         expire_in: 1 day
-
-# build-to-staging:
-#     image: gitregistry.cnpem.br/gcd/data-science/segmentation/ssc-annotat3d:cuda-11.2
-#     stage: build
-#     script:
-#         # -- frontend
-#         - yarn install
-#         - CI=false yarn build
-#         # -- backend
-#         - export MAKEFLAGS="-j64"
-#         - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
-#         - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
-#         - mkdir -p ~/.pip/
-#         - printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOST\nextra-index-url = https://pypi.python.org/simple" > ~/.pip/pip.conf
-#         - cat ~/.pip/pip.conf
-#         - mkdir -p backend/sscAnnotat3D/static/
-#         - mkdir -p backend/sscAnnotat3D/templates/
-#         - cp -rf build/static/* backend/sscAnnotat3D/static/
-#         - cp -rf build/index.html backend/sscAnnotat3D/templates/
-#         - cd backend
-#         - python3 -m pip install -r requirements.txt
-#         - python3 setup.py build_ext -j64 bdist_wheel
-#     environment:
-#         name: staging
-#     only:
-#         - staging
-#     tags:
-#         - x86_64
-#         - cuda11
-#         - docker
-#     artifacts:
-#         paths:
-#             - backend/dist/*whl
-#             - build/
-#         expire_in: 1 day
-
-# build-to-production:
-#     image: gitregistry.cnpem.br/gcd/data-science/segmentation/ssc-annotat3d:cuda-11.2
-#     stage: build
-#     script:
-#         # -- frontend
-#         - yarn install
-#         - CI=false yarn build
-#         # -- backend
-#         - export MAKEFLAGS="-j64"
-#         - export GCC_PYPI_HOST=$(echo $GCC_PYPI_SERVER | sed -e "s~^http://~~" | sed -e 's~:[0-9]*$~~g')
-#         - echo "$GCC_PYPI_SERVER $GCC_PYPI_HOST"
-#         - mkdir -p ~/.pip/
-#         - printf "[global]\nindex-url = $GCC_PYPI_SERVER\ntrusted-host = $GCC_PYPI_HOST\nextra-index-url = https://pypi.python.org/simple" > ~/.pip/pip.conf
-#         - cat ~/.pip/pip.conf
-#         - mkdir -p backend/sscAnnotat3D/static/
-#         - mkdir -p backend/sscAnnotat3D/templates/
-#         - cp -rf build/static/* backend/sscAnnotat3D/static/
-#         - cp -rf build/index.html backend/sscAnnotat3D/templates/
-#         - cd backend
-#         - python3 -m pip install -r requirements.txt
-#         - python3 setup.py build_ext -j64 bdist_wheel
-#     environment:
-#         name: production
-#     only:
-#         - main
-#     tags:
-#         - x86_64
-#         - cuda11
-#         - docker
-#     artifacts:
-#         paths:
-#             - backend/dist/*whl
-#             - build/
-#         expire_in: 1 day
-
-# deploy-to-dev:
-#     image: gccdockers/sind
-#     stage: deploy
-#     script:
-#         - ./build_singularity.sh
-#         - ./deploy.sh Annotat3DWeb.sif dev $GCD_APPS
-#     environment:
-#         name: dev
-#     tags:
-#         - x86_64
-#         - cuda11
-#         - docker
-#     only:
-#         - dev
-#     needs:
-#         - job: build-to-dev
-#           artifacts: true
-
-# deploy-to-staging:
-#     image: gccdockers/sind
-#     stage: deploy
-#     script:
-#         - ./build_singularity.sh
-#         - ./deploy.sh Annotat3DWeb.sif staging $GCD_APPS
-#     environment:
-#         name: staging
-#     tags:
-#         - x86_64
-#         - cuda11
-#         - docker
-#     only:
-#         - staging
-#         - tags
-#     needs:
-#         - job: build-to-staging
-#           artifacts: true
-
-# deploy-to-production:
-#     image: gccdockers/sind
-#     stage: deploy
-#     script:
-#         - ./build_singularity.sh
-#         - ./deploy.sh Annotat3DWeb.sif production $GCD_APPS
-#     environment:
-#         name: production
-#     tags:
-#         - x86_64
-#         - cuda11
-#         - docker
-#     only:
-#         - main
-#         - tags
-#     needs:
-#         - job: build-to-production
-#           artifacts: true
+deploy-to-production:
+    image: gccdockers/sind
+    stage: deploy
+    script:
+        - singularity build Annotat3DWeb.sif container/Singularity.production.def
+        - cp Annotat3DWeb.sif ${GCD_APPS}/
+    environment:
+        name: production
+    tags:
+        - x86_64
+        - cuda11
+        - docker
+    # only:
+    #     - main
+    #     - tags
+    needs:
+        - job: build-to-production
+          artifacts: true
