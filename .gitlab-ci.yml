@@ -41,8 +41,8 @@ build-to-production:
         - python3 setup.py build_ext -j64 bdist_wheel
     environment:
         name: production
-    # only:
-    #     - main
+    only:
+        - main
     tags:
         - x86_64
         - cuda11
@@ -65,9 +65,9 @@ deploy-to-production:
         - x86_64
         - cuda11
         - docker
-    # only:
-    #     - main
-    #     - tags
+    only:
+        - main
+        - tags
     needs:
         - job: build-to-production
           artifacts: true
