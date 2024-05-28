@@ -37,6 +37,7 @@ backend/*.pyc
 *.sif
 *.so
 *.c
+*.cpp
 
 __pycache__
 *.egg-info

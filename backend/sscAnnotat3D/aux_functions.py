@@ -44,7 +44,6 @@ from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import GridSearchCV, train_test_split
-from sscDeepsirius.utils import image as dimage
 from sscIO import io, io_info
 
 from . import binary, utils

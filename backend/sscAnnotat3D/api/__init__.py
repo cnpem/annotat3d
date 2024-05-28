@@ -1,6 +1,1 @@
-from . import annotation
-from . import superpixel
-from . import io
-from . import remotevis
-from . import image
-from . import deep
+from . import annotation, image, io, superpixel

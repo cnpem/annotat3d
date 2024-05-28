@@ -7,35 +7,37 @@ import zlib
 import numpy as np
 import skimage.io
 from flask import *
-
-from sscAnnotat3D.api import annotation, filters, io as apiio, superpixel, remotevis, image as apiimage, deep
-from sscAnnotat3D.__version__ import __version__
-from sscAnnotat3D.repository import data_repo
-from sscAnnotat3D import superpixels, utils
-from sscAnnotat3D.modules import superpixel_segmentation_module
-
-from sscAnnotat3D.api.modules import superpixel_segmentation_module as apisuperpixel_segmentation_module, \
-    pixel_segmentation_module as apipixel_segmentation_module
-
 from flask_cors import CORS, cross_origin
+from sscAnnotat3D import superpixels, utils
+from sscAnnotat3D.__version__ import __version__
+from sscAnnotat3D.api import annotation, filters
+from sscAnnotat3D.api import image as apiimage
+from sscAnnotat3D.api import io as apiio
+from sscAnnotat3D.api import superpixel
+from sscAnnotat3D.api.modules import (
+    pixel_segmentation_module as apipixel_segmentation_module,
+)
+from sscAnnotat3D.api.modules import (
+    superpixel_segmentation_module as apisuperpixel_segmentation_module,
+)
+from sscAnnotat3D.modules import superpixel_segmentation_module
+from sscAnnotat3D.repository import data_repo
+
 
 app = Flask(__name__)
 # import pdb
 
 CORS(app)
 
-app.config['CORS_HEADERS'] = 'Content-Type'
+app.config["CORS_HEADERS"] = "Content-Type"
 
-# pdb.set_trace()
 app.register_blueprint(apiio.app)
 app.register_blueprint(annotation.app)
 app.register_blueprint(superpixel.app)
-app.register_blueprint(remotevis.app)
 app.register_blueprint(apiimage.app)
 app.register_blueprint(apisuperpixel_segmentation_module.app)
 app.register_blueprint(apipixel_segmentation_module.app)
 app.register_blueprint(filters.app)
-app.register_blueprint(deep.app)
 
 image = None
 image_path = None
@@ -65,13 +67,15 @@ def reconnect_session():
         return "failure", 400
 
     if image is not None:
-        annotat3d_session.update({
-            "image_path": image_path,
-            "dtype": image.dtype.name,
-            "z": image.shape[0],
-            "y": image.shape[1],
-            "x": image.shape[2],
-        })
+        annotat3d_session.update(
+            {
+                "image_path": image_path,
+                "dtype": image.dtype.name,
+                "z": image.shape[0],
+                "y": image.shape[1],
+                "x": image.shape[2],
+            }
+        )
 
     if annot is not None:
         annotat3d_session.update({"annot_path": annot_path})
@@ -80,41 +84,37 @@ def reconnect_session():
     return jsonify(annotat3d_session)
 
 
-@app.route('/test', methods=['POST', 'GET'])
+@app.route("/test", methods=["POST", "GET"])
 @cross_origin()
 def test():
-    return 'test', 200
+    return "test", 200
 
-@app.route('/versions', methods=['POST', 'GET'])
+
+@app.route("/versions", methods=["POST", "GET"])
 @cross_origin()
 def versions():
-    import sscPySpin
     import sscIO
-    import sscDeepsirius
-    import ssc_remotevis
-    return jsonify([
-        dict(name='sscRemoteVis', version=ssc_remotevis.__version__),
-        dict(name='sscPySpin', version=sscPySpin.__version__),
-        dict(name='sscIO', version=sscIO.__version__),
-        dict(name='sscAnnotat3D', version=__version__),
-        dict(name='sscDeepsirius', version=sscDeepsirius.__version__)
-    ])
+    import sscPySpin
+
+    return jsonify(
+        [
+            dict(name="sscPySpin", version=sscPySpin.__version__),
+            dict(name="sscIO", version=sscIO.__version__),
+            dict(name="sscAnnotat3D", version=__version__),
+        ]
+    )
 
 
 if __name__ == "__main__":
 
     import logging
+    from dotenv import load_dotenv
 
-    LOG_LEVEL = os.getenv('ANNOTAT3D_LOG_LEVEL', 'DEBUG')
+    load_dotenv()
+
+    LOG_LEVEL = os.getenv("ANNOTAT3D_LOG_LEVEL", "DEBUG")
     logging.root.setLevel(LOG_LEVEL)
 
-    #WARNING: only one process can be used, as we store images in memory
-    #to be able to use more processes we should find a better way to store data
-    app.run("0.0.0.0", 5000, True, processes=1, threaded=True)
-
-    # address = socket.gethostbyname(socket.gethostname())
-    # with socket.socket() as s:
-    #     s.bind(("", 0))
-    #     port = s.getsockname()[1]
-    # print(f"Running on http://{address}:{port}/ (Press CTRL+C to quit)")
-    # server = waitress.serve(app, host="0.0.0.0", port=port)
+    # WARNING: only one process can be used, as we store images in memory
+    # to be able to use more processes we should find a better way to store data
+    app.run(host=os.getenv('FLASK_RUN_HOST'), port=os.getenv('FLASK_RUN_PORT'), debug=True, processes=1, threaded=True)

@@ -7,7 +7,7 @@ import LoadingComponent from '../utils/LoadingComponent';
 import { ModuleCard, ModuleCardItem } from './ModuleCard';
 
 function onApplyThen(info: { slice: number; axis: string }) {
-    dispatch('futureChanged', info);
+    dispatch('imageChanged', info);
 }
 
 const timeToast = 2000;

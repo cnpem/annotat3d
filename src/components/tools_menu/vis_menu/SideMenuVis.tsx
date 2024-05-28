@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonItem } from '@ionic/react';
 import { moon, sunny } from 'ionicons/icons';
 import { dispatch, useEventBus } from '../../../utils/eventbus';
@@ -16,13 +16,14 @@ import {
     Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-
+import colormap from 'colormap';
 //ignoring types for react-color, as it seems broken
 //TODO: investigate if this is fixed, otherwise declare the types manually
 import { AlphaPicker, SliderPicker } from 'react-color';
 import CropMenu from './CropMenu';
 import { ImageShapeInterface } from '../utils/ImageShapeInterface';
 import { HistogramInfoPayload } from '../../main_menu/file/utils/HistogramInfoInterface';
+import ColorPicker from './ColorPicker';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Filler, Legend);
 
@@ -31,6 +32,31 @@ function rgbToHex(r: number, g: number, b: number) {
     return bin;
 }
 
+// Define an interface for the input to ensure type safety
+interface ColormapData {
+    data: number[];
+    colormapName: string;
+    nshades: number;
+}
+
+// Function to generate background colors based on data and colormap settings
+function generateBackgroundColors({ data, colormapName, nshades }: ColormapData): string[] {
+    // Generate a colormap based on the given range and colormap name
+    const cmap = colormap({
+        colormap: colormapName,
+        nshades,
+        format: 'rgbaString', // Ensure the format is 'float' for RGB values between 0 and 1
+    });
+
+    // Create a background color array based on the colormap
+    const backgroundColors = data.map((_, index) => {
+        // Ensure the index is properly scaled to the range of available colors
+        const color = cmap[Math.floor((index / data.length) * (nshades - 1))];
+        return color;
+    });
+
+    return backgroundColors;
+}
 interface SideMenuVisProps {
     imageShape: ImageShapeInterface;
 }
@@ -51,9 +77,9 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         labels: [0],
         datasets: [
             {
-                data: [0],
-                borderColor: 'rgb(53, 162, 235)',
-                backgroundColor: 'rgba(53, 162, 235, 0.5)',
+                data: [0, 0],
+                borderColor: ['rgba(53, 162, 235, 0.5)', 'rgba(53, 162, 235, 0.5)'],
+                backgroundColor: ['rgba(53, 162, 235, 0.5)', 'rgba(53, 162, 235, 0.5)'],
                 normalized: true,
             },
         ],
@@ -68,8 +94,15 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
             tooltip: {
                 enabled: false,
             },
+            hover: {
+                mode: null, // Disable hover effects
+            },
+            events: [],
         },
     };
+
+    const [selectedColor, setSelectedColor] = useStorageState<string>(sessionStorage, 'cmapname', 'greys');
+    const selectedColorRef = useRef(selectedColor); // Had to add this useRef otherwise it will get old values of cmap when slice changes
 
     const [histogramData, setHistogramData] = useStorageState(sessionStorage, 'histogramData', baseHistogram);
     const [contrastRangeRefMaxValue, setContrastRangeRefMaxValue] = useStorageState(
@@ -86,25 +119,74 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     const contrastRangeRef = useRef<HTMLIonRangeElement | null>(null);
 
     function updateContrastRangeLimitValues() {
+        console.log('Range Updated:', contrastRangeRefMaxValue, contrastRangeRefMinValue);
         contrastRangeRef.current!.max = contrastRangeRefMaxValue;
         contrastRangeRef.current!.min = contrastRangeRefMinValue;
+        setContrast({ lower: contrastRangeRefMinValue, upper: contrastRangeRefMaxValue });
     }
 
     useEventBus('ImageHistogramLoaded', (loadedHistogram: HistogramInfoPayload) => {
-        // Update histogram data and labels
-        baseHistogram.datasets[0].data = loadedHistogram.data;
-        baseHistogram.labels = Array.from(Array(baseHistogram.datasets[0].data.length).keys());
+        // Update histogram data and labels (it is necessary to update a unique variable)
 
-        // Plot histogram
-        setHistogramData(baseHistogram);
+        // Create a constant instance of ColormapData
+        const updateColormapData: ColormapData = {
+            data: loadedHistogram.data,
+            colormapName: selectedColorRef.current,
+            nshades: loadedHistogram.data.length,
+        };
+
+        console.log('Histogram Loding color', selectedColor);
+        const updatedHistogram = {
+            labels: loadedHistogram.bins,
+            datasets: [
+                {
+                    data: loadedHistogram.data,
+                    borderColor: generateBackgroundColors(updateColormapData),
+                    backgroundColor: generateBackgroundColors(updateColormapData),
+                    normalized: true,
+                },
+            ],
+        };
+        setHistogramData(updatedHistogram);
 
         // Store histogram max and min values
         setContrastRangeRefMaxValue(loadedHistogram.maxValue);
         setContrastRangeRefMinValue(loadedHistogram.minValue);
-
-        // Update range component
-        updateContrastRangeLimitValues();
+        console.log('I, the ImageHistogramLoaded event finished the execution');
     });
+
+    useEffect(() => {
+        // This code runs after contrastRangeRefMaxValue and contrastRangeRefMinValue have been updated
+        updateContrastRangeLimitValues();
+    }, [contrastRangeRefMaxValue, contrastRangeRefMinValue]); // Dependencies
+
+    useEffect(() => {
+        console.log('Selected color has changed to: ', selectedColor);
+        setSelectedColor(selectedColor);
+        selectedColorRef.current = selectedColor;
+        // Create a constant instance of ColormapData
+        const newBackgroundColors: ColormapData = {
+            data: histogramData.datasets[0].data,
+            colormapName: selectedColor,
+            nshades: histogramData.datasets[0].data.length,
+        };
+        // Update the backgroundColor for the single dataset
+        const updatedDataset = [
+            {
+                ...histogramData.datasets[0],
+                borderColor: generateBackgroundColors(newBackgroundColors), // Apply the new borderColor array
+                backgroundColor: generateBackgroundColors(newBackgroundColors), // Apply the new background colors array
+            },
+        ];
+
+        // Update the state with the new dataset
+        setHistogramData((prev) => ({
+            ...prev,
+            datasets: updatedDataset,
+        }));
+
+        dispatch('ColorMapChanged', selectedColor); // Change rendering in canvas
+    }, [selectedColor]);
 
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
@@ -120,15 +202,13 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     //so I am manually setting it.
     useEffect(() => {
         if (contrastRangeRef) {
-            updateContrastRangeLimitValues();
-
             if (!isEqual(contrastRangeRef.current!.value, contrast)) {
                 // this is used to reposition the slider markers to the last values set on contrast
                 setTimeout(() => {
                     contrastRangeRef.current!.value = contrast;
                 }, 20);
 
-                dispatch('contrastChanged', [contrast.lower / 100, contrast.upper / 100]);
+                dispatch('contrastChanged', [contrast.lower, contrast.upper]);
             }
         }
         //now I am just dispatch all events on mount
@@ -148,6 +228,7 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         <React.Fragment>
             <IonCard disabled={lockVisCards}>
                 <IonCardContent>
+                    <ColorPicker selectedColor={selectedColor} setSelectedColor={setSelectedColor} />
                     <IonRange
                         ref={contrastRangeRef}
                         pin={true}
@@ -156,12 +237,11 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
                             if (e.detail.value) {
                                 const range = e.detail.value;
                                 setContrast(range);
-                                dispatch('contrastChanged', [range.lower / 100, range.upper / 100]);
+                                dispatch('contrastChanged', [range.lower, range.upper]);
                             }
                         }}
                     >
                         <IonIcon slot="start" icon={sunny}></IonIcon>
-                        <IonIcon slot="end" icon={moon}></IonIcon>
                     </IonRange>
                     <Line options={histogramOptions} data={histogramData} />
                 </IonCardContent>
