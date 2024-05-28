@@ -6,4 +6,4 @@
 python3 container/hpccm-cuda-gcc-openmpi-hdf-conda.py --format docker > container/Dockerfile
 
 # -- Build a Docker Image
-docker build -t gitregistry.cnpem.br/gcd/data-science/segmentation/annotat3dweb:cuda-11.2 -f container/Dockerfile .
+docker build -t gitregistry.cnpem.br/gcd/data-science/segmentation/annotat3dweb -f container/Dockerfile .

@@ -1,7 +1,7 @@
 variables:
     GCD_APPS: /ibira/lnls/labs/tepui/apps/gcd
     GIT_SUBMODULE_STRATEGY: recursive
-    IMAGE_TAG: $CI_REGISTRY_IMAGE
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:latest
 
 stages:
     - build

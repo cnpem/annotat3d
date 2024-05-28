@@ -6,4 +6,4 @@
 python3 container/hpccm-cuda-gcc-openmpi-hdf-conda.py --format singularity > container/Singularity.def
 
 # -- Build a Singularity Image
-singularity build --fakeroot annotat3dweb.cuda112.sif container/Singularity.def
+singularity build --fakeroot annotat3dweb.sif container/Singularity.def
