@@ -61,7 +61,7 @@ class Brush {
 
         this.cursor = this.createBrush();
 
-        this.setSize(4);
+        this.setSize(5);
 
         this.update();
     }
@@ -90,7 +90,7 @@ class Brush {
     contextDrawBrush(context: CanvasRenderingContext2D, x: number, y: number) {
         const [r, g, b] = this.colors[this.label % this.colors.length];
         context.beginPath();
-        context.fillStyle = `rgb(${r},${g},${b})`;
+        context.fillStyle = `rgb(${r},${g},${b}, 1)`;
         context.arc(x, y, this.radius, 0, 2 * Math.PI);
         context.fill();
     }
@@ -420,6 +420,11 @@ class Canvas {
 
         this.isPainting = true;
         this.prevPosition = this.viewport.toWorld(event.data.global);
+        /* Floor the coordinates of the returned PIXI.Point. This is relevant for forcing the canvas to show discrete positions for the user
+        since we are painting in a discrete manner in the backend and make both compatible, making a friendly user experience :)
+        */
+        this.prevPosition.x = Math.floor(this.prevPosition.x);
+        this.prevPosition.y = Math.floor(this.prevPosition.y);
     }
 
     onPointerMove(event: any) {
@@ -428,16 +433,20 @@ class Canvas {
         if (event.type === 'wheel') {
             this.viewport.plugins.resume('drag');
             currPosition = this.viewport.toWorld(event.offsetX, event.offsetY);
+            currPosition.x = Math.floor(currPosition.x);
+            currPosition.y = Math.floor(currPosition.y);
         } else {
             currPosition = this.viewport.toWorld(event.data.global);
+            currPosition.x = Math.floor(currPosition.x);
+            currPosition.y = Math.floor(currPosition.y);
             if (event.data.pointerType === 'touch' && event.data.originalEvent.touches.length > 1) {
                 this.isPainting = false;
                 return;
             }
         }
 
-        this.brush.cursor.position.x = currPosition.x - this.brush.size / 2;
-        this.brush.cursor.position.y = currPosition.y - this.brush.size / 2;
+        this.brush.cursor.position.x = currPosition.x - Math.floor(this.brush.size / 2);
+        this.brush.cursor.position.y = currPosition.y - Math.floor(this.brush.size / 2);
 
         if (!this.isPainting) return;
 
@@ -452,6 +461,9 @@ class Canvas {
         if (!this.isPainting) return;
 
         const currPosition = this.viewport.toWorld(event.data.global);
+        currPosition.x = Math.floor(currPosition.x);
+        currPosition.y = Math.floor(currPosition.y);
+
         this.prevPosition = currPosition;
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
@@ -463,6 +475,7 @@ class Canvas {
             label: this.brush.label,
             mode: this.brush_mode,
         };
+
         void sfetch('POST', '/draw', JSON.stringify(data)).then((success) => {
             console.log(success);
             dispatch('annotationChanged', null);
@@ -512,8 +525,8 @@ class Canvas {
             this.brush.cursor.visible = false;
 
             const data = {
-                x_coord: Math.round(this.prevPosition.x),
-                y_coord: Math.round(this.prevPosition.y),
+                x_coord: this.prevPosition.x,
+                y_coord: this.prevPosition.y,
                 slice: this.sliceNum,
                 axis: this.axis,
             };
@@ -892,12 +905,13 @@ class Canvas {
     }
 
     increaseBrushSize() {
-        this.brush.setSize(this.brush.size + 1);
+        // Brush size should be an odd number, as the kernel in backend needs an unobiguous center
+        this.brush.setSize(this.brush.size + 2);
     }
 
     decreaseBrushSize() {
-        if (this.brush.size <= 2) return;
-        this.brush.setSize(this.brush.size - 1);
+        if (this.brush.size <= 1) return;
+        this.brush.setSize(this.brush.size - 2);
     }
 
     setSuperpixelColor(color: number) {

@@ -455,7 +455,6 @@ class AnnotationModule():
             if not erase:
                 # Draw point using current label
                 c = self.get_current_slice_3d_coord((y, x))
-                print(c)
                 if self.valid_coords(c):
                     self.annotation[c] = (marker_lb, marker_id)
                     self.__annotation_image[c] = marker_lb
@@ -505,6 +504,64 @@ class AnnotationModule():
                     if coords in self.label_splitting_scribbles:
                         del self.label_splitting_scribbles[coords]
             else:
+                self.annotation.update(valid_coords)
+
+                self.__update_annotation_image(valid_coords)
+
+    def draw_marker_curve(self, cursor_coords, marker_id, marker_lb, erase=False):
+        
+        ## Making the markers id go by one ##
+        self.order_markers.add(marker_id)
+
+        ###  We are couting half fills from the frontend, therefore, radius is increased by one. ###
+        radius = self.radius + 1
+
+        ### Creating the mask in the size of the brush ###
+        size = 2 * radius + 1 
+        disk_mask = np.zeros((size, size), dtype=np.uint8)
+        rr, cc = draw.disk((radius, radius), radius)
+        disk_mask[rr, cc] = 1
+
+        ### Create a mask image for adding the drawings ###
+        height, width = self.get_current_slice_shape()
+        image = np.zeros((width, height), dtype=np.uint8)
+        
+        for coord in cursor_coords:
+            #check if its valid coord, invert for y (or z),x mode. Coord is in x,y (or z).
+            if self.valid_coords(coord[::-1]):
+                x, y = list(map(int,np.floor(coord)))
+                #ensure the drawing of the disk is within the image range
+                x_start = max(0, x - radius)
+                y_start = max(0, y - radius)
+                x_end = min(width, x + radius + 1)
+                y_end = min(height, y + radius + 1)
+
+                mask_x_start = radius - (x - x_start)
+                mask_y_start = radius - (y - y_start)
+                mask_x_end = radius + (x_end - x)
+                mask_y_end = radius + (y_end - y)
+
+                # make the drawing
+                image[x_start:x_end, y_start:y_end] += disk_mask[mask_x_start:mask_x_end, mask_y_start:mask_y_end]
+            
+        #get all the places where the disk went over, it should be cc,rr beacause of valid coords is inverted y,x.
+        cc,rr = np.nonzero(image)
+        #all the cords are valid, therefore no need to use the self.get_valid_coords
+        valid_coords = {c: v for c, v in map(lambda co: (self.get_current_slice_3d_coord(co), (marker_lb, marker_id)), zip(rr,cc))}
+
+        if erase:
+                for coords in valid_coords:
+                    if coords in self.annotation:
+                        self.removed_annotation[coords] = self.annotation[coords]
+
+                        del self.annotation[coords]
+                        self.__annotation_image[coords] = -1
+
+                    if coords in self.label_merging_scribbles:
+                        del self.label_merging_scribbles[coords]
+                    if coords in self.label_splitting_scribbles:
+                        del self.label_splitting_scribbles[coords]
+        else:
                 self.annotation.update(valid_coords)
 
                 self.__update_annotation_image(valid_coords)

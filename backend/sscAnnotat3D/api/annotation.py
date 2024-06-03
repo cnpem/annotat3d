@@ -16,6 +16,44 @@ from flask import Blueprint, request, send_file, jsonify
 from flask_cors import cross_origin
 from werkzeug.exceptions import BadRequest
 
+import cProfile
+import pstats
+import io
+import time
+from functools import wraps
+
+def combined_profile(filename):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Using time to measure the overall time
+            start_time = time.time()
+
+            # Using cProfile to profile the function
+            prof = cProfile.Profile()
+            prof.enable()
+            retval = func(*args, **kwargs)
+            prof.disable()
+
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+
+            # Create a StringIO buffer to hold the pstats output
+            s = io.StringIO()
+            sortby = 'cumulative'
+            ps = pstats.Stats(prof, stream=s).sort_stats(sortby)
+            ps.print_stats()
+
+            # Append the profiling data to the file
+            with open(filename, 'a') as perf_file:
+                perf_file.write(f"Total elapsed time: {elapsed_time:.6f} seconds\n")
+                perf_file.write(s.getvalue())
+                perf_file.write("\n")
+
+            return retval
+
+        return wrapper
+    return decorator
 app = Blueprint('annotation', __name__)
 
 
@@ -222,12 +260,14 @@ def save_annot():
 
 @app.route("/draw", methods=["POST"])
 @cross_origin()
+@combined_profile('/ibira/lnls/labs/tepui/home/egon.borges/work/dev_annotat3D/draw.txt')
 def draw():
     slice_num = request.json["slice"]
     axis = request.json["axis"]
     size = request.json["size"]
     label = request.json["label"]
     mode = request.json["mode"]
+    cursor_coords = request.json["coords"]
 
     axis_dim = utils.get_axis_num(axis)
 
@@ -246,19 +286,25 @@ def draw():
     annot_module.set_current_slice(slice_num)
     annot_module.set_radius(size // 2)
 
+    marker_id = annot_module.current_mk_id
+
     erase = (mode == 'erase_brush')
-
-    mk_id = annot_module.current_mk_id
-
+    
+    annot_module.draw_marker_curve(cursor_coords, marker_id, label, erase)
+    
     if (flag_is_merge_activated):
         edit_label_annotation_module = data_repo.get_edit_label_options("edit_label_merge_module")
     elif (flag_is_split_activated):
         edit_label_annotation_module = data_repo.get_edit_label_options("edit_label_split_module")
 
-    for coord in request.json['coords']:
-        annot_module.draw_marker_dot(coord[1], coord[0], label, mk_id, erase)
-        if (flag_is_merge_activated or flag_is_split_activated):
-            edit_label_annotation_module.draw_marker_dot(coord[1], coord[0], label, mk_id, erase)
+    if (flag_is_merge_activated or flag_is_split_activated):
+            mk_id = annot_module.current_mk_id
+            for point in cursor_coords:
+                edit_label_annotation_module.draw_marker_dot(point[1], point[0], label, mk_id, erase)
+
+
+    
+   
 
     if (flag_is_merge_activated):
         data_repo.set_edit_label_options("edit_label_merge_module", edit_label_annotation_module)
