@@ -518,13 +518,13 @@ class AnnotationModule():
 
         ### Creating the mask in the size of the brush ###
         size = 2 * radius + 1 
-        disk_mask = np.zeros((size, size), dtype=np.uint8)
+        disk_mask = np.zeros((size, size), dtype=np.bool_)
         rr, cc = draw.disk((radius, radius), radius)
-        disk_mask[rr, cc] = 1
+        disk_mask[rr, cc] = True
 
         ### Create a mask image for adding the drawings ###
         height, width = self.get_current_slice_shape()
-        image = np.zeros((width, height), dtype=np.uint8)
+        image = np.zeros((width, height), dtype=np.bool_)
         
         for coord in cursor_coords:
             #check if its valid coord, invert for y (or z),x mode. Coord is in x,y (or z).
