@@ -83,7 +83,7 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({
             isOpen={openWarningWindow}
             onDidDismiss={closeWarningWindow}
             header={'Deleting all labels'}
-            message={'Do you wish to delete all labels ?'}
+            message={'Do you wish to permanently delete all labels ?'}
             buttons={[
                 {
                     text: 'No',
@@ -175,19 +175,6 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         console.log('label List rn : ', labelVec);
     });
 
-    useEventBus('isExtendLabelActivated', (flag: boolean) => {
-        setIsExtendActivated(flag);
-    });
-
-    useEventBus('isSplitActivated', (flag: boolean) => {
-        setIsSplitActivated(flag);
-        if (flag) {
-            console.log('newLabelId - 1 : ', labelList[labelList.length - 1].id);
-            setSelectedLabel(labelList[labelList.length - 1].id);
-            setIsExtendActivated(false);
-        }
-    });
-
     useEffect(() => {
         console.log('doing this dispatch rn');
         dispatch('labelColorsChanged', labelList);
@@ -259,16 +246,6 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
             }
             dispatch('annotationChanged', null);
         });
-    };
-
-    const extendLabel = (e: CustomEvent) => {
-        dispatch('ExtendLabel', e.detail.checked);
-        if (e.detail.checked) {
-            console.log('Doing dispatch for ExtendLabel');
-            void ionToastActivateExtendOp(`Extend label operation activated !`, timeToast);
-            setActivateSL(!e.detail.checked);
-        }
-        setIsExtendActivated(e.detail.checked);
     };
 
     const renderLabel = (labelElement: LabelInterface) => {
@@ -365,23 +342,6 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                 </IonCol>
             </IonRow>
             {/*Find Label menu*/}
-            <IonRow>
-                <IonCol>
-                    <IonItem>
-                        <IonLabel>Extend Label</IonLabel>
-                        <IonIcon icon={eyedrop} slot={'end'} />
-                        <IonCheckbox
-                            checked={isExtendActivated}
-                            slot={'end'}
-                            onIonChange={(e: CustomEvent) => {
-                                extendLabel(e);
-                                dispatch('changeMergeDisableStatus', e.detail.checked);
-                            }}
-                            disabled={lockMenu}
-                        />
-                    </IonItem>
-                </IonCol>
-            </IonRow>
             <IonRow>
                 <IonCol>
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

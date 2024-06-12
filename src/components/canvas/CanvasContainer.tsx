@@ -38,8 +38,6 @@ class Brush {
 
     mode: BrushModeType = 'draw_brush';
 
-    maintainExtendLabel: boolean;
-
     canvas: HTMLCanvasElement;
 
     context: CanvasRenderingContext2D;
@@ -51,7 +49,6 @@ class Brush {
     constructor(colors: [number, number, number][]) {
         this.label = 0;
         this.color = 0xffffff;
-        this.maintainExtendLabel = false;
 
         this.canvas = document.createElement('canvas');
 
@@ -222,12 +219,6 @@ class Canvas {
 
     isPainting: boolean;
 
-    extendLabel: boolean;
-
-    maintainExtendLabel: boolean;
-
-    mergeLabel: boolean;
-
     annotation: Annotation;
 
     brush: Brush;
@@ -303,9 +294,6 @@ class Canvas {
 
         this.slice = new PIXI.Sprite();
         this.slice.visible = true;
-        this.extendLabel = false;
-        this.maintainExtendLabel = false;
-        this.mergeLabel = false;
 
         this.labelSlice = new PIXI.Sprite();
 
@@ -510,39 +498,11 @@ class Canvas {
         }
     }
 
-    setExtendLabel(flag: boolean) {
-        this.extendLabel = flag;
-    }
-
     draw(currPosition: PIXI.Point): [number, number][] {
         const context = this.annotation.context;
         const mode = this.brush_mode;
 
         if (mode === 'no_brush') {
-            return [];
-        } else if (this.extendLabel) {
-            this.extendLabel = false;
-            this.brush.cursor.visible = false;
-
-            const data = {
-                x_coord: this.prevPosition.x,
-                y_coord: this.prevPosition.y,
-                slice: this.sliceNum,
-                axis: this.axis,
-            };
-
-            console.log('Finding label by click');
-            void sfetch('POST', '/find_label_by_click', JSON.stringify(data), 'json').then((labelId: number) => {
-                console.log('label ID found : ', labelId);
-                if (labelId >= 0) {
-                    this.brush.setLabel(labelId);
-                    this.brush.updateColor();
-                    this.setBrushMode('draw_brush');
-                }
-                this.brush.cursor.visible = true;
-                dispatch('changeSelectedLabel', labelId);
-                dispatch('isExtendLabelActivated', false);
-            });
             return [];
         } else if (mode === 'erase_brush') {
             this.annotation.context.globalCompositeOperation = 'destination-out';
@@ -557,8 +517,6 @@ class Canvas {
             this.brush.contextDrawBrush(context, x, y);
 
             this.annotation.sprite.texture.update();
-
-            dispatch('extendLabelOnMerge', this.maintainExtendLabel);
 
             return [[x, y]];
         }
@@ -861,10 +819,6 @@ class Canvas {
         this.futureSlice.texture = PIXI.Texture.EMPTY;
     }
 
-    setMaintainExtend(flag: boolean) {
-        this.maintainExtendLabel = flag;
-    }
-
     setImage(imgSlice: NdArray<TypedArray>) {
         this.imgData = imgSlice;
 
@@ -1022,10 +976,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     onChangeStateBrush: (mode: BrushModeType) => void = () => {};
 
-    onExtendLabel: (flag: boolean) => void = () => {};
-
-    onExtendLabelOnMerge: (flag: boolean) => void = () => {};
-
     onCropPreviewMode: (activateCropPreview: boolean) => void = () => {};
 
     onCropShape: (cropShape: CropShapeInterface) => void = () => {};
@@ -1033,8 +983,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onCropPreviewColorChanged: (color: any) => void = () => {};
 
     onActivateSL: (sequentialLabelPayload: { isActivated: boolean; id: number }) => void = () => {};
-
-    onSplitLabel: (flag: boolean) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -1281,19 +1229,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.setBrushMode(mode);
             };
 
-            this.onExtendLabel = (flag: boolean) => {
-                console.log('flag val : ', flag);
-                this.canvas!.setExtendLabel(flag);
-                this.canvas!.showBrush(false);
-            };
-
-            this.onExtendLabelOnMerge = (flag: boolean) => {
-                this.canvas!.setMaintainExtend(flag);
-                if (flag) {
-                    this.onExtendLabel(flag);
-                }
-            };
-
             this.onCropPreviewMode = (activateCropPreview: boolean) => {
                 this.cropPreviewMode(activateCropPreview);
             };
@@ -1305,13 +1240,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             this.onActivateSL = (sequentialLabelPayload: { isActivated: boolean; id: number }) => {
                 this.canvas?.setSequentialLabel(sequentialLabelPayload.isActivated);
                 this.canvas?.brush.setLabel(sequentialLabelPayload.id);
-            };
-
-            this.onSplitLabel = (flag: boolean) => {
-                this.onActivateSL({
-                    isActivated: flag,
-                    id: this.canvas!.getLabelTableLen(),
-                });
             };
 
             subscribe('futureChanged', this.onFutureChanged);
@@ -1332,13 +1260,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('labelChanged', this.onLabelChanged);
             subscribe('ImageLoaded', this.onImageLoaded);
             subscribe('ChangeStateBrush', this.onChangeStateBrush);
-            subscribe('ExtendLabel', this.onExtendLabel);
-            subscribe('extendLabelOnMerge', this.onExtendLabelOnMerge);
             subscribe('cropShape', this.onCropShape);
             subscribe('cropPreviewMode', this.onCropPreviewMode);
             subscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
             subscribe('activateSL', this.onActivateSL);
-            subscribe('splitLabel', this.onSplitLabel);
         }
     }
 
@@ -1362,13 +1287,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('contrastChanged', this.onContrastChanged);
         unsubscribe('labelChanged', this.onLabelChanged);
         unsubscribe('ChangeStateBrush', this.onChangeStateBrush);
-        unsubscribe('ExtendLabel', this.onExtendLabel);
-        unsubscribe('extendLabelOnMerge', this.onExtendLabelOnMerge);
         unsubscribe('cropShape', this.onCropShape);
         unsubscribe('cropPreviewMode', this.onCropPreviewMode);
         unsubscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
         unsubscribe('activateSL', this.onActivateSL);
-        unsubscribe('splitLabel', this.onSplitLabel);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {

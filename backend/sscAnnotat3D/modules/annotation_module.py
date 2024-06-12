@@ -413,10 +413,8 @@ class AnnotationModule():
         ###end###
 
     def erase_all_markers(self):
-        # Copying all removed annotation
-        self.removed_annotation = dict(self.annotation)
 
-        self.annotation = {}
+        self.annotation = defaultdict(list)
         self.order_markers = set()
 
     def clear_removed_data(self):

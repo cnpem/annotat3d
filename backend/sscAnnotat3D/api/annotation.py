@@ -174,20 +174,6 @@ def close_annot():
         return handle_exception("Failed to erase all markers")
 
     try:
-        edit_label_merge_module = data_repo.get_edit_label_options(key="edit_label_merge_module")
-        edit_label_split_module = data_repo.get_edit_label_options(key="edit_label_split_module")
-    except Exception as e:
-        return handle_exception(str(e))
-
-    try:
-        if (edit_label_merge_module is not None):
-            edit_label_merge_module.erase_all_markers()
-        if (edit_label_split_module is not None):
-            edit_label_split_module.erase_all_markers()
-    except Exception as e:
-        return handle_exception(str(e))
-
-    try:
         label_img = data_repo.get_image(key="label")
     except Exception as e:
         return handle_exception(str(e))
