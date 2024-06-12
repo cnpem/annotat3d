@@ -127,8 +127,15 @@ def open_annot():
     except:
         return handle_exception("Error while trying to get the annotation path")
 
-    annot_module.load_annotation(annot_path)
+
+    with open(annot_path, "rb") as f:
+        loaded_annot = pickle.load(f)
+
+    annot_module = annotation_module.AnnotationModule(img.shape)
+    annot_module.annotation = loaded_annot
+
     module_repo.set_module('annotation', module=annot_module)
+
     label_list = []
     annotation = set()
     for label in annot_module.get_annotation().values():
@@ -214,8 +221,15 @@ def save_annot():
     except:
         return handle_exception("Failed to receive annotation path")
 
+    from collections import defaultdict
+    clean_annot = defaultdict(list)
+
+    for coord3D, label_list in annot.items():
+        if label_list:  # Check if the list is not empty
+            clean_annot[coord3D].append(label_list[-1])
+
     with open(annot_path, "wb") as f:
-        pickle.dump(annot, f)
+        pickle.dump(clean_annot, f)
 
     return "success", 200
 
@@ -263,10 +277,6 @@ def draw():
             for point in cursor_coords:
                 edit_label_annotation_module.draw_marker_dot(point[1], point[0], label, mk_id, erase)
 
-
-    
-   
-
     if (flag_is_merge_activated):
         data_repo.set_edit_label_options("edit_label_merge_module", edit_label_annotation_module)
     elif (flag_is_split_activated):
@@ -312,9 +322,10 @@ def undo_annot():
 
     """
     annot_module = module_repo.get_module('annotation')
-    annot_module.undo()
+    #when the label is deleted in frontend we need to tell frontend to recover this label with the undo operation
+    _, label_returned = annot_module.undo()
 
-    return 'success', 200
+    return jsonify(label_returned)
 
 
 @app.route("/delete_label_annot", methods=["POST"])
@@ -334,32 +345,21 @@ def delete_label_annot():
 
     try:
         annot_module = module_repo.get_module('annotation')
-        annot_module.remove_label(label_id)
+        marker_id = annot_module.current_mk_id
+        annot_module.remove_label(label_id, marker_id)
     except Exception as e:
         return handle_exception(str(e))
 
-    try:
-        edit_label_merge_module = data_repo.get_edit_label_options(key="edit_label_merge_module")
-        edit_label_split_module = data_repo.get_edit_label_options(key="edit_label_split_module")
-    except Exception as e:
-        return handle_exception(str(e))
+    #label image is not affected
+    
+    #try:
+    #    label_img = data_repo.get_image(key="label")
+    #except Exception as e:
+    #    return handle_exception(str(e))
 
-    try:
-        if (edit_label_merge_module is not None):
-            edit_label_merge_module.remove_label(label_id)
-        if (edit_label_split_module is not None):
-            edit_label_split_module.remove_label(label_id)
-    except Exception as e:
-        return handle_exception(str(e))
-
-    try:
-        label_img = data_repo.get_image(key="label")
-    except Exception as e:
-        return handle_exception(str(e))
-
-    if (label_img is not None and label_id is not 0):
-        label_img[label_img == label_id] = 0
-        data_repo.set_image(key="label", data=label_img)
+    #if (label_img is not None and label_id is not 0):
+    #    label_img[label_img == label_id] = 0
+    #    data_repo.set_image(key="label", data=label_img)
 
     return "success", 200
 
@@ -482,7 +482,6 @@ def merge_labels():
     data_repo.set_annotation(data=annotations)
 
     return jsonify(selected_labels[1:])
-
 
 @app.route("/is_annotation_empty", methods=["POST"])
 @cross_origin()

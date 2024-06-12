@@ -120,6 +120,8 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         },
     ]);
 
+    // Storage of removed labels for undo opreation
+    const [removedLabels, setRemovedLabels] = useState<LabelInterface[]>([]);
     const [activateSL, setActivateSL] = useStorageState<boolean>(sessionStorage, 'activateSL', false);
     const [isSplitActivated, setIsSplitActivated] = useStorageState<boolean>(
         sessionStorage,
@@ -205,7 +207,9 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     });
 
     const removeLabelElement = (label: LabelInterface) => {
-        setLabelList(labelList.filter((l) => l.id !== label.id));
+        setLabelList((prevLabelList) => prevLabelList.filter((l) => l.id !== label.id));
+
+        setRemovedLabels((prevRemovedLabels) => [...prevRemovedLabels, label]);
 
         if (labelList.length === 2) {
             setNewLabelId(1);
@@ -241,7 +245,18 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     }
 
     const undoAnnotation = () => {
-        void sfetch('POST', '/undo_annot', '').then(() => {
+        void sfetch('POST', '/undo_annot', '', 'json').then((label_number: number) => {
+            if (label_number !== -1) {
+                console.log('undid label, update label table');
+                const labelToRestore = removedLabels.find((l) => l.id === label_number);
+                // Ensure labelToRestore is defined before proceeding
+                if (!labelToRestore) {
+                    dispatch('annotationChanged', null);
+                    return;
+                }
+                setRemovedLabels((prevRemovedLabels) => prevRemovedLabels.filter((l) => l.id !== label_number));
+                setLabelList((currentLabels) => [...currentLabels, labelToRestore]);
+            }
             dispatch('annotationChanged', null);
         });
     };

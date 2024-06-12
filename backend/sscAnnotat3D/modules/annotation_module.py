@@ -7,7 +7,7 @@ from skimage import draw
 from operator import itemgetter
 
 from sscAnnotat3D import aux_functions
-
+from collections import defaultdict
 
 class Label(object):
     def __init__(self, id, name=None):
@@ -67,12 +67,18 @@ class AnnotationModule():
 
         self.radius = 5
 
-        # Annotation result
-        self.annotation = {}
+        # initialize annotation property, therefore creating underscore itens
+        self.annotation = defaultdict(list)
 
-        self.label_merging_scribbles = {}
-        self.label_splitting_scribbles = {}
+        # list that appends every new annotation in order
+        self.__annotation_list = []
+
         self.removed_annotation = {}
+
+        #dicitionary with marker id (oder of operation) as entry and label id as key, necessary 
+        #for restoration of labeltable in frontend after deleting whole label
+        #and pressing undo operation
+        self.__annot_label_removed = {}
 
         self.create_labels()
 
@@ -107,12 +113,10 @@ class AnnotationModule():
         self.__annotation_image = (-1) * np.ones((self.zsize, self.ysize, self.xsize), dtype='int16')
 
         for c, v in self.__annotation.items():
-            self.__annotation_image[c] = v[0]
+            self.__annotation_image[c] = v[-1]
 
     def initialize(self):
         self.annotation = {}
-        self.label_merging_scribbles = {}
-        self.label_splitting_scribbles = {}
         self.removed_annotation = {}
 
         self.set_slice_xy(0, False)
@@ -384,27 +388,35 @@ class AnnotationModule():
 
         self.added_labels.append(Label(new_label, name))
 
-    def remove_label(self, label_id: int):
-        self.remove_annotation(labels=(label_id,))
+    def remove_label(self, label_id: int, marker_id: int):
+        
+        #updating the marker id, the remove label is considered an erase (of label) action
+        self.order_markers.add(marker_id)
 
-        removed_labels = aux_functions.get_marker_ids(self.removed_annotation)
-        try:
-            self.order_markers -= removed_labels
-        except Exception as e:
-            print(str(e))
+        self.__annot_label_removed[marker_id] = label_id
+
+        new_annotation = []
+        #iteration through all the dict to get last label added equal to label_id coords
+        for coord3D, label_list in self.__annotation.items():
+            if label_list[-1] == label_id:
+                #take last label from this coords, garantee to have since it's on the list
+                self.__annotation[coord3D].append(-1)
+                self.__annotation_image[coord3D] = -1
+                new_annotation.append(coord3D)
+
+        self.__annotation_list.append(new_annotation)
 
         # update the label list
         added_labels = [l for l in self.added_labels if l.id != label_id]
         self.added_labels = added_labels
-        return removed_labels
+
+        ###end###
 
     def erase_all_markers(self):
         # Copying all removed annotation
         self.removed_annotation = dict(self.annotation)
 
         self.annotation = {}
-        self.label_merging_scribbles = {}
-        self.label_splitting_scribbles = {}
         self.order_markers = set()
 
     def clear_removed_data(self):
@@ -438,8 +450,31 @@ class AnnotationModule():
             marker_to_remove = max(self.order_markers)
             print("marker_to_remove", marker_to_remove)
             self.order_markers.remove(marker_to_remove)
-            self.remove_annotation(ids=(marker_to_remove,))
-            return marker_to_remove
+
+            #we need to tell the frontend that the label has returned 
+            if marker_to_remove in self.__annot_label_removed.keys():
+                label_restored = self.__annot_label_removed[marker_to_remove]
+                del self.__annot_label_removed[marker_to_remove]
+            else:
+                label_restored = -1
+
+            #get last annoted coords
+            coords_to_remove = self.__annotation_list.pop()
+
+            for coord3D in coords_to_remove:
+
+                #take last label from this coords, garantee to have since it's on the list
+                self.__annotation[coord3D].pop()
+
+                #if there is one label, it writes as the previous label, otherwise it will write as -1
+                if len(self.__annotation[coord3D])> 0:
+                    self.__annotation_image[coord3D] = self.__annotation[coord3D][-1]
+                else:
+                    self.__annotation_image[coord3D] = -1
+                    del self.__annotation[coord3D]
+                    
+
+            return marker_to_remove, label_restored
         return -1
 
     @property
@@ -447,70 +482,10 @@ class AnnotationModule():
         marker_id = max(self.order_markers) + 1 if self.order_markers else 1
         return marker_id
 
-    def draw_marker_dot(self, y, x, marker_lb, marker_id, erase=False):
-
-        self.order_markers.add(marker_id)
-
-        if self.radius == 0:
-            if not erase:
-                # Draw point using current label
-                c = self.get_current_slice_3d_coord((y, x))
-                if self.valid_coords(c):
-                    self.annotation[c] = (marker_lb, marker_id)
-                    self.__annotation_image[c] = marker_lb
-            else:
-                coord3d = self.get_current_slice_3d_coord((y, x))
-
-                if coord3d in self.annotation:
-                    self.removed_annotation[coord3d] = self.annotation[coord3d]
-                    del self.annotation[coord3d]
-                    self.__annotation_image[coord3d] = -1
-
-                try:
-                    del self.label_merging_scribbles[coord3d]
-                except:
-                    pass
-                try:
-                    del self.label_splitting_scribbles[coord3d]
-                except:
-                    pass
-        else:
-
-            if self.current_axis < 0:
-                sphere = draw.ellipsoid(self.radius, self.radius, self.radius)
-                dd, rr, cc = np.nonzero(sphere)
-                center = np.array(sphere.shape) // 2
-
-                # coords = map(lambda coord: (self.get_current_slice_3d_coord(coord), (marker_lb, marker_id)), zip(dd - center[0], rr - center[1] + y, cc - center[2] + x))
-                coord = self.get_current_slice_3d_coord((y, x))
-                coords = map(lambda co: (tuple((np.array(co)).astype('int32')), (marker_lb, marker_id)),
-                             zip(dd - center[0] + coord[0], rr - center[1] + coord[1], cc - center[2] + coord[2]))
-            else:
-                rr, cc = draw.disk((y, x), radius=self.radius, shape=self.get_current_slice_shape())
-                coords = map(lambda co: (self.get_current_slice_3d_coord(co), (marker_lb, marker_id)), zip(rr, cc))
-
-            valid_coords = {c: v for c, v in coords if self.valid_coords(c)}
-
-            if erase:
-                for coords in valid_coords:
-                    if coords in self.annotation:
-                        self.removed_annotation[coords] = self.annotation[coords]
-
-                        del self.annotation[coords]
-                        self.__annotation_image[coords] = -1
-
-                    if coords in self.label_merging_scribbles:
-                        del self.label_merging_scribbles[coords]
-                    if coords in self.label_splitting_scribbles:
-                        del self.label_splitting_scribbles[coords]
-            else:
-                self.annotation.update(valid_coords)
-
-                self.__update_annotation_image(valid_coords)
-
     def draw_marker_curve(self, cursor_coords, marker_id, marker_lb, erase=False):
-        
-        ## Making the markers id go by one ##
+
+        #from time import time
+        ## Updating the markers with the current marker id ##
         self.order_markers.add(marker_id)
 
         ###  We are couting half fills from the frontend, therefore, radius is increased by one. ###
@@ -525,9 +500,9 @@ class AnnotationModule():
         ### Create a mask image for adding the drawings ###
         height, width = self.get_current_slice_shape()
         image = np.zeros((width, height), dtype=np.bool_)
-        
+
         for coord in cursor_coords:
-            #check if its valid coord, invert for y (or z),x mode. Coord is in x,y (or z).
+            #check if its valid coord, invert for y (or z),x mode. Coord inputs are in x,y (or z).
             if self.valid_coords(coord[::-1]):
                 x, y = list(map(int,np.floor(coord)))
                 #ensure the drawing of the disk is within the image range
@@ -543,28 +518,30 @@ class AnnotationModule():
 
                 # make the drawing
                 image[x_start:x_end, y_start:y_end] += disk_mask[mask_x_start:mask_x_end, mask_y_start:mask_y_end]
-            
-        #get all the places where the disk went over, it should be cc,rr beacause of valid coords is inverted y,x.
-        cc,rr = np.nonzero(image)
-        #all the cords are valid, therefore no need to use the self.get_valid_coords
-        valid_coords = {c: v for c, v in map(lambda co: (self.get_current_slice_3d_coord(co), (marker_lb, marker_id)), zip(rr,cc))}
+
+        #print('first {}'.format(time()-start))
+
+        rr,cc = np.nonzero(image)
+
+        #print('second {}'.format(time()-start))    
+
+        #all the coords are valid, therefore no need to use the self.get_valid_coords
 
         if erase:
-                for coords in valid_coords:
-                    if coords in self.annotation:
-                        self.removed_annotation[coords] = self.annotation[coords]
+            marker_lb = -1
+        
+        new_annotation = []
+        #since get_current_slice_3D gives, (z,y,x) coords, we need to provide cc,rr coords not rr,cc
+        for coord2D in zip(cc,rr):
+            coord3D = self.get_current_slice_3d_coord(coord2D)
+            self.__annotation[coord3D].append(marker_lb)
+            self.__annotation_image[coord3D] = marker_lb
+            #save the coords
+            new_annotation.append(coord3D)
 
-                        del self.annotation[coords]
-                        self.__annotation_image[coords] = -1
-
-                    if coords in self.label_merging_scribbles:
-                        del self.label_merging_scribbles[coords]
-                    if coords in self.label_splitting_scribbles:
-                        del self.label_splitting_scribbles[coords]
-        else:
-                self.annotation.update(valid_coords)
-
-                self.__update_annotation_image(valid_coords)
+        self.__annotation_list.append(new_annotation)
+        
+        #print('draw backend time {}'.format(time()-start))    
 
     def __update_annotation_image(self, annotation, label=None):
         if label is not None:
@@ -572,41 +549,7 @@ class AnnotationModule():
                 self.__annotation_image[c] = label
         else:
             for c, v in annotation.items():
-                self.__annotation_image[c] = v[0]
-
-    def remove_annotation(self, labels=None, ids=None):
-        if (labels is None and ids is None) or (labels is not None and ids is not None):
-            raise Exception('Please select one type of marker removal: label or id based. (Labels %s, Ids %s)',
-                            str(labels), str(ids))
-
-        self.__update_annotation_image(self.annotation, 0)
-
-        if labels is not None:
-            remaining_annotation = {key: value for key, value in self.annotation.items() if value[0] not in labels}
-            self.label_merging_scribbles = {
-                key: value
-                for key, value in self.label_merging_scribbles.items() if value[0] not in labels
-            }
-            self.label_splitting_scribbles = {
-                key: value
-                for key, value in self.label_splitting_scribbles.items() if value[0] not in labels
-            }
-        else:
-            remaining_annotation = {key: value for key, value in self.annotation.items() if value[1] not in ids}
-            self.label_merging_scribbles = {
-                key: value
-                for key, value in self.label_merging_scribbles.items() if value[1] not in ids
-            }
-            self.label_splitting_scribbles = {
-                key: value
-                for key, value in self.label_splitting_scribbles.items() if value[1] not in ids
-            }
-
-        self.removed_annotation = {
-            key: value
-            for key, value in self.annotation.items() if key not in remaining_annotation
-        }
-        self.annotation = remaining_annotation
+                self.__annotation_image[c] = v[-1]
 
     def get_annotation(self):
         return self.annotation
