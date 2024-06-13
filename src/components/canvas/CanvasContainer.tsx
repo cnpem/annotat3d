@@ -858,16 +858,6 @@ class Canvas {
         this.slice.texture = texture;
     }
 
-    increaseBrushSize() {
-        // Brush size should be an odd number, as the kernel in backend needs an unobiguous center
-        this.brush.setSize(this.brush.size + 2);
-    }
-
-    decreaseBrushSize() {
-        if (this.brush.size <= 1) return;
-        this.brush.setSize(this.brush.size - 2);
-    }
-
     setSuperpixelColor(color: number) {
         this.superpixelColor = color;
         this.superpixelSlice.tint = this.superpixelColor;
@@ -934,6 +924,10 @@ const brushList = [
         logo: browsers,
     },
 ];
+
+function timeout(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     pixi_container: HTMLDivElement | null;
@@ -1332,6 +1326,57 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.canvas?.setCropShape(cropShape);
     }
 
+    increaseIntervalId: NodeJS.Timeout | null = null;
+
+    decreaseIntervalId: NodeJS.Timeout | null = null;
+
+    initialTimeoutId: NodeJS.Timeout | null = null;
+
+    increaseBrushSize = () => {
+        // Brush size should be an odd number, as the kernel in backend needs an unambiguous center
+        this.canvas?.brush.setSize(this.canvas?.brush.size + 2);
+    };
+
+    decreaseBrushSize = () => {
+        if (this.canvas?.brush.size === undefined) return;
+        if (this.canvas?.brush.size <= 1) return;
+        // Brush size should be an odd number, as the kernel in backend needs an unambiguous center
+        this.canvas?.brush.setSize(this.canvas?.brush.size - 2);
+    };
+
+    handleIncreaseMouseDown = () => {
+        this.increaseBrushSize();
+        this.initialTimeoutId = setTimeout(() => {
+            this.increaseIntervalId = setInterval(() => {
+                this.increaseBrushSize();
+            }, 20);
+        }, 200);
+    };
+
+    handleDecreaseMouseDown = () => {
+        this.decreaseBrushSize();
+        this.initialTimeoutId = setTimeout(() => {
+            this.decreaseIntervalId = setInterval(() => {
+                this.decreaseBrushSize();
+            }, 20);
+        }, 200);
+    };
+
+    handleMouseUp = () => {
+        if (this.initialTimeoutId) {
+            clearTimeout(this.initialTimeoutId);
+            this.initialTimeoutId = null;
+        }
+        if (this.increaseIntervalId) {
+            clearInterval(this.increaseIntervalId);
+            this.increaseIntervalId = null;
+        }
+        if (this.decreaseIntervalId) {
+            clearInterval(this.decreaseIntervalId);
+            this.decreaseIntervalId = null;
+        }
+    };
+
     render() {
         return (
             <div
@@ -1373,18 +1418,18 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 <IonFab vertical="bottom" horizontal="end" style={{ marginBottom: '4em' }}>
                     <IonFabButton
                         size="small"
-                        onClick={() => {
-                            this.canvas?.increaseBrushSize();
-                        }}
+                        onMouseDown={this.handleIncreaseMouseDown}
+                        onMouseUp={this.handleMouseUp}
+                        onMouseLeave={this.handleMouseUp}
                     >
                         <IonIcon icon={add} />
                     </IonFabButton>
                     <IonFabButton
                         size="small"
                         title="Decrease brush/eraser size"
-                        onClick={() => {
-                            this.canvas?.decreaseBrushSize();
-                        }}
+                        onMouseDown={this.handleDecreaseMouseDown}
+                        onMouseUp={this.handleMouseUp}
+                        onMouseLeave={this.handleMouseUp}
                     >
                         <IonIcon icon={remove} />
                     </IonFabButton>
