@@ -88,7 +88,8 @@ class Brush {
         const [r, g, b] = this.colors[this.label % this.colors.length];
         context.beginPath();
         context.fillStyle = `rgb(${r},${g},${b}, 1)`;
-        context.arc(x, y, this.radius, 0, 2 * Math.PI);
+        // needs to add 0.5 to center the drawing in the center of the pixel square
+        context.arc(x + 0.5, y + 0.5, this.radius, 0, 2 * Math.PI);
         context.fill();
     }
 
