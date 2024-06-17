@@ -210,8 +210,9 @@ def save_annot():
     clean_annot = defaultdict(list)
 
     for coord3D, label_list in annot.items():
-        if label_list:  # Check if the list is not empty
-            clean_annot[coord3D].append(label_list[-1])
+        if label_list and label_list[-1] != -1:  # Check if the list is not empty and ignore erase coords
+            if clean_annot[coord3D] != -1:
+                clean_annot[coord3D].append(label_list[-1])
 
     with open(annot_path, "wb") as f:
         pickle.dump(clean_annot, f)
