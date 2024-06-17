@@ -139,7 +139,6 @@ def open_annot():
     label_list = []
     annotation = set()
     for label in annot_module.get_annotation().values():
-
         if (label[0] not in annotation):
             annotation.add(label[0])
             label_list.append({
