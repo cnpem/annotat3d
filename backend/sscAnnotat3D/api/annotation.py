@@ -225,7 +225,7 @@ def save_annot():
 def draw():
     slice_num = request.json["slice"]
     axis = request.json["axis"]
-    size = request.json["size"]
+    size = request.json["size"] #size in diameter
     label = request.json["label"]
     mode = request.json["mode"]
     cursor_coords = request.json["coords"]
@@ -245,7 +245,7 @@ def draw():
 
     annot_module.set_current_axis(axis_dim)
     annot_module.set_current_slice(slice_num)
-    annot_module.set_radius(size // 2)
+    annot_module.set_radius((size + 1)// 2) #we are counting half fills, so the size is increase by + 1 
 
     marker_id = annot_module.current_mk_id
 

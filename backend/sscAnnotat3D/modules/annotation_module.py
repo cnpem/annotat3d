@@ -486,10 +486,9 @@ class AnnotationModule():
         ## Updating the markers with the current marker id ##
         self.order_markers.add(marker_id)
 
-        ###  We are couting half fills from the frontend, therefore, radius is increased by one. ###
-        radius = self.radius + 1
 
         ### Creating the mask in the size of the brush ###
+        radius = self.radius
         size = 2 * radius + 1 
         disk_mask = np.zeros((size, size), dtype=np.bool_)
         rr, cc = draw.disk((radius, radius), radius)
