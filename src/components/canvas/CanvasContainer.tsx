@@ -1004,6 +1004,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             this.getAnnotSlice();
             this.getLabelSlice();
             this.getFutureSlice();
+            this.getHistogram();
         });
     };
 
@@ -1298,12 +1299,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.setBrushMode('draw_brush');
             }
         }
-
-        if (this.props.axis !== prevProps.axis || this.props.slice !== prevProps.slice) {
-            // Get histogram if slice or axis changes, should add to the fetchAllDebounced function?
-            this.getHistogram();
-        }
-
         this.setState({ ...this.state, future_sight_on: false });
         this.canvas?.setSliceNum(this.props.slice);
         this.canvas?.setAxis(this.props.axis);
