@@ -12,6 +12,8 @@
 # - OpenMPI version 4.1.0
 # - HDF5 version 1.10.7
 # - Anaconda version 24.3.0-0
+# - NVM version v0.39.7
+# - NODE version 20.12.2
 # 
 # Usage:
 #     - python3 hpccm-cuda-gcc-openmpi-hdf-conda.py --format docker --cuda 11.2.2 --opmpi 4.1.0 --python py39 > Dockerfile
@@ -58,6 +60,10 @@ From: nvcr.io/nvidia/cuda:11.2.2-cudnn8-devel-ubuntu20.04
     export HDF5_INCLUDE_PATH=/usr/include/hdf5/serial/:$HDF5_INCLUDE_PATH
     export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$CUDA_HOME/lib64:$CUDA_HOME/lib64/stubs:$LD_LIBRARY_PATH
     export PATH=/opt/conda/bin:$CUDA_HOME/bin:$CUDA_HOME/nvvm/bin:$PATH
+
+%post
+    ln -sf /usr/local/cuda/lib64/*.* /usr/lib/
+    ln -sf /usr/local/cuda/include/*.* /usr/include/
 
 %post
     apt-get update -y
@@ -251,6 +257,10 @@ From: nvcr.io/nvidia/cuda:11.2.2-cudnn8-devel-ubuntu20.04
 
 %post
     python3 -m pip install --upgrade pip setuptools wheel build pyclean
+
+%post
+    python3 -m pip install numpy==1.22.3
+    python3 -m pip install SharedArray==3.2.0
 
 %files
     . /opt/annotat3dweb

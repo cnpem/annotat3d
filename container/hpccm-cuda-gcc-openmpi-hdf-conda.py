@@ -14,6 +14,8 @@ Description: This scripts implement an HPCCM recipe for the HARPIA project. The 
 - OpenMPI version 4.1.0
 - HDF5 version 1.10.7
 - Anaconda version 24.3.0-0
+- NVM version v0.39.7
+- NODE version 20.12.2
 
 Usage:
     - python3 hpccm-cuda-gcc-openmpi-hdf-conda.py --format docker --cuda 11.2.2 --opmpi 4.1.0 --python py39 > Dockerfile
@@ -98,6 +100,14 @@ stage += hpccm.primitives.environment(
         'LD_LIBRARY_PATH': '/usr/lib/x86_64-linux-gnu:$CUDA_HOME/lib64:$CUDA_HOME/lib64/stubs:$LD_LIBRARY_PATH',
         'PATH': '/opt/conda/bin:$CUDA_HOME/bin:$CUDA_HOME/nvvm/bin:$PATH',
     }
+)
+
+stage += hpccm.primitives.shell(
+    commands=[
+        'ln -sf /usr/local/cuda/lib64/*.* /usr/lib/',
+        'ln -sf /usr/local/cuda/include/*.* /usr/include/',
+    ],
+    chdir=False,
 )
 
 # Install development tools
@@ -185,7 +195,14 @@ stage += hpccm.primitives.shell(
     chdir=False,
 )
 
-# Install backend
+# Install Annotat3DWeb
+stage += hpccm.primitives.shell(
+    commands=[
+        'python3 -m pip install numpy==1.22.3',
+        'python3 -m pip install SharedArray==3.2.0',
+    ],
+    chdir=False,
+)
 stage += hpccm.primitives.copy(src='.', dest='/opt/annotat3dweb')
 stage += hpccm.building_blocks.pip(ospackages=[], requirements='backend/requirements.txt', pip='pip3')
 stage += hpccm.building_blocks.pip(ospackages=[], requirements='backend/requirements-dev.txt', pip='pip3')
@@ -211,6 +228,7 @@ stage += hpccm.primitives.environment(
         'PATH': '$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH',
     }
 )
+
 stage += hpccm.primitives.shell(
     commands=[
         'mkdir -p $NVM_DIR',
