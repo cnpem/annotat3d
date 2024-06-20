@@ -5,12 +5,15 @@ import numpy
 
 from sklearn.preprocessing import LabelEncoder
 
-try:
-    libname = 'libcuda.so'
-    cuda = ctypes.CDLL(libname)
-    cuda.cuInit(0)
-except:
-    cuda = None
+
+#Had to comment this, on singularity this 'steals' the GPU form the SPIN/HARPIA module makeing it malfunction
+#However the same effect does not happen on old singularity recipe and on new docker recipe (weird, don't you agree?) 
+#try:
+#    libname = 'libcuda.so'
+#    cuda = ctypes.CDLL(libname)
+#    cuda.cuInit(0)
+#except:
+#    cuda = None
 
 FILE_EXTENSION_IMAGE_FILTER = "Images (*.tif *.tiff *.TIFF *TIF *.b *.raw);; TIFF  (*.tif *.tiff *.TIFF *.TIF);; Raw Data  (*.b *.raw);; All Files (*.*)"
 
@@ -238,17 +241,17 @@ def add_variable_console(export={}):
 CUDA_SUCCESS = 0
 
 
-def cuda_capability():
-    cc_major = ctypes.c_int()
-    cc_minor = ctypes.c_int()
-    device = ctypes.c_int()
+#def cuda_capability():
+#    cc_major = ctypes.c_int()
+#    cc_minor = ctypes.c_int()
+#    device = ctypes.c_int()
 
-    result = cuda.cuDeviceGet(ctypes.byref(device), 0)
-    if cuda.cuDeviceComputeCapability(ctypes.byref(cc_major), ctypes.byref(cc_minor), device) == CUDA_SUCCESS:
-        return (cc_major.value, cc_minor.value)
-    else:
-        print('Could not retrive cuda capability information')
-        return (0, 0)
+#    result = cuda.cuDeviceGet(ctypes.byref(device), 0)
+#    if cuda.cuDeviceComputeCapability(ctypes.byref(cc_major), ctypes.byref(cc_minor), device) == CUDA_SUCCESS:
+#        return (cc_major.value, cc_minor.value)
+#    else:
+#        print('Could not retrive cuda capability information')
+#        return (0, 0)
 
 
 def rapids_support():
