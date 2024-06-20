@@ -12,6 +12,8 @@
 # - OpenMPI version 4.1.0
 # - HDF5 version 1.10.7
 # - Anaconda version 24.3.0-0
+# - NVM version v0.39.7
+# - NODE version 20.12.2
 # 
 # Usage:
 #     - python3 hpccm-cuda-gcc-openmpi-hdf-conda.py --format docker --cuda 11.2.2 --opmpi 4.1.0 --python py39 > Dockerfile
@@ -37,6 +39,9 @@ ENV CPATH=/usr/include/hdf5/serial/:$CUDA_HOME/include:$CPATH \
     HDF5_INCLUDE_PATH=/usr/include/hdf5/serial/:$HDF5_INCLUDE_PATH \
     LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$CUDA_HOME/lib64:$CUDA_HOME/lib64/stubs:$LD_LIBRARY_PATH \
     PATH=/opt/conda/bin:$CUDA_HOME/bin:$CUDA_HOME/nvvm/bin:$PATH
+
+RUN ln -sf /usr/local/cuda/lib64/*.* /usr/lib/ && \
+    ln -sf /usr/local/cuda/include/*.* /usr/include/
 
 RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -196,6 +201,9 @@ RUN python3 -m pip config set global.extra-index-url https://gitlab.cnpem.br/api
     python3 -m pip config set global.trusted-host gitlab.cnpem.br
 
 RUN python3 -m pip install --upgrade pip setuptools wheel build pyclean
+
+RUN python3 -m pip install numpy==1.22.3 && \
+    python3 -m pip install SharedArray==3.2.0
 
 COPY . /opt/annotat3dweb
 
