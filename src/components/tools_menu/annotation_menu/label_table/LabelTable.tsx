@@ -83,7 +83,7 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({
             isOpen={openWarningWindow}
             onDidDismiss={closeWarningWindow}
             header={'Deleting all labels'}
-            message={'Do you wish to delete all labels ?'}
+            message={'Do you wish to permanently delete all labels ?'}
             buttons={[
                 {
                     text: 'No',
@@ -120,6 +120,8 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         },
     ]);
 
+    // Storage of removed labels for undo opreation
+    const [removedLabels, setRemovedLabels] = useState<LabelInterface[]>([]);
     const [activateSL, setActivateSL] = useStorageState<boolean>(sessionStorage, 'activateSL', false);
     const [isSplitActivated, setIsSplitActivated] = useStorageState<boolean>(
         sessionStorage,
@@ -173,19 +175,6 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         console.log('label List rn : ', labelVec);
     });
 
-    useEventBus('isExtendLabelActivated', (flag: boolean) => {
-        setIsExtendActivated(flag);
-    });
-
-    useEventBus('isSplitActivated', (flag: boolean) => {
-        setIsSplitActivated(flag);
-        if (flag) {
-            console.log('newLabelId - 1 : ', labelList[labelList.length - 1].id);
-            setSelectedLabel(labelList[labelList.length - 1].id);
-            setIsExtendActivated(false);
-        }
-    });
-
     useEffect(() => {
         console.log('doing this dispatch rn');
         dispatch('labelColorsChanged', labelList);
@@ -205,7 +194,9 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     });
 
     const removeLabelElement = (label: LabelInterface) => {
-        setLabelList(labelList.filter((l) => l.id !== label.id));
+        setLabelList((prevLabelList) => prevLabelList.filter((l) => l.id !== label.id));
+
+        setRemovedLabels((prevRemovedLabels) => [...prevRemovedLabels, label]);
 
         if (labelList.length === 2) {
             setNewLabelId(1);
@@ -241,19 +232,20 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     }
 
     const undoAnnotation = () => {
-        void sfetch('POST', '/undo_annot', '').then(() => {
+        void sfetch('POST', '/undo_annot', '', 'json').then((label_number: number) => {
+            if (label_number !== -1) {
+                console.log('undid label, update label table');
+                const labelToRestore = removedLabels.find((l) => l.id === label_number);
+                // Ensure labelToRestore is defined before proceeding
+                if (!labelToRestore) {
+                    dispatch('annotationChanged', null);
+                    return;
+                }
+                setRemovedLabels((prevRemovedLabels) => prevRemovedLabels.filter((l) => l.id !== label_number));
+                setLabelList((currentLabels) => [...currentLabels, labelToRestore]);
+            }
             dispatch('annotationChanged', null);
         });
-    };
-
-    const extendLabel = (e: CustomEvent) => {
-        dispatch('ExtendLabel', e.detail.checked);
-        if (e.detail.checked) {
-            console.log('Doing dispatch for ExtendLabel');
-            void ionToastActivateExtendOp(`Extend label operation activated !`, timeToast);
-            setActivateSL(!e.detail.checked);
-        }
-        setIsExtendActivated(e.detail.checked);
     };
 
     const renderLabel = (labelElement: LabelInterface) => {
@@ -350,23 +342,6 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                 </IonCol>
             </IonRow>
             {/*Find Label menu*/}
-            <IonRow>
-                <IonCol>
-                    <IonItem>
-                        <IonLabel>Extend Label</IonLabel>
-                        <IonIcon icon={eyedrop} slot={'end'} />
-                        <IonCheckbox
-                            checked={isExtendActivated}
-                            slot={'end'}
-                            onIonChange={(e: CustomEvent) => {
-                                extendLabel(e);
-                                dispatch('changeMergeDisableStatus', e.detail.checked);
-                            }}
-                            disabled={lockMenu}
-                        />
-                    </IonItem>
-                </IonCol>
-            </IonRow>
             <IonRow>
                 <IonCol>
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

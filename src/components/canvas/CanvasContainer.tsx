@@ -38,8 +38,6 @@ class Brush {
 
     mode: BrushModeType = 'draw_brush';
 
-    maintainExtendLabel: boolean;
-
     canvas: HTMLCanvasElement;
 
     context: CanvasRenderingContext2D;
@@ -51,7 +49,6 @@ class Brush {
     constructor(colors: [number, number, number][]) {
         this.label = 0;
         this.color = 0xffffff;
-        this.maintainExtendLabel = false;
 
         this.canvas = document.createElement('canvas');
 
@@ -61,7 +58,7 @@ class Brush {
 
         this.cursor = this.createBrush();
 
-        this.setSize(4);
+        this.setSize(5);
 
         this.update();
     }
@@ -90,8 +87,9 @@ class Brush {
     contextDrawBrush(context: CanvasRenderingContext2D, x: number, y: number) {
         const [r, g, b] = this.colors[this.label % this.colors.length];
         context.beginPath();
-        context.fillStyle = `rgb(${r},${g},${b})`;
-        context.arc(x, y, this.radius, 0, 2 * Math.PI);
+        context.fillStyle = `rgb(${r},${g},${b}, 1)`;
+        // needs to add 0.5 to center the drawing in the center of the pixel square
+        context.arc(x + 0.5, y + 0.5, this.radius, 0, 2 * Math.PI);
         context.fill();
     }
 
@@ -222,12 +220,6 @@ class Canvas {
 
     isPainting: boolean;
 
-    extendLabel: boolean;
-
-    maintainExtendLabel: boolean;
-
-    mergeLabel: boolean;
-
     annotation: Annotation;
 
     brush: Brush;
@@ -303,9 +295,6 @@ class Canvas {
 
         this.slice = new PIXI.Sprite();
         this.slice.visible = true;
-        this.extendLabel = false;
-        this.maintainExtendLabel = false;
-        this.mergeLabel = false;
 
         this.labelSlice = new PIXI.Sprite();
 
@@ -420,6 +409,11 @@ class Canvas {
 
         this.isPainting = true;
         this.prevPosition = this.viewport.toWorld(event.data.global);
+        /* Floor the coordinates of the returned PIXI.Point. This is relevant for forcing the canvas to show discrete positions for the user
+        since we are painting in a discrete manner in the backend and make both compatible, making a friendly user experience :)
+        */
+        this.prevPosition.x = Math.floor(this.prevPosition.x);
+        this.prevPosition.y = Math.floor(this.prevPosition.y);
     }
 
     onPointerMove(event: any) {
@@ -428,16 +422,20 @@ class Canvas {
         if (event.type === 'wheel') {
             this.viewport.plugins.resume('drag');
             currPosition = this.viewport.toWorld(event.offsetX, event.offsetY);
+            currPosition.x = Math.floor(currPosition.x);
+            currPosition.y = Math.floor(currPosition.y);
         } else {
             currPosition = this.viewport.toWorld(event.data.global);
+            currPosition.x = Math.floor(currPosition.x);
+            currPosition.y = Math.floor(currPosition.y);
             if (event.data.pointerType === 'touch' && event.data.originalEvent.touches.length > 1) {
                 this.isPainting = false;
                 return;
             }
         }
 
-        this.brush.cursor.position.x = currPosition.x - this.brush.size / 2;
-        this.brush.cursor.position.y = currPosition.y - this.brush.size / 2;
+        this.brush.cursor.position.x = currPosition.x - Math.floor(this.brush.size / 2);
+        this.brush.cursor.position.y = currPosition.y - Math.floor(this.brush.size / 2);
 
         if (!this.isPainting) return;
 
@@ -452,6 +450,9 @@ class Canvas {
         if (!this.isPainting) return;
 
         const currPosition = this.viewport.toWorld(event.data.global);
+        currPosition.x = Math.floor(currPosition.x);
+        currPosition.y = Math.floor(currPosition.y);
+
         this.prevPosition = currPosition;
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
@@ -463,6 +464,7 @@ class Canvas {
             label: this.brush.label,
             mode: this.brush_mode,
         };
+
         void sfetch('POST', '/draw', JSON.stringify(data)).then((success) => {
             console.log(success);
             dispatch('annotationChanged', null);
@@ -497,39 +499,11 @@ class Canvas {
         }
     }
 
-    setExtendLabel(flag: boolean) {
-        this.extendLabel = flag;
-    }
-
     draw(currPosition: PIXI.Point): [number, number][] {
         const context = this.annotation.context;
         const mode = this.brush_mode;
 
         if (mode === 'no_brush') {
-            return [];
-        } else if (this.extendLabel) {
-            this.extendLabel = false;
-            this.brush.cursor.visible = false;
-
-            const data = {
-                x_coord: Math.round(this.prevPosition.x),
-                y_coord: Math.round(this.prevPosition.y),
-                slice: this.sliceNum,
-                axis: this.axis,
-            };
-
-            console.log('Finding label by click');
-            void sfetch('POST', '/find_label_by_click', JSON.stringify(data), 'json').then((labelId: number) => {
-                console.log('label ID found : ', labelId);
-                if (labelId >= 0) {
-                    this.brush.setLabel(labelId);
-                    this.brush.updateColor();
-                    this.setBrushMode('draw_brush');
-                }
-                this.brush.cursor.visible = true;
-                dispatch('changeSelectedLabel', labelId);
-                dispatch('isExtendLabelActivated', false);
-            });
             return [];
         } else if (mode === 'erase_brush') {
             this.annotation.context.globalCompositeOperation = 'destination-out';
@@ -544,8 +518,6 @@ class Canvas {
             this.brush.contextDrawBrush(context, x, y);
 
             this.annotation.sprite.texture.update();
-
-            dispatch('extendLabelOnMerge', this.maintainExtendLabel);
 
             return [[x, y]];
         }
@@ -848,10 +820,6 @@ class Canvas {
         this.futureSlice.texture = PIXI.Texture.EMPTY;
     }
 
-    setMaintainExtend(flag: boolean) {
-        this.maintainExtendLabel = flag;
-    }
-
     setImage(imgSlice: NdArray<TypedArray>) {
         this.imgData = imgSlice;
 
@@ -889,15 +857,6 @@ class Canvas {
         const floatdata = this.toFloat32ColorArray(imgSlice, this.cmap);
         const texture = this.colortextureFromSlice(floatdata, x, y, PIXI.FORMATS.RGBA);
         this.slice.texture = texture;
-    }
-
-    increaseBrushSize() {
-        this.brush.setSize(this.brush.size + 1);
-    }
-
-    decreaseBrushSize() {
-        if (this.brush.size <= 2) return;
-        this.brush.setSize(this.brush.size - 1);
     }
 
     setSuperpixelColor(color: number) {
@@ -967,6 +926,10 @@ const brushList = [
     },
 ];
 
+function timeout(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     pixi_container: HTMLDivElement | null;
 
@@ -1008,10 +971,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     onChangeStateBrush: (mode: BrushModeType) => void = () => {};
 
-    onExtendLabel: (flag: boolean) => void = () => {};
-
-    onExtendLabelOnMerge: (flag: boolean) => void = () => {};
-
     onCropPreviewMode: (activateCropPreview: boolean) => void = () => {};
 
     onCropShape: (cropShape: CropShapeInterface) => void = () => {};
@@ -1019,8 +978,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     onCropPreviewColorChanged: (color: any) => void = () => {};
 
     onActivateSL: (sequentialLabelPayload: { isActivated: boolean; id: number }) => void = () => {};
-
-    onSplitLabel: (flag: boolean) => void = () => {};
 
     constructor(props: ICanvasProps) {
         super(props);
@@ -1047,6 +1004,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             this.getAnnotSlice();
             this.getLabelSlice();
             this.getFutureSlice();
+            this.getHistogram();
         });
     };
 
@@ -1267,19 +1225,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.setBrushMode(mode);
             };
 
-            this.onExtendLabel = (flag: boolean) => {
-                console.log('flag val : ', flag);
-                this.canvas!.setExtendLabel(flag);
-                this.canvas!.showBrush(false);
-            };
-
-            this.onExtendLabelOnMerge = (flag: boolean) => {
-                this.canvas!.setMaintainExtend(flag);
-                if (flag) {
-                    this.onExtendLabel(flag);
-                }
-            };
-
             this.onCropPreviewMode = (activateCropPreview: boolean) => {
                 this.cropPreviewMode(activateCropPreview);
             };
@@ -1291,13 +1236,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             this.onActivateSL = (sequentialLabelPayload: { isActivated: boolean; id: number }) => {
                 this.canvas?.setSequentialLabel(sequentialLabelPayload.isActivated);
                 this.canvas?.brush.setLabel(sequentialLabelPayload.id);
-            };
-
-            this.onSplitLabel = (flag: boolean) => {
-                this.onActivateSL({
-                    isActivated: flag,
-                    id: this.canvas!.getLabelTableLen(),
-                });
             };
 
             subscribe('futureChanged', this.onFutureChanged);
@@ -1318,13 +1256,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('labelChanged', this.onLabelChanged);
             subscribe('ImageLoaded', this.onImageLoaded);
             subscribe('ChangeStateBrush', this.onChangeStateBrush);
-            subscribe('ExtendLabel', this.onExtendLabel);
-            subscribe('extendLabelOnMerge', this.onExtendLabelOnMerge);
             subscribe('cropShape', this.onCropShape);
             subscribe('cropPreviewMode', this.onCropPreviewMode);
             subscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
             subscribe('activateSL', this.onActivateSL);
-            subscribe('splitLabel', this.onSplitLabel);
         }
     }
 
@@ -1348,13 +1283,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('contrastChanged', this.onContrastChanged);
         unsubscribe('labelChanged', this.onLabelChanged);
         unsubscribe('ChangeStateBrush', this.onChangeStateBrush);
-        unsubscribe('ExtendLabel', this.onExtendLabel);
-        unsubscribe('extendLabelOnMerge', this.onExtendLabelOnMerge);
         unsubscribe('cropShape', this.onCropShape);
         unsubscribe('cropPreviewMode', this.onCropPreviewMode);
         unsubscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
         unsubscribe('activateSL', this.onActivateSL);
-        unsubscribe('splitLabel', this.onSplitLabel);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
@@ -1367,12 +1299,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.setBrushMode('draw_brush');
             }
         }
-
-        if (this.props.axis !== prevProps.axis || this.props.slice !== prevProps.slice) {
-            // Get histogram if slice or axis changes, should add to the fetchAllDebounced function?
-            this.getHistogram();
-        }
-
         this.setState({ ...this.state, future_sight_on: false });
         this.canvas?.setSliceNum(this.props.slice);
         this.canvas?.setAxis(this.props.axis);
@@ -1395,6 +1321,57 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     setCropShape(cropShape: CropShapeInterface) {
         this.canvas?.setCropShape(cropShape);
     }
+
+    increaseIntervalId: NodeJS.Timeout | null = null;
+
+    decreaseIntervalId: NodeJS.Timeout | null = null;
+
+    initialTimeoutId: NodeJS.Timeout | null = null;
+
+    increaseBrushSize = () => {
+        // Brush size should be an odd number, as the kernel in backend needs an unambiguous center
+        this.canvas?.brush.setSize(this.canvas?.brush.size + 2);
+    };
+
+    decreaseBrushSize = () => {
+        if (this.canvas?.brush.size === undefined) return;
+        if (this.canvas?.brush.size <= 1) return;
+        // Brush size should be an odd number, as the kernel in backend needs an unambiguous center
+        this.canvas?.brush.setSize(this.canvas?.brush.size - 2);
+    };
+
+    handleIncreaseMouseDown = () => {
+        this.increaseBrushSize();
+        this.initialTimeoutId = setTimeout(() => {
+            this.increaseIntervalId = setInterval(() => {
+                this.increaseBrushSize();
+            }, 20);
+        }, 200);
+    };
+
+    handleDecreaseMouseDown = () => {
+        this.decreaseBrushSize();
+        this.initialTimeoutId = setTimeout(() => {
+            this.decreaseIntervalId = setInterval(() => {
+                this.decreaseBrushSize();
+            }, 20);
+        }, 200);
+    };
+
+    handleMouseUp = () => {
+        if (this.initialTimeoutId) {
+            clearTimeout(this.initialTimeoutId);
+            this.initialTimeoutId = null;
+        }
+        if (this.increaseIntervalId) {
+            clearInterval(this.increaseIntervalId);
+            this.increaseIntervalId = null;
+        }
+        if (this.decreaseIntervalId) {
+            clearInterval(this.decreaseIntervalId);
+            this.decreaseIntervalId = null;
+        }
+    };
 
     render() {
         return (
@@ -1437,18 +1414,18 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 <IonFab vertical="bottom" horizontal="end" style={{ marginBottom: '4em' }}>
                     <IonFabButton
                         size="small"
-                        onClick={() => {
-                            this.canvas?.increaseBrushSize();
-                        }}
+                        onMouseDown={this.handleIncreaseMouseDown}
+                        onMouseUp={this.handleMouseUp}
+                        onMouseLeave={this.handleMouseUp}
                     >
                         <IonIcon icon={add} />
                     </IonFabButton>
                     <IonFabButton
                         size="small"
                         title="Decrease brush/eraser size"
-                        onClick={() => {
-                            this.canvas?.decreaseBrushSize();
-                        }}
+                        onMouseDown={this.handleDecreaseMouseDown}
+                        onMouseUp={this.handleMouseUp}
+                        onMouseLeave={this.handleMouseUp}
                     >
                         <IonIcon icon={remove} />
                     </IonFabButton>

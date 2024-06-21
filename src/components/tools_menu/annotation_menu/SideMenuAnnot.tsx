@@ -16,7 +16,6 @@ const SideMenuAnnot: React.FC = () => {
                     <LabelTable colors={defaultColormap} />
                 </IonCardContent>
             </IonCard>
-            <EditLabelMenu />
         </div>
     );
 };

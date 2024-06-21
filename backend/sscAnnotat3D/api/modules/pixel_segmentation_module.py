@@ -261,11 +261,10 @@ def create():
         return handle_exception(
             "unable to apply!. Please, at least create one label and background annotation and try again the preprocess.")
 
-    dict_tuple_values = [*annotations.values()]
     unique_ids = set()
-    for tuple_values in dict_tuple_values:
-        id, _ = tuple_values
-        unique_ids.add(id)
+    for key,value in annotations.items():
+        unique_ids.add(value[-1])
+
     if (len(unique_ids) <= 1):
         return handle_exception(
             "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
@@ -434,6 +433,16 @@ def preview():
         return handle_exception(
             "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
 
+
+    #TODO: refactor all the superpixel and pixel segmentation modules to the new annotation dict, not the previous one
+    annotation_dict = {}
+    for key,value in annotations.items():
+        annotation_dict[key] = (value[-1],1)
+        annotations = annotation_dict
+
+    annotations = annotation_dict
+
+
     slice_num = request.json['slice']
     axis = request.json['axis']
 
@@ -448,11 +457,9 @@ def preview():
     try:
         label, selected_features_names = segm_module.preview(annotations, [slice_num], axis_dim)
     except Exception as e:
-        dict_tuple_values = [*annotations.values()]
         unique_ids = set()
-        for tuple_values in dict_tuple_values:
-            id, _ = tuple_values
-            unique_ids.add(id)
+        for key,value in annotations.items():
+            unique_ids.add(value)
         if (len(unique_ids) <= 1):
             return handle_exception(
                 "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
@@ -476,14 +483,20 @@ def execute():
     if segm_module is None:
         return "Not a valid segmentation module", 400
 
+    #TODO: refactor all the superpixel and pixel segmentation modules to the new annotation dict, not the previous one
+    annotation_dict = {}
+    for key,value in annotations.items():
+        annotation_dict[key] = (value[-1],1)
+        annotations = annotation_dict
+
+    annotations = annotation_dict
+
     try:
         label, selected_features_names = segm_module.execute(annotations)
     except Exception as e:
-        dict_tuple_values = [*annotations.values()]
         unique_ids = set()
-        for tuple_values in dict_tuple_values:
-            id, _ = tuple_values
-            unique_ids.add(id)
+        for key,value in annotations.items():
+            unique_ids.add(value)
         if (len(unique_ids) <= 1):
             return handle_exception(
                 "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
