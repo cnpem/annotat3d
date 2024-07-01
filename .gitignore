@@ -47,3 +47,6 @@ backend/.eggs
 backend/sscAnnotat3D/static
 
 Makefile
+
+# Sentry Config File
+.sentryclirc
