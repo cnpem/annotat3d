@@ -1,5 +1,5 @@
 import npyjs from 'npyjs';
-import pako from 'pako';
+import { ungzip } from 'pako'; // Explicitly import ungzip
 
 const BACKEND_HOST = process.env.NODE_ENV === 'development' ? process.env.REACT_APP_DEV_API_URL : window.location.href;
 
@@ -30,25 +30,25 @@ async function responseToArrayBuffer(response) {
 
 async function responseToUint8Array(response) {
     const gzippedArrayBuffer = await responseToArrayBuffer(response);
-    const bytes = pako.ungzip(gzippedArrayBuffer);
+    const bytes = ungzip(gzippedArrayBuffer);
     return new Uint8Array(bytes.buffer);
 }
 
 async function responseToFloat64Array(response) {
     const gzippedArrayBuffer = await responseToArrayBuffer(response);
-    const bytes = pako.ungzip(gzippedArrayBuffer);
+    const bytes = ungzip(gzippedArrayBuffer);
     return new Float64Array(bytes.buffer);
 }
 
 async function decompressGzip(response) {
     const gzippedArrayBuffer = await responseToArrayBuffer(response);
-    const bytes = pako.ungzip(gzippedArrayBuffer);
+    const bytes = ungzip(gzippedArrayBuffer);
     return bytes.buffer;
 }
 
-async function bufferToNdArray(buffer) {
+function bufferToNdArray(buffer) {
     const n = new npyjs();
-    const data = await n.parse(buffer);
+    const data = n.parse(buffer);
     return data;
 }
 

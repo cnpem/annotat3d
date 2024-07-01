@@ -6,7 +6,6 @@ import numpy as np
 import sscIO.io
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
-from skimage.exposure import histogram as skimage_histogram
 from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo
 from werkzeug.exceptions import BadRequest
@@ -69,27 +68,32 @@ def get_image_histogram(image_id):
 
     img_slice = image[slice_range]
 
-    histogram, bin_centers = skimage_histogram(img_slice)
+    histogram, bin_edges = np.histogram(img_slice,bins=255)
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+    # round bin_centers for pretty show in frontend
+    if np.issubdtype(bin_centers.dtype, np.floating):
+        # Round the array to two decimal places
+        bin_centers = np.round(bin_centers, decimals=2)
 
     end = time.process_time()
     print(f"Elapsed time during histogram calculation: {end-start} seconds")
+
     # it is necessary to convert the numpy datatype to a numpy datatype for json
     data_type = img_slice.dtype
     if data_type == float:
-
         def python_typer(x):
             return float(x)
 
     else:
-
         def python_typer(x):
             return int(x)
 
     # Mount response following HistogramInfoInterface.ts definition
     histogram_info = {}
     histogram_info["data"] = histogram.tolist()
-    histogram_info["maxValue"] = python_typer(np.max(bin_centers))
-    histogram_info["minValue"] = python_typer(np.min(bin_centers))
+    histogram_info["maxValue"] = python_typer(np.max(img_slice))
+    histogram_info["minValue"] = python_typer(np.min(img_slice))
     histogram_info["bins"] = bin_centers.tolist()
 
     return jsonify(histogram_info)
