@@ -46,9 +46,9 @@ async function decompressGzip(response) {
     return bytes.buffer;
 }
 
-async function bufferToNdArray(buffer) {
+function bufferToNdArray(buffer) {
     const n = new npyjs();
-    const data = await n.parse(buffer);
+    const data = n.parse(buffer);
     return data;
 }
 
