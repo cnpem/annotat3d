@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import { IonFab, IonFabButton, IonIcon } from '@ionic/react';
-import { expand, brush, browsers, add, remove, eye, eyeOff, cogOutline } from 'ionicons/icons';
+import { expand, brush, browsers, add, remove, eye, eyeOff, colorFill } from 'ionicons/icons';
 import isEqual from 'lodash.isequal';
 import debounce from 'lodash.debounce';
 import * as PIXI from 'pixi.js';
@@ -25,7 +25,7 @@ import { ImageShapeInterface } from '../tools_menu/utils/ImageShapeInterface';
 import { ImageInfoInterface } from '../main_menu/file/utils/ImageInfoInterface';
 import { ColorOptions } from '../../utils/colormaplist';
 
-type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush';
+type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush' | 'magic_wand';
 
 class Brush {
     label: number;
@@ -132,6 +132,30 @@ class Brush {
         }
         this.updateBrush();
     }
+}
+
+function applyMagicWand(
+    viewport: pixi_viewport.Viewport,
+    sliceNum: number,
+    Currentaxis: string,
+    brush_label: number,
+    event: any
+) {
+    const currPositionw = viewport.toWorld(event.data.global);
+    const dataWand = {
+        slice: sliceNum,
+        axis: Currentaxis,
+        label: brush_label,
+        x_coord: Math.round(currPositionw.x),
+        y_coord: Math.round(currPositionw.y),
+        tolerance: 500,
+        blur_radius: 1,
+    };
+
+    void sfetch('POST', '/magic_wand/image', JSON.stringify(dataWand)).then((success) => {
+        console.log(success, 'Magic wand applied!');
+        dispatch('annotationChanged', null);
+    });
 }
 
 class Annotation {
@@ -437,7 +461,7 @@ class Canvas {
         this.brush.cursor.position.x = currPosition.x - Math.floor(this.brush.size / 2);
         this.brush.cursor.position.y = currPosition.y - Math.floor(this.brush.size / 2);
 
-        if (!this.isPainting) return;
+        if (!this.isPainting || this.brush_mode === 'magic_wand') return;
 
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
@@ -448,6 +472,13 @@ class Canvas {
         this.viewport.plugins.resume('drag');
 
         if (!this.isPainting) return;
+
+        if (this.brush_mode === 'magic_wand') {
+            this.viewport.plugins.pause('drag');
+            void applyMagicWand(this.viewport, this.sliceNum, this.axis, this.brush.label, event);
+            this.isPainting = false; // Reset painting flag
+            return; // Exit the method early since the magic wand logic is
+        }
 
         const currPosition = this.viewport.toWorld(event.data.global);
         currPosition.x = Math.floor(currPosition.x);
@@ -923,6 +954,10 @@ const brushList = [
     {
         id: 'erase_brush',
         logo: browsers,
+    },
+    {
+        id: 'magic_wand',
+        logo: colorFill,
     },
 ];
 

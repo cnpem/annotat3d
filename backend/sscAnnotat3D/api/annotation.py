@@ -8,6 +8,7 @@ import io
 import zlib
 import numpy as np
 
+from sscAnnotat3D.modules.magic_wand import MagicWandSelector
 from sscAnnotat3D.modules import annotation_module
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D import utils
@@ -542,3 +543,42 @@ def set_edit_label_options():
         return handle_exception(str(e))
 
     return jsonify("success")
+
+
+@app.route("/magic_wand/<input_id>", methods=["POST"])
+@cross_origin()
+def apply_magicwand(input_id: str):
+    """
+    Function to apply the magic wand from request of the frontend.
+
+    Returns:
+        (str): returns "success" if everything goes well and an error otherwise
+
+    """
+
+    try:
+        slice_num = request.json["slice"]
+        axis = request.json["axis"]
+        x_coord = request.json["x_coord"]
+        y_coord = request.json["y_coord"]
+        tol = request.json["tolerance"]
+        blur_radius = request.json["blur_radius"]
+        label = request.json["label"]
+    except Exception as e:
+        return handle_exception(str(e))       
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    annot_module = module_repo.get_module('annotation')
+    img_slice = data_repo.get_image(input_id)[slice_range]
+
+    mw = MagicWandSelector(img_slice, blur_radius = blur_radius, tolerance = tol)
+
+    mask_wand, stats = mw.apply_magic_wand(x_coord, y_coord)
+
+    #Marker id is not necessary for the magic wand logic.
+    mk_id = annot_module.current_mk_id
+
+    annot_module.annotationwand_update(mask_wand, label, mk_id)
+
+    return "success", 200
