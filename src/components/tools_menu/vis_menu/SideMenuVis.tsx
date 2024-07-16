@@ -17,13 +17,13 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import colormap from 'colormap';
-//ignoring types for react-color, as it seems broken
-//TODO: investigate if this is fixed, otherwise declare the types manually
+// ignoring types for react-color, as it seems broken
 import { AlphaPicker, SliderPicker } from 'react-color';
 import CropMenu from './CropMenu';
 import { ImageShapeInterface } from '../utils/ImageShapeInterface';
 import { HistogramInfoPayload } from '../../main_menu/file/utils/HistogramInfoInterface';
 import ColorPicker from './ColorPicker';
+import HistogramPortal from './HistogramPortal';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Filler, Legend);
 
@@ -57,17 +57,14 @@ function generateBackgroundColors({ data, colormapName, nshades }: ColormapData)
 
     return backgroundColors;
 }
+
 interface SideMenuVisProps {
     imageShape: ImageShapeInterface;
 }
 
 const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     const [lockVisCards, setLockVisCards] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
-
-    const [contrast, setContrast] = useStorageState(sessionStorage, 'contrast', {
-        lower: 10,
-        upper: 90,
-    });
+    const [contrast, setContrast] = useStorageState(sessionStorage, 'contrast', { lower: 10, upper: 90 });
 
     useEventBus('LockComponents', (changeDisableVis) => {
         setLockVisCards(changeDisableVis);
@@ -246,6 +243,11 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
                     <Line options={histogramOptions} data={histogramData} />
                 </IonCardContent>
             </IonCard>
+            <HistogramPortal
+                containerId="magic-wand-histogram"
+                histogramData={histogramData}
+                histogramOptions={histogramOptions}
+            />
             <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <IonItem>
