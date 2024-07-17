@@ -153,6 +153,12 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
                 (contrast.upper - contrast.lower)
         );
         console.log('nshades', nshades);
+
+        if (nshades < 9) {
+            // do not execute for n shades lesser than 9, as the cmap will crash everything
+            return;
+        }
+
         // Create a constant instance of ColormapData
         const newBackgroundColors: ColormapData = {
             data: histogramData.datasets[0].data,
