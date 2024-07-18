@@ -25,6 +25,8 @@ import { ImageShapeInterface } from '../utils/ImageShapeInterface';
 import { HistogramInfoPayload } from '../../main_menu/file/utils/HistogramInfoInterface';
 import ColorPicker from './ColorPicker';
 
+import './HistogramAlignment.css';
+
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Filler, Legend);
 
 function rgbToHex(r: number, g: number, b: number) {
@@ -69,6 +71,41 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
 
     const histogramOptions = {
         responsive: true,
+        maintainAspectRatio: true, // Set this to true
+        aspectRatio: 4, // Adjust this value to change the height. Higher values make it shorter.
+        layout: {
+            padding: {
+                right: 0, // Adjust this value as needed
+                bottom: 0,
+            },
+        },
+        scales: {
+            y: {
+                display: true,
+                border: {
+                    display: false,
+                },
+                grid: {
+                    display: true,
+                },
+                ticks: {
+                    display: false,
+                },
+            },
+            x: {
+                display: true,
+                border: {
+                    display: false,
+                },
+                grid: {
+                    display: true,
+                },
+                ticks: {
+                    display: false,
+                    maxTicksLimit: 5, // Adjust this number to control the number of gridlines
+                },
+            },
+        },
         plugins: {
             legend: {
                 display: false,
@@ -265,21 +302,22 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
             <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <ColorPicker selectedColor={selectedColor} setSelectedColor={setSelectedColor} />
-                    <IonRange
-                        ref={contrastRangeRef}
-                        pin={true}
-                        dualKnobs={true}
-                        onIonKnobMoveEnd={(e: CustomEvent) => {
-                            if (e.detail.value) {
-                                const range = e.detail.value;
-                                setContrast(range);
-                                dispatch('contrastChanged', [range.lower, range.upper]);
-                            }
-                        }}
-                    >
-                        <IonIcon slot="start" icon={sunny}></IonIcon>
-                    </IonRange>
-                    <Line options={histogramOptions} data={histogramData} />
+                    <div className="alignment-container">
+                        <Line options={histogramOptions} data={histogramData} />
+                        <IonRange
+                            className="custom-range"
+                            ref={contrastRangeRef}
+                            pin={true}
+                            dualKnobs={true}
+                            onIonKnobMoveEnd={(e: CustomEvent) => {
+                                if (e.detail.value) {
+                                    const range = e.detail.value;
+                                    setContrast(range);
+                                    dispatch('contrastChanged', [range.lower, range.upper]);
+                                }
+                            }}
+                        ></IonRange>
+                    </div>
                 </IonCardContent>
             </IonCard>
             <IonCard disabled={lockVisCards}>
