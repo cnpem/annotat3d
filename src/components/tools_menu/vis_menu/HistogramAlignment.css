@@ -1,0 +1,18 @@
+.alignment-container {
+  position: relative;
+  width: 100%;
+  padding: 10px;
+  position: relative;
+}
+
+.custom-range {
+  position: relative;
+  left: 0;
+  bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: -3%; /* Adjust this value to move it up as needed */
+  width: 100%; /* Adjust this value */
+  padding-left: 1%;
+  padding-right: 1%;
+}

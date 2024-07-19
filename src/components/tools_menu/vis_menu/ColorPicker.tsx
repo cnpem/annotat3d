@@ -30,7 +30,6 @@ const colorOptions = [
     'portland',
     'blackbody',
     'warm',
-    'cool',
     'rainbow-soft',
     'bathymetry',
     'cdom',
