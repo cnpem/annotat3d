@@ -480,10 +480,15 @@ class AnnotationModule():
         marker_id = max(self.order_markers) + 1 if self.order_markers else 1
         return marker_id
 
-    def annotationwand_update(self, label_mask, marker_lb, marker_id):
+    def annotationwand_update(self, label_mask, marker_lb, marker_id, new_click):
+
+        # Undo previous iteration        
+        if new_click == False:
+            self.undo()
+
         ## Updating the markers with the current marker id ##
         self.order_markers.add(marker_id)
-        
+
         # Get the coordinates where the mask is non-zero to draw
         rr,cc = np.nonzero(label_mask)
 

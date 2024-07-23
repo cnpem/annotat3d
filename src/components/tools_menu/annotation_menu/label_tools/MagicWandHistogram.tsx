@@ -1,30 +1,17 @@
-import React, { useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import React from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 
 ChartJS.register(annotationPlugin);
 
-interface HistogramPortalProps {
+interface HistogramProps {
     histogramData: any;
     histogramOptions: any;
-    containerId: string;
     verticalLinePosition: number;
 }
 
-const HistogramPortal: React.FC<HistogramPortalProps> = ({
-    histogramData,
-    histogramOptions,
-    containerId,
-    verticalLinePosition,
-}) => {
-    const containerRef = useRef(document.getElementById(containerId));
-
-    useEffect(() => {
-        containerRef.current = document.getElementById(containerId);
-    }, [containerId]);
-
+const MagicWandHistogram: React.FC<HistogramProps> = ({ histogramData, histogramOptions, verticalLinePosition }) => {
     // Function to find the closest label index using binary search
     const getClosestLabelIndex = (labels: number[], position: number) => {
         let left = 0;
@@ -68,9 +55,7 @@ const HistogramPortal: React.FC<HistogramPortalProps> = ({
         },
     };
 
-    return containerRef.current
-        ? createPortal(<Line options={optionsWithAnnotation} data={histogramData} />, containerRef.current)
-        : null;
+    return <Line options={optionsWithAnnotation} data={histogramData} />;
 };
 
-export default HistogramPortal;
+export default MagicWandHistogram;

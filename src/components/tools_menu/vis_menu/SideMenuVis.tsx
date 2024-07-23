@@ -23,7 +23,6 @@ import CropMenu from './CropMenu';
 import { ImageShapeInterface } from '../utils/ImageShapeInterface';
 import { HistogramInfoPayload } from '../../main_menu/file/utils/HistogramInfoInterface';
 import ColorPicker from './ColorPicker';
-import HistogramPortal from './HistogramPortal';
 
 import './HistogramAlignment.css';
 
@@ -142,8 +141,8 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         contrastRangeRef.current!.max = contrastRangeRefMaxValue;
         contrastRangeRef.current!.min = contrastRangeRefMinValue;
         setContrast({ lower: contrastRangeRefMinValue, upper: contrastRangeRefMaxValue });
+        dispatch('contrastlimitschanged', { lower: contrastRangeRefMinValue, upper: contrastRangeRefMaxValue });
     }
-
     // Function to generate background colors based on data and colormap settings
     function generateBackgroundColors({ data, colormapName, nshades }: ColormapData): string[] {
         // Generate a colormap based on the given range and colormap name
@@ -192,7 +191,7 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         console.log('nshades', nshades);
 
         if (nshades < 11) {
-            // do not execute for n shades lesser than 9, as the cmap will crash everything
+            // do not execute for n shades lesser than 11, as the cmap will crash everything
             return;
         }
 
@@ -221,6 +220,12 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
 
         dispatch('ColorMapChanged', selectedColor); // Change rendering in canvas
     }
+
+    // Monitor histogramData Changes
+    useEffect(() => {
+        console.log('histogram data changed');
+        dispatch('histogramdatachanged', histogramData);
+    }, [histogramData]); // Dependencies
 
     useEventBus('ImageHistogramLoaded', (loadedHistogram: HistogramInfoPayload) => {
         // Update histogram data and labels (it is necessary to update a unique variable)
@@ -275,6 +280,7 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     //so I am manually setting it.
     useEffect(() => {
         if (contrastRangeRef) {
+            console.log('Peixinho is sorry!');
             if (!isEqual(contrastRangeRef.current!.value, contrast)) {
                 // this is used to reposition the slider markers to the last values set on contrast
                 setTimeout(() => {
@@ -320,11 +326,6 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
                     </div>
                 </IonCardContent>
             </IonCard>
-            <HistogramPortal
-                containerId="magic-wand-histogram"
-                histogramData={histogramData}
-                histogramOptions={histogramOptions}
-            />
             <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <IonItem>

@@ -109,7 +109,7 @@ const PaintToolbar: React.FC = () => {
 
             <div ref={contentRef}>
                 <div className={activeCard === 'magicWand' ? 'visible' : 'hidden'}>
-                    <MagicWandCard />
+                    <MagicWandCard isVisible={activeCard === 'magicWand'} />
                 </div>
 
                 <div className={activeCard === 'lasso' ? 'visible' : 'hidden'}>

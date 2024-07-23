@@ -148,14 +148,9 @@ function applyMagicWand(
         label: brush_label,
         x_coord: Math.round(currPositionw.x),
         y_coord: Math.round(currPositionw.y),
-        tolerance: 500,
-        blur_radius: 1,
     };
 
-    void sfetch('POST', '/magic_wand/image', JSON.stringify(dataWand)).then((success) => {
-        console.log(success, 'Magic wand applied!');
-        dispatch('annotationChanged', null);
-    });
+    dispatch('magicwand', dataWand);
 }
 
 class Annotation {

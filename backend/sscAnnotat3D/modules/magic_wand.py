@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 
 class MagicWandSelector():
-    def __init__(self, img: np.array, blur_radius: int = 0, tolerance: int = 32, connectivity: int = 8):
+    def __init__(self, img: np.array, blur_radius: int = 0, upper_tolerance = 32, lower_tolerance = 32, connectivity: int = 8):
 
         if img.dtype != "float32" or img.dtype != "uint8":
             self.img = img.astype("float32")
@@ -12,7 +12,8 @@ class MagicWandSelector():
         self._flood_fill_flags = (
             connectivity | cv.FLOODFILL_FIXED_RANGE | cv.FLOODFILL_MASK_ONLY | 255 << 8
         )
-        self.tolerance = (tolerance,) * 3
+        self.upper_tolerance = (upper_tolerance,) * 3
+        self.lower_tolerance = (lower_tolerance,) * 3
         self.blur_radius = blur_radius
         self.flood_mask = np.zeros(img.shape,dtype='uint8')
 
@@ -25,8 +26,8 @@ class MagicWandSelector():
             flood_mask,
             (x, y),
             255,
-            self.tolerance,
-            self.tolerance,
+            self.lower_tolerance,
+            self.upper_tolerance,
             self._flood_fill_flags,
         )
 
@@ -44,7 +45,9 @@ class MagicWandSelector():
         }
         if self.blur_radius != 0:
             ##CLOSING HOLES
-            self.mask = (self.flood_mask != 0).astype("uint8")
-            self.mask = cv.GaussianBlur(self.mask, (self.blur_radius * 2 + 1, self.blur_radius * 2 + 1), 0)
-
-        return self.mask, stats
+            mask = (self.flood_mask != 0).astype("uint8")
+            mask = cv.GaussianBlur(mask, (self.blur_radius * 2 + 1, self.blur_radius * 2 + 1), 0)
+        else:
+            mask = self.flood_mask
+            
+        return mask, stats
