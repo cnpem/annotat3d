@@ -1,11 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { IonList, IonItem, IonLabel, IonInput, IonToggle, IonRange, IonGrid, IonRow, IonCol } from '@ionic/react';
+import {
+    IonList,
+    IonItem,
+    IonLabel,
+    IonInput,
+    IonToggle,
+    IonRange,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonIcon,
+} from '@ionic/react';
 import '../../vis_menu/HistogramAlignment.css';
 import MagicWandHistogram from './MagicWandHistogram';
 import { dispatch, useEventBus } from '../../../../utils/eventbus';
 import { useStorageState } from 'react-storage-hooks';
 import { sfetch } from '../../../../utils/simplerequest';
-import { clamp } from '../../../../utils/math';
+import enter from '../../../../public/icon-park-solid--enter-key.svg';
 
 interface MagicWandCardProps {
     isVisible: boolean;
@@ -73,7 +84,7 @@ const MagicWandCard: React.FC<MagicWandCardProps> = ({ isVisible }) => {
             events: [],
         },
     };
-
+    const skipEffectRef = useRef(false);
     const [smoothingEnabled, setSmoothingEnabled] = useState(false);
     const smoothingRef = useRef<HTMLDivElement>(null);
 
@@ -111,14 +122,32 @@ const MagicWandCard: React.FC<MagicWandCardProps> = ({ isVisible }) => {
             upper_min: contrast.lower,
             blur_radius: bluRadius,
             new_click: newClick,
+            max_contrast: contrastRangeRefMaxValue,
+            min_contrast: contrastRangeRefMinValue,
         };
         console.log('Wand Applied');
         void sfetch('POST', '/magic_wand/image', JSON.stringify(updatedDataWand), 'json').then((StartValue: number) => {
             console.log('Magic wand applied!', 'Center pixel:', StartValue);
             setVerticaline(StartValue);
             dispatch('annotationChanged', null);
+            //change bars for when is a new click
+            if (newClick) {
+                skipEffectRef.current = true;
+                // Tolerance is set to 8% of the width in histogram
+                const Tolerance = (8 * (contrastRangeRefMaxValue - contrastRangeRefMinValue)) / 100;
+                setContrast({ lower: StartValue - Tolerance, upper: StartValue + Tolerance });
+            }
         });
     };
+
+    useEffect(() => {
+        //only execute if the button is pressed
+        if (isVisible) {
+            dispatch('ChangeStateBrush', 'magic_wand');
+        } else {
+            dispatch('ChangeStateBrush', 'draw_brush');
+        }
+    }, [isVisible]);
 
     // Updates the datawand, and use a hooke to update the state
     useEventBus('magicwand', (data) => {
@@ -135,6 +164,12 @@ const MagicWandCard: React.FC<MagicWandCardProps> = ({ isVisible }) => {
 
     // This is execute when new configuration changes
     useEffect(() => {
+        // ignore contrast change for the first click
+        if (skipEffectRef.current) {
+            skipEffectRef.current = false;
+            return;
+        }
+
         //only execute if the button is pressed
         if (isVisible) {
             console.log('fetchDataWand(false)');
@@ -142,10 +177,12 @@ const MagicWandCard: React.FC<MagicWandCardProps> = ({ isVisible }) => {
         }
     }, [contrast, bluRadius]);
 
-    // enable smotthing
+    // enable smotthing and set to 0 if its not enabled
     useEffect(() => {
         if (smoothingEnabled && smoothingRef.current) {
             smoothingRef.current.scrollIntoView({ block: 'start' });
+        } else if (!smoothingEnabled) {
+            setBlur(0);
         }
     }, [smoothingEnabled]);
 
@@ -156,12 +193,42 @@ const MagicWandCard: React.FC<MagicWandCardProps> = ({ isVisible }) => {
                     <IonRow>
                         <IonCol>
                             <IonItem>
-                                <IonInput placeholder={`${contrast.lower}`}></IonInput>
+                                <IonInput
+                                    inputMode="numeric"
+                                    max={contrastRangeRefMaxValue}
+                                    min={contrastRangeRefMinValue}
+                                    placeholder="Lower"
+                                    onKeyUp={(e: React.KeyboardEvent) => {
+                                        if (e.key === 'Enter') {
+                                            const target = e.target as HTMLInputElement;
+                                            const inputValue = parseFloat(target.value);
+                                            if (target.value && inputValue < verticalLinePosition) {
+                                                setContrast({ upper: contrast.upper, lower: inputValue });
+                                            }
+                                        }
+                                    }}
+                                />
+                                <IonIcon src={enter} slot="end" size="small"></IonIcon>
                             </IonItem>
                         </IonCol>
                         <IonCol>
                             <IonItem>
-                                <IonInput placeholder={`${contrast.upper}`}></IonInput>
+                                <IonInput
+                                    inputMode="numeric"
+                                    max={contrastRangeRefMaxValue}
+                                    min={contrastRangeRefMinValue}
+                                    placeholder="Upper"
+                                    onKeyUp={(e: React.KeyboardEvent) => {
+                                        if (e.key === 'Enter') {
+                                            const target = e.target as HTMLInputElement;
+                                            const inputValue = parseFloat(target.value);
+                                            if (target.value && inputValue > verticalLinePosition) {
+                                                setContrast({ lower: contrast.lower, upper: inputValue });
+                                            }
+                                        }
+                                    }}
+                                />
+                                <IonIcon src={enter} slot="end" size="small"></IonIcon>
                             </IonItem>
                         </IonCol>
                     </IonRow>

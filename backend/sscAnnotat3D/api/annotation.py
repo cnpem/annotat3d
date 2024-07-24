@@ -573,22 +573,24 @@ def apply_magicwand(input_id: str):
         blur_radius = request.json["blur_radius"]
         label = request.json["label"]
         new_click = request.json["new_click"]
+        max_contrast = request.json["max_contrast"]
+        min_contrast = request.json["min_contrast"]
     except Exception as e:
         return handle_exception(str(e))
-    
+
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
     annot_module = module_repo.get_module('annotation')
     img_slice = data_repo.get_image(input_id)[slice_range]
-
+ 
     if new_click:
-        upper_tolerance = python_typer(img_slice[y_coord, x_coord] * 0.1)
-        lower_tolerance = python_typer(img_slice[y_coord, x_coord] * 0.1)
+        upper_tolerance = python_typer((8 * (max_contrast - min_contrast)) / 100)
+        lower_tolerance = upper_tolerance
     else:
         upper_tolerance = python_typer(upper_max - img_slice[y_coord, x_coord])
         lower_tolerance = python_typer(img_slice[y_coord, x_coord] - upper_min)
 
-    mw = MagicWandSelector(img_slice, blur_radius = blur_radius, upper_tolerance= upper_tolerance, lower_tolerance= lower_tolerance)
+    mw = MagicWandSelector(img_slice, blur_radius = blur_radius, upper_tolerance = upper_tolerance, lower_tolerance = lower_tolerance)
 
     mask_wand, stats = mw.apply_magic_wand(x_coord, y_coord)
 
@@ -598,4 +600,3 @@ def apply_magicwand(input_id: str):
     annot_module.annotationwand_update(mask_wand, label, mk_id, new_click)
 
     return jsonify(python_typer(img_slice[y_coord, x_coord]))
-
