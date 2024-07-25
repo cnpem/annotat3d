@@ -46,6 +46,7 @@ const File: React.FC = () => {
     useEventBus('ImageLoaded', () => {
         checkActiveComponents();
     });
+    //Is there really a need to check annotation? Since it will be active when image is loaded
     useEventBus('annotationChanged', () => {
         checkActiveComponents();
     });

@@ -580,7 +580,12 @@ def apply_magicwand(input_id: str):
 
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
+    #update backend slice number
     annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
     img_slice = data_repo.get_image(input_id)[slice_range]
  
     if new_click:

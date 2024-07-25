@@ -308,7 +308,7 @@ class Canvas {
             this.app.renderer.plugins.interaction.cursorStyles = {
                 default: 'default',
                 draw_brush: 'default',
-                erase_brush: `url(${bunny}), auto`,
+                erase_brush: 'default',
                 magic_wand: `url(${fillCursor}) 0 0, auto`,
             };
         }
