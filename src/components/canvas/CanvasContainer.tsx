@@ -24,6 +24,7 @@ import { CropAxisInterface, CropShapeInterface } from '../tools_menu/utils/CropI
 import { ImageShapeInterface } from '../tools_menu/utils/ImageShapeInterface';
 import { ImageInfoInterface } from '../main_menu/file/utils/ImageInfoInterface';
 import { ColorOptions } from '../../utils/colormaplist';
+import fillCursor from '../../public/fill_cursor.png';
 
 type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush' | 'magic_wand';
 
@@ -302,6 +303,15 @@ class Canvas {
             //backgroundAlpha: 0.99,
             backgroundColor: 0x303030,
         });
+        //cursor styles here
+        if (this.app.renderer.plugins.interaction) {
+            this.app.renderer.plugins.interaction.cursorStyles = {
+                default: 'default',
+                draw_brush: 'default',
+                erase_brush: `url(${bunny}), auto`,
+                magic_wand: `url(${fillCursor}) 0 0, auto`,
+            };
+        }
 
         this.viewport = new pixi_viewport.Viewport({
             interaction: this.app.renderer.plugins.interaction,
@@ -564,6 +574,8 @@ class Canvas {
     setBrushMode(mode: BrushModeType) {
         this.brush_mode = mode;
         this.brush.setMode(mode);
+        // Set the cursor mode
+        this.viewport.cursor = mode;
     }
 
     setSuperpixelVisibility(visible = true) {
@@ -949,10 +961,6 @@ const brushList = [
     {
         id: 'erase_brush',
         logo: browsers,
-    },
-    {
-        id: 'magic_wand',
-        logo: colorFill,
     },
 ];
 
