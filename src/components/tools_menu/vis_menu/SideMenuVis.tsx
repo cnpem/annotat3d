@@ -25,6 +25,8 @@ import { ImageShapeInterface } from '../utils/ImageShapeInterface';
 import { HistogramInfoPayload } from '../../main_menu/file/utils/HistogramInfoInterface';
 import ColorPicker from './ColorPicker';
 
+import './HistogramAlignment.css';
+
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Filler, Legend);
 
 function rgbToHex(r: number, g: number, b: number) {
@@ -39,31 +41,13 @@ interface ColormapData {
     nshades: number;
 }
 
-// Function to generate background colors based on data and colormap settings
-function generateBackgroundColors({ data, colormapName, nshades }: ColormapData): string[] {
-    // Generate a colormap based on the given range and colormap name
-    const cmap = colormap({
-        colormap: colormapName,
-        nshades,
-        format: 'rgbaString', // Ensure the format is 'float' for RGB values between 0 and 1
-    });
-
-    // Create a background color array based on the colormap
-    const backgroundColors = data.map((_, index) => {
-        // Ensure the index is properly scaled to the range of available colors
-        const color = cmap[Math.floor((index / data.length) * (nshades - 1))];
-        return color;
-    });
-
-    return backgroundColors;
-}
 interface SideMenuVisProps {
     imageShape: ImageShapeInterface;
 }
 
 const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     const [lockVisCards, setLockVisCards] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
-
+    // This is the contrast that the user can change
     const [contrast, setContrast] = useStorageState(sessionStorage, 'contrast', {
         lower: 10,
         upper: 90,
@@ -87,6 +71,41 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
 
     const histogramOptions = {
         responsive: true,
+        maintainAspectRatio: true, // Set this to true
+        aspectRatio: 4, // Adjust this value to change the height. Higher values make it shorter.
+        layout: {
+            padding: {
+                right: 0, // Adjust this value as needed
+                bottom: 0,
+            },
+        },
+        scales: {
+            y: {
+                display: true,
+                border: {
+                    display: false,
+                },
+                grid: {
+                    display: true,
+                },
+                ticks: {
+                    display: false,
+                },
+            },
+            x: {
+                display: true,
+                border: {
+                    display: false,
+                },
+                grid: {
+                    display: true,
+                },
+                ticks: {
+                    display: false,
+                    maxTicksLimit: 5, // Adjust this number to control the number of gridlines
+                },
+            },
+        },
         plugins: {
             legend: {
                 display: false,
@@ -125,6 +144,84 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         setContrast({ lower: contrastRangeRefMinValue, upper: contrastRangeRefMaxValue });
     }
 
+    // Function to generate background colors based on data and colormap settings
+    function generateBackgroundColors({ data, colormapName, nshades }: ColormapData): string[] {
+        // Generate a colormap based on the given range and colormap name
+        const cmap = colormap({
+            colormap: colormapName,
+            nshades,
+            format: 'rgbaString', // Ensure the format is 'float' for RGB values between 0 and 1
+        });
+
+        const deltaIndexMax = Math.floor(
+            (data.length / (contrastRangeRefMaxValue - contrastRangeRefMinValue)) *
+                (contrastRangeRefMaxValue - contrast.upper)
+        );
+        const deltaIndexMin = Math.floor(
+            (data.length / (contrastRangeRefMaxValue - contrastRangeRefMinValue)) *
+                (contrast.lower - contrastRangeRefMinValue)
+        );
+        console.log('deltaIndexMin,deltaIndexMax', deltaIndexMin, deltaIndexMax);
+
+        // Create a background color array based on the colormap
+        const backgroundColors = data.map((_, index) => {
+            if (index <= deltaIndexMin) {
+                return cmap[0]; // All values below or equal to lower limit get the first color
+            }
+            if (index >= data.length - deltaIndexMax) {
+                return cmap[nshades - 1]; // All values above or equal to upper limit get the last color
+            }
+
+            // Ensure the index is properly scaled to the range of available colors and contrast limits
+            const color = cmap[index - deltaIndexMin - 1];
+            return color;
+        });
+
+        return backgroundColors;
+    }
+
+    function updateBackgroundColors() {
+        console.log('Selected color has changed to: ', selectedColor);
+        setSelectedColor(selectedColor);
+        selectedColorRef.current = selectedColor;
+
+        const nshades = Math.round(
+            (histogramData.datasets[0].data.length / (contrastRangeRefMaxValue - contrastRangeRefMinValue)) *
+                (contrast.upper - contrast.lower)
+        );
+        console.log('nshades', nshades);
+
+        if (nshades < 9) {
+            // do not execute for n shades lesser than 9, as the cmap will crash everything
+            return;
+        }
+
+        // Create a constant instance of ColormapData
+        const newBackgroundColors: ColormapData = {
+            data: histogramData.datasets[0].data,
+            colormapName: selectedColor,
+            nshades,
+        };
+        const generatedColors = generateBackgroundColors(newBackgroundColors);
+        // Update the backgroundColor for the single dataset
+
+        const updatedDataset = [
+            {
+                ...histogramData.datasets[0],
+                borderColor: generatedColors, // Apply the new borderColor array
+                backgroundColor: generatedColors, // Apply the new background colors array
+            },
+        ];
+
+        // Update the state with the new dataset
+        setHistogramData((prev) => ({
+            ...prev,
+            datasets: updatedDataset,
+        }));
+
+        dispatch('ColorMapChanged', selectedColor); // Change rendering in canvas
+    }
+
     useEventBus('ImageHistogramLoaded', (loadedHistogram: HistogramInfoPayload) => {
         // Update histogram data and labels (it is necessary to update a unique variable)
 
@@ -161,32 +258,8 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     }, [contrastRangeRefMaxValue, contrastRangeRefMinValue]); // Dependencies
 
     useEffect(() => {
-        console.log('Selected color has changed to: ', selectedColor);
-        setSelectedColor(selectedColor);
-        selectedColorRef.current = selectedColor;
-        // Create a constant instance of ColormapData
-        const newBackgroundColors: ColormapData = {
-            data: histogramData.datasets[0].data,
-            colormapName: selectedColor,
-            nshades: histogramData.datasets[0].data.length,
-        };
-        // Update the backgroundColor for the single dataset
-        const updatedDataset = [
-            {
-                ...histogramData.datasets[0],
-                borderColor: generateBackgroundColors(newBackgroundColors), // Apply the new borderColor array
-                backgroundColor: generateBackgroundColors(newBackgroundColors), // Apply the new background colors array
-            },
-        ];
-
-        // Update the state with the new dataset
-        setHistogramData((prev) => ({
-            ...prev,
-            datasets: updatedDataset,
-        }));
-
-        dispatch('ColorMapChanged', selectedColor); // Change rendering in canvas
-    }, [selectedColor]);
+        updateBackgroundColors();
+    }, [selectedColor, contrast]);
 
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
 
@@ -229,21 +302,22 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
             <IonCard disabled={lockVisCards}>
                 <IonCardContent>
                     <ColorPicker selectedColor={selectedColor} setSelectedColor={setSelectedColor} />
-                    <IonRange
-                        ref={contrastRangeRef}
-                        pin={true}
-                        dualKnobs={true}
-                        onIonKnobMoveEnd={(e: CustomEvent) => {
-                            if (e.detail.value) {
-                                const range = e.detail.value;
-                                setContrast(range);
-                                dispatch('contrastChanged', [range.lower, range.upper]);
-                            }
-                        }}
-                    >
-                        <IonIcon slot="start" icon={sunny}></IonIcon>
-                    </IonRange>
-                    <Line options={histogramOptions} data={histogramData} />
+                    <div className="alignment-container">
+                        <Line options={histogramOptions} data={histogramData} />
+                        <IonRange
+                            className="custom-range"
+                            ref={contrastRangeRef}
+                            pin={true}
+                            dualKnobs={true}
+                            onIonKnobMoveEnd={(e: CustomEvent) => {
+                                if (e.detail.value) {
+                                    const range = e.detail.value;
+                                    setContrast(range);
+                                    dispatch('contrastChanged', [range.lower, range.upper]);
+                                }
+                            }}
+                        ></IonRange>
+                    </div>
                 </IonCardContent>
             </IonCard>
             <IonCard disabled={lockVisCards}>
