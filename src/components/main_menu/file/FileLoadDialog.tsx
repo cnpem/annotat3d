@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     IonButton,
     IonCol,
@@ -21,7 +21,7 @@ import {
 import '../../../styles/FileDialog.css';
 import { barChart, construct, create, extensionPuzzle, image, images, information } from 'ionicons/icons';
 import { sfetch } from '../../../utils/simplerequest';
-import { dispatch } from '../../../utils/eventbus';
+import { dispatch, useEventBus } from '../../../utils/eventbus';
 import ErrorWindowComp from './utils/ErrorWindowComp';
 import { ImageInfoInterface, ImageInfoPayload } from './utils/ImageInfoInterface';
 import ErrorInterface from './utils/ErrorInterface';
@@ -43,12 +43,13 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
     });
 
     const [pathFiles, setPathFiles] = useStorageState<MultiplesPath>(sessionStorage, 'loadedPathFiles', {
+        //check if undefined assign '', else their value
         workspacePath: '',
-        imagePath: '',
-        superpixelPath: '',
-        labelPath: '',
-        annotPath: '',
-        classificationPath: '',
+        imagePath: process.env.REACT_APP_IMAGE_PATH || '',
+        superpixelPath: process.env.REACT_APP_SUPERPIXEL_PATH || '',
+        labelPath: process.env.REACT_APP_LABEL_PATH || '',
+        annotPath: process.env.REACT_APP_ANNOT_PATH || '',
+        classificationPath: process.env.REACT_APP_CLASS_PATH || '',
     });
 
     const [openLoadingMenu, setOpenLoadingMenu] = useState<boolean>(false);
@@ -63,6 +64,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [headerErrorMsg, setHeaderErrorMsg] = useState<string>('');
+    const loadedOnce = useRef<boolean>(false);
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -163,7 +165,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         const returnedObj: QueueToast = { message: msgReturned, isError };
         return returnedObj;
     };
-
     /**
      * Function that Loads the classifier model .model file and send to the backend
      */
@@ -223,6 +224,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
          */
 
         setOpenLoadingMenu(true);
+        //ensure it loads only once when annotat3d opens
+        loadedOnce.current = true;
 
         const queueToast: QueueToast[] = [
             {
@@ -304,12 +307,10 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
             }
         }
 
-        dispatch('setDefaultValuesLoad', pathFiles);
         setToastMsg(finalMsg);
         setOpenLoadingMenu(false);
         setShowToast(flagShowToast);
     };
-
     /**
      * Clean up popover dialog
      */
@@ -335,6 +336,13 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         setShowToast(false);
         setHeaderErrorMsg('');
     };
+    // Load files when logged in
+    useEventBus('LoadFiles', () => {
+        if (!loadedOnce.current) {
+            void handleLoadImageAction();
+        }
+    });
+
     return (
         <>
             <IonPopover
