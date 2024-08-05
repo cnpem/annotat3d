@@ -42,14 +42,14 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         event: undefined,
     });
 
-    const [pathFiles, setPathFiles] = useStorageState<MultiplesPath>(sessionStorage, 'loadedPathFiles', {
+    const [pathFiles, setPathFiles] = useState<MultiplesPath>({
         //check if undefined assign '', else their value
         workspacePath: '',
-        imagePath: process.env.REACT_APP_IMAGE_PATH || '',
-        superpixelPath: process.env.REACT_APP_SUPERPIXEL_PATH || '',
-        labelPath: process.env.REACT_APP_LABEL_PATH || '',
-        annotPath: process.env.REACT_APP_ANNOT_PATH || '',
-        classificationPath: process.env.REACT_APP_CLASS_PATH || '',
+        imagePath: '',
+        superpixelPath: '',
+        labelPath: '',
+        annotPath: '',
+        classificationPath: '',
     });
 
     const [openLoadingMenu, setOpenLoadingMenu] = useState<boolean>(false);
@@ -218,14 +218,13 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         return returnedObj;
     };
 
-    const handleLoadImageAction = async () => {
+    const handleLoadImageAction = async (pathFilesarg: MultiplesPath) => {
         /**
          * Dispatch for images, label and superpixel
          */
 
         setOpenLoadingMenu(true);
         //ensure it loads only once when annotat3d opens
-        loadedOnce.current = true;
 
         const queueToast: QueueToast[] = [
             {
@@ -250,43 +249,47 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
             },
         ];
 
-        if (pathFiles.imagePath !== '') {
+        if (pathFilesarg.imagePath !== '') {
             const imgPath =
-                pathFiles.workspacePath !== '' ? pathFiles.workspacePath + pathFiles.imagePath : pathFiles.imagePath;
+                pathFilesarg.workspacePath !== ''
+                    ? pathFilesarg.workspacePath + pathFilesarg.imagePath
+                    : pathFilesarg.imagePath;
             const promise = dispatchOpenImage(imgPath, 'image');
             await promise.then((item: QueueToast) => {
                 queueToast[0] = item;
             });
         }
 
-        if (pathFiles.superpixelPath !== '') {
+        if (pathFilesarg.superpixelPath !== '') {
             const superpixelPath =
-                pathFiles.workspacePath !== ''
-                    ? pathFiles.workspacePath + pathFiles.superpixelPath
-                    : pathFiles.superpixelPath;
+                pathFilesarg.workspacePath !== ''
+                    ? pathFilesarg.workspacePath + pathFilesarg.superpixelPath
+                    : pathFilesarg.superpixelPath;
             const promise = dispatchOpenImage(superpixelPath, 'superpixel');
             await promise.then((item: QueueToast) => {
                 queueToast[1] = item;
             });
         }
 
-        if (pathFiles.labelPath !== '') {
+        if (pathFilesarg.labelPath !== '') {
             const labelPath =
-                pathFiles.workspacePath !== '' ? pathFiles.workspacePath + pathFiles.labelPath : pathFiles.labelPath;
+                pathFilesarg.workspacePath !== ''
+                    ? pathFilesarg.workspacePath + pathFilesarg.labelPath
+                    : pathFilesarg.labelPath;
             const promise = dispatchOpenImage(labelPath, 'label');
             await promise.then((item: QueueToast) => {
                 queueToast[2] = item;
             });
         }
 
-        if (pathFiles.annotPath !== '') {
+        if (pathFilesarg.annotPath !== '') {
             const promise = dispatchOpenAnnot();
             await promise.then((item: QueueToast) => {
                 queueToast[3] = item;
             });
         }
 
-        if (pathFiles.classificationPath !== '') {
+        if (pathFilesarg.classificationPath !== '') {
             const promise = dispatchLoadClassifier();
             await promise.then((item: QueueToast) => {
                 queueToast[4] = item;
@@ -339,7 +342,12 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
     // Load files when logged in
     useEventBus('LoadFiles', () => {
         if (!loadedOnce.current) {
-            void handleLoadImageAction();
+            void sfetch('POST', '/get_env/load_env', '', 'json').then((env_dict) => {
+                console.log('Setting path files', env_dict);
+                setPathFiles(env_dict);
+                void handleLoadImageAction(env_dict);
+                loadedOnce.current = true;
+            });
         }
     });
 
@@ -697,7 +705,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
                         </IonAccordionGroup>
                     </IonContent>
                 </small>
-                <IonButton color={'tertiary'} slot={'end'} onClick={() => void handleLoadImageAction()}>
+                <IonButton color={'tertiary'} slot={'end'} onClick={() => void handleLoadImageAction(pathFiles)}>
                     Load!
                 </IonButton>
             </IonPopover>
