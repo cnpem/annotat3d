@@ -193,6 +193,14 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
         return returnedObj;
     };
 
+    // Load files when logged in
+    useEventBus('LoadFiles', () => {
+        void sfetch('POST', '/get_env/save_env', '', 'json').then((env_dict) => {
+            console.log('Setting path files', env_dict);
+            setSavePathFiles(env_dict);
+        });
+    });
+
     const handleLoadImageAction = async () => {
         /**
          * Dispatch for images, label and superpixel
