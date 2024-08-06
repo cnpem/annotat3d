@@ -24,6 +24,7 @@ import './theme/variables.css';
 import ToolsMenu from './components/tools_menu/ToolsMenu';
 import { useEffect, useState } from 'react';
 import { sfetch } from './utils/simplerequest';
+import { dispatch } from './utils/eventbus';
 
 setupIonicReact();
 
@@ -57,6 +58,7 @@ const App: React.FC = () => {
         sfetch('POST', '/test')
             .then(() => {
                 setLoadedBackend(true);
+                dispatch('LoadFiles', null);
             })
             .catch(() => {
                 setLoadedBackend(false);
@@ -66,7 +68,7 @@ const App: React.FC = () => {
 
     useEffect(() => {
         loopBackendTest();
-    });
+    }, []);
 
     return (
         <IonApp>

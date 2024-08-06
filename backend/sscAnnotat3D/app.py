@@ -103,6 +103,26 @@ def reconnect_session():
 def test():
     return "test", 200
 
+@app.route("/get_env/<type_of_env>", methods=["POST", "GET"])
+@cross_origin()
+def get_env(type_of_env: str):
+    if type_of_env == 'load_env':
+        env_dict = {"workspacePath": os.getenv("REACT_APP_WORKSPACE_PATH") or "",
+                "imagePath": os.getenv("REACT_APP_IMAGE_PATH") or "",
+                "superpixelPath": os.getenv("REACT_APP_SUPERPIXEL_PATH") or "",
+                "labelPath": os.getenv("REACT_APP_LABEL_PATH") or "",
+                "annotPath": os.getenv("REACT_APP_ANNOT_PATH") or "",
+                "classificationPath": os.getenv("REACT_APP_CLASS_PATH") or ""}
+        
+    if type_of_env == 'save_env':
+        env_dict = {"workspacePath": os.getenv("REACT_APP_OUTPUT_PATH") or "",
+                "imagePath": "",
+                "superpixelPath": "",
+                "labelPath": "",
+                "annotPath": "",
+                "classificationPath": ""}
+
+    return jsonify(env_dict)
 
 @app.route("/versions", methods=["POST", "GET"])
 @cross_origin()

@@ -42,6 +42,7 @@ build-to-production:
     environment:
         name: production
     only:
+        - staging
         - main
     tags:
         - x86_64

@@ -36,8 +36,8 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
         event: undefined,
     });
 
-    const [pathFiles, setPathFiles] = useStorageState<MultiplesPath>(sessionStorage, 'savedPathFiles', {
-        workspacePath: '',
+    const [pathSaveFiles, setSavePathFiles] = useState<MultiplesPath>({
+        workspacePath: process.env.REACT_APP_WORKSPACE_PATH || '',
         imagePath: '',
         superpixelPath: '',
         labelPath: '',
@@ -58,25 +58,6 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
     );
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [headerErrorMsg, setHeaderErrorMsg] = useState<string>('');
-
-    useEventBus('setDefaultValuesLoad', (loadedPaths: MultiplesPath) => {
-        const setDefaultStringPath = (pathStr: string) => {
-            if (pathStr !== '') {
-                const splintedPath = pathStr.split('.', 2);
-                return `${splintedPath[0]}_saved.${splintedPath[1]}`;
-            }
-            return pathStr;
-        };
-
-        setPathFiles({
-            workspacePath: loadedPaths.workspacePath,
-            imagePath: setDefaultStringPath(loadedPaths.imagePath),
-            superpixelPath: setDefaultStringPath(loadedPaths.superpixelPath),
-            labelPath: setDefaultStringPath(loadedPaths.labelPath),
-            annotPath: setDefaultStringPath(loadedPaths.annotPath),
-            classificationPath: setDefaultStringPath(loadedPaths.classificationPath),
-        });
-    });
 
     useEventBus('useSuperpixelModule', (flag: boolean) => {
         setUseSuperpixelModule(flag);
@@ -139,13 +120,15 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
     const dispatchSaveAnnot = async () => {
         const annotPath = {
             annot_path:
-                pathFiles.workspacePath !== '' ? pathFiles.workspacePath + pathFiles.annotPath : pathFiles.annotPath,
+                pathSaveFiles.workspacePath !== ''
+                    ? pathSaveFiles.workspacePath + pathSaveFiles.annotPath
+                    : pathSaveFiles.annotPath,
         };
         let msgReturned = '';
         let isError = false;
         await sfetch('POST', '/save_annot', JSON.stringify(annotPath), '')
             .then((success: string) => {
-                const imgName = pathFiles.annotPath.split('/');
+                const imgName = pathSaveFiles.annotPath.split('/');
                 msgReturned = `${imgName[imgName.length - 1]} saved as annotation`;
                 console.log(success);
             })
@@ -168,9 +151,9 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
     const dispatchSaveClassifier = async () => {
         const backendPayload: { classificationPath: string } = {
             classificationPath:
-                pathFiles.workspacePath !== ''
-                    ? pathFiles.workspacePath + pathFiles.classificationPath
-                    : pathFiles.classificationPath,
+                pathSaveFiles.workspacePath !== ''
+                    ? pathSaveFiles.workspacePath + pathSaveFiles.classificationPath
+                    : pathSaveFiles.classificationPath,
         };
 
         let msgReturned = '';
@@ -179,7 +162,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
         if (useSuperpixelModule) {
             await sfetch('POST', '/save_classifier', JSON.stringify(backendPayload), 'json')
                 .then((success: string) => {
-                    msgReturned = `${pathFiles.classificationPath} saved as .model`;
+                    msgReturned = `${pathSaveFiles.classificationPath} saved as .model`;
                     console.log(success);
                 })
                 .catch((error: ErrorInterface) => {
@@ -193,7 +176,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
         } else {
             await sfetch('POST', '/save_classifier_pixel', JSON.stringify(backendPayload), 'json')
                 .then((success: string) => {
-                    msgReturned = `${pathFiles.classificationPath} saved as .model`;
+                    msgReturned = `${pathSaveFiles.classificationPath} saved as .model`;
                     console.log(success);
                 })
                 .catch((error: ErrorInterface) => {
@@ -209,6 +192,14 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
         const returnedObj: QueueToast = { message: msgReturned, isError };
         return returnedObj;
     };
+
+    // Load files when logged in
+    useEventBus('LoadFiles', () => {
+        void sfetch('POST', '/get_env/save_env', '', 'json').then((env_dict) => {
+            console.log('Setting path files', env_dict);
+            setSavePathFiles(env_dict);
+        });
+    });
 
     const handleLoadImageAction = async () => {
         /**
@@ -240,43 +231,47 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
             },
         ];
 
-        if (pathFiles.imagePath !== '') {
+        if (pathSaveFiles.imagePath !== '') {
             const imgPath =
-                pathFiles.workspacePath !== '' ? pathFiles.workspacePath + pathFiles.imagePath : pathFiles.imagePath;
+                pathSaveFiles.workspacePath !== ''
+                    ? pathSaveFiles.workspacePath + pathSaveFiles.imagePath
+                    : pathSaveFiles.imagePath;
             const promise = handleSaveImageAction(imgPath, 'image');
             await promise.then((item: QueueToast) => {
                 queueToast[0] = item;
             });
         }
 
-        if (pathFiles.superpixelPath !== '') {
+        if (pathSaveFiles.superpixelPath !== '') {
             const superpixelPath =
-                pathFiles.workspacePath !== ''
-                    ? pathFiles.workspacePath + pathFiles.superpixelPath
-                    : pathFiles.superpixelPath;
+                pathSaveFiles.workspacePath !== ''
+                    ? pathSaveFiles.workspacePath + pathSaveFiles.superpixelPath
+                    : pathSaveFiles.superpixelPath;
             const promise = handleSaveImageAction(superpixelPath, 'superpixel');
             await promise.then((item: QueueToast) => {
                 queueToast[1] = item;
             });
         }
 
-        if (pathFiles.labelPath !== '') {
+        if (pathSaveFiles.labelPath !== '') {
             const labelPath =
-                pathFiles.workspacePath !== '' ? pathFiles.workspacePath + pathFiles.labelPath : pathFiles.labelPath;
+                pathSaveFiles.workspacePath !== ''
+                    ? pathSaveFiles.workspacePath + pathSaveFiles.labelPath
+                    : pathSaveFiles.labelPath;
             const promise = handleSaveImageAction(labelPath, 'label');
             await promise.then((item: QueueToast) => {
                 queueToast[2] = item;
             });
         }
 
-        if (pathFiles.annotPath !== '') {
+        if (pathSaveFiles.annotPath !== '') {
             const promise = dispatchSaveAnnot();
             await promise.then((item: QueueToast) => {
                 queueToast[3] = item;
             });
         }
 
-        if (pathFiles.classificationPath !== '') {
+        if (pathSaveFiles.classificationPath !== '') {
             const promise = dispatchSaveClassifier();
             await promise.then((item: QueueToast) => {
                 queueToast[4] = item;
@@ -346,10 +341,10 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         <IonInput
                                             clearInput
                                             placeholder={'/path/to/workspace'}
-                                            value={pathFiles.workspacePath}
+                                            value={pathSaveFiles.workspacePath}
                                             onIonChange={(e: CustomEvent) =>
-                                                setPathFiles({
-                                                    ...pathFiles,
+                                                setSavePathFiles({
+                                                    ...pathSaveFiles,
                                                     workspacePath: e.detail.value!,
                                                 })
                                             }
@@ -373,10 +368,10 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         <IonInput
                                             clearInput
                                             placeholder={'/path/to/file.tif, .tiff, .raw or .b'}
-                                            value={pathFiles.imagePath}
+                                            value={pathSaveFiles.imagePath}
                                             onIonChange={(e: CustomEvent) =>
-                                                setPathFiles({
-                                                    ...pathFiles,
+                                                setSavePathFiles({
+                                                    ...pathSaveFiles,
                                                     imagePath: e.detail.value!,
                                                 })
                                             }
@@ -419,10 +414,10 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         <IonInput
                                             clearInput
                                             placeholder={'/path/to/Superpixel.tif, .tiff, .raw or .b'}
-                                            value={pathFiles.superpixelPath}
+                                            value={pathSaveFiles.superpixelPath}
                                             onIonChange={(e: CustomEvent) =>
-                                                setPathFiles({
-                                                    ...pathFiles,
+                                                setSavePathFiles({
+                                                    ...pathSaveFiles,
                                                     superpixelPath: e.detail.value!,
                                                 })
                                             }
@@ -445,10 +440,10 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         <IonInput
                                             clearInput
                                             placeholder={'/path/to/Label.tif, .tiff, .raw or .b'}
-                                            value={pathFiles.labelPath}
+                                            value={pathSaveFiles.labelPath}
                                             onIonChange={(e: CustomEvent) =>
-                                                setPathFiles({
-                                                    ...pathFiles,
+                                                setSavePathFiles({
+                                                    ...pathSaveFiles,
                                                     labelPath: e.detail.value!,
                                                 })
                                             }
@@ -471,10 +466,10 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         <IonInput
                                             clearInput
                                             placeholder={'/path/to/Annotation.pkl'}
-                                            value={pathFiles.annotPath}
+                                            value={pathSaveFiles.annotPath}
                                             onIonChange={(e: CustomEvent) =>
-                                                setPathFiles({
-                                                    ...pathFiles,
+                                                setSavePathFiles({
+                                                    ...pathSaveFiles,
                                                     annotPath: e.detail.value!,
                                                 })
                                             }
@@ -497,10 +492,10 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         <IonInput
                                             clearInput
                                             placeholder={'/path/to/classifier.model'}
-                                            value={pathFiles.classificationPath}
+                                            value={pathSaveFiles.classificationPath}
                                             onIonChange={(e: CustomEvent) =>
-                                                setPathFiles({
-                                                    ...pathFiles,
+                                                setSavePathFiles({
+                                                    ...pathSaveFiles,
                                                     classificationPath: e.detail.value!,
                                                 })
                                             }
