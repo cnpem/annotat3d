@@ -106,13 +106,18 @@ def test():
 @app.route("/get_env/<type_of_env>", methods=["POST", "GET"])
 @cross_origin()
 def get_env(type_of_env: str):
+    
+    loaded = data_repo.loadedEnv()
+
     if type_of_env == 'load_env':
         env_dict = {"workspacePath": os.getenv("REACT_APP_WORKSPACE_PATH") or "",
                 "imagePath": os.getenv("REACT_APP_IMAGE_PATH") or "",
                 "superpixelPath": os.getenv("REACT_APP_SUPERPIXEL_PATH") or "",
                 "labelPath": os.getenv("REACT_APP_LABEL_PATH") or "",
                 "annotPath": os.getenv("REACT_APP_ANNOT_PATH") or "",
-                "classificationPath": os.getenv("REACT_APP_CLASS_PATH") or ""}
+                "classificationPath": os.getenv("REACT_APP_CLASS_PATH") or "",
+                "loadedOnce": loaded 
+                }
         
     if type_of_env == 'save_env':
         env_dict = {"workspacePath": os.getenv("REACT_APP_OUTPUT_PATH") or "",
