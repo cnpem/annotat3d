@@ -64,7 +64,6 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [headerErrorMsg, setHeaderErrorMsg] = useState<string>('');
-    const loadedOnce = useRef<boolean>(false);
 
     const handleErrorMsg = (msg: string) => {
         setErrorMsg(msg);
@@ -137,11 +136,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
     /**
      * Function that reads the annotation_menu .pkl file and send to the backend
      */
-    const dispatchOpenAnnot = async () => {
-        const annotPath = {
-            annot_path:
-                pathFiles.workspacePath !== '' ? pathFiles.workspacePath + pathFiles.annotPath : pathFiles.annotPath,
-        };
+    const dispatchOpenAnnot = async (annotPath: { annot_path: string }) => {
         let msgReturned = '';
         let isError = false;
         await sfetch('POST', '/open_annot', JSON.stringify(annotPath), 'json')
@@ -168,14 +163,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
     /**
      * Function that Loads the classifier model .model file and send to the backend
      */
-    const dispatchLoadClassifier = async () => {
-        const backendPayload: { classificationPath: string } = {
-            classificationPath:
-                pathFiles.workspacePath !== ''
-                    ? pathFiles.workspacePath + pathFiles.classificationPath
-                    : pathFiles.classificationPath,
-        };
-
+    const dispatchLoadClassifier = async (backendPayload: { classificationPath: string }) => {
         let msgReturned = '';
         let isError = false;
         console.table(backendPayload);
@@ -283,14 +271,26 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         }
 
         if (pathFilesarg.annotPath !== '') {
-            const promise = dispatchOpenAnnot();
+            const annotPath = {
+                annot_path:
+                    pathFilesarg.workspacePath !== ''
+                        ? pathFilesarg.workspacePath + pathFilesarg.annotPath
+                        : pathFilesarg.annotPath,
+            };
+            const promise = dispatchOpenAnnot(annotPath);
             await promise.then((item: QueueToast) => {
                 queueToast[3] = item;
             });
         }
 
         if (pathFilesarg.classificationPath !== '') {
-            const promise = dispatchLoadClassifier();
+            const backendPayload: { classificationPath: string } = {
+                classificationPath:
+                    pathFilesarg.workspacePath !== ''
+                        ? pathFilesarg.workspacePath + pathFilesarg.classificationPath
+                        : pathFilesarg.classificationPath,
+            };
+            const promise = dispatchLoadClassifier(backendPayload);
             await promise.then((item: QueueToast) => {
                 queueToast[4] = item;
             });
@@ -341,14 +341,18 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
     };
     // Load files when logged in
     useEventBus('LoadFiles', () => {
-        if (!loadedOnce.current) {
-            void sfetch('POST', '/get_env/load_env', '', 'json').then((env_dict) => {
-                console.log('Setting path files', env_dict);
-                setPathFiles(env_dict);
-                void handleLoadImageAction(env_dict);
-                loadedOnce.current = true;
-            });
-        }
+        // Check if the component has been loaded before by checking local storage
+        void sfetch('POST', '/get_env/load_env', '', 'json').then((infoEnvDict) => {
+            // Create a copy of the object without the `loadedOnce` key
+            const { loadedOnce, ...EnvDict } = infoEnvDict;
+            // The IF loaded once logic is handled by backend, frontend refreshes states on page refrash or save states for new instances, annoying >:(
+            console.log('Setting path files', EnvDict);
+            setPathFiles(EnvDict);
+            if (!loadedOnce) {
+                void handleLoadImageAction(EnvDict);
+            }
+            // Store the state in local storage to persist across refreshes
+        });
     });
 
     return (
