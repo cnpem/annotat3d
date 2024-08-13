@@ -173,7 +173,23 @@ stage += hpccm.building_blocks.mlnx_ofed(version=args.mlnx, _distro=args.distro)
 stage += hpccm.building_blocks.openmpi(version=args.ompi, toolchain=compiler.toolchain)
 
 # HDF5
-stage += hpccm.building_blocks.hdf5(version=args.hdf5, toolchain=compiler.toolchain)
+#stage += hpccm.building_blocks.hdf5(version=args.hdf5, toolchain=compiler.toolchain)
+# This building block is using wget, and it downloads the webpage not the zip file (although it saves with the right extension is an html file!!!), so I'm manually downloading based on this link: https://portal.hdfgroup.org/downloads/hdf5/hdf5_1_14_4.html
+
+# HDF5 (Manual Download and Install)
+hdf5_url = f'https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{args.hdf5[:4]}/hdf5-{args.hdf5}/src/hdf5-{args.hdf5}.tar.gz'
+
+stage += hpccm.primitives.shell(
+    commands=[
+        f'wget -q --no-check-certificate -O /opt/annotat3dweb/hdf5-{args.hdf5}.tar.gz {hdf5_url}',
+        f'gzip -cd /opt/annotat3dweb/hdf5-{args.hdf5}.tar.gz | tar xvf - -C /opt/annotat3dweb',
+        f'cd /opt/annotat3dweb/hdf5-{args.hdf5} && CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/hdf5 --enable-cxx --enable-fortran',
+        'make -j$(nproc)',
+        'make -j$(nproc) install',
+        f'rm -rf /opt/annotat3dweb/hdf5-{args.hdf5} /opt/annotat3dweb/hdf5-{args.hdf5}.tar.gz',
+    ],
+    chdir=False,
+)
 
 # Anaconda
 stage += hpccm.building_blocks.conda(channels=['conda-forge', 'nvidia'], prefix='/opt/conda', version=args.conda, python_subversion=args.python, eula=True)
