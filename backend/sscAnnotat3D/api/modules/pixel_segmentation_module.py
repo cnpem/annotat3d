@@ -502,20 +502,6 @@ def execute():
                 "unable to preview!. Please, at least create one label and background annotation and try again the preprocess.")
         return handle_exception("unable to preview! {}".format(str(e)))
 
-    try:
-        edit_label_merge_module = data_repo.get_edit_label_options(key="edit_label_merge_module")
-        edit_label_split_module = data_repo.get_edit_label_options(key="edit_label_split_module")
-    except Exception as e:
-        return handle_exception(str(e))
-
-    if (edit_label_merge_module is not None and edit_label_merge_module.get_annotation()):
-        _debugger_print("doing the merge on apply", "RIGHT NOW")
-        label = _merge_label(edit_label_merge_module.get_annotation(), label, segm_module)
-
-    if (edit_label_split_module is not None and edit_label_split_module.get_annotation()):
-        _debugger_print("doing the split on apply", "RIGHT NOW")
-        label = _split_label(edit_label_split_module.get_annotation(), annotations, label)
-
     data_repo.set_image('label', label)
 
     return jsonify({"selected_features_names": selected_features_names}), 200
