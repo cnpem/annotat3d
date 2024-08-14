@@ -234,12 +234,6 @@ def draw():
 
     annot_module = module_repo.get_module('annotation')
 
-    try:
-        flag_is_merge_activated = data_repo.get_edit_label_options(key="is_merge_activated")
-        flag_is_split_activated = data_repo.get_edit_label_options(key="is_split_activated")
-    except Exception as e:
-        return handle_exception(str(e))
-
     if annot_module is None:
         return handle_exception("Annotation module not found")
 
@@ -252,21 +246,6 @@ def draw():
     erase = (mode == 'erase_brush')
     
     annot_module.draw_marker_curve(cursor_coords, marker_id, label, erase)
-    
-    if (flag_is_merge_activated):
-        edit_label_annotation_module = data_repo.get_edit_label_options("edit_label_merge_module")
-    elif (flag_is_split_activated):
-        edit_label_annotation_module = data_repo.get_edit_label_options("edit_label_split_module")
-
-    if (flag_is_merge_activated or flag_is_split_activated):
-            mk_id = annot_module.current_mk_id
-            for point in cursor_coords:
-                edit_label_annotation_module.draw_marker_dot(point[1], point[0], label, mk_id, erase)
-
-    if (flag_is_merge_activated):
-        data_repo.set_edit_label_options("edit_label_merge_module", edit_label_annotation_module)
-    elif (flag_is_split_activated):
-        data_repo.set_edit_label_options("edit_label_split_module", edit_label_annotation_module)
 
     return "success", 200
 
