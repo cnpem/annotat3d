@@ -5,6 +5,7 @@ import socket
 import zlib
 
 import numpy as np
+import sentry_sdk
 import skimage.io
 from flask import *
 from flask_cors import CORS, cross_origin
@@ -23,19 +24,16 @@ from sscAnnotat3D.api.modules import (
 from sscAnnotat3D.modules import superpixel_segmentation_module
 from sscAnnotat3D.repository import data_repo
 
-
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn="https://dcdb7e790b3747c3c10823e8ffcc0058@o4507488156057600.ingest.us.sentry.io/4507488327630848",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
-)
+# sentry_sdk.init(
+#    dsn="https://dcdb7e790b3747c3c10823e8ffcc0058@o4507488156057600.ingest.us.sentry.io/4507488327630848",
+#    # Set traces_sample_rate to 1.0 to capture 100%
+#    # of transactions for performance monitoring.
+#    traces_sample_rate=1.0,
+#    # Set profiles_sample_rate to 1.0 to profile 100%
+#    # of sampled transactions.
+#    # We recommend adjusting this value in production.
+#    profiles_sample_rate=1.0,
+# )
 
 
 app = Flask(__name__)
@@ -103,31 +101,36 @@ def reconnect_session():
 def test():
     return "test", 200
 
+
 @app.route("/get_env/<type_of_env>", methods=["POST", "GET"])
 @cross_origin()
 def get_env(type_of_env: str):
-    
+
     loaded = data_repo.loadedEnv()
 
-    if type_of_env == 'load_env':
-        env_dict = {"workspacePath": os.getenv("REACT_APP_WORKSPACE_PATH") or "",
-                "imagePath": os.getenv("REACT_APP_IMAGE_PATH") or "",
-                "superpixelPath": os.getenv("REACT_APP_SUPERPIXEL_PATH") or "",
-                "labelPath": os.getenv("REACT_APP_LABEL_PATH") or "",
-                "annotPath": os.getenv("REACT_APP_ANNOT_PATH") or "",
-                "classificationPath": os.getenv("REACT_APP_CLASS_PATH") or "",
-                "loadedOnce": loaded 
-                }
-        
-    if type_of_env == 'save_env':
-        env_dict = {"workspacePath": os.getenv("REACT_APP_OUTPUT_PATH") or "",
-                "imagePath": "",
-                "superpixelPath": "",
-                "labelPath": "",
-                "annotPath": "",
-                "classificationPath": ""}
+    if type_of_env == "load_env":
+        env_dict = {
+            "workspacePath": os.getenv("REACT_APP_WORKSPACE_PATH") or "",
+            "imagePath": os.getenv("REACT_APP_IMAGE_PATH") or "",
+            "superpixelPath": os.getenv("REACT_APP_SUPERPIXEL_PATH") or "",
+            "labelPath": os.getenv("REACT_APP_LABEL_PATH") or "",
+            "annotPath": os.getenv("REACT_APP_ANNOT_PATH") or "",
+            "classificationPath": os.getenv("REACT_APP_CLASS_PATH") or "",
+            "loadedOnce": loaded,
+        }
+
+    if type_of_env == "save_env":
+        env_dict = {
+            "workspacePath": os.getenv("REACT_APP_OUTPUT_PATH") or "",
+            "imagePath": "",
+            "superpixelPath": "",
+            "labelPath": "",
+            "annotPath": "",
+            "classificationPath": "",
+        }
 
     return jsonify(env_dict)
+
 
 @app.route("/versions", methods=["POST", "GET"])
 @cross_origin()
@@ -147,6 +150,7 @@ def versions():
 if __name__ == "__main__":
 
     import logging
+
     from dotenv import load_dotenv
 
     load_dotenv()
@@ -156,4 +160,4 @@ if __name__ == "__main__":
 
     # WARNING: only one process can be used, as we store images in memory
     # to be able to use more processes we should find a better way to store data
-    app.run(host=os.getenv('FLASK_RUN_HOST'), port=os.getenv('FLASK_RUN_PORT'), debug=True, processes=1, threaded=True)
+    app.run(host=os.getenv("FLASK_RUN_HOST"), port=os.getenv("FLASK_RUN_PORT"), debug=True, processes=1, threaded=True)

@@ -2,13 +2,19 @@ cdef extern from "<algorithm>" namespace "std":
     Iter max_element[Iter](Iter first, Iter last)
 
 from collections import defaultdict
-from libcpp.map cimport map as cmap, pair as cpair
+
+cimport cython
+from libcpp.map cimport map as cmap
+from libcpp.map cimport pair as cpair
 from libcpp.unordered_map cimport unordered_map as cunmap
 from libcpp.vector cimport vector
-cimport cython
+
 import time
-from cython.operator import preincrement, dereference
+
+from cython.operator import dereference, preincrement
+
 from cython.parallel cimport prange
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)

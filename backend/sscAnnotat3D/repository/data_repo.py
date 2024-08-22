@@ -42,6 +42,7 @@ _loadedEnv = {
     "loaded": False,
 }
 
+
 def contiguous(array: np.ndarray) -> np.ndarray:
     """
     Check if the array is configous if not, make it contigous (bug fixfor the cython wrapper in backend spin).
@@ -60,6 +61,7 @@ def contiguous(array: np.ndarray) -> np.ndarray:
         array = np.ascontiguousarray(array)
 
     return array
+
 
 def set_feature_extraction_params(key: str = "", data: dict = None):
     """
@@ -291,6 +293,7 @@ def get_classification_model(key="model_complete"):
 
     """
     return __model_complete.get(key, None)
+
 
 def loadedEnv(key="loaded"):
     """

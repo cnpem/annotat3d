@@ -3,17 +3,16 @@ This script contains functions used for annotations
 @Docs author : Gabriel Borin Macedo (gabriel.macedo@lnls.com.br or borinmacedo@gmail.com)
 """
 
-import pickle
 import io
+import pickle
 import zlib
-import numpy as np
 
+import numpy as np
+from flask import Blueprint, jsonify, request, send_file
+from flask_cors import cross_origin
+from sscAnnotat3D import utils
 from sscAnnotat3D.modules import annotation_module
 from sscAnnotat3D.repository import data_repo, module_repo
-from sscAnnotat3D import utils
-
-from flask import Blueprint, request, send_file, jsonify
-from flask_cors import cross_origin
 from werkzeug.exceptions import BadRequest
 
 app = Blueprint('annotation', __name__)

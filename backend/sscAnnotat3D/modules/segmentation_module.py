@@ -1,10 +1,9 @@
 import abc
-
 from abc import abstractmethod
 
 
 class SegmentationModule(abc.ABC):
-    _module_name = 'Generic Segmentation'
+    _module_name = "Generic Segmentation"
 
     @classmethod
     def module_name(cls):

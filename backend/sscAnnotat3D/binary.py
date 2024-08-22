@@ -24,7 +24,11 @@
 import numpy
 from scipy.ndimage import _ni_support
 from scipy.ndimage.measurements import find_objects, label
-from scipy.ndimage.morphology import (binary_erosion, distance_transform_edt, generate_binary_structure)
+from scipy.ndimage.morphology import (
+    binary_erosion,
+    distance_transform_edt,
+    generate_binary_structure,
+)
 from scipy.stats import pearsonr
 
 # own modules
@@ -74,7 +78,7 @@ def dc(result, reference):
     size_i2 = numpy.count_nonzero(reference)
 
     try:
-        coef = 2. * intersection / float(size_i1 + size_i2)
+        coef = 2.0 * intersection / float(size_i1 + size_i2)
     except ZeroDivisionError:
         coef = 0.0
 
@@ -408,8 +412,9 @@ def assd(result, reference, voxelspacing=None, connectivity=1):
 
     The binary images can therefore be supplied in any order.
     """
-    score = numpy.mean((asd(result, reference, voxelspacing,
-                            connectivity), asd(reference, result, voxelspacing, connectivity)))
+    score = numpy.mean(
+        (asd(result, reference, voxelspacing, connectivity), asd(reference, result, voxelspacing, connectivity))
+    )
     return score
 
 
@@ -606,7 +611,7 @@ def ravd(result, reference):
     vol2 = numpy.count_nonzero(reference)
 
     if 0 == vol2:
-        raise RuntimeError('The second supplied array does not contain any binary object.')
+        raise RuntimeError("The second supplied array does not contain any binary object.")
 
     return (vol1 - vol2) / float(vol2)
 
@@ -681,8 +686,9 @@ def volume_change_correlation(results, references):
     results_volumes_changes = results_volumes[1:] - results_volumes[:-1]
     references_volumes_changes = references_volumes[1:] - references_volumes[:-1]
 
-    return pearsonr(results_volumes_changes,
-                    references_volumes_changes)  # returns (Pearson's correlation coefficient, 2-tailed p-value)
+    return pearsonr(
+        results_volumes_changes, references_volumes_changes
+    )  # returns (Pearson's correlation coefficient, 2-tailed p-value)
 
 
 def obj_assd(result, reference, voxelspacing=None, connectivity=1):
@@ -736,8 +742,9 @@ def obj_assd(result, reference, voxelspacing=None, connectivity=1):
 
     The binary images can therefore be supplied in any order.
     """
-    score = numpy.mean((obj_asd(result, reference, voxelspacing,
-                                connectivity), obj_asd(reference, result, voxelspacing, connectivity)))
+    score = numpy.mean(
+        (obj_asd(result, reference, voxelspacing, connectivity), obj_asd(reference, result, voxelspacing, connectivity))
+    )
     return score
 
 
@@ -1142,7 +1149,7 @@ def __distinct_binary_object_correspondences(reference, result, connectivity=1):
         )  # extract all unique object identifiers at the corresponding positions in the reference (i.e. the mapping)
         l2ids = l2ids[0 != l2ids]  # remove background identifiers (=0)
         if 1 == len(
-                l2ids
+            l2ids
         ):  # one-to-one mapping: if target label not already used, add to final list of object-to-object mappings and mark target label as used
             l2id = l2ids[0]
             if not l2id in used_labels:
@@ -1153,8 +1160,9 @@ def __distinct_binary_object_correspondences(reference, result, connectivity=1):
 
     # process one-to-many mappings, always choosing the one with the least labelmap2 correspondences first
     while True:
-        one_to_many = [(l1id, l2ids - used_labels)
-                       for l1id, l2ids in one_to_many]  # remove already used ids from all sets
+        one_to_many = [
+            (l1id, l2ids - used_labels) for l1id, l2ids in one_to_many
+        ]  # remove already used ids from all sets
         one_to_many = [x for x in one_to_many if x[1]]  # remove empty sets
         one_to_many = sorted(one_to_many, key=lambda x: len(x[1]))  # sort by set length
         if 0 == len(one_to_many):
@@ -1185,9 +1193,9 @@ def __surface_distances(result, reference, voxelspacing=None, connectivity=1):
 
     # test for emptiness
     if 0 == numpy.count_nonzero(result):
-        raise RuntimeError('The first supplied array does not contain any binary object.')
+        raise RuntimeError("The first supplied array does not contain any binary object.")
     if 0 == numpy.count_nonzero(reference):
-        raise RuntimeError('The second supplied array does not contain any binary object.')
+        raise RuntimeError("The second supplied array does not contain any binary object.")
 
     # extract only 1-pixel border line of objects
     result_border = result ^ binary_erosion(result, structure=footprint, iterations=1)
