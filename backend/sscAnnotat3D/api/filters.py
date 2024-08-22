@@ -1,21 +1,24 @@
-from flask import Blueprint, request
 import numpy as np
-
-from sscAnnotat3D.repository import data_repo
+from flask import Blueprint, request
+from flask_cors import cross_origin
+from harpia.filters import (
+    anisotropic_diffusion2D,
+    anisotropic_diffusion3D,
+    gaussian,
+    mean,
+    median,
+    unsharp_mask,
+)
+from skimage.filters import gaussian as skimage_gaussian
 from sscAnnotat3D import utils
-
+from sscAnnotat3D.repository import data_repo
 from sscPySpin.filters import filter_bm3d as spin_bm3d
 from sscPySpin.filters import non_local_means as spin_nlm
 
-from harpia.filters import unsharp_mask, anisotropic_diffusion2D, anisotropic_diffusion3D, median, mean, gaussian
+app = Blueprint("filter", __name__)
 
-from skimage.filters import gaussian as skimage_gaussian
 
-from flask_cors import cross_origin
-
-app = Blueprint('filter', __name__)
-
-@app.route('/filters/bm3d/preview/<input_id>/<output_id>', methods=['POST'])
+@app.route("/filters/bm3d/preview/<input_id>/<output_id>", methods=["POST"])
 @cross_origin()
 def bm3d_preview(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
@@ -23,8 +26,8 @@ def bm3d_preview(input_id: str, output_id: str):
     if input_img is None:
         return f"Image {input_id} not found.", 400
 
-    sigma = request.json['sigma']
-    twostep = request.json['twostep']
+    sigma = request.json["sigma"]
+    twostep = request.json["twostep"]
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
@@ -37,9 +40,10 @@ def bm3d_preview(input_id: str, output_id: str):
 
     data_repo.set_image(output_id, data=output_img)
 
-    return 'success', 200
+    return "success", 200
 
-@app.route('/filters/bm3d/apply/<input_id>/<output_id>', methods=['POST'])
+
+@app.route("/filters/bm3d/apply/<input_id>/<output_id>", methods=["POST"])
 @cross_origin()
 def bm3d_apply(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
@@ -47,16 +51,17 @@ def bm3d_apply(input_id: str, output_id: str):
     if input_img is None:
         return f"Image {input_id} not found.", 400
 
-    sigma = request.json['sigma']
-    twostep = request.json['twostep']
+    sigma = request.json["sigma"]
+    twostep = request.json["twostep"]
 
     output_img = spin_bm3d(input_img, sigma, twostep)
 
     data_repo.set_image(output_id, data=output_img)
 
-    return 'success', 200
+    return "success", 200
 
-@app.route('/filters/gaussian/preview/<input_id>/<output_id>', methods=['POST'])
+
+@app.route("/filters/gaussian/preview/<input_id>/<output_id>", methods=["POST"])
 @cross_origin()
 def gaussian_preview(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
@@ -64,7 +69,7 @@ def gaussian_preview(input_id: str, output_id: str):
     if input_img is None:
         return f"Image {input_id} not found.", 400
 
-    sigma = request.json['sigma']
+    sigma = request.json["sigma"]
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
@@ -77,9 +82,10 @@ def gaussian_preview(input_id: str, output_id: str):
 
     data_repo.set_image(output_id, data=output_img)
 
-    return 'success', 200
+    return "success", 200
 
-@app.route('/filters/gaussian/apply/<input_id>/<output_id>', methods=['POST'])
+
+@app.route("/filters/gaussian/apply/<input_id>/<output_id>", methods=["POST"])
 @cross_origin()
 def gaussian_apply(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
@@ -87,9 +93,9 @@ def gaussian_apply(input_id: str, output_id: str):
     if input_img is None:
         return f"Image {input_id} not found.", 400
 
-    sigma = request.json['sigma']
-    convType = request.json['convType'] # 2d or 3d
-    
+    sigma = request.json["sigma"]
+    convType = request.json["convType"]  # 2d or 3d
+
     if convType == "2d":
         # convolution in x, y applied for all slices in the the z direction
         output_img = np.zeros_like(input_img)
@@ -104,19 +110,20 @@ def gaussian_apply(input_id: str, output_id: str):
                 output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
             elif axisIndex == 1:
                 # stack following the y axis
-                output_img[:,i,:] = skimage_gaussian(input_img[:,i,:], sigma, preserve_range=True).astype(typeImg2d)
+                output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
             elif axisIndex == 2:
                 # stack following the x axis
-                output_img[:,:,i] = skimage_gaussian(input_img[:,:,i], sigma, preserve_range=True).astype(typeImg2d)
+                output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
     elif convType == "3d":
         # convolution in x, y, z
         output_img = skimage_gaussian(input_img, sigma, preserve_range=True).astype(input_img.dtype)
 
     data_repo.set_image(output_id, data=output_img)
 
-    return 'success', 200
+    return "success", 200
 
-@app.route('/filters/nlm/preview/<input_id>/<output_id>', methods=['POST'])
+
+@app.route("/filters/nlm/preview/<input_id>/<output_id>", methods=["POST"])
 @cross_origin()
 def nlm_preview(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
@@ -124,9 +131,9 @@ def nlm_preview(input_id: str, output_id: str):
     if input_img is None:
         return f"Image {input_id} not found.", 400
 
-    sigma = request.json['sigma']
-    nlmStep = request.json['nlmStep']
-    gaussianStep = request.json['gaussianStep']
+    sigma = request.json["sigma"]
+    nlmStep = request.json["nlmStep"]
+    gaussianStep = request.json["gaussianStep"]
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
@@ -135,14 +142,15 @@ def nlm_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)))
 
-    output_img = np.zeros_like(input_img_3d)    
+    output_img = np.zeros_like(input_img_3d)
     spin_nlm(output_img, input_img_3d, sigma, nlmStep, gaussianStep)
 
     data_repo.set_image(output_id, data=output_img)
 
-    return 'success', 200
+    return "success", 200
 
-@app.route('/filters/nlm/apply/<input_id>/<output_id>', methods=['POST'])
+
+@app.route("/filters/nlm/apply/<input_id>/<output_id>", methods=["POST"])
 @cross_origin()
 def nlm_apply(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
@@ -150,18 +158,19 @@ def nlm_apply(input_id: str, output_id: str):
     if input_img is None:
         return f"Image {input_id} not found.", 400
 
-    sigma = request.json['sigma']
-    nlmStep = request.json['nlmStep']
-    gaussianStep = request.json['gaussianStep']
+    sigma = request.json["sigma"]
+    nlmStep = request.json["nlmStep"]
+    gaussianStep = request.json["gaussianStep"]
 
     output_img = np.zeros_like(input_img)
     spin_nlm(output_img, input_img, sigma, nlmStep, gaussianStep)
 
     data_repo.set_image(output_id, data=output_img)
 
-    return 'success', 200
+    return "success", 200
 
-@app.route('/filters/anisodiff/preview/<input_id>/<output_id>', methods=['POST'])
+
+@app.route("/filters/anisodiff/preview/<input_id>/<output_id>", methods=["POST"])
 @cross_origin()
 def anisodiff_preview(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
@@ -169,39 +178,42 @@ def anisodiff_preview(input_id: str, output_id: str):
     if input_img is None:
         return f"Image {input_id} not found.", 400
 
-    total_iterations = request.json['total_iterations']
-    delta_t = request.json['delta_t']
-    kappa = request.json['kappa']
-    diffusion_option = request.json['diffusion_option']
-    aniso3D = request.json['3D']
+    total_iterations = request.json["total_iterations"]
+    delta_t = request.json["delta_t"]
+    kappa = request.json["kappa"]
+    diffusion_option = request.json["diffusion_option"]
+    aniso3D = request.json["aniso3D"]
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
 
     if aniso3D:
-        #arbitrary selection of 5 slices up and five slices down (if possible)
+        # arbitrary selection of 5 slices up and five slices down (if possible)
         slice_start = max(0, slice_num - 5)
         slice_range = utils.get_3d_slice_range_from(axis, slice_start, slice_num + 5)
         slice_num_map = slice_num - slice_start
-        
-        input_img_vol = input_img[slice_range].copy()
 
-        anisotropic_diffusion3D(input_img_vol, delta_t, kappa, diffusion_option)
+        input_img_vol = input_img[slice_range].astype("float32")
+
+        anisotropic_diffusion3D(input_img_vol, total_iterations, delta_t, kappa, diffusion_option)
 
         output_img = input_img_vol[slice_num_map]
 
-
     else:
-        slice_range = utils.get_3d_slice_range_from(axis, slice_start, slice_num + 5)
+        slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
         output_img = input_img[slice_range].copy()
+        output_img = output_img.astype("float32")
 
-        anisotropic_diffusion2D(output_img, delta_t, kappa, diffusion_option)
+        anisotropic_diffusion2D(output_img, total_iterations, delta_t, kappa, diffusion_option)
 
+    output_img = output_img.reshape((1, *output_img.shape))
     data_repo.set_image(output_id, data=output_img)
 
-    return 'success', 200
+    return "success", 200
 
-@app.route('/filters/anisodiff/apply/<input_id>/<output_id>', methods=['POST'])
+
+@app.route("/filters/anisodiff/apply/<input_id>/<output_id>", methods=["POST"])
 @cross_origin()
 def anisodiff_apply(input_id: str, output_id: str):
     input_img = data_repo.get_image(input_id)
@@ -209,24 +221,25 @@ def anisodiff_apply(input_id: str, output_id: str):
     if input_img is None:
         return f"Image {input_id} not found.", 400
 
-    total_iterations = request.json['total_iterations']
-    delta_t = request.json['delta_t']
-    kappa = request.json['kappa']
-    diffusion_option = request.json['diffusion_option']
-    aniso3D = request.json['aniso3D']
+    total_iterations = request.json["total_iterations"]
+    delta_t = request.json["delta_t"]
+    kappa = request.json["kappa"]
+    diffusion_option = request.json["diffusion_option"]
+    aniso3D = request.json["aniso3D"]
 
     if aniso3D:
-        output_img = input_img.copy()
-        anisotropic_diffusion3D(output_img, delta_t, kappa, diffusion_option)
+        output_img = input_img.astype("float32")
+        anisotropic_diffusion3D(output_img, total_iterations, delta_t, kappa, diffusion_option)
     else:
-        #apply 2D aniso diffusion in xy slices
-        output_img = []        
+        # apply 2D aniso diffusion in xy slices
+        output_img = []
         for image_slice in input_img:
-            anisotropic_diffusion2D(image_slice, delta_t, kappa, diffusion_option)
+            image_slice = image_slice.astype("float32")
+            anisotropic_diffusion2D(image_slice, total_iterations, delta_t, kappa, diffusion_option)
             output_img.append(image_slice)
 
         output_img = np.asarray(output_img)
 
     data_repo.set_image(output_id, data=output_img)
 
-    return 'success', 200
+    return "success", 200

@@ -1,10 +1,11 @@
-import { IonInput, IonItem, IonLabel, IonRadio, IonRadioGroup, IonToggle, useIonToast } from '@ionic/react';
+import { IonInput, IonItem, IonLabel, IonRadio, IonRadioGroup, IonToggle, IonSelect, IonSelectOption, IonCheckbox, useIonToast } from '@ionic/react';
 import { useState } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 import { currentEventValue, dispatch } from '../../../utils/eventbus';
 import { sfetch } from '../../../utils/simplerequest';
 import LoadingComponent from '../utils/LoadingComponent';
 import { ModuleCard, ModuleCardItem } from './ModuleCard';
+import { DiffusionOptionSelect, KappaInputWithInfo, TimeStepInputWithInfo, IterationsInputWithInfo } from './FilteringOptions';
 
 function onApplyThen(info: { slice: number; axis: string }) {
     dispatch('imageChanged', info);
@@ -324,14 +325,20 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
         { value: 3, label: 'Hyperbolic tangent decay' },
     ];
 
+    const dimensionOptions = [
+        { value: false, label: '2D' },
+        { value: true, label: '3D' },
+    ];
+
     const [showToast] = useIonToast();
 
     const [disabled, setDisabled] = useState<boolean>(false);
-
-    const [kappa, setKappa] = useState<number>(2);
-    const [totalIterations, setTotalIterations] = useState<number>(2);
-    const [TimeStep, setTimeStep] = useState<number>(2);
-    const [diffusionOption, setdiffusionOption] = useState<number>(3);
+    
+    const [kappa, setKappa] = useStorageState<number>(sessionStorage, 'kappa', 100);
+    const [totalIterations, setTotalIterations] = useStorageState<number>(sessionStorage, 'totalIterations', 1);
+    const [timeStep, setTimeStep] = useStorageState<number>(sessionStorage, 'TimeStep', 0.1);
+    const [diffusionOption, setDiffusionOption] = useStorageState<number>(sessionStorage, 'diffusionOption', 3);
+    const [aniso3D, setAniso3D] = useStorageState<boolean>(sessionStorage, 'aniso3D', false);
 
 
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
@@ -345,7 +352,7 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
 
         const params = {
             total_iterations: totalIterations,
-            delta_t : TimeStep,
+            delta_t : timeStep,
             kappa: kappa,
             diffusion_option: diffusionOption,
             aniso3D: aniso3D,
@@ -375,10 +382,13 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
         };
 
         const params = {
-            sigma,
-            nlmStep,
-            gaussianStep,
+            total_iterations: totalIterations,
+            delta_t : timeStep,
+            kappa: kappa,
+            diffusion_option: diffusionOption,
+            aniso3D: aniso3D,
             axis: curSlice.axis,
+            slice: curSlice.slice,
         };
 
         setDisabled(true);
@@ -397,64 +407,42 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
     }
 
     return (
-        <ModuleCard disabled={disabled} name="Anisotropic Diffusion Filtering" onPreview={onPreview} onApply={onApply}>
+        <ModuleCard disabled={disabled} name="Anisotropic Diffusion" onPreview={onPreview} onApply={onApply}>
             <ModuleCardItem name="Filter Parameters">
+                <KappaInputWithInfo
+                    kappa={kappa}
+                    setKappa={setKappa}
+                    showToast={showToast}
+                    timeToast={timeToast}
+                />
+                <TimeStepInputWithInfo
+                    timeStep={timeStep}
+                    setTimeStep={setTimeStep}
+                    showToast={showToast}
+                    timeToast={timeToast}
+                />
+
+                <IterationsInputWithInfo
+                    totalIterations={totalIterations}
+                    setTotalIterations={setTotalIterations}
+                    showToast={showToast}
+                    timeToast={timeToast}
+                />
                 <IonItem>
-                    <IonLabel>kappa</IonLabel>
-                    <IonInput
-                        value={kappa}
-                        type="number"
-                        step="0.1"
-                        min={0.1}
-                        onIonChange={(e) =>                             
-                        typeof +e.detail.value! == 'number'
-                        ? setTimeStep(+e.detail.value!)
-                        : void showToast('Please insert an valid number!', timeToast)}
-                    ></IonInput>
-                </IonItem>
-                <IonItem>
-                    <IonLabel>Time step size</IonLabel>
-                    <IonInput
-                        value={TimeStep}
-                        type="number"
-                        step="1"
-                        min={0}
-                        onIonChange={(e) =>
-                            typeof +e.detail.value! == 'number'
-                                ? setTimeStep(+e.detail.value!)
-                                : void showToast('Please insert an valid number!', timeToast)
-                        }
-                    ></IonInput>
-                </IonItem>
-                <IonItem>
-                    <IonLabel>Number of Iterations</IonLabel>
-                    <IonInput
-                        value={totalIterations}
-                        type="number"
-                        step="1"
-                        min={1}
-                        onIonChange={(e) =>
-                            Number.isInteger(+e.detail.value!)
-                                ? setGaussianStep(+e.detail.value!)
-                                : void showToast('Please insert an integer value!', timeToast)
-                        }
-                    ></IonInput>
-                </IonItem>
-                <IonItem>
-                    <IonLabel>Diffusion Option</IonLabel>
+                    <IonLabel>Neighbour 2D or 3D</IonLabel>
                     <IonSelect
-                        aria-label="Diffusion Option"
-                        interface="popover"
-                        placeholder="Select diffusion option"
-                        value={diffusionOption}
-                        onIonChange={(e) => setDiffusionOption(e.detail.value)}
-                    >
-                        {diffusionOptions.map((option) => (
-                            <IonSelectOption key={option.value} value={option.value}>
-                                {option.label}
-                            </IonSelectOption>
-                        ))}
-                    </IonSelect>
+                    aria-label="Dimension Option"
+                    interface="popover"
+                    placeholder="Select 2D or 3D"
+                    value={aniso3D}
+                    onIonChange={(e) => setAniso3D(e.detail.value)}
+                >
+                    {dimensionOptions.map((option) => (
+                        <IonSelectOption key={String(option.value)} value={option.value}>
+                            {option.label}
+                        </IonSelectOption>
+                    ))}
+                </IonSelect>
                 </IonItem>
             </ModuleCardItem>
             <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={loadingMsg} />
@@ -463,3 +451,4 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
 };
 
 export { BM3DFilteringModuleCard, GaussianFilteringModuleCard, NonLocalMeansFilteringModuleCard, AnisotropicDiffusionFilteringModuleCard };
+
