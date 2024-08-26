@@ -6,7 +6,8 @@ import {
     BM3DFilteringModuleCard,
     GaussianFilteringModuleCard,
     NonLocalMeansFilteringModuleCard,
-    AnisotropicDiffusionFilteringModuleCard
+    AnisotropicDiffusionFilteringModuleCard,
+    MeanFilteringModuleCard,
 } from './FilteringModuleCard';
 import GroupSelect from './GroupSelect';
 import PixelSegmentationModuleCard from './PixelSegmentationModuleCard';
@@ -25,6 +26,7 @@ const moduleOptions = [
             { id: 'gaussian_filter', label: 'Gaussian Filter' },
             { id: 'nlm_filter', label: 'Non Local Means Filter' },
             { id: 'aniso_filter', label: 'Anisotropic Diffusion Filter' },
+            { id: 'mean_filter', label: 'Mean Filter' },
         ],
     },
 ];
@@ -37,6 +39,7 @@ const canvas: Record<string, 'drawing' | 'imaging'> = {
     gaussian_filter: 'imaging',
     nlm_filter: 'imaging',
     aniso_filter: 'imaging',
+    mean_filter: 'imaging',
 };
 
 const ProcessingMenu: React.FC = () => {
@@ -88,6 +91,9 @@ const ProcessingMenu: React.FC = () => {
             </IonList>
             <IonList hidden={curModule !== 'aniso_filter'}>
                 <AnisotropicDiffusionFilteringModuleCard />
+            </IonList>
+            <IonList hidden={curModule !== 'mean_filter'}>
+                <MeanFilteringModuleCard />
             </IonList>
             <MessageCard />
         </Fragment>
