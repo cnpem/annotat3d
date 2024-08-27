@@ -46,14 +46,14 @@ const ThresholdHistogram: React.FC<HistogramProps> = ({ histogramData, histogram
             ...histogramOptions.plugins,
             annotation: {
                 annotations: {
-                    verticalLine: {
+                    verticalLine1: {
                         type: 'line',
                         xMin: label1Index,
                         xMax: label1Index,
                         borderColor: 'red',
                         borderWidth: 2,
                     },
-                    verticalLine: {
+                    verticalLine2: {
                         type: 'line',
                         xMin: label2Index,
                         xMax: label2Index,

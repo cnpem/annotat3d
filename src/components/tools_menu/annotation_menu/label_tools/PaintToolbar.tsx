@@ -25,6 +25,7 @@ import {
 import './PaintToolbar.css'; // Ensure this path is correct
 
 import MagicWandCard from './MagicWandCard'; // Ensure this path is correct
+import ThresholdCard from './ThresholdCard'; // Ensure this path is correct
 
 const PaintToolbar: React.FC = () => {
     const [activeCard, setActiveCard] = useState<string | null>(null);
@@ -161,15 +162,7 @@ const PaintToolbar: React.FC = () => {
                 </div>
 
                 <div className={activeCard === 'threshold' ? 'visible' : 'hidden'}>
-                    <IonCard>
-                        <IonCardContent>
-                            <IonList>
-                                <IonItem button>Threshold Option 1</IonItem>
-                                <IonItem button>Threshold Option 2</IonItem>
-                                <IonItem button>Threshold Option 3</IonItem>
-                            </IonList>
-                        </IonCardContent>
-                    </IonCard>
+                    <ThresholdCard isVisible={activeCard === 'magicWand'} />
                 </div>
 
                 <div className={activeCard === 'removeIsland' ? 'visible' : 'hidden'}>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     IonList,
     IonItem,
@@ -12,13 +12,14 @@ import {
     IonIcon,
     IonSelect,
     IonSelectOption,
+    IonRadio,
+    IonRadioGroup,
 } from '@ionic/react';
-import { ThresholdHistogram } from './ThresholdHistogram';
+import ThresholdHistogram from './ThresholdHistogram';
 import OtsuThreshold from './OtsuThreshold';
-import { useState, useEffect } from 'react'
 
-import '../../vis_menu/HistogramAlignment.css';
-
+import enter from '../../../../../public/icon-park-solid--enter-key.svg';
+import '../../../vis_menu/HistogramAlignment.css';
 const ManualThreshold: React.FC = () => {
 
     const baseHistogram = {
@@ -98,7 +99,7 @@ const ManualThreshold: React.FC = () => {
 
     // This is a demon component, need to render the proper annotation for this
     useEffect(() => {
-        console.log('Threshold value changed')
+        console.log('Threshold value changed');
     }, [currentValue]);
     
     const handleValueChange = (newValues: { lower: number; upper: number }) => {
@@ -121,7 +122,7 @@ const ManualThreshold: React.FC = () => {
                 ],
             };
             setHistogramData(fetched2DData);
-            setHistogramMinMaxValue({ min: 0, max: 50 });
+            sethistogramMinMaxValue({ min: 0, max: 4 });
         } else if (selectedDimension === '3D') {
             // Fetch or compute 3D histogram data
             const fetched3DData = {
@@ -136,7 +137,7 @@ const ManualThreshold: React.FC = () => {
                 ],
             };
             setHistogramData(fetched3DData);
-            setHistogramMinMaxValue({ min: 0, max: 55 });
+            sethistogramMinMaxValue({ min: 0, max: 4 });
         }
     };
 
@@ -145,49 +146,111 @@ const ManualThreshold: React.FC = () => {
     }, [selectedDimension]); // Effect will run when selectedDimension changes
 
     return (
-    <IonItem>
-        <IonLabel>Select Dimension</IonLabel>
-        <IonSelect
-            aria-label="Select Dimension"
-            interface="popover"
-            placeholder="Select Dimension"
-            value={selectedDimension}
+        <IonList>
+        <IonItem>
+        <IonRadioGroup 
+            value={selectedDimension} 
             onIonChange={(e) => setSelectedDimension(e.detail.value)}
+            style={{ width: '100%' }}
         >
-            <IonSelectOption value="2D">2D</IonSelectOption>
-            <IonSelectOption value="3D">3D</IonSelectOption>
-        </IonSelect>
-        <IonLabel>Manual Threshold Component</IonLabel>
-        {/* Add your Manual Threshold component implementation here */}
-        <div className="alignment-container">
-        <ThresholdHistogram
-                    histogramData={histogramData}
-                    histogramOptions={histogramOptions}
-                    verticalLine1Position={currentValue.lower}
-                    verticalLine2Position={currentValue.upper}
-                />
-        <IonRange
-            className="custom-range"
-            step={1}
-            max={histogramMinMaxValue.max}
-            min={histogramMinMaxValue.min}
-            value={{ lower: currentValue.lower, upper: currentValue.upper }}
-            pin={true}
-            dualKnobs={true}
-            onIonKnobMoveEnd={(e: CustomEvent) => {
-                if (e.detail.value) {
-                    setCurrentValue(e.detail.value);
-                }
-            }}
-        ></IonRange>
-        </div>
-       <OtsuThreshold
-            lower={currentValue.lower} 
-            upper={currentValue.upper}
-            onChange={handleValueChange} 
-        />
+            <IonGrid>
+            <IonRow class="ion-justify-content-center ion-align-items-center">
+                <IonCol size="auto">
+                <IonItem lines="none">
+                    <IonRadio slot="start" value="2D" />
+                    <IonLabel>2D</IonLabel>
+                </IonItem>
+                </IonCol>
+                <IonCol size="auto">
+                <IonItem lines="none">
+                    <IonRadio slot="start" value="3D" />
+                    <IonLabel>3D</IonLabel>
+                </IonItem>
+                </IonCol>
+            </IonRow>
+            </IonGrid>
+        </IonRadioGroup>
         </IonItem>
-    )
+
+        <IonItem>
+        <IonGrid>
+                <IonRow>
+                    <IonCol>
+                        <IonItem>
+                            <IonInput
+                                inputMode="numeric"
+                                max={histogramMinMaxValue.max}
+                                min={histogramMinMaxValue.min}
+                                placeholder={`${currentValue.lower}`}
+                                onKeyUp={(e: React.KeyboardEvent) => {
+                                    if (e.key === 'Enter') {
+                                        const target = e.target as HTMLInputElement;
+                                        const inputValue = parseFloat(target.value);
+                                        if (target.value && inputValue > histogramMinMaxValue.min) {
+                                            setCurrentValue({ lower: currentValue.lower, upper: inputValue });
+                                        }
+                                    }
+                                }}
+                            />
+                            <IonIcon src={enter} slot="end" size="small"></IonIcon>
+                        </IonItem>
+                    </IonCol>
+                    <IonCol>
+                        <IonItem>
+                            <IonInput
+                                inputMode="numeric"
+                                max={histogramMinMaxValue.max}
+                                min={histogramMinMaxValue.min}
+                                placeholder={`${currentValue.upper}`}
+                                onKeyUp={(e: React.KeyboardEvent) => {
+                                    if (e.key === 'Enter') {
+                                        const target = e.target as HTMLInputElement;
+                                        const inputValue = parseFloat(target.value);
+                                        if (target.value && inputValue < histogramMinMaxValue.max) {
+                                            setCurrentValue({ upper: currentValue.upper, lower: inputValue });
+                                        }
+                                    }
+                                }}
+                            />
+                            <IonIcon src={enter} slot="end" size="small"></IonIcon>
+                        </IonItem>
+                    </IonCol>
+                </IonRow>
+            </IonGrid>
+            </IonItem>
+
+                <div className="alignment-container">
+                    <ThresholdHistogram
+                        histogramData={histogramData}
+                        histogramOptions={histogramOptions}
+                        verticalLine1Position={currentValue.lower}
+                        verticalLine2Position={currentValue.upper}
+                    />
+                <IonRange
+                    className="custom-range"
+                    step={1}
+                    max={histogramMinMaxValue.max}
+                    min={histogramMinMaxValue.min}
+                    value={{ lower: currentValue.lower, upper: currentValue.upper }}
+                    pin={true}
+                    dualKnobs={true}
+                    onIonKnobMoveEnd={(e: CustomEvent) => {
+                        if (e.detail.value) {
+                            setCurrentValue(e.detail.value);
+                        }
+                    }}
+                ></IonRange>
+                </div>
+
+            <IonItem>
+                <OtsuThreshold
+                    lower={currentValue.lower}
+                    upper={currentValue.upper}
+                    onChange={handleValueChange}
+                />
+            </IonItem>
+        </IonList>
+    );
 };
 
 export default ManualThreshold;
