@@ -1,5 +1,18 @@
 import React from 'react';
-import { IonItem, IonLabel, IonInput, IonButton, IonIcon, IonPopover, IonContent, IonCard, IonCardHeader, IonCardContent, IonSelect, IonSelectOption } from '@ionic/react';
+import {
+    IonItem,
+    IonLabel,
+    IonInput,
+    IonButton,
+    IonIcon,
+    IonPopover,
+    IonContent,
+    IonCard,
+    IonCardHeader,
+    IonCardContent,
+    IonSelect,
+    IonSelectOption,
+} from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
 
 const diffusionOptions = [
@@ -23,7 +36,10 @@ const diffusionOptions = [
     },
 ];
 
-const DiffusionOptionSelect: React.FC<{ diffusionOption: number, setDiffusionOption: (value: number) => void }> = ({ diffusionOption, setDiffusionOption }) => {
+const DiffusionOptionSelect: React.FC<{ diffusionOption: number; setDiffusionOption: (value: number) => void }> = ({
+    diffusionOption,
+    setDiffusionOption,
+}) => {
     return (
         <IonItem>
             <IonLabel>Diffusion Option: </IonLabel>
@@ -47,10 +63,12 @@ const DiffusionOptionSelect: React.FC<{ diffusionOption: number, setDiffusionOpt
                 <IonContent>
                     <IonCard>
                         <IonCardHeader>
-                            <div style={{ fontWeight: 600, fontSize: 14 }}>{diffusionOptions.find(o => o.value === diffusionOption)?.type}</div>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>
+                                {diffusionOptions.find((o) => o.value === diffusionOption)?.type}
+                            </div>
                         </IonCardHeader>
                         <IonCardContent>
-                            {diffusionOptions.find(o => o.value === diffusionOption)?.description}
+                            {diffusionOptions.find((o) => o.value === diffusionOption)?.description}
                         </IonCardContent>
                     </IonCard>
                 </IonContent>
@@ -92,7 +110,9 @@ const KappaInputWithInfo: React.FC<KappaInputWithInfoProps> = ({ kappa, setKappa
                             <div style={{ fontWeight: 600, fontSize: 14 }}>Kappa Parameter</div>
                         </IonCardHeader>
                         <IonCardContent>
-                            Kappa is a parameter used in anisotropic diffusion filtering that controls the level of diffusion. Higher values result in stronger smoothing effects, while lower values preserve more detail.
+                            Kappa is a parameter used in anisotropic diffusion filtering that controls the level of
+                            diffusion. Higher values result in stronger smoothing effects, while lower values preserve
+                            more detail.
                         </IonCardContent>
                     </IonCard>
                 </IonContent>
@@ -109,7 +129,12 @@ interface TimeStepInputWithInfoProps {
     timeToast: number;
 }
 
-const TimeStepInputWithInfo: React.FC<TimeStepInputWithInfoProps> = ({ timeStep, setTimeStep, showToast, timeToast }) => {
+const TimeStepInputWithInfo: React.FC<TimeStepInputWithInfoProps> = ({
+    timeStep,
+    setTimeStep,
+    showToast,
+    timeToast,
+}) => {
     return (
         <IonItem>
             <IonLabel>Time step size: </IonLabel>
@@ -151,7 +176,12 @@ interface IterationsInputWithInfoProps {
     timeToast: number;
 }
 
-const IterationsInputWithInfo: React.FC<IterationsInputWithInfoProps> = ({ totalIterations, setTotalIterations, showToast, timeToast }) => {
+const IterationsInputWithInfo: React.FC<IterationsInputWithInfoProps> = ({
+    totalIterations,
+    setTotalIterations,
+    showToast,
+    timeToast,
+}) => {
     return (
         <IonItem>
             <IonLabel>Number of Iterations: </IonLabel>
@@ -176,7 +206,8 @@ const IterationsInputWithInfo: React.FC<IterationsInputWithInfoProps> = ({ total
                             <div style={{ fontWeight: 600, fontSize: 14 }}>Number of Iterations</div>
                         </IonCardHeader>
                         <IonCardContent>
-                            More iterations lead to greater diffusion and more smoothing. It tends to converge after a high value.
+                            More iterations lead to greater diffusion and more smoothing. It tends to converge after a
+                            high value.
                         </IonCardContent>
                     </IonCard>
                 </IonContent>

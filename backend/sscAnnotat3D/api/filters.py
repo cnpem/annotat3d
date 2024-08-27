@@ -354,3 +354,181 @@ def mean_apply(input_id: str, output_id: str):
     data_repo.set_image(output_id, data=output_img)
 
     return "success", 200
+
+
+
+@app.route("/filters/UMFilter/preview/<input_id>/<output_id>", methods=["POST"])
+@cross_origin()
+def unsharp_mask_preview(input_id: str, output_id: str):
+    input_img = data_repo.get_image(input_id)
+
+    if input_img is None:
+        return f"Image {input_id} not found.", 400
+
+    sigma = request.json["Sigma"]
+    ammount = request.json['Amount']
+    threshold = request.json['Threshold']
+
+    slice_num = request.json["slice"]
+    axis = request.json["axis"]
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    input_img_slice = input_img[slice_range]
+    input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)),dtype=np.float32)
+
+    output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
+
+    z,x,y = output_img.shape
+
+    #output_img = skimage_gaussian(input_img_3d, sigma, preserve_range=True).astype(input_img_3d.dtype)
+
+    unsharp_mask(input_img_3d,output_img,x,y,z,sigma,ammount,threshold,0)
+
+    data_repo.set_image(output_id, data=output_img)
+
+    return "success", 200
+
+
+@app.route("/filters/UMFilter/apply/<input_id>/<output_id>", methods=["POST"])
+@cross_origin()
+def unsharp_mask_apply(input_id: str, output_id: str):
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id),dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img),dtype=np.float32)
+
+    if input_img is None:
+        return f"Image {input_id} not found.", 400
+
+    sigma = request.json["Sigma"]
+    ammount = request.json['Amount']
+    threshold = request.json['Threshold']
+    convType = request.json["convType"]  # 2d or 3d
+
+    z,x,y = input_img.shape
+
+    if convType == "2d":
+        # convolution in x, y applied for all slices in the the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[request.json["axis"]]
+        typeImg2d = input_img[0].dtype
+        for i in range(input_img.shape[axisIndex]):
+            # on the annotat3D legacy, this was implemented forcing the stack through the z axis
+            if axisIndex == 0:
+                # stack following the z axis
+                #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
+                img = input_img[i]
+                unsharp_mask(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,sigma,ammount,threshold,0)
+
+            elif axisIndex == 1:
+                # stack following the y axis
+                #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
+                input = np.ascontiguousarray(input_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
+                z,x,y = out.shape
+                unsharp_mask(input,out,x,y,z,sigma,ammount,threshold,0)
+                output_img[:,i,:] = out
+
+            elif axisIndex == 2:
+                # stack following the x axis
+                #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
+                input = np.ascontiguousarray(input_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
+                z,x,y = out.shape
+                unsharp_mask(input,out,x,y,z,sigma,ammount,threshold,0)
+                output_img[:,:,i] = out
+
+
+    elif convType == "3d":
+        # convolution in x, y, z
+        unsharp_mask(input_img,output_img,x,y,z,sigma,ammount,threshold,1)
+
+    data_repo.set_image(output_id, data=output_img)
+
+    return "success", 200
+
+
+
+@app.route("/filters/median/preview/<input_id>/<output_id>", methods=["POST"])
+@cross_origin()
+def median_preview(input_id: str, output_id: str):
+    input_img = data_repo.get_image(input_id)
+
+    if input_img is None:
+        return f"Image {input_id} not found.", 400
+
+    N = request.json["Kernel"]
+
+    slice_num = request.json["slice"]
+    axis = request.json["axis"]
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    input_img_slice = input_img[slice_range]
+    input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)),dtype=np.float32)
+
+    output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
+
+    z,x,y = output_img.shape
+
+    #output_img = skimage_gaussian(input_img_3d, sigma, preserve_range=True).astype(input_img_3d.dtype)
+
+    mean(input_img_3d,output_img,x,y,z,N,N,1)
+
+    data_repo.set_image(output_id, data=output_img)
+
+    return "success", 200
+
+
+@app.route("/filters/median/apply/<input_id>/<output_id>", methods=["POST"])
+@cross_origin()
+def median_apply(input_id: str, output_id: str):
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id),dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img),dtype=np.float32)
+
+    if input_img is None:
+        return f"Image {input_id} not found.", 400
+
+    N = request.json["Kernel"]
+    convType = request.json["convType"]  # 2d or 3d
+
+    z,x,y = input_img.shape
+
+    if convType == "2d":
+        # convolution in x, y applied for all slices in the the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[request.json["axis"]]
+        typeImg2d = input_img[0].dtype
+        for i in range(input_img.shape[axisIndex]):
+            # on the annotat3D legacy, this was implemented forcing the stack through the z axis
+            if axisIndex == 0:
+                # stack following the z axis
+                #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
+                img = input_img[i]
+                median(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,N,N,1)
+
+            elif axisIndex == 1:
+                # stack following the y axis
+                #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
+                input = np.ascontiguousarray(input_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
+                z,x,y = out.shape
+                median(input,out,x,y,z,N,N,1)
+                output_img[:,i,:] = out
+
+            elif axisIndex == 2:
+                # stack following the x axis
+                #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
+                input = np.ascontiguousarray(input_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
+                z,x,y = out.shape
+                median(input,out,x,y,z,N,N,1)
+                output_img[:,:,i] = out
+
+
+    elif convType == "3d":
+        # convolution in x, y, z
+        median(input_img,output_img,x,y,z,N,N,N)
+
+    data_repo.set_image(output_id, data=output_img)
+
+    return "success", 200

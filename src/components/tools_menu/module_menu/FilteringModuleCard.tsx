@@ -555,10 +555,228 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
     );
 };
 
+const UnsharpMaskFilteringModuleCard: React.FC = () => {
+    const [showToast] = useIonToast();
+
+    const [disabled, setDisabled] = useState<boolean>(false);
+
+    const [Sigma, setSigma] = useStorageState<number>(sessionStorage, 'Sigma', 1);
+    const [Amount, setAmount] = useStorageState<number>(sessionStorage, 'Amount', 1);
+    const [Threshold, setThreshold] = useStorageState<number>(sessionStorage, 'Threshold', 0);
+    const [convType, setConvType] = useStorageState<string>(sessionStorage, 'convType', '2d');
+
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
+    const [loadingMsg, setLoadingMsg] = useState<string>('');
+
+    function onPreview() {
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number;
+            axis: string;
+        };
+
+        const params = {
+            Sigma,
+            Amount,
+            Threshold,
+            convType,
+            axis: curSlice.axis,
+            slice: curSlice.slice,
+        };
+
+        setDisabled(true);
+        setShowLoadingComp(true);
+        setLoadingMsg('Creating the preview');
+
+        sfetch('POST', '/filters/UMFilter/preview/image/future', JSON.stringify(params))
+            .then(() => {
+                dispatch('futureChanged', curSlice);
+            })
+            .finally(() => {
+                setDisabled(false);
+                setShowLoadingComp(false);
+                void showToast(toastMessages.onPreview, timeToast);
+            });
+    }
+
+    function onApply() {
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number;
+            axis: string;
+        };
+
+        const params = {
+            Sigma,
+            Amount,
+            Threshold,
+            convType,
+            axis: curSlice.axis,
+        };
+
+        setDisabled(true);
+        setShowLoadingComp(true);
+        setLoadingMsg('Applying');
+
+        sfetch('POST', '/filters/UMFilter/apply/image/image', JSON.stringify(params))
+            .then(() => {
+                onApplyThen(curSlice);
+            })
+            .finally(() => {
+                setDisabled(false);
+                setShowLoadingComp(false);
+                void showToast(toastMessages.onApply, timeToast);
+            });
+    }
+
+    return (
+        <ModuleCard disabled={disabled} name="Unsharp Mask Filter" onPreview={onPreview} onApply={onApply}>
+            <ModuleCardItem name="Filter Parameters">
+                <IonItem>
+                    <IonLabel>Sigma</IonLabel>
+                    <IonInput
+                        value={Sigma}
+                        type="number"
+                        step="0.1"
+                        min={0}
+                        onIonChange={(e) => setSigma(+e.detail.value!)}
+                    ></IonInput>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>Amount</IonLabel>
+                    <IonInput
+                        value={Amount}
+                        type="number"
+                        step="0.1"
+                        min={0}
+                        onIonChange={(e) => setAmount(+e.detail.value!)}
+                    ></IonInput>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>Threshold</IonLabel>
+                    <IonInput
+                        value={Threshold}
+                        type="number"
+                        step="0.1"
+                        min={0}
+                        onIonChange={(e) => setThreshold(+e.detail.value!)}
+                    ></IonInput>
+                </IonItem>
+                <IonRadioGroup value={convType} onIonChange={(e) => setConvType(e.detail.value)}>
+                    <IonItem>
+                        <IonLabel>2D Convolution</IonLabel>
+                        <IonRadio value="2d" />
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel>3D Convolution</IonLabel>
+                        <IonRadio value="3d"></IonRadio>
+                    </IonItem>
+                </IonRadioGroup>
+            </ModuleCardItem>
+            <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={loadingMsg} />
+        </ModuleCard>
+    );
+};
+
+const MedianFilteringModuleCard: React.FC = () => {
+    const [showToast] = useIonToast();
+
+    const [disabled, setDisabled] = useState<boolean>(false);
+
+    const [Kernel, setKernelSize] = useStorageState<number>(sessionStorage, 'Kernel', 3);
+    const [convType, setConvType] = useStorageState<string>(sessionStorage, 'convType', '2d');
+
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
+    const [loadingMsg, setLoadingMsg] = useState<string>('');
+
+    function onPreview() {
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number;
+            axis: string;
+        };
+
+        const params = {
+            Kernel,
+            convType,
+            axis: curSlice.axis,
+            slice: curSlice.slice,
+        };
+
+        setDisabled(true);
+        setShowLoadingComp(true);
+        setLoadingMsg('Creating the preview');
+
+        sfetch('POST', '/filters/median/preview/image/future', JSON.stringify(params))
+            .then(() => {
+                dispatch('futureChanged', curSlice);
+            })
+            .finally(() => {
+                setDisabled(false);
+                setShowLoadingComp(false);
+                void showToast(toastMessages.onPreview, timeToast);
+            });
+    }
+
+    function onApply() {
+        const curSlice = currentEventValue('sliceChanged') as {
+            slice: number;
+            axis: string;
+        };
+
+        const params = {
+            Kernel,
+            convType,
+            axis: curSlice.axis,
+        };
+
+        setDisabled(true);
+        setShowLoadingComp(true);
+        setLoadingMsg('Applying');
+
+        sfetch('POST', '/filters/median/apply/image/image', JSON.stringify(params))
+            .then(() => {
+                onApplyThen(curSlice);
+            })
+            .finally(() => {
+                setDisabled(false);
+                setShowLoadingComp(false);
+                void showToast(toastMessages.onApply, timeToast);
+            });
+    }
+
+    return (
+        <ModuleCard disabled={disabled} name="Median Filtering" onPreview={onPreview} onApply={onApply}>
+            <ModuleCardItem name="Filter Parameters">
+                <IonItem>
+                    <IonLabel>Kernel</IonLabel>
+                    <IonInput
+                        value={Kernel}
+                        type="number"
+                        step="1"
+                        min={3}
+                        onIonChange={(e) => setKernelSize(+e.detail.value!)}
+                    ></IonInput>
+                </IonItem>
+                <IonRadioGroup value={convType} onIonChange={(e) => setConvType(e.detail.value)}>
+                    <IonItem>
+                        <IonLabel>2D Convolution</IonLabel>
+                        <IonRadio value="2d" />
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel>3D Convolution</IonLabel>
+                        <IonRadio value="3d"></IonRadio>
+                    </IonItem>
+                </IonRadioGroup>
+            </ModuleCardItem>
+            <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={loadingMsg} />
+        </ModuleCard>
+    );
+};
+
 export {
     BM3DFilteringModuleCard,
     GaussianFilteringModuleCard,
     MeanFilteringModuleCard,
     NonLocalMeansFilteringModuleCard,
     AnisotropicDiffusionFilteringModuleCard,
+    UnsharpMaskFilteringModuleCard,
+    MedianFilteringModuleCard,
 };

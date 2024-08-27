@@ -8,6 +8,8 @@ import {
     NonLocalMeansFilteringModuleCard,
     AnisotropicDiffusionFilteringModuleCard,
     MeanFilteringModuleCard,
+    MedianFilteringModuleCard,
+    UnsharpMaskFilteringModuleCard,
 } from './FilteringModuleCard';
 import GroupSelect from './GroupSelect';
 import PixelSegmentationModuleCard from './PixelSegmentationModuleCard';
@@ -27,6 +29,8 @@ const moduleOptions = [
             { id: 'nlm_filter', label: 'Non Local Means Filter' },
             { id: 'aniso_filter', label: 'Anisotropic Diffusion Filter' },
             { id: 'mean_filter', label: 'Mean Filter' },
+            { id: 'median_filter', label: 'Median Filter' },
+            { id: 'unsharp_mask_filter', label: 'Unsharp Mask Filter' },
         ],
     },
 ];
@@ -40,6 +44,8 @@ const canvas: Record<string, 'drawing' | 'imaging'> = {
     nlm_filter: 'imaging',
     aniso_filter: 'imaging',
     mean_filter: 'imaging',
+    median_filter: 'imaging',
+    unsharp_mask_filter: 'imaging',
 };
 
 const ProcessingMenu: React.FC = () => {
@@ -94,6 +100,12 @@ const ProcessingMenu: React.FC = () => {
             </IonList>
             <IonList hidden={curModule !== 'mean_filter'}>
                 <MeanFilteringModuleCard />
+            </IonList>
+            <IonList hidden={curModule !== 'median_filter'}>
+                <MedianFilteringModuleCard />
+            </IonList>
+            <IonList hidden={curModule !== 'unsharp_mask_filter'}>
+                <UnsharpMaskFilteringModuleCard />
             </IonList>
             <MessageCard />
         </Fragment>
