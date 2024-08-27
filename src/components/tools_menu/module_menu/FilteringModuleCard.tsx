@@ -755,16 +755,6 @@ const MedianFilteringModuleCard: React.FC = () => {
                         onIonChange={(e) => setKernelSize(+e.detail.value!)}
                     ></IonInput>
                 </IonItem>
-                <IonRadioGroup value={convType} onIonChange={(e) => setConvType(e.detail.value)}>
-                    <IonItem>
-                        <IonLabel>2D Convolution</IonLabel>
-                        <IonRadio value="2d" />
-                    </IonItem>
-                    <IonItem>
-                        <IonLabel>3D Convolution</IonLabel>
-                        <IonRadio value="3d"></IonRadio>
-                    </IonItem>
-                </IonRadioGroup>
             </ModuleCardItem>
             <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={loadingMsg} />
         </ModuleCard>

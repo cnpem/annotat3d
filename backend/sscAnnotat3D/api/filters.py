@@ -488,7 +488,7 @@ def median_apply(input_id: str, output_id: str):
         return f"Image {input_id} not found.", 400
 
     N = request.json["Kernel"]
-    convType = request.json["convType"]  # 2d or 3d
+    convType = "2d"#request.json["convType"]  # 2d or 3d
 
     z,x,y = input_img.shape
 
