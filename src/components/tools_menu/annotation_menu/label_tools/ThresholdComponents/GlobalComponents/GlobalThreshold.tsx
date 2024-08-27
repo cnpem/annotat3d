@@ -20,7 +20,7 @@ import OtsuThreshold from './OtsuThreshold';
 
 import enter from '../../../../../public/icon-park-solid--enter-key.svg';
 import '../../../vis_menu/HistogramAlignment.css';
-const ManualThreshold: React.FC = () => {
+const GlobalThreshold: React.FC = () => {
 
     const baseHistogram = {
         labels: [0],
@@ -253,4 +253,4 @@ const ManualThreshold: React.FC = () => {
     );
 };
 
-export default ManualThreshold;
+export default GlobalThreshold;
