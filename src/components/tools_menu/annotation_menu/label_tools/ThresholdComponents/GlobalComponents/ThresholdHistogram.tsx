@@ -12,8 +12,12 @@ interface HistogramProps {
     verticalLine2Position: number;
 }
 
-const ThresholdHistogram: React.FC<HistogramProps> = ({ histogramData, histogramOptions, verticalLine1Position, verticalLine2Position }) => {
-
+const ThresholdHistogram: React.FC<HistogramProps> = ({
+    histogramData,
+    histogramOptions,
+    verticalLine1Position,
+    verticalLine2Position,
+}) => {
     // Function to find the closest label index using binary search
     const getClosestLabelIndex = (labels: number[], position: number) => {
         let left = 0;

@@ -21,7 +21,6 @@ import OtsuThreshold from './OtsuThreshold';
 import enter from '../../../../../public/icon-park-solid--enter-key.svg';
 import '../../../vis_menu/HistogramAlignment.css';
 const GlobalThreshold: React.FC = () => {
-
     const baseHistogram = {
         labels: [0],
         datasets: [
@@ -77,11 +76,12 @@ const GlobalThreshold: React.FC = () => {
             tooltip: {
                 enabled: true,
             },
-/*             hover: {
+            /*             hover: {
                 mode: null, // Disable hover effects
             },
             events: [],
- */        },
+ */
+        },
     };
 
     const [histogramData, setHistogramData] = useState(baseHistogram);
@@ -101,7 +101,7 @@ const GlobalThreshold: React.FC = () => {
     useEffect(() => {
         console.log('Threshold value changed');
     }, [currentValue]);
-    
+
     const handleValueChange = (newValues: { lower: number; upper: number }) => {
         setCurrentValue(newValues);
     };
@@ -147,85 +147,85 @@ const GlobalThreshold: React.FC = () => {
 
     return (
         <IonList>
-        <IonItem>
-        <IonRadioGroup 
-            value={selectedDimension} 
-            onIonChange={(e) => setSelectedDimension(e.detail.value)}
-            style={{ width: '100%' }}
-        >
-            <IonGrid>
-            <IonRow class="ion-justify-content-center ion-align-items-center">
-                <IonCol size="auto">
-                <IonItem lines="none">
-                    <IonRadio slot="start" value="2D" />
-                    <IonLabel>2D</IonLabel>
-                </IonItem>
-                </IonCol>
-                <IonCol size="auto">
-                <IonItem lines="none">
-                    <IonRadio slot="start" value="3D" />
-                    <IonLabel>3D</IonLabel>
-                </IonItem>
-                </IonCol>
-            </IonRow>
-            </IonGrid>
-        </IonRadioGroup>
-        </IonItem>
-
-        <IonItem>
-        <IonGrid>
-                <IonRow>
-                    <IonCol>
-                        <IonItem>
-                            <IonInput
-                                inputMode="numeric"
-                                max={histogramMinMaxValue.max}
-                                min={histogramMinMaxValue.min}
-                                placeholder={`${currentValue.lower}`}
-                                onKeyUp={(e: React.KeyboardEvent) => {
-                                    if (e.key === 'Enter') {
-                                        const target = e.target as HTMLInputElement;
-                                        const inputValue = parseFloat(target.value);
-                                        if (target.value && inputValue > histogramMinMaxValue.min) {
-                                            setCurrentValue({ lower: currentValue.lower, upper: inputValue });
-                                        }
-                                    }
-                                }}
-                            />
-                            <IonIcon src={enter} slot="end" size="small"></IonIcon>
-                        </IonItem>
-                    </IonCol>
-                    <IonCol>
-                        <IonItem>
-                            <IonInput
-                                inputMode="numeric"
-                                max={histogramMinMaxValue.max}
-                                min={histogramMinMaxValue.min}
-                                placeholder={`${currentValue.upper}`}
-                                onKeyUp={(e: React.KeyboardEvent) => {
-                                    if (e.key === 'Enter') {
-                                        const target = e.target as HTMLInputElement;
-                                        const inputValue = parseFloat(target.value);
-                                        if (target.value && inputValue < histogramMinMaxValue.max) {
-                                            setCurrentValue({ upper: currentValue.upper, lower: inputValue });
-                                        }
-                                    }
-                                }}
-                            />
-                            <IonIcon src={enter} slot="end" size="small"></IonIcon>
-                        </IonItem>
-                    </IonCol>
-                </IonRow>
-            </IonGrid>
+            <IonItem>
+                <IonRadioGroup
+                    value={selectedDimension}
+                    onIonChange={(e) => setSelectedDimension(e.detail.value)}
+                    style={{ width: '100%' }}
+                >
+                    <IonGrid>
+                        <IonRow class="ion-justify-content-center ion-align-items-center">
+                            <IonCol size="auto">
+                                <IonItem lines="none">
+                                    <IonRadio slot="start" value="2D" />
+                                    <IonLabel>2D</IonLabel>
+                                </IonItem>
+                            </IonCol>
+                            <IonCol size="auto">
+                                <IonItem lines="none">
+                                    <IonRadio slot="start" value="3D" />
+                                    <IonLabel>3D</IonLabel>
+                                </IonItem>
+                            </IonCol>
+                        </IonRow>
+                    </IonGrid>
+                </IonRadioGroup>
             </IonItem>
 
-                <div className="alignment-container">
-                    <ThresholdHistogram
-                        histogramData={histogramData}
-                        histogramOptions={histogramOptions}
-                        verticalLine1Position={currentValue.lower}
-                        verticalLine2Position={currentValue.upper}
-                    />
+            <IonItem>
+                <IonGrid>
+                    <IonRow>
+                        <IonCol>
+                            <IonItem>
+                                <IonInput
+                                    inputMode="numeric"
+                                    max={histogramMinMaxValue.max}
+                                    min={histogramMinMaxValue.min}
+                                    placeholder={`${currentValue.lower}`}
+                                    onKeyUp={(e: React.KeyboardEvent) => {
+                                        if (e.key === 'Enter') {
+                                            const target = e.target as HTMLInputElement;
+                                            const inputValue = parseFloat(target.value);
+                                            if (target.value && inputValue > histogramMinMaxValue.min) {
+                                                setCurrentValue({ lower: currentValue.lower, upper: inputValue });
+                                            }
+                                        }
+                                    }}
+                                />
+                                <IonIcon src={enter} slot="end" size="small"></IonIcon>
+                            </IonItem>
+                        </IonCol>
+                        <IonCol>
+                            <IonItem>
+                                <IonInput
+                                    inputMode="numeric"
+                                    max={histogramMinMaxValue.max}
+                                    min={histogramMinMaxValue.min}
+                                    placeholder={`${currentValue.upper}`}
+                                    onKeyUp={(e: React.KeyboardEvent) => {
+                                        if (e.key === 'Enter') {
+                                            const target = e.target as HTMLInputElement;
+                                            const inputValue = parseFloat(target.value);
+                                            if (target.value && inputValue < histogramMinMaxValue.max) {
+                                                setCurrentValue({ upper: currentValue.upper, lower: inputValue });
+                                            }
+                                        }
+                                    }}
+                                />
+                                <IonIcon src={enter} slot="end" size="small"></IonIcon>
+                            </IonItem>
+                        </IonCol>
+                    </IonRow>
+                </IonGrid>
+            </IonItem>
+
+            <div className="alignment-container">
+                <ThresholdHistogram
+                    histogramData={histogramData}
+                    histogramOptions={histogramOptions}
+                    verticalLine1Position={currentValue.lower}
+                    verticalLine2Position={currentValue.upper}
+                />
                 <IonRange
                     className="custom-range"
                     step={1}
@@ -240,14 +240,10 @@ const GlobalThreshold: React.FC = () => {
                         }
                     }}
                 ></IonRange>
-                </div>
+            </div>
 
             <IonItem>
-                <OtsuThreshold
-                    lower={currentValue.lower}
-                    upper={currentValue.upper}
-                    onChange={handleValueChange}
-                />
+                <OtsuThreshold lower={currentValue.lower} upper={currentValue.upper} onChange={handleValueChange} />
             </IonItem>
         </IonList>
     );

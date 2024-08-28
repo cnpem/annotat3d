@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-    IonList,
-    IonItem,
-    IonLabel,
-    IonSelect,
-    IonSelectOption,
-} from '@ionic/react';
+import { IonList, IonItem, IonLabel, IonSelect, IonSelectOption } from '@ionic/react';
 
 import GlobalThreshold from './ThresholdComponents/GlobalComponents/GlobalThreshold';
 import LocalThreshold from './ThresholdComponents/LocalComponents/LocalThreshold';

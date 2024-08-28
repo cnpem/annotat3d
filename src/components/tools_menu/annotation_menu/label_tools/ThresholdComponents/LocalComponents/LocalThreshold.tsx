@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-    IonList,
-    IonItem,
-    IonLabel,
-    IonSelect,
-    IonSelectOption,
-} from '@ionic/react';
+import { IonList, IonItem, IonLabel, IonSelect, IonSelectOption } from '@ionic/react';
 
 import NiblackThreshold from './NiblackThreshold';
 import SauvolaThreshold from './SauvolaThreshold';

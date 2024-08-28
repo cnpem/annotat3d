@@ -8,7 +8,6 @@ interface CurrentValue {
 }
 
 const OtsuThreshold: React.FC<CurrentValue> = ({ lower, upper, onChange }) => {
-
     //onChange({ lower: newLower, upper: newUpper });
 
     return (
