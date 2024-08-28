@@ -17,6 +17,7 @@ import {
     IonGrid,
     IonRow,
     IonCol,
+    IonNote,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
 
@@ -25,19 +26,20 @@ const diffusionOptions = [
         value: 1,
         label: 'Exponential decay',
         type: 'Diffusion',
-        description: 'This option applies exponential decay to the diffusion process.',
+        description: 'Original paper method. Applies exponential decay to the diffusion process.',
     },
     {
         value: 2,
         label: 'Inverse quadratic decay',
         type: 'Diffusion',
-        description: 'This option applies inverse quadratic decay to the diffusion process.',
+        description: 'Original paper method. Applies inverse quadratic decay to the diffusion process.',
     },
     {
         value: 3,
         label: 'Hyperbolic tangent decay',
         type: 'Diffusion',
-        description: 'Tends to converge faster (less iterations) with better results.',
+        description:
+            'Best method, requires higher kappa. Tends to converge faster (less iterations) with better results.',
     },
 ];
 
@@ -221,38 +223,45 @@ const AnisoNeighbourInputWithInfo: React.FC<AnisoNeighbourInputWithInfoProps> = 
                 style={{ width: '100%' }}
             >
                 <IonGrid>
-                    <IonRow class="ion-justify-content-center ion-align-items-center">
+                    <IonRow>
                         <IonCol size="auto">
-                            <IonItem lines="none">
-                                <IonRadio slot="start" value="2D" />
-                                <IonLabel>2D</IonLabel>
-                            </IonItem>
+                            <IonLabel>Diffusion neighbourhood</IonLabel>
                         </IonCol>
-                        <IonCol size="auto">
-                            <IonItem lines="none">
-                                <IonRadio slot="start" value="3D" />
-                                <IonLabel>3D</IonLabel>
-                            </IonItem>
-                        </IonCol>
+                        <IonButton id="showNeighborInfo" size="small" fill="clear">
+                            <IonIcon icon={informationCircleOutline} />
+                        </IonButton>
                     </IonRow>
                 </IonGrid>
+                <IonGrid>
+                    <IonRow class="ion-justify-content-center ion-align-items-center">
+                        <IonCol size="auto">
+                            <IonRadioGroup value="2D" style={{ display: 'flex', alignItems: 'center' }}>
+                                <IonItem lines="none">
+                                    <IonRadio slot="start" value="2D" />
+                                    <IonLabel>2D</IonLabel>
+                                </IonItem>
+                                <IonItem lines="none">
+                                    <IonRadio slot="start" value="3D" />
+                                    <IonLabel>3D</IonLabel>
+                                </IonItem>
+                            </IonRadioGroup>
+                        </IonCol>
+                    </IonRow>
+                    <IonPopover trigger="showNeighborInfo" triggerAction="click">
+                        <IonContent>
+                            <IonCard>
+                                <IonCardHeader>
+                                    <div style={{ fontWeight: 600, fontSize: 14 }}>Neighbour 2D or 3D</div>
+                                </IonCardHeader>
+                                <IonCardContent>
+                                    Choose between 2D and 3D options for anisotropic diffusion. The choice affects how
+                                    the diffusion is applied across dimensions.
+                                </IonCardContent>
+                            </IonCard>
+                        </IonContent>
+                    </IonPopover>
+                </IonGrid>
             </IonRadioGroup>
-            <IonButton id="showNeighborInfo" slot="end" size="small" fill="clear">
-                <IonIcon icon={informationCircleOutline} />
-            </IonButton>
-            <IonPopover trigger="showNeighborInfo" reference="event">
-                <IonContent>
-                    <IonCard>
-                        <IonCardHeader>
-                            <div style={{ fontWeight: 600, fontSize: 14 }}>Neighbour 2D or 3D</div>
-                        </IonCardHeader>
-                        <IonCardContent>
-                            Choose between 2D and 3D options for anisotropic diffusion. The choice affects how the
-                            diffusion is applied across dimensions.
-                        </IonCardContent>
-                    </IonCard>
-                </IonContent>
-            </IonPopover>
         </IonItem>
     );
 };
