@@ -266,13 +266,6 @@ const AnisoNeighbourInputWithInfo: React.FC<AnisoNeighbourInputWithInfoProps> = 
     );
 };
 
-export {
-    DiffusionOptionSelect,
-    KappaInputWithInfo,
-    TimeStepInputWithInfo,
-    IterationsInputWithInfo,
-    AnisoNeighbourInputWithInfo,
-};
 // KernelInputWithInfo Component
 interface KernelMeanInputWithInfoProps {
     Kernel: number;
@@ -569,4 +562,5 @@ export {
     SigmaUMInputWithInfo,
     AmountInputWithInfo,
     ThresholdInputWithInfo,
+    AnisoNeighbourInputWithInfo,
 };
