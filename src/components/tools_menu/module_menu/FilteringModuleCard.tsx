@@ -22,6 +22,12 @@ import {
     KappaInputWithInfo,
     TimeStepInputWithInfo,
     IterationsInputWithInfo,
+    KernelMeanInputWithInfo,
+    KernelMedianInputWithInfo,
+    SigmaGaussianInputWithInfo,
+    SigmaUMInputWithInfo,
+    AmountInputWithInfo,
+    ThresholdInputWithInfo,
 } from './FilteringOptions';
 
 function onApplyThen(info: { slice: number; axis: string }) {
@@ -192,16 +198,12 @@ const GaussianFilteringModuleCard: React.FC = () => {
     return (
         <ModuleCard disabled={disabled} name="Gaussian Filtering" onPreview={onPreview} onApply={onApply}>
             <ModuleCardItem name="Filter Parameters">
-                <IonItem>
-                    <IonLabel>Sigma</IonLabel>
-                    <IonInput
-                        value={sigma}
-                        type="number"
-                        step="0.1"
-                        min={0.1}
-                        onIonChange={(e) => setSigma(+e.detail.value!)}
-                    ></IonInput>
-                </IonItem>
+                <SigmaGaussianInputWithInfo
+                    Sigma={sigma}
+                    setSigma={setSigma}
+                    showToast={showToast}
+                    timeToast={timeToast}
+                />
                 <IonRadioGroup value={convType} onIonChange={(e) => setConvType(e.detail.value)}>
                     <IonItem>
                         <IonLabel>2D Convolution</IonLabel>
@@ -287,16 +289,12 @@ const MeanFilteringModuleCard: React.FC = () => {
     return (
         <ModuleCard disabled={disabled} name="Mean Filtering" onPreview={onPreview} onApply={onApply}>
             <ModuleCardItem name="Filter Parameters">
-                <IonItem>
-                    <IonLabel>Kernel</IonLabel>
-                    <IonInput
-                        value={Kernel}
-                        type="number"
-                        step="1"
-                        min={3}
-                        onIonChange={(e) => setKernelSize(+e.detail.value!)}
-                    ></IonInput>
-                </IonItem>
+                <KernelMeanInputWithInfo
+                    Kernel={Kernel}
+                    setKernelSize={setKernelSize}
+                    showToast={showToast}
+                    timeToast={timeToast}
+                />
                 <IonRadioGroup value={convType} onIonChange={(e) => setConvType(e.detail.value)}>
                     <IonItem>
                         <IonLabel>2D Convolution</IonLabel>
@@ -630,36 +628,19 @@ const UnsharpMaskFilteringModuleCard: React.FC = () => {
     return (
         <ModuleCard disabled={disabled} name="Unsharp Mask Filter" onPreview={onPreview} onApply={onApply}>
             <ModuleCardItem name="Filter Parameters">
-                <IonItem>
-                    <IonLabel>Sigma</IonLabel>
-                    <IonInput
-                        value={Sigma}
-                        type="number"
-                        step="0.1"
-                        min={0}
-                        onIonChange={(e) => setSigma(+e.detail.value!)}
-                    ></IonInput>
-                </IonItem>
-                <IonItem>
-                    <IonLabel>Amount</IonLabel>
-                    <IonInput
-                        value={Amount}
-                        type="number"
-                        step="0.1"
-                        min={0}
-                        onIonChange={(e) => setAmount(+e.detail.value!)}
-                    ></IonInput>
-                </IonItem>
-                <IonItem>
-                    <IonLabel>Threshold</IonLabel>
-                    <IonInput
-                        value={Threshold}
-                        type="number"
-                        step="0.1"
-                        min={0}
-                        onIonChange={(e) => setThreshold(+e.detail.value!)}
-                    ></IonInput>
-                </IonItem>
+                <SigmaUMInputWithInfo Sigma={Sigma} setSigma={setSigma} showToast={showToast} timeToast={timeToast} />
+                <AmountInputWithInfo
+                    Amount={Amount}
+                    setAmount={setAmount}
+                    showToast={showToast}
+                    timeToast={timeToast}
+                />
+                <ThresholdInputWithInfo
+                    Threshold={Threshold}
+                    setThreshold={setThreshold}
+                    showToast={showToast}
+                    timeToast={timeToast}
+                />
                 <IonRadioGroup value={convType} onIonChange={(e) => setConvType(e.detail.value)}>
                     <IonItem>
                         <IonLabel>2D Convolution</IonLabel>
@@ -745,16 +726,12 @@ const MedianFilteringModuleCard: React.FC = () => {
     return (
         <ModuleCard disabled={disabled} name="Median Filtering" onPreview={onPreview} onApply={onApply}>
             <ModuleCardItem name="Filter Parameters">
-                <IonItem>
-                    <IonLabel>Kernel</IonLabel>
-                    <IonInput
-                        value={Kernel}
-                        type="number"
-                        step="1"
-                        min={3}
-                        onIonChange={(e) => setKernelSize(+e.detail.value!)}
-                    ></IonInput>
-                </IonItem>
+                <KernelMedianInputWithInfo
+                    Kernel={Kernel}
+                    setKernelSize={setKernelSize}
+                    showToast={showToast}
+                    timeToast={timeToast}
+                />
             </ModuleCardItem>
             <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={loadingMsg} />
         </ModuleCard>
