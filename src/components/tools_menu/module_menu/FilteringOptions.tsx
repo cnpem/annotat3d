@@ -266,10 +266,301 @@ const AnisoNeighbourInputWithInfo: React.FC<AnisoNeighbourInputWithInfoProps> = 
     );
 };
 
+// KernelInputWithInfo Component
+interface KernelMeanInputWithInfoProps {
+    Kernel: number;
+    setKernelSize: (value: number) => void;
+    showToast: (message: string, duration: number) => void;
+    timeToast: number;
+}
+
+const KernelMeanInputWithInfo: React.FC<KernelMeanInputWithInfoProps> = ({
+    Kernel,
+    setKernelSize,
+    showToast,
+    timeToast,
+}) => {
+    return (
+        <IonItem>
+            <IonLabel>Kernel: </IonLabel>
+            <IonInput
+                value={Kernel}
+                type="number"
+                step="1"
+                min={3}
+                onIonChange={(e) =>
+                    typeof +e.detail.value! === 'number'
+                        ? setKernelSize(+e.detail.value!)
+                        : void showToast('Please insert a valid number!', timeToast)
+                }
+            ></IonInput>
+            <IonButton id="showKernelMeanInfo" slot="end" size="small" fill="clear">
+                <IonIcon icon={informationCircleOutline} />
+            </IonButton>
+            <IonPopover trigger="showKernelMeanInfo" reference="event">
+                <IonContent>
+                    <IonCard>
+                        <IonCardHeader>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>Kernel Size</div>
+                        </IonCardHeader>
+                        <IonCardContent>
+                            Specifies the size of the kernel, which defines the area/volume around each pixel/voxel that
+                            the filter considers when processing the image. A larger kernel means more neighboring
+                            elements are included in the calculation.
+                        </IonCardContent>
+                    </IonCard>
+                </IonContent>
+            </IonPopover>
+        </IonItem>
+    );
+};
+
+// KernelInputWithInfo Component
+interface KernelMedianInputWithInfoProps {
+    Kernel: number;
+    setKernelSize: (value: number) => void;
+    showToast: (message: string, duration: number) => void;
+    timeToast: number;
+}
+
+const KernelMedianInputWithInfo: React.FC<KernelMedianInputWithInfoProps> = ({
+    Kernel,
+    setKernelSize,
+    showToast,
+    timeToast,
+}) => {
+    return (
+        <IonItem>
+            <IonLabel>Kernel: </IonLabel>
+            <IonInput
+                value={Kernel}
+                type="number"
+                step="1"
+                min={3}
+                onIonChange={(e) =>
+                    typeof +e.detail.value! === 'number'
+                        ? setKernelSize(+e.detail.value!)
+                        : void showToast('Please insert a valid number!', timeToast)
+                }
+            ></IonInput>
+            <IonButton id="showKernelMedianInfo" slot="end" size="small" fill="clear">
+                <IonIcon icon={informationCircleOutline} />
+            </IonButton>
+            <IonPopover trigger="showKernelMedianInfo" reference="event">
+                <IonContent>
+                    <IonCard>
+                        <IonCardHeader>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>Kernel Size</div>
+                        </IonCardHeader>
+                        <IonCardContent>
+                            Specifies the size of the kernel, which defines the area around each pixel that processing
+                            processing the image. A larger kernel means more neighboring elements are included in
+                            included in the calculation.
+                        </IonCardContent>
+                    </IonCard>
+                </IonContent>
+            </IonPopover>
+        </IonItem>
+    );
+};
+
+// SigmaInputWithInfo Component
+interface SigmaGaussianInputWithInfoProps {
+    Sigma: number;
+    setSigma: (value: number) => void;
+    showToast: (message: string, duration: number) => void;
+    timeToast: number;
+}
+
+const SigmaGaussianInputWithInfo: React.FC<SigmaGaussianInputWithInfoProps> = ({
+    Sigma,
+    setSigma,
+    showToast,
+    timeToast,
+}) => {
+    return (
+        <IonItem>
+            <IonLabel>Sigma: </IonLabel>
+            <IonInput
+                value={Sigma}
+                type="number"
+                step="0.1"
+                min={0}
+                onIonChange={(e) =>
+                    typeof +e.detail.value! === 'number'
+                        ? setSigma(+e.detail.value!)
+                        : void showToast('Please insert a valid number!', timeToast)
+                }
+            ></IonInput>
+            <IonButton id="showSigmaGaussianInfo" slot="end" size="small" fill="clear">
+                <IonIcon icon={informationCircleOutline} />
+            </IonButton>
+            <IonPopover trigger="showSigmaGaussianInfo" reference="event">
+                <IonContent>
+                    <IonCard>
+                        <IonCardHeader>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>Sigma</div>
+                        </IonCardHeader>
+                        <IonCardContent>
+                            Sigma determines the amount of smoothing applied by the Gaussian filter. A larger sigma
+                            value results in more blurring, as it spreads out the effect over a wider area or volume.
+                            Adjusting sigma allows for fine-tuning the level of detail in the filtered image.
+                        </IonCardContent>
+                    </IonCard>
+                </IonContent>
+            </IonPopover>
+        </IonItem>
+    );
+};
+
+// SigmaInputWithInfo Component
+interface SigmaUMInputWithInfoProps {
+    Sigma: number;
+    setSigma: (value: number) => void;
+    showToast: (message: string, duration: number) => void;
+    timeToast: number;
+}
+
+const SigmaUMInputWithInfo: React.FC<SigmaUMInputWithInfoProps> = ({ Sigma, setSigma, showToast, timeToast }) => {
+    return (
+        <IonItem>
+            <IonLabel>Sigma: </IonLabel>
+            <IonInput
+                value={Sigma}
+                type="number"
+                step="0.1"
+                min={0}
+                onIonChange={(e) =>
+                    typeof +e.detail.value! === 'number'
+                        ? setSigma(+e.detail.value!)
+                        : void showToast('Please insert a valid number!', timeToast)
+                }
+            ></IonInput>
+            <IonButton id="showSigmaUMInfo" slot="end" size="small" fill="clear">
+                <IonIcon icon={informationCircleOutline} />
+            </IonButton>
+            <IonPopover trigger="showSigmaUMInfo" reference="event">
+                <IonContent>
+                    <IonCard>
+                        <IonCardHeader>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>Sigma</div>
+                        </IonCardHeader>
+                        <IonCardContent>
+                            Sigma determines the amount of smoothing applied by the Gaussian filter. A larger sigma
+                            value results in more blurring, as it spreads out the effect over a wider area or volume.
+                            Adjusting sigma allows for fine-tuning the level of detail in the filtered image.
+                        </IonCardContent>
+                    </IonCard>
+                </IonContent>
+            </IonPopover>
+        </IonItem>
+    );
+};
+
+// AmountInputWithInfo Component
+interface AmountInputWithInfoProps {
+    Amount: number;
+    setAmount: (value: number) => void;
+    showToast: (message: string, duration: number) => void;
+    timeToast: number;
+}
+
+const AmountInputWithInfo: React.FC<AmountInputWithInfoProps> = ({ Amount, setAmount, showToast, timeToast }) => {
+    return (
+        <IonItem>
+            <IonLabel>Amount: </IonLabel>
+            <IonInput
+                value={Amount}
+                type="number"
+                step="0.1"
+                min={0}
+                onIonChange={(e) =>
+                    typeof +e.detail.value! === 'number'
+                        ? setAmount(+e.detail.value!)
+                        : void showToast('Please insert a valid number!', timeToast)
+                }
+            ></IonInput>
+            <IonButton id="showAmountInfo" slot="end" size="small" fill="clear">
+                <IonIcon icon={informationCircleOutline} />
+            </IonButton>
+            <IonPopover trigger="showAmountInfo" reference="event">
+                <IonContent>
+                    <IonCard>
+                        <IonCardHeader>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>Amount</div>
+                        </IonCardHeader>
+                        <IonCardContent>
+                            The Amount parameter controls the intensity of the sharpening effect in the unsharp mask
+                            filter. Higher values increase the contrast between edges, making details appear more
+                            pronounced. Adjusting this value allows you to enhance or soften the sharpening effect.
+                        </IonCardContent>
+                    </IonCard>
+                </IonContent>
+            </IonPopover>
+        </IonItem>
+    );
+};
+
+// ThresholdInputWithInfo Component
+interface ThresholdInputWithInfoProps {
+    Threshold: number;
+    setThreshold: (value: number) => void;
+    showToast: (message: string, duration: number) => void;
+    timeToast: number;
+}
+
+const ThresholdInputWithInfo: React.FC<ThresholdInputWithInfoProps> = ({
+    Threshold,
+    setThreshold,
+    showToast,
+    timeToast,
+}) => {
+    return (
+        <IonItem>
+            <IonLabel>Threshold: </IonLabel>
+            <IonInput
+                value={Threshold}
+                type="number"
+                step="0.1"
+                min={0}
+                onIonChange={(e) =>
+                    typeof +e.detail.value! === 'number'
+                        ? setThreshold(+e.detail.value!)
+                        : void showToast('Please insert a valid number!', timeToast)
+                }
+            ></IonInput>
+            <IonButton id="showThresholdInfo" slot="end" size="small" fill="clear">
+                <IonIcon icon={informationCircleOutline} />
+            </IonButton>
+            <IonPopover trigger="showThresholdInfo" reference="event">
+                <IonContent>
+                    <IonCard>
+                        <IonCardHeader>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>Threshold Value</div>
+                        </IonCardHeader>
+                        <IonCardContent>
+                            The Threshold parameter determines the minimum contrast level required for sharpening to be
+                            applied. Higher threshold values prevent sharpening of low-contrast areas, focusing the
+                            effect only on more pronounced edges. This helps in avoiding noise enhancement in smoother
+                            areas of the image.
+                        </IonCardContent>
+                    </IonCard>
+                </IonContent>
+            </IonPopover>
+        </IonItem>
+    );
+};
+
 export {
     DiffusionOptionSelect,
     KappaInputWithInfo,
     TimeStepInputWithInfo,
     IterationsInputWithInfo,
+    KernelMeanInputWithInfo,
+    KernelMedianInputWithInfo,
+    SigmaGaussianInputWithInfo,
+    SigmaUMInputWithInfo,
+    AmountInputWithInfo,
+    ThresholdInputWithInfo,
     AnisoNeighbourInputWithInfo,
 };
