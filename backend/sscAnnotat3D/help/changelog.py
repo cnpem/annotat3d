@@ -1,8 +1,9 @@
-import sys
 import os
+import sys
+
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QDialog
 
 try:
     from PyQt5.QtWebEngineWidgets import *
@@ -37,10 +38,10 @@ class changelog_help(QDialog):
             # self.button.clicked.connect(self.function_close)
             self.show()
         else:
-            print('Fallback show help on browser')
+            print("Fallback show help on browser")
             webbrowser.open(file_path)
 
-            print('closing ...')
+            print("closing ...")
 
             self.timer = QTimer()
             self.timer.timeout.connect(self.function_close)
