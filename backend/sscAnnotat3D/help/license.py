@@ -1,13 +1,17 @@
-import sys
 import os
+import sys
+
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QDialog
+
 try:
     from PyQt5.QtWebEngineWidgets import *
+
     __has_webengine__ = True
-except:  #for ppc
+except:  # for ppc
     import webbrowser
+
     __has_webengine__ = False
 
 
@@ -18,7 +22,7 @@ class license_help(QDialog):
 
         self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint | Qt.WA_DeleteOnClose)
 
-        file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'ui', 'COPYING', "COPYING.html"))
+        file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ui", "COPYING", "COPYING.html"))
 
         print(file_path)
 
@@ -36,13 +40,13 @@ class license_help(QDialog):
             self.layout_options.addWidget(self.browser, 0, 0)
             self.setLayout(self.layout_options)
 
-            #self.button.clicked.connect(self.function_close)
+            # self.button.clicked.connect(self.function_close)
             self.show()
         else:
-            print('Fallback show license on browser')
+            print("Fallback show license on browser")
             webbrowser.open(file_path)
 
-            print('closing ...')
+            print("closing ...")
 
             self.timer = QTimer()
             self.timer.timeout.connect(self.function_close)

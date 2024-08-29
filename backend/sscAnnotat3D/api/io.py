@@ -68,7 +68,7 @@ def get_image_histogram(image_id):
 
     img_slice = image[slice_range]
 
-    histogram, bin_edges = np.histogram(img_slice,bins=255)
+    histogram, bin_edges = np.histogram(img_slice, bins=255)
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
     # round bin_centers for pretty show in frontend
@@ -82,10 +82,12 @@ def get_image_histogram(image_id):
     # it is necessary to convert the numpy datatype to a numpy datatype for json
     data_type = img_slice.dtype
     if data_type == float:
+
         def python_typer(x):
             return float(x)
 
     else:
+
         def python_typer(x):
             return int(x)
 

@@ -12,6 +12,7 @@ import copy
 import datetime
 import itertools
 import json
+import logging
 import os
 import re
 import time
@@ -19,7 +20,6 @@ import traceback
 from enum import Enum
 from operator import itemgetter
 from pathlib import Path
-import logging
 
 import cv2
 import h5py
@@ -35,8 +35,13 @@ from skimage import exposure, filters, img_as_uint
 from skimage.feature import greycomatrix, greycoprops, local_binary_pattern
 from skimage.future.graph import rag
 from skimage.morphology import disk, square
-from skimage.segmentation import (felzenszwalb, mark_boundaries, quickshift,
-                                  slic, watershed)
+from skimage.segmentation import (
+    felzenszwalb,
+    mark_boundaries,
+    quickshift,
+    slic,
+    watershed,
+)
 from sklearn import linear_model, preprocessing, svm
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
@@ -47,6 +52,7 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 from sscIO import io, io_info
 
 from . import binary, utils
+
 # from sscAnnotat3D.widgets_image import hdf5_widget, raw_widget
 
 logger = logging.getLogger(__name__)
@@ -55,8 +61,7 @@ logger.setLevel(logging.DEBUG)
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)
 
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -84,13 +89,11 @@ def log_error(exception):
         None
 
     """
-    with open(
-            os.path.join(Path.home().absolute().as_posix(),
-                         "%s_error_log.txt" % app_name()), 'a+') as f:
-        f.write('**** Error on:' + str(datetime.datetime.now()) + '****\n')
+    with open(os.path.join(Path.home().absolute().as_posix(), "%s_error_log.txt" % app_name()), "a+") as f:
+        f.write("**** Error on:" + str(datetime.datetime.now()) + "****\n")
         traceback.print_tb(exception.__traceback__, file=f)
-        f.write('Exception:' + str(exception))
-        f.write('\n\n')
+        f.write("Exception:" + str(exception))
+        f.write("\n\n")
 
 
 def log_usage(op_type, **kwargs):
@@ -106,25 +109,23 @@ def log_usage(op_type, **kwargs):
 
     """
 
-    with open(
-            os.path.join(Path.home().absolute().as_posix(),
-                         '%s_usage_log.txt' % app_name()), 'a+') as f:
+    with open(os.path.join(Path.home().absolute().as_posix(), "%s_usage_log.txt" % app_name()), "a+") as f:
         data = kwargs
         op_time = str(datetime.datetime.now())
         sys_info = os.uname()
         op_sys = {
-            'sysname': str(sys_info[0]),
-            'nodename': str(sys_info[1]),
-            'release': str(sys_info[2]),
-            'version': str(sys_info[3]),
-            'machine': str(sys_info[4])
+            "sysname": str(sys_info[0]),
+            "nodename": str(sys_info[1]),
+            "release": str(sys_info[2]),
+            "version": str(sys_info[3]),
+            "machine": str(sys_info[4]),
         }
-        data['op_type'] = op_type
-        data['op_time'] = op_time
-        data['op_system_info'] = op_sys
+        data["op_type"] = op_type
+        data["op_time"] = op_time
+        data["op_system_info"] = op_sys
         data_json = json.dumps(data)
-        f.write('**** Usage on:' + op_time + '****\n')
-        f.write(data_json + '\n\n')
+        f.write("**** Usage on:" + op_time + "****\n")
+        f.write(data_json + "\n\n")
 
 
 def save_3d_image_to_shared_memory(image, xsize, ysize, zsize, dtype):
@@ -142,178 +143,177 @@ def save_3d_image_to_shared_memory(image, xsize, ysize, zsize, dtype):
         None
 
     """
-    image = spin_img.spin_save_image_to_shared_memory(image, xsize, ysize,
-                                                      zsize, dtype)
+    image = spin_img.spin_save_image_to_shared_memory(image, xsize, ysize, zsize, dtype)
 
 
 # def load_3d_image_widget(path,
-                         # xsize=None,
-                         # ysize=None,
-                         # zsize=None,
-                         # out_dtype=None,
-                         # lock_size=False,
-                         # parent=None):
-    # """
-    # This function gets all the image information from a window that a user place values for X, Y, Z and dtype of
-    # an image .raw or .b
+# xsize=None,
+# ysize=None,
+# zsize=None,
+# out_dtype=None,
+# lock_size=False,
+# parent=None):
+# """
+# This function gets all the image information from a window that a user place values for X, Y, Z and dtype of
+# an image .raw or .b
 
-    # Args:
-        # path (string): filename path
-        # xsize (int): the image x size
-        # ysize (int): the image y size. In this actual point, y is not used
-        # zsize (int): the image z size. In this actual point, z is not used
-        # out_dtype (string): dtype image. In this actual point, out_dtype is not used
-        # lock_size (bool): it's a flog to lock the window and places only the X, Y and Z values got from the load image.
-        # parent (object): It's an object pass to the raw_widget. The default value is None
+# Args:
+# path (string): filename path
+# xsize (int): the image x size
+# ysize (int): the image y size. In this actual point, y is not used
+# zsize (int): the image z size. In this actual point, z is not used
+# out_dtype (string): dtype image. In this actual point, out_dtype is not used
+# lock_size (bool): it's a flog to lock the window and places only the X, Y and Z values got from the load image.
+# parent (object): It's an object pass to the raw_widget. The default value is None
 
-    # Returns:
-        # array: Return the image loaded if everything goes well and None otherwise
+# Returns:
+# array: Return the image loaded if everything goes well and None otherwise
 
-    # """
+# """
 
-    # extension_raw = ['.raw', '.b']
-    # filename, extension = os.path.splitext(path)
-    # x = y = z = dtype = None
-    # error_msg = None
+# extension_raw = ['.raw', '.b']
+# filename, extension = os.path.splitext(path)
+# x = y = z = dtype = None
+# error_msg = None
 
-    # if extension.lower() in extension_raw:
-        # volume_props, error_msg = io_info.get_volume_info(path)
+# if extension.lower() in extension_raw:
+# volume_props, error_msg = io_info.get_volume_info(path)
 
-        # if error_msg is not None:
-            # logger.warning(error_msg)
-            # utils.dialog_message(title='', message=error_msg, type='warning')
+# if error_msg is not None:
+# logger.warning(error_msg)
+# utils.dialog_message(title='', message=error_msg, type='warning')
 
-            # xsize = xsize if xsize is not None else 0
-            # ysize = ysize if ysize is not None else 0
-            # zsize = zsize if zsize is not None else 0
-            # dtype = dtype if dtype is not None else 0
+# xsize = xsize if xsize is not None else 0
+# ysize = ysize if ysize is not None else 0
+# zsize = zsize if zsize is not None else 0
+# dtype = dtype if dtype is not None else 0
 
-        # else:
-            # xsize = xsize if xsize is not None else volume_props['shape'][2]
-            # ysize = ysize if ysize is not None else volume_props['shape'][1]
-            # zsize = zsize if zsize is not None else volume_props['shape'][0]
-            # dtype = dtype if dtype is not None else volume_props['dtype']
+# else:
+# xsize = xsize if xsize is not None else volume_props['shape'][2]
+# ysize = ysize if ysize is not None else volume_props['shape'][1]
+# zsize = zsize if zsize is not None else volume_props['shape'][0]
+# dtype = dtype if dtype is not None else volume_props['dtype']
 
-        # file_info = {}
-        # widget = raw_widget(filename,
-                            # extension,
-                            # file_info,
-                            # parent=parent,
-                            # xsize=xsize,
-                            # ysize=ysize,
-                            # zsize=zsize,
-                            # dtype=dtype,
-                            # lock_size=lock_size)
-        # try:
-            # if widget.exec_():
-                # x = file_info['x']
-                # y = file_info['y']
-                # z = file_info['z']
-                # filename = file_info['filename']
-                # extension = file_info['extension']
-                # dtype = file_info['type']
-        # except Exception as e:
-            # logger.exception(f'Invalid image information: {str(e)}')
-        # else:
-            # if x is not None:
+# file_info = {}
+# widget = raw_widget(filename,
+# extension,
+# file_info,
+# parent=parent,
+# xsize=xsize,
+# ysize=ysize,
+# zsize=zsize,
+# dtype=dtype,
+# lock_size=lock_size)
+# try:
+# if widget.exec_():
+# x = file_info['x']
+# y = file_info['y']
+# z = file_info['z']
+# filename = file_info['filename']
+# extension = file_info['extension']
+# dtype = file_info['type']
+# except Exception as e:
+# logger.exception(f'Invalid image information: {str(e)}')
+# else:
+# if x is not None:
 
-                # while (x * y * z * np.dtype(dtype).itemsize !=
-                       # os.path.getsize(path)):
+# while (x * y * z * np.dtype(dtype).itemsize !=
+# os.path.getsize(path)):
 
-                    # war_window = QMessageBox()
-                    # war_window.setIcon(QMessageBox.Warning)
-                    # war_window.setWindowTitle(
-                        # "Information bytes doesn't match !!!")
-                    # war_window.setText(
-                        # "The input image doesn't match with the total image size. Do you wish to change this values ?"
-                    # )
-                    # war_window.setStandardButtons(QMessageBox.Yes
-                                                  # | QMessageBox.No)
+# war_window = QMessageBox()
+# war_window.setIcon(QMessageBox.Warning)
+# war_window.setWindowTitle(
+# "Information bytes doesn't match !!!")
+# war_window.setText(
+# "The input image doesn't match with the total image size. Do you wish to change this values ?"
+# )
+# war_window.setStandardButtons(QMessageBox.Yes
+# | QMessageBox.No)
 
-                    # if (war_window.exec_() == QMessageBox.Yes):
+# if (war_window.exec_() == QMessageBox.Yes):
 
-                        # try:
-                            # if widget.exec_():
-                                # x = file_info['x']
-                                # y = file_info['y']
-                                # z = file_info['z']
-                                # filename = file_info['filename']
-                                # extension = file_info['extension']
-                                # dtype = file_info['type']
-                        # except Exception as e:
-                            # logger.exception(
-                                # f'Invalid image information: {str(e)}')
+# try:
+# if widget.exec_():
+# x = file_info['x']
+# y = file_info['y']
+# z = file_info['z']
+# filename = file_info['filename']
+# extension = file_info['extension']
+# dtype = file_info['type']
+# except Exception as e:
+# logger.exception(
+# f'Invalid image information: {str(e)}')
 
-                    # else:
+# else:
 
-                        # break
+# break
 
-                # image, _ = io.read_volume(path,
-                                          # "numpy",
-                                          # dtype=dtype,
-                                          # shape=(z, y, x))
+# image, _ = io.read_volume(path,
+# "numpy",
+# dtype=dtype,
+# shape=(z, y, x))
 
-                # return image if out_dtype is None else image.astype(out_dtype)
-    # else:
-        # image, _ = io.read_volume(path, "numpy")
+# return image if out_dtype is None else image.astype(out_dtype)
+# else:
+# image, _ = io.read_volume(path, "numpy")
 
-        # return image if out_dtype is None else image.astype(out_dtype)
+# return image if out_dtype is None else image.astype(out_dtype)
 
-    # return None
+# return None
 
 
 # def load_image_hdf5_widget(path, timepoint=None, parent=None):
-    # """
-    # Function that loads a hdf5 file and return an image
+# """
+# Function that loads a hdf5 file and return an image
 
-    # Args:
-        # path (string): it's the image path
-        # timepoint (int): it's the index which slice the user want. In this actual stage, channel does nothing in this function
-        # parent (object): it's an object pass to the raw_widget. The default value is None. In the actual point, this variable is not being used
+# Args:
+# path (string): it's the image path
+# timepoint (int): it's the index which slice the user want. In this actual stage, channel does nothing in this function
+# parent (object): it's an object pass to the raw_widget. The default value is None. In the actual point, this variable is not being used
 
-    # Returns:
-        # array: returns a numpy.array image if everything goes well and None otherwise
+# Returns:
+# array: returns a numpy.array image if everything goes well and None otherwise
 
-    # """
-    # filename, extension = os.path.splitext(path)
+# """
+# filename, extension = os.path.splitext(path)
 
-    # file_info = {}
-    # logger.info('create hdf5 widget')
-    # widget = hdf5_widget(filename, extension, file_info)
-    # timepoint = None
-    # try:
-        # logger.debug('exec widget')
-        # if widget.exec_():
-            # logger.debug('executed widget')
-            # logger.info(file_info)
-            # timepoint = file_info['timepoint']
-            # scan = file_info['scan']
-    # except Exception as e:
-        # logger.exception(f'Invalid image information: {str(e)}')
-    # else:
-        # if timepoint is not None:
-            # # image, _min, _max = load_image_hdf5(path, timepoint=timepoint, scan=scan)
-            # image, _ = io.read_volume(path,
-                                      # "numpy",
-                                      # timepoint=timepoint,
-                                      # scan=scan)
+# file_info = {}
+# logger.info('create hdf5 widget')
+# widget = hdf5_widget(filename, extension, file_info)
+# timepoint = None
+# try:
+# logger.debug('exec widget')
+# if widget.exec_():
+# logger.debug('executed widget')
+# logger.info(file_info)
+# timepoint = file_info['timepoint']
+# scan = file_info['scan']
+# except Exception as e:
+# logger.exception(f'Invalid image information: {str(e)}')
+# else:
+# if timepoint is not None:
+# # image, _min, _max = load_image_hdf5(path, timepoint=timepoint, scan=scan)
+# image, _ = io.read_volume(path,
+# "numpy",
+# timepoint=timepoint,
+# scan=scan)
 
-            # if np.issubdtype(image.dtype, np.floating):
-                # utils.dialog_message(
-                    # title='',
-                    # message=
-                    # 'This image is a floating type. To work with Annotat3D the image will be rescaled to integer.',
-                    # type='warning')
+# if np.issubdtype(image.dtype, np.floating):
+# utils.dialog_message(
+# title='',
+# message=
+# 'This image is a floating type. To work with Annotat3D the image will be rescaled to integer.',
+# type='warning')
 
-                # _min, _max = _min_max(image)
-                # image -= _min
-                # image /= (_max - _min)
-                # image *= 2**15
-                # image = image.astype('uint16')
+# _min, _max = _min_max(image)
+# image -= _min
+# image /= (_max - _min)
+# image *= 2**15
+# image = image.astype('uint16')
 
-            # return image
+# return image
 
-    # return None
+# return None
 
 
 # TODO this can be slow in big data
@@ -365,11 +365,9 @@ def print_superpixels(ground_truth, segments):
         None
 
     """
-    rescaled_ground_truth = exposure.rescale_intensity(
-        copy.deepcopy(ground_truth))
+    rescaled_ground_truth = exposure.rescale_intensity(copy.deepcopy(ground_truth))
     plt.figure(figsize=(10, 10))
-    plt.imshow(
-        mark_boundaries(rescaled_ground_truth, segments, color=(0, 1, 0)))
+    plt.imshow(mark_boundaries(rescaled_ground_truth, segments, color=(0, 1, 0)))
     plt.show()
 
 
@@ -388,14 +386,12 @@ def mask_from_superpixel(superpixel_masks_binary, superpixel_labels):
     """
     superpixel_binary = np.zeros_like(superpixel_masks_binary[0])
     for i in range(len(superpixel_masks_binary)):
-        superpixel_masks_binary[i][superpixel_masks_binary[i] ==
-                                   1] = superpixel_labels[i]
+        superpixel_masks_binary[i][superpixel_masks_binary[i] == 1] = superpixel_labels[i]
         superpixel_binary += superpixel_masks_binary[i]
     return superpixel_binary
 
 
-def validation_metrics(model, scaler, test_indices1, test_indices2,
-                       ground_truth_test):
+def validation_metrics(model, scaler, test_indices1, test_indices2, ground_truth_test):
     """
     Function that creates that validate the model
 
@@ -413,23 +409,23 @@ def validation_metrics(model, scaler, test_indices1, test_indices2,
     validation = []
     superpixel_validation = []
     for test_indices1_slice, test_indices2_slice, ground_truth_test_slice in zip(
-            test_indices1, test_indices2, ground_truth_test):
+        test_indices1, test_indices2, ground_truth_test
+    ):
         # Model validation
         features = scaler.transform(test_indices1_slice)
         model_segmentation_labels = model.predict(features)
         model_segmentation = mask_from_label(
             copy.deepcopy(ground_truth_test_slice),
             copy.deepcopy(model_segmentation_labels),
-            copy.deepcopy(test_indices2_slice))
+            copy.deepcopy(test_indices2_slice),
+        )
 
         # Superpixels validation
         ground_truth_labels = labels_from_ground_truth(
-            copy.deepcopy(test_indices2_slice),
-            copy.deepcopy(ground_truth_test_slice))
+            copy.deepcopy(test_indices2_slice), copy.deepcopy(ground_truth_test_slice)
+        )
 
-        best_segmentation = mask_from_superpixel(
-            copy.deepcopy(test_indices2_slice),
-            copy.deepcopy(ground_truth_labels))
+        best_segmentation = mask_from_superpixel(copy.deepcopy(test_indices2_slice), copy.deepcopy(ground_truth_labels))
 
         # plt.figure(figsize=(20, 10))
         # plt.subplot(131)
@@ -445,15 +441,12 @@ def validation_metrics(model, scaler, test_indices1, test_indices2,
         if len(np.unique(best_segmentation)) == 1:
             superpixel_validation.append((0, 0, 0, 0, 0, 0))
         else:
-            superpixel_validation.append(
-                validation_indices(best_segmentation, ground_truth_test_slice))
+            superpixel_validation.append(validation_indices(best_segmentation, ground_truth_test_slice))
 
         if len(np.unique(model_segmentation)) == 1:
             validation.append((0, 0, 0, 0, 0, 0))
         else:
-            validation.append(
-                validation_indices(model_segmentation,
-                                   ground_truth_test_slice))
+            validation.append(validation_indices(model_segmentation, ground_truth_test_slice))
 
         mean = np.mean(validation, axis=0)
         superpixel_mean = np.mean(superpixel_validation, axis=0)
@@ -497,16 +490,16 @@ def enforce_extension(filepath, ext):
         This function is used just to verify the path string integrity and make the corrections if necessary
 
     """
-    ext = ['.' + s for s in ext.split('.') if s]
+    ext = ["." + s for s in ext.split(".") if s]
     fileext = Path(filepath).suffixes
     if ext == fileext:
         return filepath
 
     basename = filepath
     for s in fileext:
-        basename = basename.replace(s, '')
+        basename = basename.replace(s, "")
 
-    fullname = ''.join([basename, *ext])
+    fullname = "".join([basename, *ext])
     return fullname
 
 
@@ -522,41 +515,49 @@ def pixel_feature_extraction(img, **kwargs):
         array: a numpy array that contains the features of an image
 
     """
-    ngpus = -1 if 'ngpus' not in kwargs else kwargs['ngpus']
-    image_min = -1 if 'image_min' not in kwargs else int(kwargs['image_min'])
-    image_max = -1 if 'image_max' not in kwargs else int(kwargs['image_max'])
+    ngpus = -1 if "ngpus" not in kwargs else kwargs["ngpus"]
+    image_min = -1 if "image_min" not in kwargs else int(kwargs["image_min"])
+    image_max = -1 if "image_max" not in kwargs else int(kwargs["image_max"])
 
     block_size_feats = 64
 
     start = time.time()
 
-    sigmas = np.array(kwargs['sigmas'], dtype='float32')
-    selected_features = kwargs['selected_features']
-    pixel_features = spin_feat_extraction.spin_alloc_pixel_featmap(
-        img, selected_features, sigmas)
+    sigmas = np.array(kwargs["sigmas"], dtype="float32")
+    selected_features = kwargs["selected_features"]
+    pixel_features = spin_feat_extraction.spin_alloc_pixel_featmap(img, selected_features, sigmas)
 
-    spin_feat_extraction.spin_feat_extraction_2D(img,
-                                                 None,
-                                                 pixel_features,
-                                                 None,
-                                                 selected_features,
-                                                 sigmas,
-                                                 None,
-                                                 ngpus=ngpus,
-                                                 maxBlockSize=block_size_feats,
-                                                 image_min=image_min,
-                                                 image_max=image_max)
+    spin_feat_extraction.spin_feat_extraction_2D(
+        img,
+        None,
+        pixel_features,
+        None,
+        selected_features,
+        sigmas,
+        None,
+        ngpus=ngpus,
+        maxBlockSize=block_size_feats,
+        image_min=image_min,
+        image_max=image_max,
+    )
 
     end = time.time()
-    logger.debug(f'-- Feature extraction run time: {end - start}s')
+    logger.debug(f"-- Feature extraction run time: {end - start}s")
 
     return pixel_features
 
 
-def superpixel_feature_extraction(img, img_superpixels, selected_features,
-                                  sigmas, selected_supervoxel_feat_pooling,
-                                  min_label, max_label, superpixel_type,
-                                  **kwargs):
+def superpixel_feature_extraction(
+    img,
+    img_superpixels,
+    selected_features,
+    sigmas,
+    selected_supervoxel_feat_pooling,
+    min_label,
+    max_label,
+    superpixel_type,
+    **kwargs,
+):
     """
     Function that extracts features in superpixel images
 
@@ -575,37 +576,34 @@ def superpixel_feature_extraction(img, img_superpixels, selected_features,
         array: this function returns a numpy array that represents the superpixel features
 
     """
-    ngpus = -1 if 'ngpus' not in kwargs else kwargs['ngpus']
-    image_min = -1 if 'image_min' not in kwargs else int(kwargs['image_min'])
-    image_max = -1 if 'image_max' not in kwargs else int(kwargs['image_max'])
+    ngpus = -1 if "ngpus" not in kwargs else kwargs["ngpus"]
+    image_min = -1 if "image_min" not in kwargs else int(kwargs["image_min"])
+    image_max = -1 if "image_max" not in kwargs else int(kwargs["image_max"])
 
     num_superpixels = max_label - min_label + 1
 
     start = time.time()
 
-    sigmas = np.array(sigmas, dtype='float32')
+    sigmas = np.array(sigmas, dtype="float32")
 
     block_size_feats = 64
 
-    if superpixel_type == 'waterpixels3d':
+    if superpixel_type == "waterpixels3d":
         block_size_feats = 32  # 32 if 'max_block_size' not in kwargs else int(kwargs['max_block_size'])
 
-    superpixel_type_id = spin_seg.SPINSuperpixelType.superpixel_id(
-        superpixel_type)
+    superpixel_type_id = spin_seg.SPINSuperpixelType.superpixel_id(superpixel_type)
 
     superpixel_features = spin_feat_extraction.spin_alloc_superpixel_feature_vectors(
-        num_superpixels, selected_features, sigmas,
-        selected_supervoxel_feat_pooling)
+        num_superpixels, selected_features, sigmas, selected_supervoxel_feat_pooling
+    )
 
-    logger.debug(
-        f'-- Allocated Superpixel features shape: {superpixel_features.shape}')
+    logger.debug(f"-- Allocated Superpixel features shape: {superpixel_features.shape}")
 
     pixel_features = None
 
     end = time.time()
 
-    logger.debug(
-        f'-- Feature extraction memory allocation run time: {end - start}s')
+    logger.debug(f"-- Feature extraction memory allocation run time: {end - start}s")
 
     start = time.time()
 
@@ -623,20 +621,18 @@ def superpixel_feature_extraction(img, img_superpixels, selected_features,
         maxBlockSize=block_size_feats,
         super_pixels_type=superpixel_type_id,
         image_min=image_min,
-        image_max=image_max)
+        image_max=image_max,
+    )
 
     end = time.time()
-    logger.debug(f'-- Feature extraction run time: {end - start}s')
+    logger.debug(f"-- Feature extraction run time: {end - start}s")
 
     # np.save('pixel_features.npy', pixel_features)
 
     return superpixel_features
 
 
-def contextual_superpixel_features(superpixels,
-                                   features,
-                                   max_level,
-                                   connectivity=1):
+def contextual_superpixel_features(superpixels, features, max_level, connectivity=1):
     """
     Function that takes extract contextual features from superpixels
 
@@ -652,15 +648,14 @@ def contextual_superpixel_features(superpixels,
     """
     start = time.time()
     nfeats = features.shape[1]
-    contextual_features = np.zeros(
-        (features.shape[0], nfeats * (max_level + 1)), dtype='float32')
+    contextual_features = np.zeros((features.shape[0], nfeats * (max_level + 1)), dtype="float32")
 
     G = rag.RAG(superpixels, connectivity=connectivity)
 
-    logger.debug(f'RAG computation time: {time.time() - start}s')
+    logger.debug(f"RAG computation time: {time.time() - start}s")
 
     for n in G.nodes():
-        nneighbors = np.zeros(max_level + 1, dtype='int32')
+        nneighbors = np.zeros(max_level + 1, dtype="int32")
         visited = set([n])
         level = 0
         Q = [(n, level)]
@@ -669,10 +664,9 @@ def contextual_superpixel_features(superpixels,
 
             # Summing the values of the features of the 'adjacent' node 's' in the current level to the node 'n' being assessed
             for f in range(nfeats):
-                contextual_features[n - 1,
-                                    f + level * nfeats] = contextual_features[
-                                        n - 1, f +
-                                        level * nfeats] + features[s - 1, f]
+                contextual_features[n - 1, f + level * nfeats] = (
+                    contextual_features[n - 1, f + level * nfeats] + features[s - 1, f]
+                )
 
             # Compuring the number of adjacent nodes for each level
             nneighbors[level] = nneighbors[level] + 1
@@ -686,11 +680,10 @@ def contextual_superpixel_features(superpixels,
             # Computing the average contextual feature values for each level
         for level in range(max_level):
             for f in range(nfeats):
-                contextual_features[n - 1, f + level * nfeats] /= max(
-                    1, nneighbors[level])
+                contextual_features[n - 1, f + level * nfeats] /= max(1, nneighbors[level])
     end = time.time()
 
-    logger.debug(f'Contextual feature extraction run time: {end - start}s')
+    logger.debug(f"Contextual feature extraction run time: {end - start}s")
 
     return contextual_features
 
@@ -715,23 +708,17 @@ def GLCM(img_internal):
     GLCM_features = []
     for sp_img_internal in img_internal:
         GLCM_superpixel_features = []
-        img_internal_rescaled = exposure.rescale_intensity(
-            sp_img_internal, in_range='image', out_range=(0, levels - 1))
-        coo_result = greycomatrix(img_internal_rescaled, [1],
-                                  angles,
-                                  levels=levels,
-                                  normed=False,
-                                  symmetric=True)
-        GLCM_contrast = greycoprops(coo_result, prop='contrast').ravel()
+        img_internal_rescaled = exposure.rescale_intensity(sp_img_internal, in_range="image", out_range=(0, levels - 1))
+        coo_result = greycomatrix(img_internal_rescaled, [1], angles, levels=levels, normed=False, symmetric=True)
+        GLCM_contrast = greycoprops(coo_result, prop="contrast").ravel()
         GLCM_superpixel_features.extend(GLCM_contrast)
-        GLCM_dissimilarity = greycoprops(coo_result,
-                                         prop='dissimilarity').ravel()
+        GLCM_dissimilarity = greycoprops(coo_result, prop="dissimilarity").ravel()
         GLCM_superpixel_features.extend(GLCM_dissimilarity)
-        GLCM_ASM = greycoprops(coo_result, prop='ASM').ravel()
+        GLCM_ASM = greycoprops(coo_result, prop="ASM").ravel()
         GLCM_superpixel_features.extend(GLCM_ASM)
-        GLCM_energy = greycoprops(coo_result, prop='energy').ravel()
+        GLCM_energy = greycoprops(coo_result, prop="energy").ravel()
         GLCM_superpixel_features.extend(GLCM_energy)
-        GLCM_correlation = greycoprops(coo_result, prop='correlation').ravel()
+        GLCM_correlation = greycoprops(coo_result, prop="correlation").ravel()
         GLCM_superpixel_features.extend(GLCM_correlation)
         GLCM_features.append(GLCM_superpixel_features)
     return GLCM_features
@@ -755,11 +742,9 @@ def lbp(img_internal):
     LBP_features = []
     for sp_img_internal in img_internal:
         local_bin_pattern = local_binary_pattern(
-            sp_img_internal, n_points, radius,
-            method='uniform')  # {default,ror,uniform,var}
-        hist = np.histogram(local_bin_pattern.ravel(),
-                            bins=n_bins,
-                            density=False)
+            sp_img_internal, n_points, radius, method="uniform"
+        )  # {default,ror,uniform,var}
+        hist = np.histogram(local_bin_pattern.ravel(), bins=n_bins, density=False)
         hist_norm = hist[0] / hist[0].sum()
         LBP_features.append(hist_norm)
     return LBP_features
@@ -781,8 +766,7 @@ def media_segmento(masked_maps, mask_list):
     return media_list
 
 
-def superpixel_avg_features(masked_maps, mask_list, global_feats,
-                            next_superpixel_idx):
+def superpixel_avg_features(masked_maps, mask_list, global_feats, next_superpixel_idx):
     for i in range(len(mask_list)):
         nonzero = np.count_nonzero(mask_list[i])
         for f, one_map in enumerate(masked_maps[i]):
@@ -795,65 +779,58 @@ def superpixel_avg_features(masked_maps, mask_list, global_feats,
 def batch_data(indices1, indices2, ground_truth):
     ground_truth_labels_batch = []
     indices1_batch = np.empty(shape=[0, len(indices1[0][0])])
-    for ground_truth_slice, indices1_slice, segments_masks in zip(
-            ground_truth, indices1, indices2):
+    for ground_truth_slice, indices1_slice, segments_masks in zip(ground_truth, indices1, indices2):
         # segments_masks_bkp = copy.deepcopy(segments_masks)
-        ground_truth_labels = labels_from_ground_truth(segments_masks,
-                                                       ground_truth_slice)
-        indices1_batch = np.concatenate((indices1_slice, indices1_batch),
-                                        axis=0)
-        ground_truth_labels_batch = np.concatenate(
-            (ground_truth_labels, ground_truth_labels_batch))
+        ground_truth_labels = labels_from_ground_truth(segments_masks, ground_truth_slice)
+        indices1_batch = np.concatenate((indices1_slice, indices1_batch), axis=0)
+        ground_truth_labels_batch = np.concatenate((ground_truth_labels, ground_truth_labels_batch))
     return indices1_batch, ground_truth_labels_batch
 
 
 def batch_fit(mode, model, features, ground_truth_train_labels_list_batch):
-    model.fit(features,
-              ground_truth_train_labels_list_batch,
-              sample_weight=None)
+    model.fit(features, ground_truth_train_labels_list_batch, sample_weight=None)
     if mode == 1:
-        logger.debug(f'{model.best_params_}')
+        logger.debug(f"{model.best_params_}")
     return
 
 
 def validation_indices(segmentation, ground_truth):
-    return pixel_accuracy(segmentation, ground_truth), mean_accuracy(
-        segmentation, ground_truth), frequency_weighted_IU(
-            segmentation,
-            ground_truth), mean_IU(segmentation, ground_truth), binary.assd(
-                segmentation - 1,
-                ground_truth - 1), binary.dc(segmentation - 1,
-                                             ground_truth - 1)
+    return (
+        pixel_accuracy(segmentation, ground_truth),
+        mean_accuracy(segmentation, ground_truth),
+        frequency_weighted_IU(segmentation, ground_truth),
+        mean_IU(segmentation, ground_truth),
+        binary.assd(segmentation - 1, ground_truth - 1),
+        binary.dc(segmentation - 1, ground_truth - 1),
+    )
 
 
 def define_model(mode, model_name):
-    if model_name == 'svm':
+    if model_name == "svm":
         if mode == 1:
             # https://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf
             Cs = [2**i for i in range(-5, 17, 2)]
             gammas = [2**i for i in range(-15, 5, 2)]
-            param_grid = {'C': Cs, 'gamma': gammas}
-            model = GridSearchCV(svm.SVC(kernel='rbf'), param_grid)
+            param_grid = {"C": Cs, "gamma": gammas}
+            model = GridSearchCV(svm.SVC(kernel="rbf"), param_grid)
         else:
-            model = svm.SVC(kernel='rbf')
-    elif model_name == 'logreg':
+            model = svm.SVC(kernel="rbf")
+    elif model_name == "logreg":
         if mode == 1:
             n_estimators = [200, 500]
-            max_features = ['auto', 'sqrt', 'log2']
-            criterion = ['gini', 'entropy']
+            max_features = ["auto", "sqrt", "log2"]
+            criterion = ["gini", "entropy"]
             max_depth = [4, 5, 6, 7, 8]
             param_grid = {
-                'n_estimators': n_estimators,
-                'max_features': max_features,
-                'max_depth': max_depth,
-                'criterion': criterion
+                "n_estimators": n_estimators,
+                "max_features": max_features,
+                "max_depth": max_depth,
+                "criterion": criterion,
             }
-            model = GridSearchCV(
-                linear_model.SGDClassifier(loss="log", max_iter=1000),
-                param_grid)
+            model = GridSearchCV(linear_model.SGDClassifier(loss="log", max_iter=1000), param_grid)
         else:
             model = linear_model.SGDClassifier(loss="log", max_iter=1000)
-    elif model_name == 'randomforest':
+    elif model_name == "randomforest":
         model = RandomForestClassifier(n_estimators=100)
     return model
 
@@ -863,9 +840,7 @@ def hist_match(source, template):
     source = source.ravel()
     template = template.ravel()
 
-    s_values, bin_idx, s_counts = np.unique(source,
-                                            return_inverse=True,
-                                            return_counts=True)
+    s_values, bin_idx, s_counts = np.unique(source, return_inverse=True, return_counts=True)
     t_values, t_counts = np.unique(template, return_counts=True)
 
     s_quantiles = np.cumsum(s_counts).astype(np.float64)
@@ -879,7 +854,7 @@ def hist_match(source, template):
 
 
 def open_raw_image(img_path, rows, cols, slices, bits):
-    fd = open(img_path, 'rb')
+    fd = open(img_path, "rb")
     if bits == 16:
         f = np.fromfile(fd, dtype=np.uint16, count=rows * cols * slices)
     elif bits == 8:
@@ -889,22 +864,28 @@ def open_raw_image(img_path, rows, cols, slices, bits):
     return img
 
 
-def create_segments(img, superpixel, water_markers, water_compactness,
-                    felz_scale, felz_sigma, felz_min_size, slic_n_segments,
-                    slic_compactness, slic_sigma):
+def create_segments(
+    img,
+    superpixel,
+    water_markers,
+    water_compactness,
+    felz_scale,
+    felz_sigma,
+    felz_min_size,
+    slic_n_segments,
+    slic_compactness,
+    slic_sigma,
+):
     # selem = disk(20)
     # img_eq = rank.equalize(img, selem)
     img_eq = img
-    if superpixel == 'waterpixels':
+    if superpixel == "waterpixels":
         gradient = filters.sobel(img_eq)
         segments = watershed(gradient, water_markers, water_compactness)
-    if superpixel == 'felzenszwalb':
+    if superpixel == "felzenszwalb":
         segments = felzenszwalb(img_eq, felz_scale, felz_sigma, felz_min_size)
-    if superpixel == 'slic':
-        segments = slic(img_eq,
-                        n_segments=slic_n_segments,
-                        compactness=slic_compactness,
-                        sigma=slic_sigma)
+    if superpixel == "slic":
+        segments = slic(img_eq, n_segments=slic_n_segments, compactness=slic_compactness, sigma=slic_sigma)
     return segments
 
 
@@ -912,83 +893,83 @@ def create_maps(img, kernel_sizes, maps_names):
     maps = []
 
     for map_name, kernel_size in zip(maps_names, kernel_sizes):
-        if map_name == 'ori':
+        if map_name == "ori":
             maps.append(img)
 
-        if map_name == 'autolevel':
+        if map_name == "autolevel":
             selem = disk(kernel_size)
             maps.append(rank.autolevel(img, selem))
 
-        if map_name == 'entropy':
+        if map_name == "entropy":
             selem = disk(kernel_size)
             maps.append(rank.entropy(img, selem))
 
-        if map_name == 'bottomhat':
+        if map_name == "bottomhat":
             selem = disk(kernel_size)
             maps.append(rank.bottomhat(img, selem))
 
-        if map_name == 'percentile':
+        if map_name == "percentile":
             selem = disk(kernel_size)
             maps.append(rank.percentile(img, selem))
 
-        if map_name == 'equalize':
+        if map_name == "equalize":
             selem = disk(kernel_size)
             maps.append(rank.equalize(img, selem))
 
-        if map_name == 'mean':
+        if map_name == "mean":
             selem = disk(kernel_size)
             maps.append(rank.mean(img, selem))
 
-        if map_name == 'gradient':
+        if map_name == "gradient":
             idx = maps_names.index("gradient")
             selem = disk(kernel_size)
             maps.append(rank.gradient(img, selem))
 
-        if map_name == 'maximum':
+        if map_name == "maximum":
             selem = disk(kernel_size)
             maps.append(rank.maximum(img, selem))
 
-        if map_name == 'geometric_mean':
+        if map_name == "geometric_mean":
             selem = disk(kernel_size)
             maps.append(rank.maximum(img, selem))
 
-        if map_name == 'subtract_mean':
+        if map_name == "subtract_mean":
             selem = disk(kernel_size)
             maps.append(rank.subtract_mean(img, selem))
 
-        if map_name == 'median':
+        if map_name == "median":
             selem = disk(kernel_size)
             maps.append(rank.median(img, selem))
 
-        if map_name == 'modal':
+        if map_name == "modal":
             selem = disk(kernel_size)
             maps.append(rank.modal(img, selem))
 
-        if map_name == 'enhance_contrast':
+        if map_name == "enhance_contrast":
             selem = disk(kernel_size)
             maps.append(rank.enhance_contrast(img, selem))
 
-        if map_name == 'pop_bilateral':
+        if map_name == "pop_bilateral":
             selem = disk(kernel_size)
             maps.append(rank.pop_bilateral(img, selem))
 
-        if map_name == 'sum':
+        if map_name == "sum":
             selem = disk(kernel_size)
             maps.append(rank.sum(img, selem))
 
-        if map_name == 'sum_bilateral':
+        if map_name == "sum_bilateral":
             selem = disk(kernel_size)
             maps.append(rank.sum_bilateral(img, selem))
 
-        if map_name == 'threshold':
+        if map_name == "threshold":
             selem = disk(kernel_size)
             maps.append(rank.threshold(img, selem))
 
-        if map_name == 'tophat':
+        if map_name == "tophat":
             selem = disk(kernel_size)
             maps.append(rank.tophat(img, selem))
 
-        if map_name == 'otsu':
+        if map_name == "otsu":
             selem = disk(kernel_size)
             maps.append(rank.otsu(img, selem))
     return maps
@@ -1000,7 +981,7 @@ def masked_filters(filters_list, mask_list, img):
         masked_maps.append([])
         for one_filter in filters_list:
             clip = np.zeros_like(one_filter)
-            idx = (mask_list[i] == 1)
+            idx = mask_list[i] == 1
             clip[idx] = one_filter[idx]
             masked_maps[i].append(clip)
     return masked_maps
@@ -1234,7 +1215,7 @@ def retangle_mask_external(img):
     cols = np.any(img, axis=0)
     ymin, ymax = np.where(rows)[0][[0, -1]]
     xmin, xmax = np.where(cols)[0][[0, -1]]
-    return img[ymin:ymax + 1, xmin:xmax + 1]
+    return img[ymin : ymax + 1, xmin : xmax + 1]
 
 
 def retangle_full_mask_external(img):
@@ -1243,7 +1224,7 @@ def retangle_full_mask_external(img):
     ymin, ymax = np.where(rows)[0][[0, -1]]
     xmin, xmax = np.where(cols)[0][[0, -1]]
     img_mod = np.zeros_like(img)
-    img_mod[ymin:ymax + 1, xmin:xmax + 1] = 255
+    img_mod[ymin : ymax + 1, xmin : xmax + 1] = 255
     return img_mod
 
 
@@ -1288,8 +1269,7 @@ def retangle_mask_internal(img):
 def labels_from_ground_truth(segments_list, ground_truth):
     labels_ground_truth = []
     for segments in segments_list:
-        unique, counts = np.unique(ground_truth[segments != 0],
-                                   return_counts=True)
+        unique, counts = np.unique(ground_truth[segments != 0], return_counts=True)
         labels_ground_truth.append(unique[counts.argmax()])
     return labels_ground_truth
 
@@ -1299,7 +1279,7 @@ def create_masks(shape, segments):
 
     # IMPORTANT: numpy.unique returns the SORTED unique elements. Hence, we ensure that superpixels are
     # ordered by their label
-    for (i, segVal) in enumerate(np.unique(segments)):
+    for i, segVal in enumerate(np.unique(segments)):
         mask = np.zeros(shape[1:], dtype="uint8")
         mask[segments == segVal] = 1
         mask_list.append(mask)
@@ -1317,11 +1297,11 @@ def compute_wld(orig_img_internal):
 
     for sp_img_internal in orig_img_internal:
         rows, cols = sp_img_internal.shape
-        hist = np.zeros((M, T, S), 'float32')
+        hist = np.zeros((M, T, S), "float32")
 
         for i in range(1, rows - 1):
             for j in range(1, cols - 1):
-                roi = sp_img_internal[i - 1:i + 2, j - 1:j + 2].astype('int16')
+                roi = sp_img_internal[i - 1 : i + 2, j - 1 : j + 2].astype("int16")
                 ic = roi[1][1]
 
                 roi_diff = roi - ic
@@ -1335,7 +1315,7 @@ def compute_wld(orig_img_internal):
                     else:
                         zeta = -90 + eps
 
-                assert (-90 <= zeta <= 90)
+                assert -90 <= zeta <= 90
 
                 v11 = roi[1][0] - roi[1][2]
                 v10 = roi[2][1] - roi[0][1]
@@ -1345,15 +1325,15 @@ def compute_wld(orig_img_internal):
                 if theta >= 360:
                     theta -= 360
 
-                m = int(np.floor(0.5 + (zeta + 90) * M / 180.)) % M
+                m = int(np.floor(0.5 + (zeta + 90) * M / 180.0)) % M
                 # assert(m in range(0, M))
 
-                t = int(np.floor(0.5 + (theta * T / 360.))) % T
+                t = int(np.floor(0.5 + (theta * T / 360.0))) % T
                 # assert(t in range(0, T))
 
                 # Lower and upper bounds of interval m
-                lb = (2 * m - M) * 180. / (2 * M)
-                ub = (2 * m - M + 2) * 180. / (2 * M)
+                lb = (2 * m - M) * 180.0 / (2 * M)
+                ub = (2 * m - M + 2) * 180.0 / (2 * M)
 
                 s = int(np.floor(0.5 + (zeta - lb) / ((ub - lb) / S))) % S
                 # assert(s in range(0, S))
@@ -1380,11 +1360,11 @@ def get_label_ids(annotations):
 
 
 def format_output_path(path, selected_aux):
-    ext = re.findall('\*+(.[a-z0-9A-Z*_]+)', selected_aux)[0].strip()
+    ext = re.findall("\*+(.[a-z0-9A-Z*_]+)", selected_aux)[0].strip()
     output = path
 
-    if ext[0] != '.':
-        ext = '.' + ext
+    if ext[0] != ".":
+        ext = "." + ext
     ext = ext.lower()
 
     path_ext = os.path.splitext(path)[1][1:]
@@ -1394,12 +1374,12 @@ def format_output_path(path, selected_aux):
         if path_ext != ext:
             ext = path_ext
 
-    if ext[0] != '.':
-        ext = '.' + ext
+    if ext[0] != ".":
+        ext = "." + ext
     ext = ext.lower()
 
-    if ext == '.*':
-        logger.exception('Invalid file extension')
+    if ext == ".*":
+        logger.exception("Invalid file extension")
 
     if not output.lower().endswith(ext.lower()):
         output = output + ext
@@ -1409,8 +1389,8 @@ def format_output_path(path, selected_aux):
 
 def _get_size_raw(filename):
     filename = os.path.basename(filename)
-    size = re.search('\d+(x\d+)+', filename).group(0)
-    dim_size = map(int, size.lower().split('x'))
+    size = re.search("\d+(x\d+)+", filename).group(0)
+    dim_size = map(int, size.lower().split("x"))
     return list(dim_size)
 
 
@@ -1419,8 +1399,8 @@ _depth_map = {8: np.uint8, 16: np.uint16, 32: np.uint32}
 
 def _get_depth_raw(filename):
     filename = os.path.basename(filename)
-    depth = re.search('_(8|16|32)(bits|b)', filename).group(0)
-    depth_i = int(depth.replace('bits', '').replace('b', '').replace('_', ''))
+    depth = re.search("_(8|16|32)(bits|b)", filename).group(0)
+    depth_i = int(depth.replace("bits", "").replace("b", "").replace("_", ""))
     return _depth_map[depth_i]
 
 
@@ -1431,4 +1411,4 @@ def get_raw_filename_info(filename):
 def raw_filename(filename, shape, dtype):
     basefilename, ext = os.path.splitext(filename)
     bits = np.dtype(dtype).itemsize * 8
-    return f'{basefilename}_{shape[2]}x{shape[1]}x{shape[0]}_{bits}bits{ext}'
+    return f"{basefilename}_{shape[2]}x{shape[1]}x{shape[0]}_{bits}bits{ext}"

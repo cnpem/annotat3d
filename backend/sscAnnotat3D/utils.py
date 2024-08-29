@@ -1,24 +1,24 @@
 import ctypes
-import os
 import io
-import numpy
+import os
 
+import numpy
 from sklearn.preprocessing import LabelEncoder
 
-
-#Had to comment this, on singularity this 'steals' the GPU form the SPIN/HARPIA module makeing it malfunction
-#However the same effect does not happen on old singularity recipe and on new docker recipe (weird, don't you agree?) 
-#try:
+# Had to comment this, on singularity this 'steals' the GPU form the SPIN/HARPIA module makeing it malfunction
+# However the same effect does not happen on old singularity recipe and on new docker recipe (weird, don't you agree?)
+# try:
 #    libname = 'libcuda.so'
 #    cuda = ctypes.CDLL(libname)
 #    cuda.cuInit(0)
-#except:
+# except:
 #    cuda = None
 
 FILE_EXTENSION_IMAGE_FILTER = "Images (*.tif *.tiff *.TIFF *TIF *.b *.raw);; TIFF  (*.tif *.tiff *.TIFF *.TIF);; Raw Data  (*.b *.raw);; All Files (*.*)"
 
 
-__axis_num = { 'xy': 0, 'xz': 1, 'yz': 2}
+__axis_num = {"xy": 0, "xz": 1, "yz": 2}
+
 
 def get_3d_slice_range_from(axis: str, slice_num: int, slice_num_to: int = None):
     """
@@ -38,11 +38,10 @@ def get_3d_slice_range_from(axis: str, slice_num: int, slice_num_to: int = None)
     else:
         val = slice(slice_num, slice_num_to, None)
 
-    s = [slice(None, None, None),
-         slice(None, None, None),
-         slice(None, None, None)]
+    s = [slice(None, None, None), slice(None, None, None), slice(None, None, None)]
     s[__axis_num[axis.lower()]] = val
     return s
+
 
 def get_axis_num(axis: str):
     """
@@ -54,34 +53,35 @@ def get_axis_num(axis: str):
     """
     return __axis_num[axis.lower()]
 
+
 # class ThreadWorker(QtCore.QThread):
-    # append_log = QtCore.pyqtSignal(str)
-    # finished = QtCore.pyqtSignal()
+# append_log = QtCore.pyqtSignal(str)
+# finished = QtCore.pyqtSignal()
 
-    # def __init__(self, runnable):
-        # super().__init__()
-        # self._runnable = runnable
+# def __init__(self, runnable):
+# super().__init__()
+# self._runnable = runnable
 
-    # def run(self):
-        # try:
-            # log = self._runnable()
-            # #             print('logging ui: {} > {}'.format(log, type(log)))
+# def run(self):
+# try:
+# log = self._runnable()
+# #             print('logging ui: {} > {}'.format(log, type(log)))
 
-            # if log is not None:
-                # for line in log:
-                    # if line is not None:
-                        # #                         print(type(line))
-                        # #                         print(list(line))
-                        # if type(line) == str:
-                            # self.append_log.emit(line)
-                        # else:
-                            # self.append_log.emit(str(line, 'UTF-8'))
+# if log is not None:
+# for line in log:
+# if line is not None:
+# #                         print(type(line))
+# #                         print(list(line))
+# if type(line) == str:
+# self.append_log.emit(line)
+# else:
+# self.append_log.emit(str(line, 'UTF-8'))
 
-        # except Exception as e:
-            # print(str(e))
-            # self.append_log.emit(str(e))
-        # finally:
-            # self.finished.emit()
+# except Exception as e:
+# print(str(e))
+# self.append_log.emit(str(e))
+# finally:
+# self.finished.emit()
 
 
 # def pyqt_trace():
@@ -100,43 +100,44 @@ def get_axis_num(axis: str):
 
 
 def annotat3d_log_level():
-    return os.environ.get('SSC_ANNOTAT3D_LOG_LEVEL', 'INFO').upper()
+    return os.environ.get("SSC_ANNOTAT3D_LOG_LEVEL", "INFO").upper()
 
 
 # def dialog_message(title='Ops!', message='There was en error', detailed=None, type=None):
-    # error_dialog = QtWidgets.QMessageBox()
-    # error_dialog.setWindowTitle(title)
-    # error_dialog.setText(message)
-    # if detailed:
-        # error_dialog.setDetailedText(detailed)
-    # if type == 'error':
-        # error_dialog.setIcon(QtWidgets.QMessageBox.Critical)
-    # elif type == 'warning':
-        # error_dialog.setIcon(QtWidgets.QMessageBox.Warning)
+# error_dialog = QtWidgets.QMessageBox()
+# error_dialog.setWindowTitle(title)
+# error_dialog.setText(message)
+# if detailed:
+# error_dialog.setDetailedText(detailed)
+# if type == 'error':
+# error_dialog.setIcon(QtWidgets.QMessageBox.Critical)
+# elif type == 'warning':
+# error_dialog.setIcon(QtWidgets.QMessageBox.Warning)
 
-    # error_dialog.exec_()
+# error_dialog.exec_()
 
 
 # def dialog_waiting(parent=None):
 
-    # layout = QtWidgets.QVBoxLayout()
-    # d = QtWidgets.QDialog(parent=parent)
-    # d.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.FramelessWindowHint)
-    # icon = QtWidgets.QProgressBar(d)
-    # icon.setMaximum(0)
-    # icon.setMinimum(0)
-    # icon.resize(300, 20)
+# layout = QtWidgets.QVBoxLayout()
+# d = QtWidgets.QDialog(parent=parent)
+# d.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.FramelessWindowHint)
+# icon = QtWidgets.QProgressBar(d)
+# icon.setMaximum(0)
+# icon.setMinimum(0)
+# icon.resize(300, 20)
 
-    # label = QtWidgets.QLabel('Wait ...')
-    # label.setAlignment(QtCore.Qt.AlignCenter)
+# label = QtWidgets.QLabel('Wait ...')
+# label.setAlignment(QtCore.Qt.AlignCenter)
 
-    # layout.addWidget(label)
-    # layout.addWidget(icon)
+# layout.addWidget(label)
+# layout.addWidget(icon)
 
-    # d.setLayout(layout)
+# d.setLayout(layout)
 
-    # d.resize(300, 100)
-    # return d
+# d.resize(300, 100)
+# return d
+
 
 def toNpyBytes(data: numpy.ndarray):
     """
@@ -153,15 +154,15 @@ def toNpyBytes(data: numpy.ndarray):
 
 
 def tuple_to_str(s):
-    print('from tuple')
+    print("from tuple")
     print(s)
-    return ','.join([str(x) for x in s])
+    return ",".join([str(x) for x in s])
 
 
 def str_to_tuple(s):
-    print('to tuple')
+    print("to tuple")
     print(s)
-    return tuple([int(x) for x in s.split(',')])
+    return tuple([int(x) for x in s.split(",")])
 
 
 class SequenceCatcher(object):
@@ -171,18 +172,18 @@ class SequenceCatcher(object):
         self._evt = evt
 
     def __call__(self, e):
-        print('seq catcher ... ' + str(e))
+        print("seq catcher ... " + str(e))
         print(self._cur)
         print(self._seq)
-        print('key: ', e.key)
-        print('key dir: ', dir(e.key))
-        print('evt: ', dir(e))
-        print('key type', type(e.key))
+        print("key: ", e.key)
+        print("key dir: ", dir(e.key))
+        print("evt: ", dir(e))
+        print("key type", type(e.key))
         if e.key() == self._seq[self._cur]:
             self._cur += 1
             if self._cur >= len(self._seq):
                 self._cur = 0
-                print('run event')
+                print("run event")
                 self._evt()
         else:
             self._cur = 0
@@ -193,47 +194,47 @@ _console = {}
 
 def add_variable_console(export={}):
 
-    if _console.get('widget', False):
+    if _console.get("widget", False):
         for k in export:
             v = export[k]
-            _console['widget'].push_local_ns(k, v)
+            _console["widget"].push_local_ns(k, v)
 
-    _console['variables'] = {**(_console.get('variables', {})), **export}
+    _console["variables"] = {**(_console.get("variables", {})), **export}
 
 
 # def _show_console():
-    # _console['widget'].resize(640, 480)
-    # _console['widget'].show()
-    # _console['parent'].close()
+# _console['widget'].resize(640, 480)
+# _console['widget'].show()
+# _console['parent'].close()
 
 
 # def new_console(parent, export={}):
-    # _console['widget'] = PythonConsole()
-    # _console['widget'].resize(640, 480)
-    # _console['parent'] = parent
+# _console['widget'] = PythonConsole()
+# _console['widget'].resize(640, 480)
+# _console['parent'] = parent
 
-    # add_variable_console({**(_console.get('variables', {})), **export})
+# add_variable_console({**(_console.get('variables', {})), **export})
 
-    # keyevt = SequenceCatcher(
-        # [
-            # 16777235,  # up
-            # 16777235,  # up
-            # 16777237,  # down
-            # 16777237,  # down
-            # 16777234,  # left
-            # 16777236,  # right
-            # 16777234,  # left
-            # 16777236
-        # ],  # right
-        # lambda: _show_console())
+# keyevt = SequenceCatcher(
+# [
+# 16777235,  # up
+# 16777235,  # up
+# 16777237,  # down
+# 16777237,  # down
+# 16777234,  # left
+# 16777236,  # right
+# 16777234,  # left
+# 16777236
+# ],  # right
+# lambda: _show_console())
 
-    # #parent.events.key_press.connect(keyevt)
-    # #print(parent.events)
+# #parent.events.key_press.connect(keyevt)
+# #print(parent.events)
 
-    # parent.keyPressEvent = keyevt
-    # _console['widget'].eval_in_thread()
+# parent.keyPressEvent = keyevt
+# _console['widget'].eval_in_thread()
 
-    # return _console
+# return _console
 
 
 ################## cuda utilities ######################
@@ -241,7 +242,7 @@ def add_variable_console(export={}):
 CUDA_SUCCESS = 0
 
 
-#def cuda_capability():
+# def cuda_capability():
 #    cc_major = ctypes.c_int()
 #    cc_minor = ctypes.c_int()
 #    device = ctypes.c_int()
@@ -255,19 +256,19 @@ CUDA_SUCCESS = 0
 
 
 def rapids_support():
-    #temporarily disable rapids support
+    # temporarily disable rapids support
     return False
 
-    #libcuda could not be loaded suring ci-cd build
+    # libcuda could not be loaded suring ci-cd build
     if cuda is None:
         return False
     major, minor = cuda_capability()
-    print('capability {}.{}'.format(major, minor))
+    print("capability {}.{}".format(major, minor))
     return major >= 6
 
 
 def headless_mode():
-    return bool(os.environ.get('ANNOTAT3D_HEADLESS', 0))
+    return bool(os.environ.get("ANNOTAT3D_HEADLESS", 0))
 
 
 def normalize_labels(labels):
@@ -276,9 +277,8 @@ def normalize_labels(labels):
 
 
 def map_lookup_table(array, lut):
-    from_values = numpy.array([*lut.keys()], dtype='uint16')
+    from_values = numpy.array([*lut.keys()], dtype="uint16")
     to_values = numpy.array([*lut.values()], dtype=array.dtype)
     sort_idx = numpy.argsort(from_values)
     idx = numpy.searchsorted(from_values, array, sorter=sort_idx)
     return to_values[sort_idx][idx]
-

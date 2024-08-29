@@ -1,14 +1,14 @@
-import numpy as np
 import logging
-from sscPySpin import segmentation as spin_seg
-from sscPySpin import image as spin_img
 import time
+
+import numpy as np
+from sscPySpin import image as spin_img
+from sscPySpin import segmentation as spin_seg
 
 logger = logging.getLogger(__name__)
 
 
-def superpixel_extraction(img, superpixel_type, seed_spacing, compactness,
-                          **kwargs):
+def superpixel_extraction(img, superpixel_type, seed_spacing, compactness, **kwargs):
     """
     This function makes the superpixel extraction
 
@@ -26,35 +26,30 @@ def superpixel_extraction(img, superpixel_type, seed_spacing, compactness,
         (array, int): returns the superpixel image, the number of total superpixels
 
     """
-    ngpus = -1 if 'ngpus' not in kwargs else kwargs['ngpus']
-    if 'superpixel_iterations' in kwargs:
-        if kwargs['superpixel_iterations'] <= 0 and superpixel_type == 'slic':
+    ngpus = -1 if "ngpus" not in kwargs else kwargs["ngpus"]
+    if "superpixel_iterations" in kwargs:
+        if kwargs["superpixel_iterations"] <= 0 and superpixel_type == "slic":
             superpixel_iterations = 1
         else:
-            superpixel_iterations = kwargs['superpixel_iterations']
+            superpixel_iterations = kwargs["superpixel_iterations"]
     else:
-        if superpixel_type == 'slic':
+        if superpixel_type == "slic":
             superpixel_iterations = 1
         else:
             superpixel_iterations = -1
 
-    superpixel_type_id = spin_seg.SPINSuperpixelType.superpixel_id(
-        superpixel_type)
+    superpixel_type_id = spin_seg.SPINSuperpixelType.superpixel_id(superpixel_type)
 
-    logger.debug('Calling Spin library to generate superpixels')
-    logger.debug(f'{superpixel_type} {superpixel_type_id}')
+    logger.debug("Calling Spin library to generate superpixels")
+    logger.debug(f"{superpixel_type} {superpixel_type_id}")
     start = time.time()
     img_superpixels = np.zeros(img.shape, dtype=np.int32)
 
-    max_block_size = 64 if 'max_block_size' not in kwargs else int(
-        kwargs['max_block_size'])
-    min_block_size = 1 if 'min_block_size' not in kwargs else int(
-        kwargs['min_block_size'])
+    max_block_size = 64 if "max_block_size" not in kwargs else int(kwargs["max_block_size"])
+    min_block_size = 1 if "min_block_size" not in kwargs else int(kwargs["min_block_size"])
 
     end = time.time()
-    logger.debug(
-        f'Superpixel image allocation and image conversion run time: {end - start}s'
-    )
+    logger.debug(f"Superpixel image allocation and image conversion run time: {end - start}s")
 
     start = time.time()
     num_superpixels = spin_seg.spin_superpixels_2D(
@@ -68,21 +63,21 @@ def superpixel_extraction(img, superpixel_type, seed_spacing, compactness,
         float(compactness),
         ngpus,
         max_block_size,
-        min_block_size=min_block_size)
+        min_block_size=min_block_size,
+    )
 
     end = time.time()
-    logger.debug(f'Superpixel estimation run time: {end - start}s')
+    logger.debug(f"Superpixel estimation run time: {end - start}s")
 
     values = spin_img.min_max_value(img_superpixels, True)
-    min_label = values['min']
-    max_label = values['max']
+    min_label = values["min"]
+    max_label = values["max"]
 
     if min_label <= 0:
-        raise Exception('Zero-valued superpixel detected! Please contact developer')
+        raise Exception("Zero-valued superpixel detected! Please contact developer")
 
     return img_superpixels, num_superpixels
 
 
 def superpixel_slice_borders(slice_superpixels):
-    return spin_img.spin_find_boundaries_subpixel(slice_superpixels,
-                                                  dtype='uint8')
+    return spin_img.spin_find_boundaries_subpixel(slice_superpixels, dtype="uint8")
