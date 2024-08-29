@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import {
     IonInput,
     IonItem,
@@ -10,6 +9,10 @@ import {
     IonSelectOption,
     IonCheckbox,
     useIonToast,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonIcon,
 } from '@ionic/react';
 import { useState } from 'react';
 import { useStorageState } from 'react-storage-hooks';
@@ -22,6 +25,7 @@ import {
     KappaInputWithInfo,
     TimeStepInputWithInfo,
     IterationsInputWithInfo,
+    AnisoNeighbourInputWithInfo,
     KernelMeanInputWithInfo,
     KernelMedianInputWithInfo,
     SigmaGaussianInputWithInfo,
@@ -434,11 +438,6 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
         { value: 3, label: 'Hyperbolic tangent decay' },
     ];
 
-    const dimensionOptions = [
-        { value: false, label: '2D' },
-        { value: true, label: '3D' },
-    ];
-
     const [showToast] = useIonToast();
 
     const [disabled, setDisabled] = useState<boolean>(false);
@@ -447,7 +446,7 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
     const [totalIterations, setTotalIterations] = useStorageState<number>(sessionStorage, 'totalIterations', 1);
     const [timeStep, setTimeStep] = useStorageState<number>(sessionStorage, 'TimeStep', 0.1);
     const [diffusionOption, setDiffusionOption] = useStorageState<number>(sessionStorage, 'diffusionOption', 3);
-    const [aniso3D, setAniso3D] = useStorageState<boolean>(sessionStorage, 'aniso3D', false);
+    const [anisoNeighbour, setNeighbour] = useStorageState<string>(sessionStorage, 'anisoNeighbour', '2D');
 
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [loadingMsg, setLoadingMsg] = useState<string>('');
@@ -463,7 +462,7 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
             delta_t: timeStep,
             kappa,
             diffusion_option: diffusionOption,
-            aniso3D,
+            aniso3D: anisoNeighbour === '2D',
             axis: curSlice.axis,
             slice: curSlice.slice,
         };
@@ -494,7 +493,7 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
             delta_t: timeStep,
             kappa,
             diffusion_option: diffusionOption,
-            aniso3D,
+            aniso3D: anisoNeighbour === '2D',
             axis: curSlice.axis,
             slice: curSlice.slice,
         };
@@ -517,36 +516,15 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
     return (
         <ModuleCard disabled={disabled} name="Anisotropic Diffusion" onPreview={onPreview} onApply={onApply}>
             <ModuleCardItem name="Filter Parameters">
-                <KappaInputWithInfo kappa={kappa} setKappa={setKappa} showToast={showToast} timeToast={timeToast} />
-                <TimeStepInputWithInfo
-                    timeStep={timeStep}
-                    setTimeStep={setTimeStep}
-                    showToast={showToast}
-                    timeToast={timeToast}
-                />
+                <DiffusionOptionSelect diffusionOption={diffusionOption} setDiffusionOption={setDiffusionOption} />
 
-                <IterationsInputWithInfo
-                    totalIterations={totalIterations}
-                    setTotalIterations={setTotalIterations}
-                    showToast={showToast}
-                    timeToast={timeToast}
-                />
-                <IonItem>
-                    <IonLabel>Neighbour 2D or 3D</IonLabel>
-                    <IonSelect
-                        aria-label="Dimension Option"
-                        interface="popover"
-                        placeholder="Select 2D or 3D"
-                        value={aniso3D}
-                        onIonChange={(e) => setAniso3D(e.detail.value)}
-                    >
-                        {dimensionOptions.map((option) => (
-                            <IonSelectOption key={String(option.value)} value={option.value}>
-                                {option.label}
-                            </IonSelectOption>
-                        ))}
-                    </IonSelect>
-                </IonItem>
+                <KappaInputWithInfo kappa={kappa} setKappa={setKappa} />
+
+                <TimeStepInputWithInfo timeStep={timeStep} setTimeStep={setTimeStep} />
+
+                <IterationsInputWithInfo totalIterations={totalIterations} setTotalIterations={setTotalIterations} />
+
+                <AnisoNeighbourInputWithInfo anisoNeighbour={anisoNeighbour} setNeighbour={setNeighbour} />
             </ModuleCardItem>
             <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={loadingMsg} />
         </ModuleCard>
