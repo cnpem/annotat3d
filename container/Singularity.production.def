@@ -1,5 +1,5 @@
 Bootstrap: docker-daemon
-From: gitregistry.cnpem.br/gcd/data-science/segmentation/ssc-annotat3d:latest
+From: gitregistry.cnpem.br/gcd/data-science/segmentation/annotat3d:latest
 
 %files
     ./backend/dist/*whl /opt/annotat3dweb/
