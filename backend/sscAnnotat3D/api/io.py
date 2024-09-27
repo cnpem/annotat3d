@@ -152,9 +152,6 @@ def open_image(image_id: str):
             image, info = sscIO.io.read_volume(image_path, "numpy")
             error_msg = "No such file or directory {}".format(image_path)
 
-            if _convert_dtype_to_str(image.dtype) != image_dtype and (image_id == "image" or image_id == "label"):
-                image = image.astype(image_dtype)
-
         else:
             image_raw_shape = request.json["image_raw_shape"]
             image, info = sscIO.io.read_volume(
