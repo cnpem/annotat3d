@@ -616,17 +616,17 @@ class Canvas {
         const rgbaData = new Uint8Array(len * 4);
 
         const colors = this.colors;
-
         for (let i = 0; i < len; ++i) {
             const idx = i * 4;
             const label = labelSlice.data[i];
-            if (label <= 0) continue;
+            // Skip calculations if there is no label
+            if (label < 0) continue;
 
             const color = colors[label];
             rgbaData[idx] = color[0]; //R
             rgbaData[idx + 1] = color[1]; //G
             rgbaData[idx + 2] = color[2]; //B
-            rgbaData[idx + 3] = 128; //A
+            rgbaData[idx + 3] = 255; //A
         }
 
         const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
@@ -1095,11 +1095,14 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             contour: this.state.label_contour,
         };
 
-        void sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray').then(
-            (labelSlice) => {
+        void sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
+            .then((labelSlice) => {
                 this.canvas!.setLabelImage(labelSlice);
-            }
-        );
+            })
+            .catch((error) => {
+                console.error('Error fetching label slice:', error);
+                // Execute another function in case of error
+            });
     }
 
     setBrushMode(brush_mode: BrushModeType) {

@@ -177,7 +177,10 @@ def close_annot():
         return handle_exception(str(e))
 
     if (label_img is not None):
-        label_img[label_img > 0] = 0
+        label_img = label_img.astype('int32')
+        #image is of type uint16, changing for int32 to be able to pass negative labels
+        # negative labels won't be rendered in canvas, therefore its a quick fix 
+        label_img[:] = -1
         data_repo.set_image(key="label", data=label_img)
 
     return "All markers erased successfully", 200
