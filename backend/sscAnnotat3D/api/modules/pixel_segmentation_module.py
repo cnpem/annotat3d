@@ -436,8 +436,9 @@ def preview():
     # TODO: refactor all the superpixel and pixel segmentation modules to the new annotation dict, not the previous one
     annotation_dict = {}
     for key, value in annotations.items():
-        annotation_dict[key] = (value[-1], 1)
-        annotations = annotation_dict
+        if value[-1] != -1:
+            annotation_dict[key] = (value[-1], 1)
+            annotations = annotation_dict
 
     annotations = annotation_dict
 
@@ -486,8 +487,9 @@ def execute():
     # TODO: refactor all the superpixel and pixel segmentation modules to the new annotation dict, not the previous one
     annotation_dict = {}
     for key, value in annotations.items():
-        annotation_dict[key] = (value[-1], 1)
-        annotations = annotation_dict
+        if value[-1] != -1:
+            annotation_dict[key] = (value[-1], 1)
+            annotations = annotation_dict
 
     annotations = annotation_dict
 
