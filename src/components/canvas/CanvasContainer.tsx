@@ -1071,11 +1071,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             slice: this.props.slice,
         };
         console.log('Slice changed', this.props.axis, this.props.slice);
-        return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray').then(
-            (imgSlice) => {
+        return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
+            .then((imgSlice) => {
                 this.canvas!.setImage(imgSlice);
-            }
-        );
+            })
+            .catch((error) => {
+                console.log('getImageSlice() error:', error);
+            });
     }
 
     getFutureSlice() {
@@ -1086,13 +1088,15 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             slice: 0,
         };
 
-        void sfetch('POST', '/get_image_slice/future', JSON.stringify(params), 'gzip/numpyndarray').then(
-            (previewSlice) => {
+        void sfetch('POST', '/get_image_slice/future', JSON.stringify(params), 'gzip/numpyndarray')
+            .then((previewSlice) => {
                 this.canvas?.setFutureImage(previewSlice);
                 this.canvas?.setPreviewVisibility(true);
                 this.setState({ ...this.state, future_sight_on: true });
-            }
-        );
+            })
+            .catch((error) => {
+                console.log('getFutureslice() error:', error);
+            });
     }
 
     getAnnotSlice() {
@@ -1102,10 +1106,14 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         console.log('get annot slice', params);
-        void sfetch('POST', '/get_annot_slice', JSON.stringify(params), 'gzip/numpyndarray').then((slice) => {
-            console.log('annot slice');
-            this.canvas!.annotation.draw(slice);
-        });
+        void sfetch('POST', '/get_annot_slice', JSON.stringify(params), 'gzip/numpyndarray')
+            .then((slice) => {
+                console.log('annot slice');
+                this.canvas!.annotation.draw(slice);
+            })
+            .catch((error) => {
+                console.log('getAnnotSlice() error:', error);
+            });
     }
 
     getLabelSlice() {
