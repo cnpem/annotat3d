@@ -51,6 +51,7 @@ const canvas: Record<string, 'drawing' | 'imaging'> = {
 const ProcessingMenu: React.FC = () => {
     const [curModule, setCurModule] = useStorageState<string>(sessionStorage, 'curModule', 'superpixel');
     const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
+    const [showSuperpixel, setShowSuperpixel] = useStorageState<boolean>(sessionStorage, 'showSuperpixel', true);
 
     useEventBus('LockComponents', (changeLockMenu) => {
         setLockMenu(changeLockMenu);
@@ -62,6 +63,15 @@ const ProcessingMenu: React.FC = () => {
 
     useEffect(() => {
         dispatch('canvasModeChanged', canvas[curModule]);
+        console.log('curModule', curModule);
+        if (curModule === 'superpixel' && !showSuperpixel) {
+            dispatch('superpixelVisibilityChanged', true);
+            setShowSuperpixel(true);
+        }
+        if (curModule === 'pixel' && showSuperpixel) {
+            dispatch('superpixelVisibilityChanged', false);
+            setShowSuperpixel(false);
+        }
     }, [curModule]);
 
     return (
