@@ -68,7 +68,7 @@ def get_image_histogram(image_id):
 
     img_slice = image[slice_range]
 
-    histogram, bin_edges = np.histogram(img_slice,bins=255)
+    histogram, bin_edges = np.histogram(img_slice, bins=255)
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
     # round bin_centers for pretty show in frontend
@@ -82,10 +82,12 @@ def get_image_histogram(image_id):
     # it is necessary to convert the numpy datatype to a numpy datatype for json
     data_type = img_slice.dtype
     if data_type == float:
+
         def python_typer(x):
             return float(x)
 
     else:
+
         def python_typer(x):
             return int(x)
 
@@ -149,9 +151,6 @@ def open_image(image_id: str):
         if extension in tif_extensions or use_image_raw_parse:
             image, info = sscIO.io.read_volume(image_path, "numpy")
             error_msg = "No such file or directory {}".format(image_path)
-
-            if _convert_dtype_to_str(image.dtype) != image_dtype and (image_id == "image" or image_id == "label"):
-                image = image.astype(image_dtype)
 
         else:
             image_raw_shape = request.json["image_raw_shape"]

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     IonButton,
     IonCol,
@@ -21,7 +21,7 @@ import {
 import '../../../styles/FileDialog.css';
 import { barChart, construct, create, extensionPuzzle, image, images, information } from 'ionicons/icons';
 import { sfetch } from '../../../utils/simplerequest';
-import { dispatch } from '../../../utils/eventbus';
+import { dispatch, useEventBus } from '../../../utils/eventbus';
 import ErrorWindowComp from './utils/ErrorWindowComp';
 import { ImageInfoInterface, ImageInfoPayload } from './utils/ImageInfoInterface';
 import ErrorInterface from './utils/ErrorInterface';
@@ -42,7 +42,8 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         event: undefined,
     });
 
-    const [pathFiles, setPathFiles] = useStorageState<MultiplesPath>(sessionStorage, 'loadedPathFiles', {
+    const [pathFiles, setPathFiles] = useState<MultiplesPath>({
+        //check if undefined assign '', else their value
         workspacePath: '',
         imagePath: '',
         superpixelPath: '',
@@ -135,11 +136,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
     /**
      * Function that reads the annotation_menu .pkl file and send to the backend
      */
-    const dispatchOpenAnnot = async () => {
-        const annotPath = {
-            annot_path:
-                pathFiles.workspacePath !== '' ? pathFiles.workspacePath + pathFiles.annotPath : pathFiles.annotPath,
-        };
+    const dispatchOpenAnnot = async (annotPath: { annot_path: string }) => {
         let msgReturned = '';
         let isError = false;
         await sfetch('POST', '/open_annot', JSON.stringify(annotPath), 'json')
@@ -163,18 +160,10 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         const returnedObj: QueueToast = { message: msgReturned, isError };
         return returnedObj;
     };
-
     /**
      * Function that Loads the classifier model .model file and send to the backend
      */
-    const dispatchLoadClassifier = async () => {
-        const backendPayload: { classificationPath: string } = {
-            classificationPath:
-                pathFiles.workspacePath !== ''
-                    ? pathFiles.workspacePath + pathFiles.classificationPath
-                    : pathFiles.classificationPath,
-        };
-
+    const dispatchLoadClassifier = async (backendPayload: { classificationPath: string }) => {
         let msgReturned = '';
         let isError = false;
         console.table(backendPayload);
@@ -217,12 +206,13 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         return returnedObj;
     };
 
-    const handleLoadImageAction = async () => {
+    const handleLoadImageAction = async (pathFilesarg: MultiplesPath) => {
         /**
          * Dispatch for images, label and superpixel
          */
 
         setOpenLoadingMenu(true);
+        //ensure it loads only once when annotat3d opens
 
         const queueToast: QueueToast[] = [
             {
@@ -247,44 +237,60 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
             },
         ];
 
-        if (pathFiles.imagePath !== '') {
+        if (pathFilesarg.imagePath !== '') {
             const imgPath =
-                pathFiles.workspacePath !== '' ? pathFiles.workspacePath + pathFiles.imagePath : pathFiles.imagePath;
+                pathFilesarg.workspacePath !== ''
+                    ? pathFilesarg.workspacePath + pathFilesarg.imagePath
+                    : pathFilesarg.imagePath;
             const promise = dispatchOpenImage(imgPath, 'image');
             await promise.then((item: QueueToast) => {
                 queueToast[0] = item;
             });
         }
 
-        if (pathFiles.superpixelPath !== '') {
+        if (pathFilesarg.superpixelPath !== '') {
             const superpixelPath =
-                pathFiles.workspacePath !== ''
-                    ? pathFiles.workspacePath + pathFiles.superpixelPath
-                    : pathFiles.superpixelPath;
+                pathFilesarg.workspacePath !== ''
+                    ? pathFilesarg.workspacePath + pathFilesarg.superpixelPath
+                    : pathFilesarg.superpixelPath;
             const promise = dispatchOpenImage(superpixelPath, 'superpixel');
             await promise.then((item: QueueToast) => {
                 queueToast[1] = item;
             });
         }
 
-        if (pathFiles.labelPath !== '') {
+        if (pathFilesarg.labelPath !== '') {
             const labelPath =
-                pathFiles.workspacePath !== '' ? pathFiles.workspacePath + pathFiles.labelPath : pathFiles.labelPath;
+                pathFilesarg.workspacePath !== ''
+                    ? pathFilesarg.workspacePath + pathFilesarg.labelPath
+                    : pathFilesarg.labelPath;
             const promise = dispatchOpenImage(labelPath, 'label');
             await promise.then((item: QueueToast) => {
                 queueToast[2] = item;
             });
         }
 
-        if (pathFiles.annotPath !== '') {
-            const promise = dispatchOpenAnnot();
+        if (pathFilesarg.annotPath !== '') {
+            const annotPath = {
+                annot_path:
+                    pathFilesarg.workspacePath !== ''
+                        ? pathFilesarg.workspacePath + pathFilesarg.annotPath
+                        : pathFilesarg.annotPath,
+            };
+            const promise = dispatchOpenAnnot(annotPath);
             await promise.then((item: QueueToast) => {
                 queueToast[3] = item;
             });
         }
 
-        if (pathFiles.classificationPath !== '') {
-            const promise = dispatchLoadClassifier();
+        if (pathFilesarg.classificationPath !== '') {
+            const backendPayload: { classificationPath: string } = {
+                classificationPath:
+                    pathFilesarg.workspacePath !== ''
+                        ? pathFilesarg.workspacePath + pathFilesarg.classificationPath
+                        : pathFilesarg.classificationPath,
+            };
+            const promise = dispatchLoadClassifier(backendPayload);
             await promise.then((item: QueueToast) => {
                 queueToast[4] = item;
             });
@@ -304,12 +310,10 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
             }
         }
 
-        dispatch('setDefaultValuesLoad', pathFiles);
         setToastMsg(finalMsg);
         setOpenLoadingMenu(false);
         setShowToast(flagShowToast);
     };
-
     /**
      * Clean up popover dialog
      */
@@ -335,6 +339,22 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         setShowToast(false);
         setHeaderErrorMsg('');
     };
+    // Load files when logged in
+    useEventBus('LoadFiles', () => {
+        // Check if the component has been loaded before by checking local storage
+        void sfetch('POST', '/get_env/load_env', '', 'json').then((infoEnvDict) => {
+            // Create a copy of the object without the `loadedOnce` key
+            const { loadedOnce, ...EnvDict } = infoEnvDict;
+            // The IF loaded once logic is handled by backend, frontend refreshes states on page refrash or save states for new instances, annoying >:(
+            console.log('Setting path files', EnvDict);
+            setPathFiles(EnvDict);
+            if (!loadedOnce) {
+                void handleLoadImageAction(EnvDict);
+            }
+            // Store the state in local storage to persist across refreshes
+        });
+    });
+
     return (
         <>
             <IonPopover
@@ -689,7 +709,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
                         </IonAccordionGroup>
                     </IonContent>
                 </small>
-                <IonButton color={'tertiary'} slot={'end'} onClick={() => void handleLoadImageAction()}>
+                <IonButton color={'tertiary'} slot={'end'} onClick={() => void handleLoadImageAction(pathFiles)}>
                     Load!
                 </IonButton>
             </IonPopover>

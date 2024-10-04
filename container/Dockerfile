@@ -160,26 +160,12 @@ RUN mkdir -p /opt/annotat3dweb && wget -q -nc --no-check-certificate -P /opt/ann
 ENV LD_LIBRARY_PATH=/usr/local/openmpi/lib:$LD_LIBRARY_PATH \
     PATH=/usr/local/openmpi/bin:$PATH
 
-# HDF5 version 1.10.7
-RUN apt-get update -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        bzip2 \
-        file \
-        make \
-        wget \
-        zlib1g-dev && \
-    rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /opt/annotat3dweb && wget -q -nc --no-check-certificate -P /opt/annotat3dweb http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.bz2 && \
-    mkdir -p /opt/annotat3dweb && tar -x -f /opt/annotat3dweb/hdf5-1.10.7.tar.bz2 -C /opt/annotat3dweb -j && \
-    cd /opt/annotat3dweb/hdf5-1.10.7 &&  CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/hdf5 --enable-cxx --enable-fortran && \
+RUN wget -q --no-check-certificate -O /opt/annotat3dweb/hdf5-1.10.7.tar.gz https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.gz && \
+    gzip -cd /opt/annotat3dweb/hdf5-1.10.7.tar.gz | tar xvf - -C /opt/annotat3dweb && \
+    cd /opt/annotat3dweb/hdf5-1.10.7 && CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/hdf5 --enable-cxx --enable-fortran && \
     make -j$(nproc) && \
     make -j$(nproc) install && \
-    rm -rf /opt/annotat3dweb/hdf5-1.10.7 /opt/annotat3dweb/hdf5-1.10.7.tar.bz2
-ENV CPATH=/usr/local/hdf5/include:$CPATH \
-    HDF5_DIR=/usr/local/hdf5 \
-    LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH \
-    LIBRARY_PATH=/usr/local/hdf5/lib:$LIBRARY_PATH \
-    PATH=/usr/local/hdf5/bin:$PATH
+    rm -rf /opt/annotat3dweb/hdf5-1.10.7 /opt/annotat3dweb/hdf5-1.10.7.tar.gz
 
 # Anaconda
 RUN apt-get update -y && \

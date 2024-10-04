@@ -3,18 +3,17 @@ This script contains functions used for annotations
 @Docs author : Gabriel Borin Macedo (gabriel.macedo@lnls.com.br or borinmacedo@gmail.com)
 """
 
-import pickle
 import io
+import pickle
 import zlib
-import numpy as np
 
+import numpy as np
+from flask import Blueprint, jsonify, request, send_file
+from flask_cors import cross_origin
+from sscAnnotat3D import utils
 from sscAnnotat3D.modules.magic_wand import MagicWandSelector
 from sscAnnotat3D.modules import annotation_module
 from sscAnnotat3D.repository import data_repo, module_repo
-from sscAnnotat3D import utils
-
-from flask import Blueprint, request, send_file, jsonify
-from flask_cors import cross_origin
 from werkzeug.exceptions import BadRequest
 
 app = Blueprint('annotation', __name__)
@@ -179,7 +178,10 @@ def close_annot():
         return handle_exception(str(e))
 
     if (label_img is not None):
-        label_img[label_img > 0] = 0
+        label_img = label_img.astype('int32')
+        #image is of type uint16, changing for int32 to be able to pass negative labels
+        # negative labels won't be rendered in canvas, therefore its a quick fix 
+        label_img[:] = -1
         data_repo.set_image(key="label", data=label_img)
 
     return "All markers erased successfully", 200
@@ -235,12 +237,6 @@ def draw():
 
     annot_module = module_repo.get_module('annotation')
 
-    try:
-        flag_is_merge_activated = data_repo.get_edit_label_options(key="is_merge_activated")
-        flag_is_split_activated = data_repo.get_edit_label_options(key="is_split_activated")
-    except Exception as e:
-        return handle_exception(str(e))
-
     if annot_module is None:
         return handle_exception("Annotation module not found")
 
@@ -253,21 +249,6 @@ def draw():
     erase = (mode == 'erase_brush')
     
     annot_module.draw_marker_curve(cursor_coords, marker_id, label, erase)
-    
-    if (flag_is_merge_activated):
-        edit_label_annotation_module = data_repo.get_edit_label_options("edit_label_merge_module")
-    elif (flag_is_split_activated):
-        edit_label_annotation_module = data_repo.get_edit_label_options("edit_label_split_module")
-
-    if (flag_is_merge_activated or flag_is_split_activated):
-            mk_id = annot_module.current_mk_id
-            for point in cursor_coords:
-                edit_label_annotation_module.draw_marker_dot(point[1], point[0], label, mk_id, erase)
-
-    if (flag_is_merge_activated):
-        data_repo.set_edit_label_options("edit_label_merge_module", edit_label_annotation_module)
-    elif (flag_is_split_activated):
-        data_repo.set_edit_label_options("edit_label_split_module", edit_label_annotation_module)
 
     return "success", 200
 

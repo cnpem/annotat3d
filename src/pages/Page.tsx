@@ -36,9 +36,13 @@ const Page: React.FC = () => {
 
     useEventBus('sliceChanged', (payload: SliceInfoInterface) => {
         setSliceInfo(payload);
-        void sfetch('POST', '/close_image/future').then(() => {
-            dispatch('futureChanged', null);
-        });
+        void sfetch('POST', '/close_image/future')
+            .then(() => {
+                dispatch('futureChanged', null);
+            })
+            .catch((error) => {
+                console.error('Error sliceChanged useEventBus:', error);
+            });
     });
 
     useEventBus('canvasModeChanged', (mode) => {

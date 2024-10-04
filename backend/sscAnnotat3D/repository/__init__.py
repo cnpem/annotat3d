@@ -1,2 +1,1 @@
-from . import data_repo
-from . import module_repo
+from . import data_repo, module_repo

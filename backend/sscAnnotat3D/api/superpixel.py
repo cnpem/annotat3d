@@ -1,13 +1,12 @@
 import io
 import zlib
 
-from flask import Blueprint, request, send_file, jsonify
+from flask import Blueprint, jsonify, request, send_file
 from flask_cors import cross_origin
-
-from sscAnnotat3D.repository import data_repo
 from sscAnnotat3D import superpixels, utils
+from sscAnnotat3D.repository import data_repo
 
-app = Blueprint('superpixel', __name__)
+app = Blueprint("superpixel", __name__)
 
 
 def _debugger_print(msg: str, payload: any):
@@ -16,7 +15,7 @@ def _debugger_print(msg: str, payload: any):
     print("-------------------------------------------------------------\n")
 
 
-@app.route('/superpixel', methods=['POST', 'GET'])
+@app.route("/superpixel", methods=["POST", "GET"])
 @cross_origin()
 def superpixel():
     """
@@ -26,27 +25,47 @@ def superpixel():
         (str): returns a string "successes" if everything goes well and an error otherwise
 
     """
-    img = data_repo.get_image(key='image')
+    img = data_repo.get_image(key="image")
 
-    img_superpixel, num_superpixels = superpixels.superpixel_extraction(
-        img,
-        superpixel_type=request.json['superpixel_type'],
-        seed_spacing=request.json['seed_spacing'],
-        compactness=request.json['compactness'])
+    if img.dtype not in ["uint8", "uint16", "int32"]:
+ 
+        print("\n converting data type \n ")
+        img_min = img.min()
+        img_max = img.max()
+        img_scaled =  (img - img_min)/(img_max - img_min)
+
+        img_scaled = img_scaled*(2**16-1)
+
+        img_scaled = img_scaled.astype('uint16')
+
+        img_superpixel, num_superpixels = superpixels.superpixel_extraction(
+        img_scaled,
+        superpixel_type=request.json["superpixel_type"],
+        seed_spacing=request.json["seed_spacing"],
+        compactness=request.json["compactness"],
+        )
+
+    else:
+        img_superpixel, num_superpixels = superpixels.superpixel_extraction(
+            img,
+            superpixel_type=request.json["superpixel_type"],
+            seed_spacing=request.json["seed_spacing"],
+            compactness=request.json["compactness"],
+        )
 
     # saves the superpixel img into the backend
-    data_repo.set_image(key='superpixel', data=img_superpixel)
+    data_repo.set_image(key="superpixel", data=img_superpixel)
 
     # This set_superpixel_state is just to save
-    data_repo.set_superpixel_state("compactness", request.json['compactness'])
-    data_repo.set_superpixel_state("seedsSpacing", request.json['seed_spacing'])
-    data_repo.set_superpixel_state("method", request.json['superpixel_type'])
-    data_repo.set_superpixel_state("use_pixel_segmentation", request.json['use_pixel_segmentation'])
+    data_repo.set_superpixel_state("compactness", request.json["compactness"])
+    data_repo.set_superpixel_state("seedsSpacing", request.json["seed_spacing"])
+    data_repo.set_superpixel_state("method", request.json["superpixel_type"])
+    data_repo.set_superpixel_state("use_pixel_segmentation", request.json["use_pixel_segmentation"])
 
     return jsonify("success")
 
 
-@app.route('/get_superpixel_slice', methods=['POST', 'GET'])
+@app.route("/get_superpixel_slice", methods=["POST", "GET"])
 @cross_origin()
 def get_superpixel_slice():
     """
@@ -56,7 +75,7 @@ def get_superpixel_slice():
         (flask.send_file): returns the superpixel value to canvas
 
     """
-    img_superpixels = data_repo.get_image('superpixel')
+    img_superpixels = data_repo.get_image("superpixel")
 
     if img_superpixels is None:
         return "failure", 400
@@ -66,11 +85,8 @@ def get_superpixel_slice():
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
     slice_superpixels = img_superpixels[slice_range]
-    slice_superpixels = superpixels.superpixel_slice_borders(
-        slice_superpixels)
+    slice_superpixels = superpixels.superpixel_slice_borders(slice_superpixels)
 
-    compressed_slice_superpixels = zlib.compress(
-        utils.toNpyBytes(slice_superpixels))
+    compressed_slice_superpixels = zlib.compress(utils.toNpyBytes(slice_superpixels))
 
-    return send_file(io.BytesIO(compressed_slice_superpixels),
-                     "application/gzip")
+    return send_file(io.BytesIO(compressed_slice_superpixels), "application/gzip")

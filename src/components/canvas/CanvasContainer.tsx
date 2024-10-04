@@ -163,9 +163,11 @@ class Annotation {
 
     colors: [number, number, number][];
 
+    alphas: number[];
+
     annotData?: NdArray<TypedArray>;
 
-    constructor(colors: [number, number, number][]) {
+    constructor(colors: [number, number, number][], alphas: number[]) {
         this.canvas = document.createElement('canvas');
         //this.canvas.width = 0;
         //this.canvas.height = 0;
@@ -176,6 +178,7 @@ class Annotation {
         //this.sprite.tint = 0x00ff00;
 
         this.colors = colors;
+        this.alphas = alphas;
 
         this.sprite.texture = PIXI.Texture.from(this.canvas);
     }
@@ -203,6 +206,7 @@ class Annotation {
         this.annotData = slice;
 
         const colors = this.colors;
+        const alphas = this.alphas;
 
         console.log('draw slice: ', slice.shape);
 
@@ -216,10 +220,11 @@ class Annotation {
         for (let i = 0; i < slice.data.length; i++) {
             if (slice.data[i] >= 0) {
                 const color = colors[slice.data[i] % colors.length];
+                const alpha = alphas[slice.data[i] % alphas.length];
                 data[i * 4] = color[0];
                 data[i * 4 + 1] = color[1];
                 data[i * 4 + 2] = color[2];
-                data[i * 4 + 3] = 255;
+                data[i * 4 + 3] = alpha * 255;
             }
         }
         this.context.putImageData(imageData, 0, 0);
@@ -268,6 +273,8 @@ class Canvas {
 
     colors: [number, number, number][];
 
+    alphas: number[];
+
     x: number;
 
     y: number;
@@ -296,7 +303,13 @@ class Canvas {
 
     activateSequentialLabel: boolean;
 
-    constructor(div: HTMLDivElement, colors: [number, number, number][], axis: 'XY' | 'XZ' | 'YZ', sliceNum: number) {
+    constructor(
+        div: HTMLDivElement,
+        colors: [number, number, number][],
+        alphas: number[],
+        axis: 'XY' | 'XZ' | 'YZ',
+        sliceNum: number
+    ) {
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
         this.app = new PIXI.Application({
@@ -347,11 +360,12 @@ class Canvas {
         this.superpixelSlice.scale.y = 0.5;
         this.superpixelSlice.visible = true;
 
-        this.annotation = new Annotation(colors);
+        this.annotation = new Annotation(colors, alphas);
         this.brush = new Brush(colors);
         this.brush_mode = 'draw_brush';
 
         this.colors = colors;
+        this.alphas = alphas;
         this.cmap = 'greys';
 
         this.isPainting = false;
@@ -385,9 +399,10 @@ class Canvas {
         this.setLabelVisibility(true);
     }
 
-    setColor(colors: { id: number; color: [number, number, number] }[]) {
+    setColor(colors: { id: number; color: [number, number, number]; alpha: number }[]) {
         colors.forEach((color) => {
             this.colors[color.id] = color.color;
+            this.alphas[color.id] = color.alpha;
         });
 
         this.labelTableLen = colors.length;
@@ -655,16 +670,21 @@ class Canvas {
 
         const colors = this.colors;
 
+        const alphas = this.alphas;
+
         for (let i = 0; i < len; ++i) {
             const idx = i * 4;
             const label = labelSlice.data[i];
-            if (label <= 0) continue;
+            // Skip calculations if there is no label
+            if (label < 0) continue;
 
             const color = colors[label];
+            const alpha = alphas[label];
+
             rgbaData[idx] = color[0]; //R
             rgbaData[idx + 1] = color[1]; //G
             rgbaData[idx + 2] = color[2]; //B
-            rgbaData[idx + 3] = 128; //A
+            rgbaData[idx + 3] = alpha * 255; //A
         }
 
         const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
@@ -997,7 +1017,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     onAnnotanionVisibilityChanged!: (visible: boolean) => void;
 
-    onLabelColorsChanged!: (colors: { id: number; color: [number, number, number] }[]) => void;
+    onLabelColorsChanged!: (colors: { id: number; color: [number, number, number]; alpha: number }[]) => void;
 
     onAnnotationChanged!: () => void;
 
@@ -1089,11 +1109,13 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             slice: this.props.slice,
         };
         console.log('Slice changed', this.props.axis, this.props.slice);
-        return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray').then(
-            (imgSlice) => {
+        return sfetch('POST', '/get_image_slice/image', JSON.stringify(params), 'gzip/numpyndarray')
+            .then((imgSlice) => {
                 this.canvas!.setImage(imgSlice);
-            }
-        );
+            })
+            .catch((error) => {
+                console.log('getImageSlice() error:', error);
+            });
     }
 
     getFutureSlice() {
@@ -1104,13 +1126,15 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             slice: 0,
         };
 
-        void sfetch('POST', '/get_image_slice/future', JSON.stringify(params), 'gzip/numpyndarray').then(
-            (previewSlice) => {
+        void sfetch('POST', '/get_image_slice/future', JSON.stringify(params), 'gzip/numpyndarray')
+            .then((previewSlice) => {
                 this.canvas?.setFutureImage(previewSlice);
                 this.canvas?.setPreviewVisibility(true);
                 this.setState({ ...this.state, future_sight_on: true });
-            }
-        );
+            })
+            .catch((error) => {
+                console.log('getFutureslice() error:', error);
+            });
     }
 
     getAnnotSlice() {
@@ -1120,10 +1144,14 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         };
 
         console.log('get annot slice', params);
-        void sfetch('POST', '/get_annot_slice', JSON.stringify(params), 'gzip/numpyndarray').then((slice) => {
-            console.log('annot slice');
-            this.canvas!.annotation.draw(slice);
-        });
+        void sfetch('POST', '/get_annot_slice', JSON.stringify(params), 'gzip/numpyndarray')
+            .then((slice) => {
+                console.log('annot slice');
+                this.canvas!.annotation.draw(slice);
+            })
+            .catch((error) => {
+                console.log('getAnnotSlice() error:', error);
+            });
     }
 
     getLabelSlice() {
@@ -1133,11 +1161,14 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             contour: this.state.label_contour,
         };
 
-        void sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray').then(
-            (labelSlice) => {
+        void sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
+            .then((labelSlice) => {
                 this.canvas!.setLabelImage(labelSlice);
-            }
-        );
+            })
+            .catch((error) => {
+                console.error('Error fetching label slice:', error);
+                // Execute another function in case of error
+            });
     }
 
     setBrushMode(brush_mode: BrushModeType) {
@@ -1149,7 +1180,8 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         // the element is the DOM object that we will use as container to add pixi stage(canvas)
         const elem = this.pixi_container;
         if (this && elem) {
-            this.canvas = new Canvas(elem, defaultColormap, this.props.axis, this.props.slice);
+            const alphas = defaultColormap.map(() => 1); // Default to full opacity
+            this.canvas = new Canvas(elem, defaultColormap, alphas, this.props.axis, this.props.slice);
             setTimeout(() => this.canvas!.resize(), 200);
             console.log(this.canvas.viewport);
             console.log(this.pixi_container);
@@ -1307,7 +1339,6 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('ColorMapChanged', this.onColorMapChanged);
         unsubscribe('labelColorsChanged', this.onLabelColorsChanged);
         unsubscribe('labelContourChanged', this.onLabelContourChanged);
-        unsubscribe('labelColorsChanged', this.onLabelColorsChanged);
         unsubscribe('annotationChanged', this.onAnnotationChanged);
         unsubscribe('annotationVisibilityChanged', this.onAnnotanionVisibilityChanged);
         unsubscribe('annotationAlphaChanged', this.onAnnotanionAlphaChanged);

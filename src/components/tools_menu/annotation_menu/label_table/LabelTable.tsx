@@ -117,6 +117,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
             labelName: 'Background',
             color: props.colors[0],
             id: 0,
+            alpha: 1,
         },
     ]);
 
@@ -203,11 +204,11 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
         }
     };
 
-    const changeLabelList = (newLabelName: string, labelId: number, color: [number, number, number]) => {
-        const newList = labelList.map((l) => (l.id === labelId ? { ...l, labelName: newLabelName, color } : l));
+    const changeLabelList = (newLabelName: string, labelId: number, color: [number, number, number], alpha: number) => {
+        const newList = labelList.map((l) => (l.id === labelId ? { ...l, labelName: newLabelName, color, alpha } : l));
 
         if (!isEqual(labelList.filter((l) => l.id === labelId)[0].color, color)) {
-            dispatch('labelColorsChanged', [{ id: labelId, color }]);
+            dispatch('labelColorsChanged', [{ id: labelId, color, alpha }]);
         }
 
         setLabelList(newList);

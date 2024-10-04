@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { IonButton, IonButtons, IonContent, IonIcon, IonInput, IonItem, IonPopover } from '@ionic/react';
 
-/*Icons import*/
-import { closeOutline, colorPalette, pencilOutline } from 'ionicons/icons';
+/* Icons import */
+import { closeOutline, colorPalette, pencilOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
 
 import { LabelInterface } from './LabelInterface';
 import { ChromePicker } from 'react-color';
@@ -15,7 +15,7 @@ import ErrorInterface from '../../../main_menu/file/utils/ErrorInterface';
 interface OptionsProps {
     label: LabelInterface;
     onChangeLabelList: (label: LabelInterface) => void;
-    onChangeLabel: (newLabelName: string, labelId: number, color: [number, number, number]) => void;
+    onChangeLabel: (newLabelName: string, labelId: number, color: [number, number, number], alpha: number) => void;
     isSLActivated: boolean;
 }
 
@@ -30,7 +30,7 @@ interface LabelEditProps {
 }
 
 /**
- * Component of buttons that statys left size of label name that permits the user to change the name, color and delete a label
+ * Component of buttons that stays left side of label name that permits the user to change the name, color and delete a label
  * @param {LabelEditProps} props - Object that contains the
  * @interface {LabelEditProps} - LabelEditProps interface for props
  */
@@ -79,6 +79,15 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
     const [showNamePopover, setShowNamePopover] = useState<boolean>(false);
     const [showColorPopover, setShowColorPopover] = useState<boolean>(false);
     const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
+    const [color, setColor] = useStorageState<[number, number, number]>(
+        sessionStorage,
+        'labelColor.' + String(props.label.id),
+        defaultColormap[props.label.id]
+    );
+    const [alpha, setAlpha] = useStorageState<number>(sessionStorage, 'labelAlpha.' + String(props.label.id), 1);
+
+    // State to handle view/hide toggle
+    const [isEyeOpen, setIsEyeOpen] = useState<boolean>(true);
 
     useEffect(() => {
         if (userDeleteOp && props.label.id !== 0) {
@@ -90,11 +99,24 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
         setLockMenu(flag);
     });
 
-    const [color, setColor] = useStorageState<[number, number, number]>(
-        sessionStorage,
-        'labelColor.' + String(props.label.id),
-        defaultColormap[props.label.id]
-    );
+    // Toggle function for the eye icon
+    const toggleEye = () => {
+        let NewAlpha; // Declare NewAlpha
+
+        if (!isEyeOpen) {
+            NewAlpha = 1; // Set NewAlpha to 1 if the eye is being open
+        } else {
+            NewAlpha = 0; // Set NewAlpha to 0 if the eye is being closed
+        }
+
+        setIsEyeOpen(!isEyeOpen);
+        console.log(`Eye icon clicked for label: ${props.label.labelName}`);
+
+        // Call the onChangeLabel function with updated alpha value
+        props.onChangeLabel(props.label.labelName, props.label.id, props.label.color, NewAlpha);
+
+        setAlpha(NewAlpha);
+    };
 
     const handleNameEditClickButton = () => {
         setShowNamePopover(true);
@@ -130,13 +152,22 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                 <IonIcon icon={colorPalette} />
             </IonButton>
 
+            {/* Eye toggle button */}
+            <IonButton
+                id={'eye-label-button-' + String(props.label.id)}
+                onClick={toggleEye}
+                disabled={lockMenu || props.isSLActivated}
+            >
+                <IonIcon icon={isEyeOpen ? eyeOutline : eyeOffOutline} />
+            </IonButton>
+
             {/*Color popUp*/}
             <IonPopover trigger={'edit-color-button-' + String(props.label.id)} isOpen={showColorPopover}>
                 <ChromePicker
                     color={`rgb(${color[0]},${color[1]},${color[2]})`}
                     onChange={(clr: any) => {
                         const colorTuple: [number, number, number] = [clr.rgb.r, clr.rgb.g, clr.rgb.b];
-                        props.onChangeLabel(props.label.labelName, props.label.id, colorTuple);
+                        props.onChangeLabel(props.label.labelName, props.label.id, colorTuple, props.label.alpha);
                         setColor(colorTuple);
                     }}
                     disableAlpha
@@ -183,7 +214,7 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
                 label={props.label}
                 labelNameTrigger={'edit-label-button-' + String(props.label.id)}
                 showPopover={showNamePopover}
-                onChangeLabelName={(name, id) => props.onChangeLabel(name, id, props.label.color)}
+                onChangeLabelName={(name, id) => props.onChangeLabel(name, id, props.label.color, props.label.alpha)}
                 onShowPopover={handleNameEditShowPopover}
             />
         </IonButtons>

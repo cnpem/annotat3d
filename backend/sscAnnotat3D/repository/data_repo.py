@@ -36,13 +36,10 @@ dict that holds the feature_extraction_params chosen by the user
 __feature_extraction_params = dict()
 
 """
-dict that contains the flag to use merge or split operations with the object of annotations
+dict that contains the flag if env variables hass been lodaded before
 """
-__edit_label_options = {
-    "is_merge_activated": False,
-    "is_split_activated": False,
-    "edit_label_merge_module": None,
-    "edit_label_split_module": None,
+_loadedEnv = {
+    "loaded": False,
 }
 
 
@@ -64,35 +61,6 @@ def contiguous(array: np.ndarray) -> np.ndarray:
         array = np.ascontiguousarray(array)
 
     return array
-
-
-def set_edit_label_options(key: str = "", flag: bool = False or object):
-    """
-    Setter for __edit_label_options
-
-    Args:
-        key (str): key for the value
-        flag (bool or object): value to the setter
-
-    Returns:
-        None
-
-    """
-    __edit_label_options[key] = flag
-
-
-def get_edit_label_options(key: str = ""):
-    """
-    Getter for __edit_label_options
-
-    Args:
-        key(str): key for the value
-
-    Returns:
-        (bool or object): returns the annotations or the object with the annotations
-
-    """
-    return __edit_label_options.get(key, None)
 
 
 def set_feature_extraction_params(key: str = "", data: dict = None):
@@ -325,3 +293,21 @@ def get_classification_model(key="model_complete"):
 
     """
     return __model_complete.get(key, None)
+
+
+def loadedEnv(key="loaded"):
+    """
+    Function that returns if the env variables has been loaded before
+
+    Args:
+        key(str): This key is always "loaded"
+
+    Returns:
+        (bool): returns the state
+
+    """
+    previous = _loadedEnv.get(key, None)
+
+    _loadedEnv["loaded"] = True
+
+    return previous

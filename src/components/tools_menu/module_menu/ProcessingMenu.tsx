@@ -6,6 +6,10 @@ import {
     BM3DFilteringModuleCard,
     GaussianFilteringModuleCard,
     NonLocalMeansFilteringModuleCard,
+    AnisotropicDiffusionFilteringModuleCard,
+    MeanFilteringModuleCard,
+    MedianFilteringModuleCard,
+    UnsharpMaskFilteringModuleCard,
 } from './FilteringModuleCard';
 import GroupSelect from './GroupSelect';
 import PixelSegmentationModuleCard from './PixelSegmentationModuleCard';
@@ -23,6 +27,10 @@ const moduleOptions = [
             { id: 'bm3d_filter', label: 'BM3D Smoothing Filter' },
             { id: 'gaussian_filter', label: 'Gaussian Filter' },
             { id: 'nlm_filter', label: 'Non Local Means Filter' },
+            { id: 'aniso_filter', label: 'Anisotropic Diffusion Filter' },
+            { id: 'mean_filter', label: 'Mean Filter' },
+            { id: 'median_filter', label: 'Median Filter' },
+            { id: 'unsharp_mask_filter', label: 'Unsharp Mask Filter' },
         ],
     },
 ];
@@ -34,11 +42,16 @@ const canvas: Record<string, 'drawing' | 'imaging'> = {
     bm3d_filter: 'imaging',
     gaussian_filter: 'imaging',
     nlm_filter: 'imaging',
+    aniso_filter: 'imaging',
+    mean_filter: 'imaging',
+    median_filter: 'imaging',
+    unsharp_mask_filter: 'imaging',
 };
 
 const ProcessingMenu: React.FC = () => {
     const [curModule, setCurModule] = useStorageState<string>(sessionStorage, 'curModule', 'superpixel');
     const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
+    const [showSuperpixel, setShowSuperpixel] = useStorageState<boolean>(sessionStorage, 'showSuperpixel', true);
 
     useEventBus('LockComponents', (changeLockMenu) => {
         setLockMenu(changeLockMenu);
@@ -50,6 +63,15 @@ const ProcessingMenu: React.FC = () => {
 
     useEffect(() => {
         dispatch('canvasModeChanged', canvas[curModule]);
+        console.log('curModule', curModule);
+        if (curModule === 'superpixel' && !showSuperpixel) {
+            dispatch('superpixelVisibilityChanged', true);
+            setShowSuperpixel(true);
+        }
+        if (curModule === 'pixel' && showSuperpixel) {
+            dispatch('superpixelVisibilityChanged', false);
+            setShowSuperpixel(false);
+        }
     }, [curModule]);
 
     return (
@@ -82,6 +104,18 @@ const ProcessingMenu: React.FC = () => {
             </IonList>
             <IonList hidden={curModule !== 'nlm_filter'}>
                 <NonLocalMeansFilteringModuleCard />
+            </IonList>
+            <IonList hidden={curModule !== 'aniso_filter'}>
+                <AnisotropicDiffusionFilteringModuleCard />
+            </IonList>
+            <IonList hidden={curModule !== 'mean_filter'}>
+                <MeanFilteringModuleCard />
+            </IonList>
+            <IonList hidden={curModule !== 'median_filter'}>
+                <MedianFilteringModuleCard />
+            </IonList>
+            <IonList hidden={curModule !== 'unsharp_mask_filter'}>
+                <UnsharpMaskFilteringModuleCard />
             </IonList>
             <MessageCard />
         </Fragment>

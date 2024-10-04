@@ -2,6 +2,7 @@ from threading import Timer
 
 _progress_bars = {}
 
+
 def register(level):
     global _progress_bars
     _progress_bars[level] = ConsoleProgressBar()
@@ -12,7 +13,7 @@ def get(level):
     return _progress_bars.get(level, None)
 
 
-class ConsoleProgressBar():
+class ConsoleProgressBar:
 
     def __init__(self, widget=None):
         super().__init__()
@@ -25,10 +26,11 @@ class ConsoleProgressBar():
 
     def __call__(self, l):
         import time
+
         n = l.__len__()
         self.set_max(n)
         for i in l:
-            #yield i
+            # yield i
             self.inc()
         self.set_cur(0)
 
@@ -37,7 +39,7 @@ class ConsoleProgressBar():
 
     def set_max(self, val):
         if val < 0:
-            raise Exception('Nao ne ... manda um maior que zero ai ...')
+            raise Exception("Nao ne ... manda um maior que zero ai ...")
         self._max = val
 
         self._reset()
@@ -49,10 +51,10 @@ class ConsoleProgressBar():
         self.set_cur(0)
 
     def reset(self):
-        #reset in a second, enough time to see animation of completing progressbar
+        # reset in a second, enough time to see animation of completing progressbar
         timer = Timer(1, self._reset)
         timer.start()
-        #self.set_cur(0)
+        # self.set_cur(0)
 
     def set_cur(self, val):
         self._cur = max(min(val, self._max), 0)
@@ -60,4 +62,5 @@ class ConsoleProgressBar():
     def inc(self, val=1):
         self.set_cur(self._cur + val)
 
-register('main')
+
+register("main")
