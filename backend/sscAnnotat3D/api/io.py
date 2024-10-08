@@ -66,10 +66,19 @@ def get_image_histogram(image_id):
     axis = request.json["axis"]
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
-    img_slice = image[slice_range]
+    print('slice_num: \n',slice_num, slice_num == -1)
+    if slice_num >= 0:
+        img_slice = image[slice_range]
+        histogram, bin_edges = np.histogram(img_slice, bins=255)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        img_max = np.max(img_slice)
+        img_min = np.min(img_slice)
 
-    histogram, bin_edges = np.histogram(img_slice, bins=255)
-    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    elif slice_num == -1:
+        histogram, bin_edges = np.histogram(image, bins=255)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        img_max = np.max(image)
+        img_min = np.min(image)
 
     # round bin_centers for pretty show in frontend
     if np.issubdtype(bin_centers.dtype, np.floating):
@@ -80,7 +89,7 @@ def get_image_histogram(image_id):
     print(f"Elapsed time during histogram calculation: {end-start} seconds")
 
     # it is necessary to convert the numpy datatype to a numpy datatype for json
-    data_type = img_slice.dtype
+    data_type = image.dtype
     if data_type == float:
 
         def python_typer(x):
@@ -94,8 +103,8 @@ def get_image_histogram(image_id):
     # Mount response following HistogramInfoInterface.ts definition
     histogram_info = {}
     histogram_info["data"] = histogram.tolist()
-    histogram_info["maxValue"] = python_typer(np.max(img_slice))
-    histogram_info["minValue"] = python_typer(np.min(img_slice))
+    histogram_info["maxValue"] = python_typer(img_max)
+    histogram_info["minValue"] = python_typer(img_min)
     histogram_info["bins"] = bin_centers.tolist()
 
     return jsonify(histogram_info)

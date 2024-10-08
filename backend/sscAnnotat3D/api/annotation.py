@@ -533,7 +533,7 @@ def apply_magicwand(input_id: str):
     Function to apply the magic wand from request of the frontend.
 
     Returns:
-        (str): returns "success" if everything goes well and an error otherwise
+        (number): returns center pixel value if everything goes well
 
     """
     def python_typer(x):
@@ -583,6 +583,107 @@ def apply_magicwand(input_id: str):
     #Marker id is not necessary for the magic wand logic.
     mk_id = annot_module.current_mk_id
 
-    annot_module.annotationwand_update(mask_wand, label, mk_id, new_click)
+    annot_module.labelmask_update(mask_wand, label, mk_id, new_click)
 
     return jsonify(python_typer(img_slice[y_coord, x_coord]))
+
+@app.route("/threshold/<input_id>", methods=["POST"])
+@cross_origin()
+def threshold(input_id: str):
+    """
+    Function to apply the threhsold from request of the frontend.
+
+    Returns:
+        (str): returns "success" if everything goes well 
+
+    """
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    try:
+        upper_tresh = request.json["upper_tresh"]
+        lower_tresh = request.json["lower_tresh"]
+        slice_num = request.json["current_slice"]
+        axis = request.json["current_axis"]
+        label = request.json["label"]
+        curret_thresh_marker = request.json["curret_thresh_marker"]
+
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    #update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    img_slice = data_repo.get_image(input_id)[slice_range]
+ 
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n',mk_id,curret_thresh_marker)
+    #New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    #its not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    label_mask = np.logical_and(img_slice >= lower_tresh, img_slice <= upper_tresh) 
+
+    annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)
+
+@app.route("/threshold_apply3D/<input_id>", methods=["POST"])
+@cross_origin()
+def threshold_apply3D(input_id: str):
+    """
+    Function to apply the threhsold from request of the frontend.
+
+    Returns:
+        (str): returns "success" if everything goes well 
+
+    """
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    try:
+        upper_tresh = request.json["upper_tresh"]
+        lower_tresh = request.json["lower_tresh"]
+        label = request.json["label"]
+        curret_thresh_marker = request.json["curret_thresh_marker"]
+
+    except Exception as e:
+        return handle_exception(str(e))
+
+    #update backend slice number
+    annot_module = module_repo.get_module('annotation')
+
+    img_slice = data_repo.get_image(input_id)
+ 
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n',mk_id,curret_thresh_marker)
+    #New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    #its not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    label_mask = np.logical_and(img_slice >= lower_tresh, img_slice <= upper_tresh) 
+
+    annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)

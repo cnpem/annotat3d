@@ -480,7 +480,7 @@ class AnnotationModule:
         marker_id = max(self.order_markers) + 1 if self.order_markers else 1
         return marker_id
 
-    def annotationwand_update(self, label_mask, marker_lb, marker_id, new_click):
+    def labelmask_update(self, label_mask, marker_lb, marker_id, new_click):
 
         # Undo previous iteration        
         if new_click == False:
@@ -489,20 +489,30 @@ class AnnotationModule:
         ## Updating the markers with the current marker id ##
         self.order_markers.add(marker_id)
 
-        # Get the coordinates where the mask is non-zero to draw
-        rr,cc = np.nonzero(label_mask)
+        if label_mask.ndim == 2:
+            # Get the coordinates where the mask is non-zero to draw
+            rr,cc = np.nonzero(label_mask)
 
-        new_annotation = []
-        #since get_current_slice_3D gives, (z,y,x) coords, we need to provide cc,rr coords not rr,cc
-        for coord2D in zip(rr,cc):
-            coord3D = self.get_current_slice_3d_coord(coord2D)
-            self.__annotation[coord3D].append(marker_lb)
-            self.__annotation_image[coord3D] = marker_lb
-            #save the coords
-            new_annotation.append(coord3D)
+            new_annotation = []
+            #since get_current_slice_3D gives, (z,y,x) coords, we need to provide cc,rr coords not rr,cc
+            for coord2D in zip(rr,cc):
+                coord3D = self.get_current_slice_3d_coord(coord2D)
+                self.__annotation[coord3D].append(marker_lb)
+                self.__annotation_image[coord3D] = marker_lb
+                #save the coords
+                new_annotation.append(coord3D)
+
+        else:
+            rr,cc,dd = np.nonzero(label_mask)
+            new_annotation = []
+            #since get_current_slice_3D gives, (z,y,x) coords, we need to provide cc,rr coords not rr,cc
+            for coord3D in zip(rr,cc,dd):
+                self.__annotation[coord3D].append(marker_lb)
+                self.__annotation_image[coord3D] = marker_lb
+                #save the coords
+                new_annotation.append(coord3D)
 
         self.__annotation_list.append(new_annotation)
-
 
     def draw_marker_curve(self, cursor_coords, marker_id, marker_lb, erase=False):
 
