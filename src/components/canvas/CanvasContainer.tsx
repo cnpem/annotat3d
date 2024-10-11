@@ -25,8 +25,9 @@ import { ImageShapeInterface } from '../tools_menu/utils/ImageShapeInterface';
 import { ImageInfoInterface } from '../main_menu/file/utils/ImageInfoInterface';
 import { ColorOptions } from '../../utils/colormaplist';
 import fillCursor from '../../public/fill_cursor.png';
+import lassoCursor from '../../public/lasso_cursor.png';
 
-type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush' | 'magic_wand';
+type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush' | 'magic_wand' | 'lasso';
 
 class Brush {
     label: number;
@@ -97,6 +98,7 @@ class Brush {
     setLabel(l: number) {
         this.label = l;
         this.update();
+        this.updateColor();
     }
 
     setSize(s: number) {
@@ -132,6 +134,89 @@ class Brush {
             this.cursor.visible = false;
         }
         this.updateBrush();
+    }
+}
+
+class Lasso {
+    color: number;
+
+    canvas: HTMLCanvasElement;
+
+    context: CanvasRenderingContext2D;
+
+    points: PIXI.Point[];
+
+    tempLine: PIXI.Graphics;
+
+    constructor() {
+        this.color = 0xffffff; // Default color (can be updated)
+        this.canvas = document.createElement('canvas');
+        this.context = this.canvas.getContext('2d')!;
+        this.points = [];
+        this.tempLine = new PIXI.Graphics();
+    }
+
+    // Start the lasso by setting the initial point and activating drawing mode
+    startLasso(x: number, y: number, color: number, context: CanvasRenderingContext2D) {
+        console.log('Lasso drawing', color, x, y);
+        this.color = color;
+        this.context = context;
+        this.points = [new PIXI.Point(x, y)];
+    }
+
+    // Add points to draw the straight lines between them
+    addPoint(x: number, y: number, context: CanvasRenderingContext2D) {
+        const lastPoint = this.points[this.points.length - 1];
+        context.beginPath();
+        context.moveTo(lastPoint.x, lastPoint.y);
+        context.lineTo(x, y);
+        context.strokeStyle = this.hexColor(this.color);
+        context.lineWidth = 2;
+        context.stroke();
+        this.points.push(new PIXI.Point(x, y));
+    }
+
+    // Finalize the lasso and fill the area inside
+    endLasso(context: CanvasRenderingContext2D, label: number, sliceNum: number, Currentaxis: string) {
+        console.log('Lasso endLasso');
+        context.beginPath();
+        context.moveTo(this.points[0].x, this.points[0].y);
+        console.log(this.points);
+        const lassoData = { lasso_points: this.points, slice_num: sliceNum, axis: Currentaxis, label };
+        sfetch('POST', '/apply_lasso/annotation', JSON.stringify(lassoData), 'json')
+            .then(() => {
+                dispatch('annotationChanged', null);
+            })
+            .catch((error) => {
+                console.log('Error while applying lasso');
+                console.log(error.error_msg);
+            });
+
+        /* // Connect the last point to the first point
+        for (let i = 1; i < this.points.length; i++) {
+            this.context.lineTo(this.points[i].x, this.points[i].y);
+        }
+        context.closePath();
+        context.fillStyle = this.hexColor(this.color);
+        context.fill(); */
+    }
+
+    private hexColor(color: number) {
+        return `#${color.toString(16).padStart(6, '0')}`;
+    }
+
+    drawTempLine(currentX: number, currentY: number) {
+        if (this.points.length > 0) {
+            const startPoint = this.points[0];
+            this.tempLine.clear();
+            this.tempLine.lineStyle(2, this.color, 1);
+            this.tempLine.moveTo(startPoint.x, startPoint.y);
+            this.tempLine.lineTo(currentX, currentY);
+        }
+    }
+
+    clearTempLine() {
+        this.tempLine.clear();
     }
 }
 
@@ -303,6 +388,8 @@ class Canvas {
 
     activateSequentialLabel: boolean;
 
+    lasso: Lasso;
+
     constructor(
         div: HTMLDivElement,
         colors: [number, number, number][],
@@ -323,6 +410,7 @@ class Canvas {
                 draw_brush: 'default',
                 erase_brush: 'default',
                 magic_wand: `url(${fillCursor}) 0 0, auto`,
+                lasso: `url(${lassoCursor}) 16 16, auto`,
             };
         }
 
@@ -362,6 +450,7 @@ class Canvas {
 
         this.annotation = new Annotation(colors, alphas);
         this.brush = new Brush(colors);
+        this.lasso = new Lasso();
         this.brush_mode = 'draw_brush';
 
         this.colors = colors;
@@ -410,7 +499,6 @@ class Canvas {
         if (this.labelData) {
             this.setLabelImage(this.labelData);
         }
-
         this.annotation.update();
         this.brush.update();
     }
@@ -450,7 +538,15 @@ class Canvas {
             this.viewport.plugins.pause('drag');
             // canvas.brush.cursor.visible = false;
         }
-
+        if (this.brush_mode === 'lasso') {
+            this.isPainting = true;
+            const position = this.viewport.toWorld(event.data.global);
+            const context = this.annotation.context;
+            this.lasso.startLasso(position.x, position.y, this.brush.color, context);
+            this.annotation.sprite.texture.update();
+            this.viewport.addChild(this.lasso.tempLine);
+            return;
+        }
         this.isPainting = true;
         this.prevPosition = this.viewport.toWorld(event.data.global);
         /* Floor the coordinates of the returned PIXI.Point. This is relevant for forcing the canvas to show discrete positions for the user
@@ -477,7 +573,14 @@ class Canvas {
                 return;
             }
         }
-
+        if (this.brush_mode === 'lasso' && this.isPainting) {
+            const position = this.viewport.toWorld(event.data.global);
+            const context = this.annotation.context;
+            this.lasso.addPoint(position.x, position.y, context);
+            this.annotation.sprite.texture.update();
+            this.lasso.drawTempLine(position.x, position.y);
+            return;
+        }
         this.brush.cursor.position.x = currPosition.x - Math.floor(this.brush.size / 2);
         this.brush.cursor.position.y = currPosition.y - Math.floor(this.brush.size / 2);
 
@@ -499,7 +602,15 @@ class Canvas {
             this.isPainting = false; // Reset painting flag
             return; // Exit the method early since the magic wand logic is
         }
-
+        if (this.brush_mode === 'lasso') {
+            this.isPainting = false; // Reset painting flag
+            const context = this.annotation.context;
+            this.lasso.endLasso(context, this.brush.label, this.sliceNum, this.axis);
+            this.lasso.clearTempLine();
+            this.viewport.removeChild(this.lasso.tempLine);
+            this.annotation.sprite.texture.update();
+            return;
+        }
         const currPosition = this.viewport.toWorld(event.data.global);
         currPosition.x = Math.floor(currPosition.x);
         currPosition.y = Math.floor(currPosition.y);

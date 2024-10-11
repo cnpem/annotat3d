@@ -12,6 +12,7 @@ from flask import Blueprint, jsonify, request, send_file
 from flask_cors import cross_origin
 from sscAnnotat3D import utils
 from sscAnnotat3D.modules.magic_wand import MagicWandSelector
+from sscAnnotat3D.modules.lasso import fill_lasso
 from sscAnnotat3D.modules import annotation_module
 from sscAnnotat3D.repository import data_repo, module_repo
 from werkzeug.exceptions import BadRequest
@@ -685,5 +686,49 @@ def threshold_apply3D(input_id: str):
     label_mask = np.logical_and(img_slice >= lower_tresh, img_slice <= upper_tresh) 
 
     annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)
+
+@app.route("/apply_lasso/<input_id>", methods=["POST"])
+@cross_origin()
+def apply_lasso(input_id: str):
+    """
+    Function to apply the threshold from request of the frontend.
+
+    Returns:
+        (str): returns "success" if everything goes well 
+    """
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    try:
+        lasso_points = request.json["lasso_points"]
+        label = request.json["label"]
+        slice_num = request.json["slice_num"]
+        axis = request.json["axis"]
+    except Exception as e:
+        return handle_exception(str(e))
+
+    #update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+    img_slice = data_repo.get_image('image')[slice_range]
+ 
+    mk_id = annot_module.current_mk_id
+
+    points = [(int(round(point['x'])), int(round(point['y']))) for point in lasso_points]
+    height = img_slice.shape[0]  
+    width = img_slice.shape[1]
+    
+    label_mask = fill_lasso(width, height, points)
+
+    annot_module.labelmask_update(label_mask, label, mk_id, new_click=True)
 
     return jsonify(annot_module.current_mk_id)

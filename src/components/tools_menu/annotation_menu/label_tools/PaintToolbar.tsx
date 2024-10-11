@@ -23,9 +23,11 @@ import {
     colorFillOutline,
 } from 'ionicons/icons';
 import './PaintToolbar.css'; // Ensure this path is correct
+import lassoCursor from '../../../../public/lasso_cursor.svg';
 
 import MagicWandCard from './MagicWandCard'; // Ensure this path is correct
 import ThresholdCard from './ThresholdCard'; // Ensure this path is correct
+import { dispatch } from '../../../../utils/eventbus';
 
 const PaintToolbar: React.FC = () => {
     const [activeCard, setActiveCard] = useState<string | null>(null);
@@ -33,6 +35,11 @@ const PaintToolbar: React.FC = () => {
 
     const handleButtonClick = (cardType: string) => {
         setActiveCard(activeCard === cardType ? null : cardType);
+        if (cardType === 'lasso') {
+            dispatch('ChangeStateBrush', 'lasso');
+        } else {
+            dispatch('ChangeStateBrush', 'draw_brush');
+        }
     };
 
     /* This hook ensures that when the activeCard state changes, 
@@ -63,7 +70,7 @@ const PaintToolbar: React.FC = () => {
                     </IonCol>
                     <IonCol>
                         <IonButton onClick={() => handleButtonClick('lasso')} title="Lasso tool">
-                            <IonIcon icon={createOutline} />
+                            <IonIcon size="medium" src={lassoCursor} />
                         </IonButton>
                     </IonCol>
                     <IonCol>
@@ -114,15 +121,7 @@ const PaintToolbar: React.FC = () => {
                 </div>
 
                 <div className={activeCard === 'lasso' ? 'visible' : 'hidden'}>
-                    <IonCard>
-                        <IonCardContent>
-                            <IonList>
-                                <IonItem button>Lasso Option 1</IonItem>
-                                <IonItem button>Lasso Option 2</IonItem>
-                                <IonItem button>Lasso Option 3</IonItem>
-                            </IonList>
-                        </IonCardContent>
-                    </IonCard>
+                    <IonCard></IonCard>
                 </div>
 
                 <div className={activeCard === 'snakes' ? 'visible' : 'hidden'}>
