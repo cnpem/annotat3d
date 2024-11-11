@@ -246,6 +246,8 @@ def anisodiff_apply(input_id: str, output_id: str):
     if input_img is None:
         return f"Image {input_id} not found.", 400
 
+    img_dtype = input_img.dtype
+
     total_iterations = request.json["total_iterations"]
     delta_t = request.json["delta_t"]
     kappa = request.json["kappa"]
@@ -264,6 +266,9 @@ def anisodiff_apply(input_id: str, output_id: str):
             output_img.append(image_slice)
 
         output_img = np.asarray(output_img)
+
+    #convert back to image type
+    output_img = output_img.astype(img_dtype)
 
     data_repo.set_image(output_id, data=output_img)
 

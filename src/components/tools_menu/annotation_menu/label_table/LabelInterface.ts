@@ -9,4 +9,5 @@ export interface LabelInterface {
     id: number;
     color: [number, number, number];
     labelName: string;
+    alpha: number;
 }

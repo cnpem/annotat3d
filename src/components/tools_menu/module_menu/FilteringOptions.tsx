@@ -235,7 +235,7 @@ const AnisoNeighbourInputWithInfo: React.FC<AnisoNeighbourInputWithInfoProps> = 
                 <IonGrid>
                     <IonRow class="ion-justify-content-center ion-align-items-center">
                         <IonCol size="auto">
-                            <IonRadioGroup value="2D" style={{ display: 'flex', alignItems: 'center' }}>
+                            <IonRadioGroup style={{ display: 'flex', alignItems: 'center' }}>
                                 <IonItem lines="none">
                                     <IonRadio slot="start" value="2D" />
                                     <IonLabel>2D</IonLabel>

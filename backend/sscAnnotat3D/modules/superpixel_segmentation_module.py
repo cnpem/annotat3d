@@ -241,7 +241,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                 max_coord = np.array(self._superpixels.shape, dtype="int32") - 1
 
                 preview_bounding_box = self._preview_bounding_box(annotations, selected_slices, selected_axis)
-
+                print("Selected axis and slices", selected_axis, selected_slices)
                 end = time.time()
 
                 logging.debug("Time to compute superpixel bounding boxes: %fs" % (end - start))
@@ -280,6 +280,9 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
             mainbar.inc()
             with sentry_sdk.start_span(op="Classify superpixels for preview"):
                 if classifier_trained:
+                    # A pred that has -1 for pixels that are not in the current slice for frontend visualization
+                    pred_output = np.zeros(self._image.shape,  dtype="int32") - 1
+                    # I need an array that will be the input for the superpixel spin function, can't be int32 array
                     pred = np.zeros(self._image.shape, dtype="uint16")
                     preview_superpixel_limits = spin_img.spin_min_max_region_id(preview_superpixels, True)
                     min_superpixel_label = preview_superpixel_limits["min"]
@@ -293,6 +296,14 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                     )
                     # min_superpixel_id=min_superpixel_label,
                     # max_superpixel_id=max_superpixel_label)
+
+                    # Here I change the pred_output with the pred predictions
+
+                    # Create a tuple of slices (using slice(None) to select all elements along other axes)
+                    index = [slice(None)] * pred.ndim
+                    index[selected_axis] = selected_slices[0]
+                    # Assign the values
+                    pred_output[tuple(index)] = pred[tuple(index)]
 
                     total_time = training_time + test_time + assignment_time
 
@@ -335,7 +346,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
             mainbar.reset()
 
-            return pred, selected_features_names
+            return pred_output, selected_features_names
 
     def has_superpixel_features_cached(self):
         cached_features = True

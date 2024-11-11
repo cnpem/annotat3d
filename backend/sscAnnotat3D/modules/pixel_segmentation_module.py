@@ -248,7 +248,8 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             mainbar.inc()
             with sentry_sdk.start_span(op="Classify pixels for preview"):
                 if classifier_trained:
-                    pred = np.zeros(self._image.shape, dtype="uint16")
+                    # FOR PREVIEW THE IMAGE IS OF INT32 TO ALLOW NEGATIVE VALUES THAT WONT RENDER IN THE FRONTEND
+                    pred = np.zeros(self._image.shape, dtype="int32") - 1
                     pred[selected_slices_idx], assignment_time, test_time, predict_times = self._classify_pixels(
                         preview_features
                     )

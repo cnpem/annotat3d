@@ -27,12 +27,31 @@ def superpixel():
     """
     img = data_repo.get_image(key="image")
 
-    img_superpixel, num_superpixels = superpixels.superpixel_extraction(
-        img,
+    if img.dtype not in ["uint8", "uint16", "int32"]:
+ 
+        print("\n converting data type \n ")
+        img_min = img.min()
+        img_max = img.max()
+        img_scaled =  (img - img_min)/(img_max - img_min)
+
+        img_scaled = img_scaled*(2**16-1)
+
+        img_scaled = img_scaled.astype('uint16')
+
+        img_superpixel, num_superpixels = superpixels.superpixel_extraction(
+        img_scaled,
         superpixel_type=request.json["superpixel_type"],
         seed_spacing=request.json["seed_spacing"],
         compactness=request.json["compactness"],
-    )
+        )
+
+    else:
+        img_superpixel, num_superpixels = superpixels.superpixel_extraction(
+            img,
+            superpixel_type=request.json["superpixel_type"],
+            seed_spacing=request.json["seed_spacing"],
+            compactness=request.json["compactness"],
+        )
 
     # saves the superpixel img into the backend
     data_repo.set_image(key="superpixel", data=img_superpixel)
