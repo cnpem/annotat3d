@@ -8,6 +8,7 @@ from harpia.filters import (
     mean,
     median,
     unsharp_mask,
+    non_local_means,
 )
 from skimage.filters import gaussian as skimage_gaussian
 from sscAnnotat3D import utils
@@ -156,21 +157,23 @@ def nlm_preview(input_id: str, output_id: str):
     if input_img is None:
         return f"Image {input_id} not found.", 400
 
+    h = request.json['h']
     sigma = request.json["sigma"]
-    nlmStep = request.json["nlmStep"]
-    gaussianStep = request.json["gaussianStep"]
+    bigWindow = request.json["bigWindow"]
+    smallWindow = request.json["smallWindow"]
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
     input_img_slice = input_img[slice_range]
-    input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)))
+    x,y = input_img_slice.shape
+    input_img_2d = np.ascontiguousarray(input_img_slice,dtype=np.float32)
 
-    output_img = np.zeros_like(input_img_3d)
-    spin_nlm(output_img, input_img_3d, sigma, nlmStep, gaussianStep)
+    output_img = np.zeros_like(input_img_2d,dtype=np.float64)
+    non_local_means(input_img_2d,output_img, x,y,smallWindow,bigWindow,h,sigma)
 
-    data_repo.set_image(output_id, data=output_img)
+    data_repo.set_image(output_id, data=output_img.reshape((1,x,y)))
 
     return "success", 200
 
@@ -178,17 +181,51 @@ def nlm_preview(input_id: str, output_id: str):
 @app.route("/filters/nlm/apply/<input_id>/<output_id>", methods=["POST"])
 @cross_origin()
 def nlm_apply(input_id: str, output_id: str):
-    input_img = data_repo.get_image(input_id)
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id),dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img),dtype=np.float64)
 
     if input_img is None:
         return f"Image {input_id} not found.", 400
-
+    
+    h = request.json['h']
     sigma = request.json["sigma"]
-    nlmStep = request.json["nlmStep"]
-    gaussianStep = request.json["gaussianStep"]
+    bigWindow = request.json["bigWindow"]
+    smallWindow = request.json["smallWindow"]
 
-    output_img = np.zeros_like(input_img)
-    spin_nlm(output_img, input_img, sigma, nlmStep, gaussianStep)
+    z,x,y = input_img.shape
+
+
+    # convolution in x, y applied for all slices in the the z direction
+    # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+    axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+    axisIndex = axisIndexDict[request.json["axis"]]
+    typeImg2d = input_img[0].dtype
+    for i in range(input_img.shape[axisIndex]):
+        # on the annotat3D legacy, this was implemented forcing the stack through the z axis
+        if axisIndex == 0:
+            # stack following the z axis
+            #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
+            img = input_img[i]
+                
+            non_local_means(img.reshape(x,y),output_img[i].reshape(x,y),x,y,smallWindow,bigWindow,h,sigma)
+
+        elif axisIndex == 1:
+            # stack following the y axis
+            #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
+            input = np.ascontiguousarray(input_img[:,i,:].reshape((input_img[:,i,:].shape)),dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:,i,:].reshape((input_img[:,i,:].shape)),dtype=np.float64)
+            x,y = out.shape
+            non_local_means(img.reshape(x,y),output_img[i].reshape(x,y),x,y,smallWindow,bigWindow,h,sigma)
+            output_img[:,i,:] = out
+
+        elif axisIndex == 2:
+            # stack following the x axis
+            #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
+            input = np.ascontiguousarray(input_img[:,:,i].reshape((input_img[:,:,i].shape)),dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:,:,i].reshape((input_img[:,:,i].shape)),dtype=np.float64)
+            x,y = out.shape
+            non_local_means(img.reshape(x,y),output_img[i].reshape(x,y),x,y,smallWindow,bigWindow,h,sigma)
+            output_img[:,:,i] = out
 
     data_repo.set_image(output_id, data=output_img)
 

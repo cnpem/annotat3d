@@ -321,9 +321,10 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
 
     const [disabled, setDisabled] = useState<boolean>(false);
 
-    const [sigma, setSigma] = useStorageState<number>(sessionStorage, 'nlmSigma', 2);
-    const [nlmStep, setNlmStep] = useStorageState<number>(sessionStorage, 'nlmStep', 2);
-    const [gaussianStep, setGaussianStep] = useStorageState<number>(sessionStorage, 'gaussianStep', 2);
+    const [h, setH] = useStorageState<number>(sessionStorage, 'h', 50);
+    const [sigma, setSigma] = useStorageState<number>(sessionStorage, 'sigma', 0);
+    const [bigWindow, setBigWindow] = useStorageState<number>(sessionStorage, 'bigWindow', 21);
+    const [smallWindow, setSmallWindow] = useStorageState<number>(sessionStorage, 'smallWindow', 5);
 
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [loadingMsg, setLoadingMsg] = useState<string>('');
@@ -335,9 +336,10 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
         };
 
         const params = {
+            h,
             sigma,
-            nlmStep,
-            gaussianStep,
+            bigWindow,
+            smallWindow,
             axis: curSlice.axis,
             slice: curSlice.slice,
         };
@@ -364,9 +366,10 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
         };
 
         const params = {
+            h,
             sigma,
-            nlmStep,
-            gaussianStep,
+            bigWindow,
+            smallWindow,
             axis: curSlice.axis,
         };
 
@@ -389,39 +392,49 @@ const NonLocalMeansFilteringModuleCard: React.FC = () => {
         <ModuleCard disabled={disabled} name="Non Local Means Filtering" onPreview={onPreview} onApply={onApply}>
             <ModuleCardItem name="Filter Parameters">
                 <IonItem>
+                    <IonLabel>h</IonLabel>
+                    <IonInput
+                        value={h}
+                        type="number"
+                        step="0.1"
+                        min={0.1}
+                        onIonChange={(e) => setH(+e.detail.value!)}
+                    ></IonInput>
+                </IonItem>
+                <IonItem>
                     <IonLabel>Sigma</IonLabel>
                     <IonInput
                         value={sigma}
                         type="number"
                         step="0.1"
-                        min={0.1}
+                        min={0}
                         onIonChange={(e) => setSigma(+e.detail.value!)}
                     ></IonInput>
                 </IonItem>
                 <IonItem>
-                    <IonLabel>NLM Step</IonLabel>
+                    <IonLabel>Big window</IonLabel>
                     <IonInput
-                        value={nlmStep}
+                        value={bigWindow}
                         type="number"
                         step="1"
-                        min={1}
+                        min={3}
                         onIonChange={(e) =>
                             Number.isInteger(+e.detail.value!)
-                                ? setNlmStep(+e.detail.value!)
+                                ? setBigWindow(+e.detail.value!)
                                 : void showToast('Please insert an integer value!', timeToast)
                         }
                     ></IonInput>
                 </IonItem>
                 <IonItem>
-                    <IonLabel>Gaussian Step</IonLabel>
+                    <IonLabel>Small window</IonLabel>
                     <IonInput
-                        value={gaussianStep}
+                        value={smallWindow}
                         type="number"
                         step="1"
-                        min={1}
+                        min={3}
                         onIonChange={(e) =>
                             Number.isInteger(+e.detail.value!)
-                                ? setGaussianStep(+e.detail.value!)
+                                ? setSmallWindow(+e.detail.value!)
                                 : void showToast('Please insert an integer value!', timeToast)
                         }
                     ></IonInput>
