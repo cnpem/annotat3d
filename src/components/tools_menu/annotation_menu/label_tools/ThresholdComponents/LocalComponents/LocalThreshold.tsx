@@ -9,6 +9,17 @@ import LocalMeanThreshold from './LocalMeanThreshold';
 const LocalThreshold: React.FC<{ onSubOptionSelect: (option: number) => void }> = ({ onSubOptionSelect }) => {
     const [selectedSubOption, setSelectedSubOption] = useState<number | null>(null);
 
+    // Example default values for props
+    const [kernelSize, setKernelSize] = useState(3);
+    const [Sigma, setSigma] = useState(3);
+    const [Range, setRange] = useState(1);
+    const [Weight, setWeight] = useState(0);
+    const [Threshold, setThreshold] = useState(0); // Add state for Threshold
+    const showToast = (message: string, duration: number) => {
+        console.log(`${message} (shown for ${duration}ms)`);
+    };
+    const timeToast = 3000;
+
     const thresholdOptions = [
         { value: 1, label: 'Niblack' },
         { value: 2, label: 'Sauvola' },
@@ -24,13 +35,51 @@ const LocalThreshold: React.FC<{ onSubOptionSelect: (option: number) => void }> 
     const renderSubComponent = () => {
         switch (selectedSubOption) {
             case 1:
-                return <NiblackThreshold />;
+                return (
+                    <NiblackThreshold
+                        Kernel={kernelSize}
+                        setKernelSize={setKernelSize}
+                        showToast={showToast}
+                        timeToast={timeToast}
+                        Weight={Weight} // Pass the Threshold state
+                        setWeight={setWeight} // Pass the setThreshold function
+                    />
+                );
             case 2:
-                return <SauvolaThreshold />;
+                return (
+                    <SauvolaThreshold
+                        Kernel={kernelSize}
+                        setKernelSize={setKernelSize}
+                        showToast={showToast}
+                        timeToast={timeToast}
+                        Weight={Weight} // Pass the Threshold state
+                        setWeight={setWeight} // Pass the setThreshold function
+                        Range={Range}
+                        setRange={setRange}
+                    />
+                );
             case 3:
-                return <LocalGaussianThreshold />;
+                return (
+                    <LocalGaussianThreshold
+                        Sigma={Sigma}
+                        setSigma={setSigma}
+                        showToast={showToast}
+                        timeToast={timeToast}
+                        Threshold={Threshold} // Pass the Threshold state
+                        setThreshold={setThreshold} // Pass the setThreshold function
+                    />
+                );
             case 4:
-                return <LocalMeanThreshold />;
+                return (
+                    <LocalMeanThreshold
+                        Kernel={kernelSize}
+                        setKernelSize={setKernelSize}
+                        showToast={showToast}
+                        timeToast={timeToast}
+                        Threshold={Threshold} // Pass the Threshold state
+                        setThreshold={setThreshold} // Pass the setThreshold function
+                    />
+                );
             default:
                 return null;
         }
