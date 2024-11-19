@@ -11,12 +11,20 @@ import numpy as np
 from flask import Blueprint, jsonify, request, send_file
 from flask_cors import cross_origin
 from sscAnnotat3D import utils
+from sscAnnotat3D.label import label_slice_contour
 from sscAnnotat3D.modules.magic_wand import MagicWandSelector
 from sscAnnotat3D.modules.lasso import fill_lasso
 from sscAnnotat3D.modules import annotation_module
 from sscAnnotat3D.repository import data_repo, module_repo
 from werkzeug.exceptions import BadRequest
-
+from harpia import morph_2D_chan_vese
+from sscPySpin import image as spin_img
+from skimage import img_as_float32
+from skimage.segmentation import (
+    inverse_gaussian_gradient,
+    disk_level_set,
+    checkerboard_level_set
+)
 app = Blueprint('annotation', __name__)
 
 
@@ -732,3 +740,64 @@ def apply_lasso(input_id: str):
     annot_module.labelmask_update(label_mask, label, mk_id, new_click=True)
 
     return jsonify(annot_module.current_mk_id)
+
+@app.route("/active_contour/<input_id>/<mode_id>", methods=["POST"])
+@cross_origin()
+def apply_active_contour(input_id: str, mode_id: str):
+    """
+    Function to apply the morphological snakes.
+
+    Returns:
+        (str): returns "success" if everything goes well 
+    """
+    import time
+
+    start = time.time()
+    try:
+        seed_points = request.json["points"]
+        label = request.json["label"]
+        slice_num = request.json["slice_num"]
+        axis = request.json["axis"]
+        iterations = int(request.json["iterations"])
+        smoothing = int(request.json["smoothing"])
+        weight = float(request.json["weight"])
+    except Exception as e:
+        return handle_exception(str(e))
+
+    #update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    if mode_id != "finalize":
+        axis_dim = utils.get_axis_num(axis)
+        annot_module.set_current_axis(axis_dim)
+        annot_module.set_current_slice(slice_num)
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+    start_imageasfloat = time.time()
+    img_slice = img_as_float32(data_repo.get_image('image')[slice_range])
+    print('Float conversion time{}\n'.format(time.time() - start_imageasfloat))
+
+    points = [(int(round(point['y'])), int(round(point['x']))) for point in seed_points]
+    print(points)
+    initLs = annot_module.draw_init_levelset(points)
+
+    level_set = morph_2D_chan_vese(img_slice, initLs, iterations, lambda1 = weight, lambda2 = 1.0, smoothing = smoothing)
+
+    init_ls = disk_level_set(img_slice.shape, center=points[0], radius=3)
+
+    print((init_ls==initLs).all())
+
+    print(iterations, weight, smoothing)
+
+
+    if mode_id == "finalize":
+        mk_id = annot_module.current_mk_id
+        annot_module.labelmask_update(level_set, label, mk_id, new_click=True)
+        return jsonify(annot_module.current_mk_id)
+    else:
+        border = spin_img.spin_find_boundaries(level_set, dtype="uint8") > 0
+        yy,xx = np.nonzero(border)
+        coords_list = [yy.astype('int').tolist(), xx.astype('int').tolist()]
+
+        print('end time{}\n'.format(time.time()-start))
+        
+        return jsonify(coords_list)

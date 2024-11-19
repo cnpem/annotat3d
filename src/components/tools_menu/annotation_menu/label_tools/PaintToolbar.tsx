@@ -12,7 +12,6 @@ import {
     IonCardHeader,
 } from '@ionic/react';
 import {
-    createOutline,
     colorFilterOutline,
     constructOutline,
     waterOutline,
@@ -27,6 +26,8 @@ import lassoCursor from '../../../../public/lasso_cursor.svg';
 
 import MagicWandCard from './MagicWandCard'; // Ensure this path is correct
 import ThresholdCard from './ThresholdCard'; // Ensure this path is correct
+import ActiveContourCard from './ActiveContourCard'; // Ensure this path is correct
+
 import { dispatch } from '../../../../utils/eventbus';
 
 const PaintToolbar: React.FC = () => {
@@ -125,15 +126,7 @@ const PaintToolbar: React.FC = () => {
                 </div>
 
                 <div className={activeCard === 'snakes' ? 'visible' : 'hidden'}>
-                    <IonCard>
-                        <IonCardContent>
-                            <IonList>
-                                <IonItem button>Snakes Option 1</IonItem>
-                                <IonItem button>Snakes Option 2</IonItem>
-                                <IonItem button>Snakes Option 3</IonItem>
-                            </IonList>
-                        </IonCardContent>
-                    </IonCard>
+                    <ActiveContourCard isVisible={activeCard === 'snakes'} />
                 </div>
 
                 <div className={activeCard === 'morphology' ? 'visible' : 'hidden'}>

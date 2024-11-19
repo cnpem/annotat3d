@@ -573,6 +573,43 @@ class AnnotationModule:
 
         # print('draw backend time {}'.format(time()-start))
 
+    def draw_init_levelset(self, cursor_coords):
+        #same as funtion of draw_marker_curve, excpet it returns the bool image array
+
+        ### Creating the mask in the size of the brush ###
+        radius = 3
+        size = 2 * radius + 1
+        disk_mask = np.zeros((size, size), dtype=np.bool_)
+        rr, cc = draw.disk((radius, radius), radius)
+        disk_mask[rr, cc] = True
+
+        ### Create a mask image for adding the drawings ###
+        height, width = self.get_current_slice_shape()
+        image = np.zeros((height, width), dtype=np.bool_)
+        #print(image.shape)
+        for coord in cursor_coords:
+            # check if its valid coord, invert for y (or z),x mode. Coord inputs are in x,y (or z).
+            if self.valid_coords(coord):
+                x, y = list(map(int, np.floor(coord)))
+                # ensure the drawing of the disk is within the image range
+                x_start = max(0, x - radius)
+                y_start = max(0, y - radius)
+                x_end = min(height, x + radius + 1)
+                y_end = min(width, y + radius + 1)
+
+                mask_x_start = radius - (x - x_start)
+                mask_y_start = radius - (y - y_start)
+                mask_x_end = radius + (x_end - x)
+                mask_y_end = radius + (y_end - y)
+
+                # make the drawing
+                image[x_start:x_end, y_start:y_end] += disk_mask[mask_x_start:mask_x_end, mask_y_start:mask_y_end]
+            else:
+                print('not valid?\n', coord)
+        
+        return image
+        
+
     def __update_annotation_image(self, annotation, label=None):
         if label is not None:
             for c in annotation:
