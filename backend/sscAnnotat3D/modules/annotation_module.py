@@ -604,8 +604,6 @@ class AnnotationModule:
 
                 # make the drawing
                 image[x_start:x_end, y_start:y_end] += disk_mask[mask_x_start:mask_x_end, mask_y_start:mask_y_end]
-            else:
-                print('not valid?\n', coord)
         
         return image
         

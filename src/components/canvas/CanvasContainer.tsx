@@ -26,8 +26,9 @@ import { ImageInfoInterface } from '../main_menu/file/utils/ImageInfoInterface';
 import { ColorOptions } from '../../utils/colormaplist';
 import fillCursor from '../../public/fill_cursor.png';
 import lassoCursor from '../../public/lasso_cursor.png';
+import snakesCursor from '../../public/snakes_cursor.png';
 
-type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush' | 'magic_wand' | 'lasso' | 'active_contour';
+type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush' | 'magic_wand' | 'lasso' | 'snakes';
 
 class Brush {
     label: number;
@@ -248,7 +249,7 @@ class ActiveContour {
 
     private lastSendTime = 0;
 
-    private debounceTime = 250; // 100ms debounce
+    private debounceTime = 150; // 100ms debounce
 
     private radius = 3; // Fixed radius
 
@@ -257,12 +258,13 @@ class ActiveContour {
         this.context = this.canvas.getContext('2d')!;
     }
 
-    drawPoint(
+    drawContour(
         x: number,
         y: number,
         label: number,
         sliceNum: number,
-        axis: string
+        axis: string,
+        process: string
     ): Promise<[number[], number[]] | null> {
         // Draw locally
         this.context.beginPath();
@@ -285,13 +287,16 @@ class ActiveContour {
                 iterations: parseInt(sessionStorage.getItem('ActiveContourIterations') || '10', 10),
                 smoothing: parseInt(sessionStorage.getItem('ActiveContourSmoothing') || '1', 10),
                 weight: parseFloat(sessionStorage.getItem('ActiveContourWeight') || '1.0'),
+                method: (sessionStorage.getItem('ActiveContourMethod') || 'chan-vese').replace(/^"|"$/g, ''), // Retrieve method from sessionStorage and sanitize
+                threshold: parseFloat(sessionStorage.getItem('GeodesicThreshold') || '0.5'),
+                balloon_force: sessionStorage.getItem('BalloonForce') === 'true', // Boolean stored as string
+                sigma: parseFloat(sessionStorage.getItem('GeodesicSigma') || '1.0'),
             };
-
             // Update the last send time
             this.lastSendTime = currentTime;
 
             // Return the backend response as a promise
-            return sfetch('POST', '/active_contour/image/update', JSON.stringify(params), 'json')
+            return sfetch('POST', '/active_contour/image/' + process, JSON.stringify(params), 'json')
                 .then((response) => {
                     if (response && Array.isArray(response[0]) && Array.isArray(response[1])) {
                         return response as [number[], number[]];
@@ -322,6 +327,10 @@ class ActiveContour {
             iterations: parseInt(sessionStorage.getItem('ActiveContourIterations') || '10', 10),
             smoothing: parseInt(sessionStorage.getItem('ActiveContourSmoothing') || '1', 10),
             weight: parseFloat(sessionStorage.getItem('ActiveContourWeight') || '1.0'),
+            method: (sessionStorage.getItem('ActiveContourMethod') || 'chan-vese').replace(/^"|"$/g, ''), // Retrieve method from sessionStorage and sanitize
+            threshold: parseFloat(sessionStorage.getItem('GeodesicThreshold') || '0.5'),
+            balloon_force: sessionStorage.getItem('BalloonForce') === 'true', // Boolean stored as string
+            sigma: parseFloat(sessionStorage.getItem('GeodesicSigma') || '1.0'),
         };
 
         // Send finalization request to backend
@@ -355,7 +364,7 @@ class Annotation {
 
     annotData?: NdArray<TypedArray>;
 
-    private previousCoords: [number[], number[]] | null = null;
+    private previousData: Uint8ClampedArray | null = null;
 
     constructor(colors: [number, number, number][], alphas: number[]) {
         this.canvas = document.createElement('canvas');
@@ -426,7 +435,15 @@ class Annotation {
 
         // Get the current image data
         const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        const data = imageData.data;
+
+        // Update `previousData` if not already set
+        if (!this.previousData) {
+            console.log('initializing previous data');
+            this.previousData = new Uint8ClampedArray(imageData.data); // Create a copy of the initial data
+        }
+
+        // Use existing `previousData` or initialize it
+        const data = new Uint8ClampedArray(this.previousData);
 
         const colors = this.colors[label % this.colors.length];
         const alpha = this.alphas[label % this.alphas.length];
@@ -434,33 +451,28 @@ class Annotation {
         // Define a helper function to set pixel data
         const setPixel = (x: number, y: number, r: number, g: number, b: number, a: number) => {
             const idx = (y * this.canvas.width + x) * 4;
-            data[idx] = r;
-            data[idx + 1] = g;
-            data[idx + 2] = b;
-            data[idx + 3] = a;
+            data[idx] = r; // Red
+            data[idx + 1] = g; // Green
+            data[idx + 2] = b; // Blue
+            data[idx + 3] = a; // Alpha
         };
-
-        /*         // Reset only affected pixels
-        if (this.previousCoords) {
-            const [prevYCoords, prevXCoords] = this.previousCoords;
-            prevYCoords.forEach((y, i) => {
-                const x = prevXCoords[i];
-                setPixel(x, y, 0, 0, 0, 0);
-            });
-        } */
 
         // Update pixels with new coordinates
         coords[0].forEach((y, i) => {
             const x = coords[1][i];
-            setPixel(x, y, colors[0], colors[1], colors[2], alpha * 255);
+            setPixel(x, y, colors[0], colors[1], colors[2], Math.round(alpha * 255));
         });
 
-        // Store the current coords as the previous contour
-        this.previousCoords = coords;
+        // Write back the updated data to imageData
+        imageData.data.set(data);
 
         // Apply the updated image data back to the canvas
         this.context.putImageData(imageData, 0, 0);
         this.sprite.texture.update();
+    }
+
+    resetPreviousData() {
+        this.previousData = null;
     }
 }
 class Canvas {
@@ -559,6 +571,7 @@ class Canvas {
                 erase_brush: 'default',
                 magic_wand: `url(${fillCursor}) 0 0, auto`,
                 lasso: `url(${lassoCursor}) 16 16, auto`,
+                snakes: `url(${snakesCursor}) 16 16, auto`,
             };
         }
 
@@ -696,19 +709,25 @@ class Canvas {
             this.viewport.addChild(this.lasso.tempLine);
             return;
         }
-        if (this.brush_mode === 'active_contour') {
+        if (this.brush_mode === 'snakes') {
             this.isPainting = true;
             const position = this.viewport.toWorld(event.data.global);
-            //const start = performance.now();
+            const start = performance.now();
             this.activeContour
-                .drawPoint(Math.floor(position.x), Math.floor(position.y), this.brush.label, this.sliceNum, this.axis)
+                .drawContour(
+                    Math.floor(position.x),
+                    Math.floor(position.y),
+                    this.brush.label,
+                    this.sliceNum,
+                    this.axis,
+                    'start'
+                )
                 .then((coords) => {
-                    const end = performance.now();
-                    //console.log(`Execution time activeContour Pointerdown: ${end - start} ms`);
-
                     // Ensure coords is not null before using it
                     if (coords !== null) {
                         this.annotation.drawOver(coords, this.brush.label);
+                        const end = performance.now();
+                        console.log(`Execution time activeContour Pointerdown: ${end - start} ms`);
                     }
                 })
                 .catch((error) => {
@@ -751,18 +770,24 @@ class Canvas {
             return;
         }
 
-        if (this.brush_mode === 'active_contour' && this.isPainting) {
+        if (this.brush_mode === 'snakes' && this.isPainting) {
             const position = this.viewport.toWorld(event.data.global);
-            //const start = performance.now();
+            const start = performance.now();
             this.activeContour
-                .drawPoint(Math.floor(position.x), Math.floor(position.y), this.brush.label, this.sliceNum, this.axis)
+                .drawContour(
+                    Math.floor(position.x),
+                    Math.floor(position.y),
+                    this.brush.label,
+                    this.sliceNum,
+                    this.axis,
+                    'execute'
+                )
                 .then((coords) => {
-                    const end = performance.now();
-                    //console.log(`Execution time activeContour Pointerdown: ${end - start} ms`);
-
                     // Ensure coords is not null before using it
                     if (coords !== null) {
                         this.annotation.drawOver(coords, this.brush.label);
+                        const end = performance.now();
+                        console.log(`Execution time activeContour Pointerdown: ${end - start} ms`);
                     }
                 })
                 .catch((error) => {
@@ -802,10 +827,11 @@ class Canvas {
             return;
         }
 
-        if (this.brush_mode === 'active_contour') {
+        if (this.brush_mode === 'snakes') {
             void this.activeContour.finalize(this.brush.label, this.sliceNum, this.axis);
             // Clear the initial state after finalizing
             this.isPainting = false;
+            this.annotation.resetPreviousData();
             return;
         }
 
@@ -899,6 +925,7 @@ class Canvas {
         this.brush_mode = mode;
         this.brush.setMode(mode);
         // Set the cursor mode
+        console.log('setting brush to mode:', mode);
         this.viewport.cursor = mode;
     }
 

@@ -17,7 +17,7 @@ from sscAnnotat3D.modules.lasso import fill_lasso
 from sscAnnotat3D.modules import annotation_module
 from sscAnnotat3D.repository import data_repo, module_repo
 from werkzeug.exceptions import BadRequest
-from harpia import morph_2D_chan_vese
+from harpia import morph_2D_chan_vese, morph_2D_geodesic_active_contour
 from sscPySpin import image as spin_img
 from skimage import img_as_float32
 from skimage.segmentation import (
@@ -745,59 +745,95 @@ def apply_lasso(input_id: str):
 @cross_origin()
 def apply_active_contour(input_id: str, mode_id: str):
     """
-    Function to apply the morphological snakes.
+    Apply active contours (Chan-Vese or Geodesic) in initialization, execution, or finalization modes.
+
+    Args:
+        input_id (str): Identifier for the input.
+        mode_id (str): Mode of operation ('start', 'execution', 'finalize').
 
     Returns:
-        (str): returns "success" if everything goes well 
+        JSON or str: Coordinates list for execution or "success" for finalization.
     """
     import time
 
-    start = time.time()
+    start_time = time.time()
+
+    # Step 1: Parse Parameters
     try:
-        seed_points = request.json["points"]
-        label = request.json["label"]
-        slice_num = request.json["slice_num"]
-        axis = request.json["axis"]
-        iterations = int(request.json["iterations"])
-        smoothing = int(request.json["smoothing"])
-        weight = float(request.json["weight"])
+        params = {
+            "seed_points": [(int(round(p["y"])), int(round(p["x"]))) for p in request.json["points"]],
+            "label": request.json["label"],
+            "slice_num": request.json["slice_num"],
+            "axis": request.json["axis"],
+            "iterations": int(request.json["iterations"]),
+            "smoothing": int(request.json["smoothing"]),
+            "weight": float(request.json["weight"]),
+            "method": str(request.json["method"]),  # 'chan-vese' or 'geodesic'
+            "threshold": float(request.json.get("threshold", 0.5)),
+            "balloon_force": float(request.json.get("balloon_force", True)),
+            "sigma": float(request.json.get("sigma", 1)),
+
+        }
     except Exception as e:
         return handle_exception(str(e))
 
-    #update backend slice number
-    annot_module = module_repo.get_module('annotation')
-    if mode_id != "finalize":
-        axis_dim = utils.get_axis_num(axis)
+    annot_module = module_repo.get_module("annotation")
+
+    # Step 2: Preprocessing (Setup for 'start' only)
+    if mode_id == "start":
+        # Set current slice and axis
+        axis_dim = utils.get_axis_num(params["axis"])
         annot_module.set_current_axis(axis_dim)
-        annot_module.set_current_slice(slice_num)
+        annot_module.set_current_slice(params["slice_num"])
 
-    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
-    start_imageasfloat = time.time()
-    img_slice = img_as_float32(data_repo.get_image('image')[slice_range])
-    print('Float conversion time{}\n'.format(time.time() - start_imageasfloat))
+        # Get image slice and convert to float
+        slice_range = utils.get_3d_slice_range_from(params["axis"], params["slice_num"])
+        img_slice = img_as_float32(data_repo.get_image("image")[slice_range])
 
-    points = [(int(round(point['y'])), int(round(point['x']))) for point in seed_points]
-    print(points)
-    initLs = annot_module.draw_init_levelset(points)
+        # Store the image slice for later use
+        data_repo.set_image(key="ImageForContour", data=img_slice)
 
-    level_set = morph_2D_chan_vese(img_slice, initLs, iterations, lambda1 = weight, lambda2 = 1.0, smoothing = smoothing)
+        # If the method is geodesic, compute and store the gradient image
+        if params["method"] == "geodesic":
+            gimage = inverse_gaussian_gradient(img_slice, sigma=params["sigma"])
+            data_repo.set_image(key="ImageForContour", data=gimage)
 
-    init_ls = disk_level_set(img_slice.shape, center=points[0], radius=3)
+    init_ls = annot_module.draw_init_levelset(params["seed_points"])
+    host_image = data_repo.get_image("ImageForContour")
 
-    print((init_ls==initLs).all())
-
-    print(iterations, weight, smoothing)
-
-
-    if mode_id == "finalize":
-        mk_id = annot_module.current_mk_id
-        annot_module.labelmask_update(level_set, label, mk_id, new_click=True)
-        return jsonify(annot_module.current_mk_id)
+    # Step 3: Execution Logic
+    if params["method"] == "chan-vese":
+        level_set = morph_2D_chan_vese(
+            host_image, init_ls, params["iterations"], lambda1=params["weight"], lambda2=1.0, smoothing=params["smoothing"]
+        )
+    elif params["method"] == "geodesic":
+        level_set = morph_2D_geodesic_active_contour(
+            host_image,
+            init_ls,
+            iterations=params["iterations"],
+            balloonForce=params["balloon_force"],
+            threshold=params["threshold"],
+            smoothing=params["smoothing"],
+        )
     else:
-        border = spin_img.spin_find_boundaries(level_set, dtype="uint8") > 0
-        yy,xx = np.nonzero(border)
-        coords_list = [yy.astype('int').tolist(), xx.astype('int').tolist()]
+        print(params["method"])
+        return handle_exception(f"Unknown method: {params['method']}")
 
-        print('end time{}\n'.format(time.time()-start))
-        
-        return jsonify(coords_list)
+    # Step 4: Finalization or Boundary Extraction
+    if mode_id == "finalize":
+        # Update annotation with the final level set
+        mk_id = annot_module.current_mk_id
+        annot_module.labelmask_update(level_set, params["label"], mk_id, new_click=True)
+
+        # Clean up stored images
+        data_repo.delete_image("ImageForContour")
+
+        return jsonify(annot_module.current_mk_id)
+
+    # Extract boundary coordinates for visualization
+    border = spin_img.spin_find_boundaries(level_set, dtype="uint8") > 0
+    yy, xx = np.nonzero(border)
+    coords_list = [yy.astype("int").tolist(), xx.astype("int").tolist()]
+
+    print(f"Execution completed in {time.time() - start_time:.2f} seconds")
+    return jsonify(coords_list)

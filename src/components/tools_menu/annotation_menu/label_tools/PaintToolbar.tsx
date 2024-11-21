@@ -23,6 +23,7 @@ import {
 } from 'ionicons/icons';
 import './PaintToolbar.css'; // Ensure this path is correct
 import lassoCursor from '../../../../public/lasso_cursor.svg';
+import snakesCursor from '../../../../public/snakes_cursor.svg';
 
 import MagicWandCard from './MagicWandCard'; // Ensure this path is correct
 import ThresholdCard from './ThresholdCard'; // Ensure this path is correct
@@ -76,7 +77,7 @@ const PaintToolbar: React.FC = () => {
                     </IonCol>
                     <IonCol>
                         <IonButton onClick={() => handleButtonClick('snakes')} title="Snakes tool">
-                            <IonIcon icon={colorFilterOutline} />
+                            <IonIcon icon={snakesCursor} />
                         </IonButton>
                     </IonCol>
                 </IonRow>
