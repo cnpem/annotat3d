@@ -27,6 +27,9 @@ import { ColorOptions } from '../../utils/colormaplist';
 import fillCursor from '../../public/fill_cursor.png';
 import lassoCursor from '../../public/lasso_cursor.png';
 import snakesCursor from '../../public/snakes_cursor.png';
+import eraserIcon from '../../public/eraser_icon.svg';
+import eraserCursor from '../../public/eraser.png';
+import brushCursor from '../../public/ion_brush.png';
 
 type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush' | 'magic_wand' | 'lasso' | 'snakes';
 
@@ -567,8 +570,8 @@ class Canvas {
         if (this.app.renderer.plugins.interaction) {
             this.app.renderer.plugins.interaction.cursorStyles = {
                 default: 'default',
-                draw_brush: 'default',
-                erase_brush: 'default',
+                draw_brush: `url(${brushCursor}) 0 32, auto`,
+                erase_brush: `url(${eraserCursor}) 0 32, auto`,
                 magic_wand: `url(${fillCursor}) 0 0, auto`,
                 lasso: `url(${lassoCursor}) 16 16, auto`,
                 snakes: `url(${snakesCursor}) 16 16, auto`,
@@ -1316,7 +1319,7 @@ const brushList = [
     },
     {
         id: 'erase_brush',
-        logo: browsers,
+        logo: eraserIcon,
     },
 ];
 
