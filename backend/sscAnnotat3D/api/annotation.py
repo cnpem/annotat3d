@@ -769,7 +769,7 @@ def apply_active_contour(input_id: str, mode_id: str):
             "smoothing": int(request.json["smoothing"]),
             "weight": float(request.json["weight"]),
             "method": str(request.json["method"]),  # 'chan-vese' or 'geodesic'
-            "threshold": float(request.json.get("threshold", 0.5)),
+            "threshold_percentage": float(request.json.get("threshold", 40)),
             "balloon_force": float(request.json.get("balloon_force", True)),
             "sigma": float(request.json.get("sigma", 1)),
 
@@ -789,6 +789,7 @@ def apply_active_contour(input_id: str, mode_id: str):
         # Get image slice and convert to float
         slice_range = utils.get_3d_slice_range_from(params["axis"], params["slice_num"])
         img_slice = img_as_float32(data_repo.get_image("image")[slice_range])
+        
 
         # Store the image slice for later use
         data_repo.set_image(key="ImageForContour", data=img_slice)
@@ -797,6 +798,8 @@ def apply_active_contour(input_id: str, mode_id: str):
         if params["method"] == "geodesic":
             gimage = inverse_gaussian_gradient(img_slice, sigma=params["sigma"])
             data_repo.set_image(key="ImageForContour", data=gimage)
+            threshold = np.percentile(gimage, params["threshold_percentage"])
+            data_repo.set_image(key="GeodesicTresh", data=threshold)
 
     init_ls = annot_module.draw_init_levelset(params["seed_points"])
     host_image = data_repo.get_image("ImageForContour")
@@ -807,12 +810,13 @@ def apply_active_contour(input_id: str, mode_id: str):
             host_image, init_ls, params["iterations"], lambda1=params["weight"], lambda2=1.0, smoothing=params["smoothing"]
         )
     elif params["method"] == "geodesic":
+        threshold = data_repo.get_image("GeodesicTresh")
         level_set = morph_2D_geodesic_active_contour(
             host_image,
             init_ls,
             iterations=params["iterations"],
             balloonForce=params["balloon_force"],
-            threshold=params["threshold"],
+            threshold=threshold,
             smoothing=params["smoothing"],
         )
     else:
