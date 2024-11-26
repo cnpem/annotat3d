@@ -832,6 +832,7 @@ class Canvas {
 
         if (this.brush_mode === 'snakes') {
             void this.activeContour.finalize(this.brush.label, this.sliceNum, this.axis);
+            this.activeContour.clear();
             // Clear the initial state after finalizing
             this.isPainting = false;
             this.annotation.resetPreviousData();

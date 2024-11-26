@@ -34,7 +34,7 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
 
     // Geodesic Specific Parameters
     const [threshold, setThreshold] = useStorageState<number>(sessionStorage, 'GeodesicThreshold', 40);
-    const [sigma, setSigma] = useStorageState<number>(sessionStorage, 'GeodesicSigma', 0.5);
+    const [sigma, setSigma] = useStorageState<number>(sessionStorage, 'GeodesicSigma', 1);
     const [balloonForce, setBalloonForce] = useStorageState<boolean>(sessionStorage, 'BalloonForce', true);
 
     useEffect(() => {
@@ -96,8 +96,7 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
                 <InfoPopover
                     triggerId="Methods"
                     header="Snakes"
-                    content="Chan-Vese minimizes the area within the level set while considering the surrounding region, requiring fewer parameters for configuration.
-Geodesic is guided by image edges, offering greater customization with a broader range of parameters."
+                    content="Chan-Vese defines an energy functional for image segmentation that evaluates the content inside the curve and the entire image outside it. In contrast, the Geodesic model relies on image edges, offering greater flexibility through a broader range of parameters. Unlike Chan-Vese, it emphasizes the specific regions along the curve's path."
                 />
             </IonItem>
 
@@ -217,7 +216,7 @@ Geodesic is guided by image edges, offering greater customization with a broader
                             value={sigma.toString()}
                             onIonChange={(e: CustomEvent) => handleValueChange('sigma', e.detail.value!)}
                             placeholder="Enter threshold value"
-                            step="0.01"
+                            step="1"
                         />
                         <InfoPopover
                             triggerId="geodesicSigmaInfo"
