@@ -117,18 +117,19 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
     /**
      * Function that Saves the annotation_menu .pkl file and send to the backend
      */
-    const dispatchSaveAnnot = async () => {
+    const dispatchSaveAnnot = async (annotName?: string, currentPaths?: MultiplesPath) => {
+        const paths = currentPaths || pathSaveFiles; // Use currentPaths if provided, otherwise fallback to state
+        const newAnnotName = annotName || paths.annotPath; // Use annotName if provided, otherwise fallback to annotPath
         const annotPath = {
-            annot_path:
-                pathSaveFiles.workspacePath !== ''
-                    ? pathSaveFiles.workspacePath + pathSaveFiles.annotPath
-                    : pathSaveFiles.annotPath,
+            annot_path: paths.workspacePath ? paths.workspacePath + newAnnotName : newAnnotName, // Construct full path
         };
+        console.log('annotPathtoSave', annotPath);
+
         let msgReturned = '';
         let isError = false;
         await sfetch('POST', '/save_annot', JSON.stringify(annotPath), '')
             .then((success: string) => {
-                const imgName = pathSaveFiles.annotPath.split('/');
+                const imgName = newAnnotName.split('/');
                 msgReturned = `${imgName[imgName.length - 1]} saved as annotation`;
                 console.log(success);
             })
@@ -310,6 +311,33 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
         setShowToast(false);
         setHeaderErrorMsg('');
     };
+
+    useEventBus('SaveAnnot', (eventData: string) => {
+        setSavePathFiles((prevPaths) => {
+            console.log('SaveAnnotTriggered', prevPaths);
+            // Ensure the function has workspace
+            if (prevPaths.workspacePath !== '') {
+                void (async () => {
+                    try {
+                        const result = await dispatchSaveAnnot(eventData, prevPaths); // Use the updated paths
+                        if (result.isError) {
+                            setToastMsg(`Error: ${result.message}`); // Error message for toast
+                        } else {
+                            setToastMsg(`Success: ${result.message}`); // Success message for toast
+                        }
+                        setShowToast(true); // Show the toast
+                    } catch (error) {
+                        console.error('Error during annotation save:', error);
+                        setToastMsg(`Unexpected error during save`);
+                        setShowToast(true);
+                    }
+                })();
+            }
+            // Always return the current state to satisfy the type requirement
+            return prevPaths;
+        });
+    });
+
     return (
         <>
             <IonPopover
