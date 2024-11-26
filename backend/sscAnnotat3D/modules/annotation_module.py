@@ -154,6 +154,18 @@ class AnnotationModule:
         self.set_marker_label_selection_type(self.__default_marker_label_selection_type)
 
         logging.debug("Reloading complete for annotation class")
+        
+    def update_image_shape(self, new_image_shape):
+        """
+        Update the shape of the image and reinitialize relevant attributes.
+        """
+        if len(new_image_shape) != 3:
+            raise ValueError("new_image_shape must be a tuple of three dimensions (z, y, x).")
+
+        logging.info(f"Updating image shape from {self.zsize, self.ysize, self.xsize} to {new_image_shape}")
+
+        # Update dimensions
+        self.zsize, self.ysize, self.xsize = new_image_shape
 
     def get_volume_grid_data(self, volume_data=None):
         d0, d1, d2 = self.zsize, self.ysize, self.xsize
@@ -620,7 +632,7 @@ class AnnotationModule:
         return self.annotation
 
     def set_annotation(self, label_annotation: dict):
-        self.annotation = label_annotation
+        self.annotation = defaultdict(list, label_annotation)
         return self.annotation
 
     def update_annotation(self, annotations):

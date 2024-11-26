@@ -1,13 +1,14 @@
 import os
 import os.path
 import time
+import logging
 
 import numpy as np
 import sscIO.io
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
 from sscAnnotat3D import utils
-from sscAnnotat3D.repository import data_repo
+from sscAnnotat3D.repository import data_repo, module_repo
 from werkzeug.exceptions import BadRequest
 
 app = Blueprint("io", __name__)
@@ -195,6 +196,21 @@ def open_image(image_id: str):
     label_list = []
     if image_id == "image":
         data_repo.set_info(data=image_info)
+        
+        try:
+            annot_module = module_repo.get_module("annotation")
+
+            if annot_module is not None:
+                #re_init annot_module
+                from sscAnnotat3D.modules import annotation_module
+                annot_module = annotation_module.AnnotationModule(image.shape)
+                module_repo.set_module("annotation", module=annot_module)
+            else:
+                logging.warning("Annotation module not found. Proceeding without updating image shape.")
+        
+        except Exception as e:
+            logging.error("An error occurred while processing the annotation module.", exc_info=True)
+            return handle_exception("Error processing annotation module\n", e)
 
     elif image_id == "label":
         set_unique_labels_id = np.unique(image)
