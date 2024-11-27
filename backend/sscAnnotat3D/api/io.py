@@ -76,11 +76,23 @@ def get_image_histogram(image_id):
         img_min = np.min(img_slice)
 
     elif slice_num == -1:
-        histogram, bin_edges = np.histogram(image, bins=255)
-        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        img_max = np.max(image)
-        img_min = np.min(image)
+        image_info = data_repo.get_info(key="image_info")
 
+        hist_data =  data_repo.get_info(key= image_info['imageName'] + " 3Dhistogram")
+
+        if hist_data is not None:
+            histogram, bin_centers, img_max, img_min = hist_data['histogram'], hist_data['bin_edges'], hist_data['img_max'], hist_data['img_min']
+        else:
+            histogram, bin_edges = np.histogram(image, bins=255)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+            img_max = np.max(image)
+            img_min = np.min(image)
+
+            hist_data = {}
+            hist_data['histogram'], hist_data['bin_edges'], hist_data['img_max'], hist_data['img_min'] = histogram, bin_centers, img_max, img_min
+
+            data_repo.set_info(key= image_info['imageName'] + " 3Dhistogram", data=hist_data)
+            
     # round bin_centers for pretty show in frontend
     if np.issubdtype(bin_centers.dtype, np.floating):
         # Round the array to two decimal places

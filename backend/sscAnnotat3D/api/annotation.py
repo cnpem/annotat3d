@@ -650,15 +650,14 @@ def threshold(input_id: str):
 
     return jsonify(annot_module.current_mk_id)
 
-@app.route("/threshold_apply3D/<input_id>", methods=["POST"])
+@app.route("/threshold_apply3D/<input_id>/<output_id>", methods=["POST"])
 @cross_origin()
-def threshold_apply3D(input_id: str):
+def threshold_apply3D(input_id: str, output_id: str):
     """
-    Function to apply the threhsold from request of the frontend.
+    Function to apply the threshold from a request of the frontend.
 
     Returns:
-        (str): returns "success" if everything goes well 
-
+        (str): returns "success" if everything goes well.
     """
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
@@ -667,35 +666,52 @@ def threshold_apply3D(input_id: str):
             return int(x)
         else:
             raise ValueError("Unsupported data type")
+
     try:
-        upper_tresh = request.json["upper_tresh"]
-        lower_tresh = request.json["lower_tresh"]
-        label = request.json["label"]
-        curret_thresh_marker = request.json["curret_thresh_marker"]
+        # Parse request JSON safely
+        data = request.get_json()
+        if not data:
+            raise KeyError("Missing JSON data in the request")
 
+        upper_thresh = data["upper_thresh"]
+        lower_thresh = data["lower_thresh"]
+        label = data["label"]
+        curret_thresh_marker = data["curret_thresh_marker"]
+
+    except KeyError as e:
+        return handle_exception(f"Missing key in JSON: {str(e)}")
     except Exception as e:
-        return handle_exception(str(e))
+        return handle_exception(f"Unexpected error: {str(e)}")
 
-    #update backend slice number
+    # Update backend slice number
     annot_module = module_repo.get_module('annotation')
+    img = data_repo.get_image(input_id)
 
-    img_slice = data_repo.get_image(input_id)
- 
+    if img is None:
+        return handle_exception("Input image not found")
+
     mk_id = annot_module.current_mk_id
+    label_mask = np.logical_and(img >= lower_thresh, img <= upper_thresh)
 
-    print('Current markers\n',mk_id,curret_thresh_marker)
-    #New annotation
-    if mk_id != curret_thresh_marker:
-        new_click = True
-    #its not a new annotation (overwrite current annotation)
+    if output_id == 'annotation':
+        # Determine new click status
+        new_click = mk_id != curret_thresh_marker
+
+        annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+        print('Current markers\n', mk_id, curret_thresh_marker)
     else:
-        new_click = False
+        img_label = data_repo.get_image("label")
 
-    label_mask = np.logical_and(img_slice >= lower_tresh, img_slice <= upper_tresh) 
+        # Create the image label if not already present
+        if img_label is None:
+            img_label = np.zeros(img.shape, dtype='int32')
+            img_label[~label_mask] = -1
 
-    annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+        img_label[label_mask] = label
+        data_repo.set_image("label", img_label)
 
-    return jsonify(annot_module.current_mk_id)
+    return jsonify({"current_mk_id": annot_module.current_mk_id})
 
 @app.route("/apply_lasso/<input_id>", methods=["POST"])
 @cross_origin()

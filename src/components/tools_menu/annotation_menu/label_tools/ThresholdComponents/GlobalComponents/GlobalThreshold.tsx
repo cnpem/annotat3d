@@ -121,18 +121,16 @@ const GlobalThreshold: React.FC = () => {
         console.log('Applying 3D threshold with values:', currentValue);
         const selectedLabel = parseInt(sessionStorage.getItem('selectedLabel') || '0', 10); // For numbers
         const dataThreshold = {
-            upper_tresh: currentValue.upper,
-            lower_tresh: currentValue.lower,
+            upper_thresh: currentValue.upper,
+            lower_thresh: currentValue.lower,
             curret_thresh_marker: markerID,
             label: selectedLabel,
         };
         console.log('new 3D threshold', dataThreshold);
-        void sfetch('POST', '/threshold_apply3D/image', JSON.stringify(dataThreshold), 'json')
+        void sfetch('POST', '/threshold_apply3D/image/label', JSON.stringify(dataThreshold), 'json')
             .then((backendMarkerID) => {
-                console.log('3D Threshold applied');
-                setMarkerId(backendMarkerID);
-                console.log('backendMarkerID', backendMarkerID);
-                dispatch('annotationChanged', null);
+                console.log('3D Threshold applied in label');
+                dispatch('labelChanged', '');
                 setShowLoadingCompPS(false);
             })
             .catch((error) => {
@@ -333,7 +331,7 @@ const GlobalThreshold: React.FC = () => {
                     <IonRow class="ion-justify-content-center">
                         {selectedDimension === '3D' && (
                             <IonButton expand="block" onClick={handleApply3D}>
-                                Apply 3D Threshold
+                                Apply 3D Threshold as Label
                             </IonButton>
                         )}
                     </IonRow>
