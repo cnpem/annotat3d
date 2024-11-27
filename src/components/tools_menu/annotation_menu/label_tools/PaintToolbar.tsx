@@ -21,12 +21,14 @@ import {
     pricetagsOutline,
     gitCompareOutline,
     colorFillOutline,
+    gridOutline,
 } from 'ionicons/icons';
 import './PaintToolbar.css'; // Ensure this path is correct
 import lassoCursor from '../../../../public/lasso_cursor.svg';
 
 import MagicWandCard from './MagicWandCard'; // Ensure this path is correct
 import ThresholdCard from './ThresholdCard'; // Ensure this path is correct
+import MorphologyCard from './MorphologyCard'; // Ensure this path is correct
 import { dispatch } from '../../../../utils/eventbus';
 
 const PaintToolbar: React.FC = () => {
@@ -87,7 +89,7 @@ const PaintToolbar: React.FC = () => {
                     </IonCol>
                     <IonCol>
                         <IonButton onClick={() => handleButtonClick('morphology')} title="Morphology">
-                            <IonIcon icon={constructOutline} />
+                            <IonIcon icon={gridOutline} />
                         </IonButton>
                     </IonCol>
                     <IonCol>
@@ -137,15 +139,7 @@ const PaintToolbar: React.FC = () => {
                 </div>
 
                 <div className={activeCard === 'morphology' ? 'visible' : 'hidden'}>
-                    <IonCard>
-                        <IonCardContent>
-                            <IonList>
-                                <IonItem button>Morphology Option 1</IonItem>
-                                <IonItem button>Morphology Option 2</IonItem>
-                                <IonItem button>Morphology Option 3</IonItem>
-                            </IonList>
-                        </IonCardContent>
-                    </IonCard>
+                    <MorphologyCard isVisible={activeCard === 'morphology'} />
                 </div>
 
                 <div className={activeCard === 'watershed' ? 'visible' : 'hidden'}>
