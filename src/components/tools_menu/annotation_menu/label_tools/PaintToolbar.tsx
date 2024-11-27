@@ -24,6 +24,7 @@ import {
 import './PaintToolbar.css'; // Ensure this path is correct
 import lassoCursor from '../../../../public/lasso_cursor.svg';
 import snakesCursor from '../../../../public/snakes_cursor.svg';
+import thresholdIcon from '../../../../public/threshold_icon.svg';
 
 import MagicWandCard from './MagicWandCard'; // Ensure this path is correct
 import ThresholdCard from './ThresholdCard'; // Ensure this path is correct
@@ -84,7 +85,7 @@ const PaintToolbar: React.FC = () => {
                 <IonRow>
                     <IonCol>
                         <IonButton onClick={() => handleButtonClick('threshold')} title="Threshold">
-                            <IonIcon icon={funnelOutline} />
+                            <IonIcon icon={thresholdIcon} />
                         </IonButton>
                     </IonCol>
                     <IonCol>
