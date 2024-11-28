@@ -340,6 +340,42 @@ def delete_label_annot():
 
     return "success", 200
 
+@app.route("/get_annotation_history", methods=["POST"])
+@cross_origin()
+def get_annotation_history():
+    """
+    Function that retrieves the annotation image and prepares data
+    for slice viewing in the frontend.
+
+    Returns:
+        dict: JSON object containing index, values, and length
+        for each axis (XY, XZ, YZ).
+    """
+    import time
+
+    start = time.time()
+
+    # Retrieve the annotation image from the module repository
+    annot_module = module_repo.get_module('annotation')
+    image_annot = annot_module.annotation_image
+
+    # Get the non-zero coordinates of the annotation image
+    rr, cc, dd = np.nonzero(image_annot >= 0)
+
+    # Prepare the data for each axis
+    XY = np.unique(rr).tolist()
+    XZ = np.unique(cc).tolist()
+    YZ = np.unique(dd).tolist()
+
+    hist = {
+        "XY": {"index": list(range(len(XY))), "values": XY, "length": len(XY)},
+        "XZ": {"index": list(range(len(XZ))), "values": XZ, "length": len(XZ)},
+        "YZ": {"index": list(range(len(YZ))), "values": YZ, "length": len(YZ)},
+    }
+    print('\nTotal time:', time.time() - start)
+    # Return the data as a JSON response
+    return jsonify(hist)
+
 
 @app.route("/find_label_by_click", methods=["POST"])
 @cross_origin()
