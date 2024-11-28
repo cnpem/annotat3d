@@ -443,8 +443,8 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
 
     const [disabled, setDisabled] = useState<boolean>(false);
 
-    const [kappa, setKappa] = useStorageState<number>(sessionStorage, 'kappa', 100);
-    const [totalIterations, setTotalIterations] = useStorageState<number>(sessionStorage, 'totalIterations', 1);
+    const [kappa, setKappa] = useStorageState<number>(sessionStorage, 'kappa', 200);
+    const [totalIterations, setTotalIterations] = useStorageState<number>(sessionStorage, 'totalIterations', 100);
     const [timeStep, setTimeStep] = useStorageState<number>(sessionStorage, 'TimeStep', 0.1);
     const [diffusionOption, setDiffusionOption] = useStorageState<number>(sessionStorage, 'diffusionOption', 3);
     const [anisoNeighbour, setNeighbour] = useStorageState<string>(sessionStorage, 'anisoNeighbour', '2D');
@@ -521,9 +521,9 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
 
                 <KappaInputWithInfo kappa={kappa} setKappa={setKappa} />
 
-                <TimeStepInputWithInfo timeStep={timeStep} setTimeStep={setTimeStep} />
-
                 <IterationsInputWithInfo totalIterations={totalIterations} setTotalIterations={setTotalIterations} />
+
+                <TimeStepInputWithInfo timeStep={timeStep} setTimeStep={setTimeStep} />
 
                 <AnisoNeighbourInputWithInfo anisoNeighbour={anisoNeighbour} setNeighbour={setNeighbour} />
             </ModuleCardItem>
