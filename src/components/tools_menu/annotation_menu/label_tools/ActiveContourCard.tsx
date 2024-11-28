@@ -115,7 +115,7 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
                         <InfoPopover
                             triggerId="chanVeseIterationsInfo"
                             header="Iterations"
-                            content="More iterations lead to better segmentation but may increase runtime."
+                            content="More iterations allow the contour to evolve further until it reachs a maximum, usually around 150-300 iterations."
                         />
                     </IonItem>
 
@@ -170,7 +170,7 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
                         <InfoPopover
                             triggerId="geodesicIterationsInfo"
                             header="Iterations"
-                            content="More iterations allow the contour to evolve further, potentially capturing more details."
+                            content="More iterations allow the contour to evolve further until it reachs a maximum, usually around 150-300 iterations."
                         />
                     </IonItem>
 

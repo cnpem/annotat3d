@@ -72,14 +72,15 @@ const File: React.FC = () => {
         const imageName = info?.imageName || 'nameless_image'; // Use info passed as argument
         console.log('Generated save file name:', imageName);
 
-        return `${imageName}_${hours}h${minutes}m${seconds}s_${day}_${month}_${year}.pkl`;
+        return 'Annot_' + `${imageName}_${hours}h${minutes}m${seconds}s_${day}_${month}_${year}.pkl`;
     };
 
     useEffect(() => {
         console.log('annotationChanged:', annotationCount);
         if (annotationCount >= 50) {
             setAnnotationCount(0);
-            dispatch('SaveAnnot', generateTimestampFileName(ImageInfo)); // Pass current ImageInfo
+            const imageName = ImageInfo?.imageName || 'nameless_image';
+            dispatch('SaveAnnot', 'Annotation_Checkpoint_' + imageName + '.pkl'); // Pass current ImageInfo
         }
     }, [annotationCount, ImageInfo]); // Add ImageInfo to dependencies
 
