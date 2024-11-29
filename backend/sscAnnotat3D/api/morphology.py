@@ -68,6 +68,6 @@ def morphology_apply():
     # Marker id is not necessary for the magic wand logic.
     erase_label = -1
     mk_id = annot_module.current_mk_id
-    annot_module.labelmask_multiupdate([erase_mask_2d,write_mask_2d], [erase_label, label], mk_id, True)
+    annot_module.labelmask_multiupdate([erase_mask_2d, write_mask_2d], [erase_label, label], mk_id, True)
 
     return "success", 200
