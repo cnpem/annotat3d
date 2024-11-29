@@ -5,7 +5,8 @@ from harpia.morphology.operations_binary import (
      erosion_binary,
      dilation_binary,
      closing_binary,
-     opening_binary
+     opening_binary,
+     smooth_binary
 )
 from skimage.filters import gaussian as skimage_gaussian
 from sscAnnotat3D.repository import module_repo
@@ -16,10 +17,10 @@ from sscPySpin.filters import non_local_means as spin_nlm
 
 app = Blueprint("morphology", __name__)
 
-@app.route("/morphology/binary/erosion/", methods=["POST"])
+@app.route("/morphology/binary/morphology/", methods=["POST"])
 @cross_origin()
-def erosion_apply():
-
+def morphology_apply():
+    operation = request.json["operation"]
     kernel_shape = request.json["kernelShape"]
     kernel_size = request.json["kernelSize"]
     label = request.json["label"]
@@ -42,8 +43,19 @@ def erosion_apply():
     annotation_slice_3d = np.ascontiguousarray(annotation_slice.reshape((1, *annotation_slice.shape)))
     binary_mask_3d = (annotation_slice_3d == label).astype('int32')
 
-    # Morphologycal operation
-    output_mask_3d = erosion_binary(binary_mask_3d, kernel_3d, gpuMemory=0.41)
+    # Dictionary of operations
+    operations = {
+        "erosion": erosion_binary,
+        "dilation": dilation_binary,
+        "closing": closing_binary,
+        "opening": opening_binary,
+        "smooth": smooth_binary,
+    }
+    if operation not in operations:
+        return {"error": f"Invalid operation: {operation}"}, 400
+
+    # Perform the selected morphological operation
+    output_mask_3d = operations[operation](binary_mask_3d, kernel_3d, gpuMemory=0.41)
 
     # Create masks
     write_mask = (binary_mask_3d == 0) & (output_mask_3d == 1)  # 0 -> 1
@@ -54,10 +66,8 @@ def erosion_apply():
     erase_mask_2d = np.squeeze(erase_mask)
 
     # Marker id is not necessary for the magic wand logic.
-    mk_id = annot_module.current_mk_id
     erase_label = -1
-
-    annot_module.labelmask_update(erase_mask_2d, erase_label, mk_id, True)
-    annot_module.labelmask_update(write_mask_2d, label, mk_id, True)
+    mk_id = annot_module.current_mk_id
+    annot_module.labelmask_multiupdate([erase_mask_2d,write_mask_2d], [erase_label, label], mk_id, True)
 
     return "success", 200

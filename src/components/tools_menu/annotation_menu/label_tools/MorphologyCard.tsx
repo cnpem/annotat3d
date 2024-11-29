@@ -51,7 +51,8 @@ const MorphologyCard: React.FC<MorphologyCardProps> = ({ isVisible }) => {
                 slice: parseInt(sessionStorage.getItem('sliceValue') || '0', 10), // For numbers
                 axis: JSON.parse(sessionStorage.getItem('sliceName') || '"XY"'), // For strings with JSON-like quotes
             };
-            const flaskPath = '/morphology/binary/' + operation + '/';
+            //const flaskPath = '/morphology/binary/' + operation + '/';
+            const flaskPath = '/morphology/binary/morphology/';
             console.log('flaskPath: ', flaskPath);
             sfetch('POST', flaskPath, JSON.stringify(data), '')
                 .then(() => {
@@ -83,8 +84,8 @@ const MorphologyCard: React.FC<MorphologyCardProps> = ({ isVisible }) => {
                             >
                                 <IonSelectOption value="erosion">Shrink</IonSelectOption>
                                 <IonSelectOption value="dilation">Expand</IonSelectOption>
-                                <IonSelectOption value="close">Closing</IonSelectOption>
-                                <IonSelectOption value="open">Opening</IonSelectOption>
+                                <IonSelectOption value="closing">Closing</IonSelectOption>
+                                <IonSelectOption value="opening">Opening</IonSelectOption>
                                 <IonSelectOption value="smooth">Smooth</IonSelectOption>
                                 <IonSelectOption value="fillholes">Fill Holes</IonSelectOption>
                             </IonSelect>
