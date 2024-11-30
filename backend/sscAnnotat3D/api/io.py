@@ -9,6 +9,7 @@ from flask_cors import cross_origin
 from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo
 from werkzeug.exceptions import BadRequest
+from harpia.threshold import threshold as threshold_H
 
 app = Blueprint("io", __name__)
 
@@ -106,6 +107,13 @@ def get_image_histogram(image_id):
     histogram_info["maxValue"] = python_typer(img_max)
     histogram_info["minValue"] = python_typer(img_min)
     histogram_info["bins"] = bin_centers.tolist()
+
+    bins = len(histogram_info["bins"])
+    #computes otsu
+    value = threshold_H.otsu(histogram.astype(np.int32), int(bins) )
+    otsu_value = value*(img_max-img_min)/bins
+
+    histogram_info['otsu'] = round(otsu_value,3)
 
     return jsonify(histogram_info)
 

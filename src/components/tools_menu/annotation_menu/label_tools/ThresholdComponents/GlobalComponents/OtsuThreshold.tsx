@@ -12,8 +12,8 @@ const OtsuThreshold: React.FC<CurrentValue> = ({ lower, upper, onChange }) => {
 
     return (
         <IonItem>
-            <IonLabel>Otsu threshold</IonLabel>
-            {/* Add your additional implementation here */}
+            <IonLabel>Otsu threshold:</IonLabel>
+            {lower}
         </IonItem>
     );
 };
