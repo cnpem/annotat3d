@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     IonItem,
     IonLabel,
@@ -10,25 +10,26 @@ import {
     IonCard,
     IonCardHeader,
     IonCardContent,
-    IonSelect,
-    IonSelectOption,
-    IonRadio,
     IonRadioGroup,
+    IonRadio,
     IonGrid,
     IonRow,
     IonCol,
-    IonNote,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
+import LoadingComponent from '../../../../utils/LoadingComponent';
 
 // KernelInputWithInfo Component
 interface LocalGaussianThresholdProps {
     Sigma: number;
-    setSigma: (value: number) => void;
+    setSigma: React.Dispatch<React.SetStateAction<number>>;
     showToast: (message: string, duration: number) => void;
     timeToast: number;
     Threshold: number;
-    setThreshold: (value: number) => void;
+    setThreshold: React.Dispatch<React.SetStateAction<number>>;
+    ConvolutionType: string;
+    setConvolutionType: React.Dispatch<React.SetStateAction<string>>;
+    handleApplyLocalGaussian: () => void; // Add this
 }
 
 const LocalGaussianThreshold: React.FC<LocalGaussianThresholdProps> = ({
@@ -38,7 +39,27 @@ const LocalGaussianThreshold: React.FC<LocalGaussianThresholdProps> = ({
     timeToast,
     Threshold,
     setThreshold,
+    ConvolutionType,
+    setConvolutionType,
+    handleApplyLocalGaussian,
 }) => {
+    const [disabled, setDisabled] = useState<boolean>(false);
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
+    const [loadingMsg, setLoadingMsg] = useState<string>('');
+
+    const onApply = () => {
+        setDisabled(true);
+        setShowLoadingComp(true);
+        setLoadingMsg('Applying the threshold');
+
+        // Replace with your apply logic
+        setTimeout(() => {
+            handleApplyLocalGaussian();
+            setDisabled(false);
+            setShowLoadingComp(false);
+            showToast('Threshold applied successfully', timeToast);
+        }, 3000); // Simulating a delay for applying
+    };
     return (
         <>
             <IonItem>
@@ -65,26 +86,13 @@ const LocalGaussianThreshold: React.FC<LocalGaussianThresholdProps> = ({
                             </IonCardHeader>
                             <IonCardContent>
                                 The <strong>Sigma</strong> parameter defines the standard deviation of the Gaussian
-                                kernel used in local thresholding. It controls the degree of smoothing applied to the
-                                image:
-                                <ul>
-                                    <li>
-                                        <strong>Smaller Sigma:</strong> Focuses on finer details, making the
-                                        thresholding more sensitive to local variations but potentially more prone to
-                                        noise.
-                                    </li>
-                                    <li>
-                                        <strong>Larger Sigma:</strong> Blurs the image over a wider area, capturing
-                                        broader intensity patterns but potentially losing small details.
-                                    </li>
-                                </ul>
-                                Adjust sigma based on the scale of the features in the image to achieve optimal
-                                thresholding results.
+                                kernel used in local thresholding.
                             </IonCardContent>
                         </IonCard>
                     </IonContent>
                 </IonPopover>
             </IonItem>
+
             <IonItem>
                 <IonLabel>Threshold: </IonLabel>
                 <IonInput
@@ -114,6 +122,39 @@ const LocalGaussianThreshold: React.FC<LocalGaussianThresholdProps> = ({
                     </IonContent>
                 </IonPopover>
             </IonItem>
+
+            {/* Convolution Type Radio Group */}
+            <IonItem>
+                <IonLabel>Convolution Type:</IonLabel>
+            </IonItem>
+            <IonRadioGroup value={ConvolutionType} onIonChange={(e) => setConvolutionType(e.detail.value)}>
+                <IonGrid>
+                    <IonRow>
+                        <IonCol>
+                            <IonItem>
+                                <IonLabel>2D</IonLabel>
+                                <IonRadio slot="start" value="2d" />
+                            </IonItem>
+                        </IonCol>
+                        <IonCol>
+                            <IonItem>
+                                <IonLabel>3D</IonLabel>
+                                <IonRadio slot="start" value="3d" />
+                            </IonItem>
+                        </IonCol>
+                    </IonRow>
+                </IonGrid>
+            </IonRadioGroup>
+
+            {/* Apply Button */}
+            <IonItem lines="none">
+                <IonButton expand="block" disabled={disabled || Sigma < 0 || Threshold < 0} onClick={onApply}>
+                    Apply Threshold
+                </IonButton>
+            </IonItem>
+
+            {/* Loading Component */}
+            <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={loadingMsg} />
         </>
     );
 };

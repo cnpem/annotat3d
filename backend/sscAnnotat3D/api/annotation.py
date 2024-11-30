@@ -732,3 +732,389 @@ def apply_lasso(input_id: str):
     annot_module.labelmask_update(label_mask, label, mk_id, new_click=True)
 
     return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/niblack_preview/<input_id>", methods=["POST"])
+@cross_origin()
+def niblack_preview(input_id: str):
+    from harpia.threshold import threshold as threshold_H
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    try:
+        N = request.json["Kernel"]
+        W = request.json["Weight"]
+        slice_num = request.json["current_slice"]
+        axis = request.json["current_axis"]
+        label = request.json["label"]
+        curret_thresh_marker = request.json["curret_thresh_marker"]
+
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    #update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    img_slice = data_repo.get_image(input_id)[slice_range]
+
+    input_img_3d = np.ascontiguousarray(img_slice.reshape((1, *img_slice.shape)),dtype=np.float32)
+
+    output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
+
+    z,x,y = output_img.shape
+ 
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n',mk_id,curret_thresh_marker)
+    #New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    #its not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    #label_mask = img_slice >= 34000
+    threshold_H.niblack(input_img_3d,output_img,W,x,y,z,N,N,1)
+
+    label_mask = output_img>0
+
+    annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/niblack_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def niblack_apply(input_id: str):
+    from harpia.threshold import threshold as threshold_H
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        N = request.json["Kernel"]  # Kernel size
+        W = request.json["Weight"]  # Weight
+        convType = request.json["convolutionType"]  # Convolution type (2d or 3d)
+        slice_num = request.json["current_slice"]  # Current slice number
+        axis = request.json["current_axis"]  # Axis: XY, XZ, YZ
+        label = request.json["label"]  # Label to associate with mask
+        curret_thresh_marker = request.json["curret_thresh_marker"]  # Current marker
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id), dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img), dtype=np.float32)
+
+    z, x, y = input_img.shape
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, curret_thresh_marker)
+    # New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    # It's not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    if convType == "2d":
+        # convolution in x, y applied for all slices in the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[axis]
+        typeImg2d = input_img[0].dtype
+        for i in range(input_img.shape[axisIndex]):
+            # Apply threshold based on axis direction
+            if axisIndex == 0:  # XY plane
+                img = input_img[i]
+                threshold_H.niblack(img.reshape(1, x, y), output_img[i].reshape(1, x, y), W, x, y, 1, N, N, 1)
+
+            elif axisIndex == 1:  # XZ plane
+                input = np.ascontiguousarray(input_img[:, i, :].reshape((1, *input_img[:, i, :].shape)), dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:, i, :].reshape((1, *input_img[:, i, :].shape)), dtype=np.float32)
+                z, x, y = out.shape
+                threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
+                output_img[:, i, :] = out
+
+            elif axisIndex == 2:  # YZ plane
+                input = np.ascontiguousarray(input_img[:, :, i].reshape((1, *input_img[:, :, i].shape)), dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:, :, i].reshape((1, *input_img[:, :, i].shape)), dtype=np.float32)
+                z, x, y = out.shape
+                threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
+                output_img[:, :, i] = out
+
+    elif convType == "3d":
+        # Apply convolution in all x, y, z directions
+        threshold_H.niblack(input_img, output_img, W, x, y, z, N, N, N)
+
+    label_mask = output_img > 0
+    annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/sauvola_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def sauvola_apply(input_id: str):
+    from harpia.threshold import threshold as threshold_H
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        N = request.json["Kernel"]  # Kernel size
+        W = request.json["Weight"]  # Weight
+        R = request.json['Range'] # range
+        convType = request.json["convolutionType"]  # Convolution type (2d or 3d)
+        slice_num = request.json["current_slice"]  # Current slice number
+        axis = request.json["current_axis"]  # Axis: XY, XZ, YZ
+        label = request.json["label"]  # Label to associate with mask
+        curret_thresh_marker = request.json["curret_thresh_marker"]  # Current marker
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id), dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img), dtype=np.float32)
+
+    z, x, y = input_img.shape
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, curret_thresh_marker)
+    # New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    # It's not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    if convType == "2d":
+        # convolution in x, y applied for all slices in the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[axis]
+        typeImg2d = input_img[0].dtype
+        for i in range(input_img.shape[axisIndex]):
+            # Apply threshold based on axis direction
+            if axisIndex == 0:  # XY plane
+                img = input_img[i]
+                threshold_H.sauvola(img.reshape(1, x, y), output_img[i].reshape(1, x, y), W, R, x, y, 1, N, N, 1)
+
+            elif axisIndex == 1:  # XZ plane
+                input = np.ascontiguousarray(input_img[:, i, :].reshape((1, *input_img[:, i, :].shape)), dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:, i, :].reshape((1, *input_img[:, i, :].shape)), dtype=np.float32)
+                z, x, y = out.shape
+                threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
+                output_img[:, i, :] = out
+
+            elif axisIndex == 2:  # YZ plane
+                input = np.ascontiguousarray(input_img[:, :, i].reshape((1, *input_img[:, :, i].shape)), dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:, :, i].reshape((1, *input_img[:, :, i].shape)), dtype=np.float32)
+                z, x, y = out.shape
+                threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
+                output_img[:, :, i] = out
+
+    elif convType == "3d":
+        # Apply convolution in all x, y, z directions
+        threshold_H.sauvola(input_img, output_img, W, R, x, y, z, N, N, N)
+
+    label_mask = output_img > 0
+    annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)
+
+@app.route("/local_mean_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def local_mean_apply(input_id: str):
+    from harpia.threshold import threshold as threshold_H
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        N = request.json["Kernel"]  # Kernel size
+        W = request.json["Threshold"]  # Weight
+        convType = request.json["convolutionType"]  # Convolution type (2d or 3d)
+        slice_num = request.json["current_slice"]  # Current slice number
+        axis = request.json["current_axis"]  # Axis: XY, XZ, YZ
+        label = request.json["label"]  # Label to associate with mask
+        curret_thresh_marker = request.json["curret_thresh_marker"]  # Current marker
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id), dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img), dtype=np.float32)
+
+    z, x, y = input_img.shape
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, curret_thresh_marker)
+    # New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    # It's not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    if convType == "2d":
+        # convolution in x, y applied for all slices in the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[axis]
+        typeImg2d = input_img[0].dtype
+        for i in range(input_img.shape[axisIndex]):
+            # Apply threshold based on axis direction
+            if axisIndex == 0:  # XY plane
+                img = input_img[i]
+                threshold_H.local_mean(img.reshape(1, x, y), output_img[i].reshape(1, x, y), W, x, y, 1, N, N, 1)
+
+            elif axisIndex == 1:  # XZ plane
+                input = np.ascontiguousarray(input_img[:, i, :].reshape((1, *input_img[:, i, :].shape)), dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:, i, :].reshape((1, *input_img[:, i, :].shape)), dtype=np.float32)
+                z, x, y = out.shape
+                threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
+                output_img[:, i, :] = out
+
+            elif axisIndex == 2:  # YZ plane
+                input = np.ascontiguousarray(input_img[:, :, i].reshape((1, *input_img[:, :, i].shape)), dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:, :, i].reshape((1, *input_img[:, :, i].shape)), dtype=np.float32)
+                z, x, y = out.shape
+                threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
+                output_img[:, :, i] = out
+
+    elif convType == "3d":
+        # Apply convolution in all x, y, z directions
+        threshold_H.local_mean(input_img, output_img, W, x, y, z, N, N, N)
+
+    label_mask = output_img > 0
+    annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/local_gaussian_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def local_gaussian_apply(input_id: str):
+    from harpia.threshold import threshold as threshold_H
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        S = request.json["Sigma"]  # Kernel size
+        W = request.json["Threshold"]  # Weight
+        convType = request.json["convolutionType"]  # Convolution type (2d or 3d)
+        slice_num = request.json["current_slice"]  # Current slice number
+        axis = request.json["current_axis"]  # Axis: XY, XZ, YZ
+        label = request.json["label"]  # Label to associate with mask
+        curret_thresh_marker = request.json["curret_thresh_marker"]  # Current marker
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id), dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img), dtype=np.float32)
+
+    z, x, y = input_img.shape
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, curret_thresh_marker)
+    # New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    # It's not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    if convType == "2d":
+        # convolution in x, y applied for all slices in the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[axis]
+        typeImg2d = input_img[0].dtype
+        for i in range(input_img.shape[axisIndex]):
+            # Apply threshold based on axis direction
+            if axisIndex == 0:  # XY plane
+                img = input_img[i]
+                threshold_H.local_gaussian(img.reshape(1, x, y), output_img[i].reshape(1, x, y), x, y, 1, S,W,0)
+
+            elif axisIndex == 1:  # XZ plane
+                input = np.ascontiguousarray(input_img[:, i, :].reshape((1, *input_img[:, i, :].shape)), dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:, i, :].reshape((1, *input_img[:, i, :].shape)), dtype=np.float32)
+                z, x, y = out.shape
+                threshold_H.local_gaussian(input, out, x, y, z, S,W,0)
+                output_img[:, i, :] = out
+
+            elif axisIndex == 2:  # YZ plane
+                input = np.ascontiguousarray(input_img[:, :, i].reshape((1, *input_img[:, :, i].shape)), dtype=np.float32)
+                out = np.ascontiguousarray(output_img[:, :, i].reshape((1, *input_img[:, :, i].shape)), dtype=np.float32)
+                z, x, y = out.shape
+                threshold_H.local_gaussian(input, out, x, y, z, S, W,0)
+                output_img[:, :, i] = out
+
+    elif convType == "3d":
+        # Apply convolution in all x, y, z directions
+        threshold_H.local_gaussian(input_img, output_img, x, y, z, S,W,1)
+
+    label_mask = output_img > 0
+    annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)

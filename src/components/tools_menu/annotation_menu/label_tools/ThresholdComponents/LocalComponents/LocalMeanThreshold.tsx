@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     IonItem,
     IonLabel,
@@ -10,25 +10,25 @@ import {
     IonCard,
     IonCardHeader,
     IonCardContent,
-    IonSelect,
-    IonSelectOption,
-    IonRadio,
     IonRadioGroup,
+    IonRadio,
     IonGrid,
     IonRow,
     IonCol,
-    IonNote,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
+import LoadingComponent from '../../../../utils/LoadingComponent';
 
-// KernelInputWithInfo Component
 interface LocalMeanThresholdProps {
     Kernel: number;
-    setKernelSize: (value: number) => void;
+    setKernelSize: React.Dispatch<React.SetStateAction<number>>;
     showToast: (message: string, duration: number) => void;
     timeToast: number;
     Threshold: number;
-    setThreshold: (value: number) => void;
+    setThreshold: React.Dispatch<React.SetStateAction<number>>;
+    ConvolutionType: string;
+    setConvolutionType: React.Dispatch<React.SetStateAction<string>>;
+    handleApplyLocalMean: () => void; // Add this
 }
 
 const LocalMeanThreshold: React.FC<LocalMeanThresholdProps> = ({
@@ -38,9 +38,30 @@ const LocalMeanThreshold: React.FC<LocalMeanThresholdProps> = ({
     timeToast,
     Threshold,
     setThreshold,
+    ConvolutionType,
+    setConvolutionType,
+    handleApplyLocalMean,
 }) => {
+    const [disabled, setDisabled] = useState<boolean>(false);
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
+    const [loadingMsg, setLoadingMsg] = useState<string>('');
+
+    const onApply = () => {
+        setDisabled(true);
+        setShowLoadingComp(true);
+        setLoadingMsg('Applying the threshold');
+
+        // Replace with your apply logic
+        setTimeout(() => {
+            handleApplyLocalMean();
+            setDisabled(false);
+            setShowLoadingComp(false);
+            showToast('Threshold applied successfully', timeToast);
+        }, 3000); // Simulating a delay for applying
+    };
     return (
         <>
+            {/* Kernel Input */}
             <IonItem>
                 <IonLabel>Kernel: </IonLabel>
                 <IonInput
@@ -54,24 +75,25 @@ const LocalMeanThreshold: React.FC<LocalMeanThresholdProps> = ({
                             : void showToast('Please insert a valid number!', timeToast)
                     }
                 ></IonInput>
-                <IonButton id="showKernelMeanInfo" slot="end" size="small" fill="clear">
+                <IonButton id="showKernelInfo" slot="end" size="small" fill="clear">
                     <IonIcon icon={informationCircleOutline} />
                 </IonButton>
-                <IonPopover trigger="showKernelMeanInfo" reference="event">
+                <IonPopover trigger="showKernelInfo" reference="event">
                     <IonContent>
                         <IonCard>
                             <IonCardHeader>
                                 <div style={{ fontWeight: 600, fontSize: 14 }}>Kernel Size</div>
                             </IonCardHeader>
                             <IonCardContent>
-                                Specifies the size of the kernel, which defines the area/volume around each pixel/voxel
-                                that the filter considers when processing the image. A larger kernel means more
-                                neighboring elements are included in the calculation.
+                                Specifies the size of the kernel, defining the area around each pixel that the filter
+                                considers when processing the image. Larger kernels include more neighboring elements.
                             </IonCardContent>
                         </IonCard>
                     </IonContent>
                 </IonPopover>
             </IonItem>
+
+            {/* Threshold Input */}
             <IonItem>
                 <IonLabel>Threshold: </IonLabel>
                 <IonInput
@@ -95,12 +117,45 @@ const LocalMeanThreshold: React.FC<LocalMeanThresholdProps> = ({
                                 <div style={{ fontWeight: 600, fontSize: 14 }}>Threshold Value</div>
                             </IonCardHeader>
                             <IonCardContent>
-                                The Threshold parameter determines the minimum value required for limiarization.
+                                The Threshold parameter determines the minimum value required for binarization.
                             </IonCardContent>
                         </IonCard>
                     </IonContent>
                 </IonPopover>
             </IonItem>
+
+            {/* Convolution Type Radio Group */}
+            <IonItem>
+                <IonLabel>Convolution Type:</IonLabel>
+            </IonItem>
+            <IonRadioGroup value={ConvolutionType} onIonChange={(e) => setConvolutionType(e.detail.value)}>
+                <IonGrid>
+                    <IonRow>
+                        <IonCol>
+                            <IonItem>
+                                <IonLabel>2D</IonLabel>
+                                <IonRadio slot="start" value="2d" />
+                            </IonItem>
+                        </IonCol>
+                        <IonCol>
+                            <IonItem>
+                                <IonLabel>3D</IonLabel>
+                                <IonRadio slot="start" value="3d" />
+                            </IonItem>
+                        </IonCol>
+                    </IonRow>
+                </IonGrid>
+            </IonRadioGroup>
+
+            {/* Apply Button */}
+            <IonItem lines="none">
+                <IonButton expand="block" disabled={disabled || Kernel < 3 || Threshold < 0} onClick={onApply}>
+                    Apply Threshold
+                </IonButton>
+            </IonItem>
+
+            {/* Loading Component */}
+            <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={loadingMsg} />
         </>
     );
 };
