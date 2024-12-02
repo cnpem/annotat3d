@@ -103,7 +103,9 @@ const MorphologyCard: React.FC<MorphologyCardProps> = ({ isVisible }) => {
                             >
                                 <IonSelectOption value="square">Square</IonSelectOption>
                                 <IonSelectOption value="circle">Circle</IonSelectOption>
-                                <IonSelectOption value="sphere">Sphere</IonSelectOption>
+                                <IonSelectOption value="vertical_line">Vertical Line</IonSelectOption>
+                                <IonSelectOption value="horizontal_line">Horizontal Line</IonSelectOption>
+                                <IonSelectOption value="cross">Cross</IonSelectOption>
                             </IonSelect>
                         </IonItem>
                         <IonItem>
