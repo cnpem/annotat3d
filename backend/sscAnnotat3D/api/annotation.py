@@ -1117,4 +1117,139 @@ def local_gaussian_apply(input_id: str):
     label_mask = output_img > 0
     annot_module.labelmask_update(label_mask, label, mk_id, new_click)
 
+    print(request.json)
+
+    return jsonify(annot_module.current_mk_id)
+
+@app.route("/watershed_apply_2d/<input_id>", methods=["POST"])
+@cross_origin()
+def watershed_apply(input_id: str):
+    from harpia.filters import (canny, sobel, prewitt)
+    from harpia.watershed import watershed
+    print(request.json)
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        #parameters
+        input_filter = request.json.get("inputFilter")
+        algorithm = request.json.get("algorithm")
+        dimension = request.json.get("dimension")
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id), dtype=np.float32)
+    relief_img = np.zeros_like(input_img, dtype=np.float32)
+
+    z, x, y = input_img.shape
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, current_thresh_marker)
+    # New annotation
+    if mk_id != current_thresh_marker:
+        new_click = True
+    else:
+        new_click = False
+    if dimension == '2d':
+        # convolution in x, y applied for all slices in the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[axis]
+        typeImg2d = input_img[0].dtype
+        # Apply threshold based on axis direction
+        if axisIndex == 0:  # XY plane
+            img = input_img[slice_num]
+
+            if input_filter == 'sobel':
+                sobel(img.reshape(1, x, y), relief_img[slice_num].reshape(1, x, y), x, y, 1, 0)
+
+            elif input_filter == 'prewitt':
+                prewitt(img.reshape(1, x, y), relief_img[slice_num].reshape(1, x, y), x, y, 1, 0)
+
+        elif axisIndex == 1:  # XZ plane
+            input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(relief_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            z, x, y = out.shape
+
+            if input_filter == 'sobel':
+                sobel(input, out, x, y, z,0)
+
+            elif input_filter == 'prewitt':
+                prewitt(input, out, x, y, z,0)
+
+            relief_img[:, slice_num, :] = out
+
+        elif axisIndex == 2:  # YZ plane
+            input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(relief_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            z, x, y = out.shape
+                    
+            if input_filter == 'sobel':
+                sobel(input, out, x, y, z,0)
+
+            elif input_filter == 'prewitt':
+                prewitt(input, out, x, y, z,0)
+                        
+            relief_img[:, :, slice_num] = out
+
+        #now we get the markers using the labels
+        markers = annot_module.annotation_image[slice_range].astype(np.int32)
+
+        watershed_relief = -relief_img[slice_range].astype(np.int32)
+        x,y = markers.shape
+
+        watershed.watershed_meyers_2d(watershed_relief,markers,-1,x,y)
+
+        label_mask = np.zeros_like(relief_img)
+        label_mask[slice_range] = markers
+        annot_module.annotation_image[slice_range] = markers
+
+    else:
+        if input_filter == 'sobel':
+            sobel(input_img, relief_img, x, y, z, 1)
+
+        elif input_filter == 'prewitt':
+            prewitt(input_img, relief_img, x, y, z, 1)
+
+        markers = annot_module.annotation_image.astype(np.int32)
+        watershed_relief = -relief_img.astype(np.int32)
+
+        print('relief shape:',watershed_relief.shape)
+        print('markers shape:',markers.shape)
+
+        #watershed.watershed_meyers_3d(watershed_relief,markers,-1,x,y,z)
+        z,x,y = watershed_relief.shape
+
+        for i in range(z):
+            watershed.watershed_meyers_2d(watershed_relief[i], markers[i], -1, x, y)
+
+        img_label = data_repo.get_image('label')
+
+        if img_label is None:
+            img_label = np.zeros_like(input_img)
+
+        print("img_label shape:", img_label.shape)
+
+        img_label[markers >= 0] = markers[markers >= 0]
+
+        data_repo.set_image("label",markers)
+
     return jsonify(annot_module.current_mk_id)

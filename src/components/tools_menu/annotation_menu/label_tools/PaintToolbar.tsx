@@ -27,6 +27,7 @@ import lassoCursor from '../../../../public/lasso_cursor.svg';
 
 import MagicWandCard from './MagicWandCard'; // Ensure this path is correct
 import ThresholdCard from './ThresholdCard'; // Ensure this path is correct
+import WatershedCard from './WatershedCard'; // Ensure this path is correct
 import { dispatch } from '../../../../utils/eventbus';
 
 const PaintToolbar: React.FC = () => {
@@ -149,15 +150,7 @@ const PaintToolbar: React.FC = () => {
                 </div>
 
                 <div className={activeCard === 'watershed' ? 'visible' : 'hidden'}>
-                    <IonCard>
-                        <IonCardContent>
-                            <IonList>
-                                <IonItem button>Watershed Option 1</IonItem>
-                                <IonItem button>Watershed Option 2</IonItem>
-                                <IonItem button>Watershed Option 3</IonItem>
-                            </IonList>
-                        </IonCardContent>
-                    </IonCard>
+                    <WatershedCard isVisible={activeCard === 'watershed'} />
                 </div>
 
                 <div className={activeCard === 'threshold' ? 'visible' : 'hidden'}>
