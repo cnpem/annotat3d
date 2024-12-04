@@ -28,6 +28,8 @@ import lassoCursor from '../../../../public/lasso_cursor.svg';
 import MagicWandCard from './MagicWandCard'; // Ensure this path is correct
 import ThresholdCard from './ThresholdCard'; // Ensure this path is correct
 import WatershedCard from './WatershedCard'; // Ensure this path is correct
+import RemoveIslandsCard from './RemoveIslandsCard';
+import ObjectSeparationCard from './ObjectSeparationCard'; // Import the ObjectSeparationCard
 import { dispatch } from '../../../../utils/eventbus';
 
 const PaintToolbar: React.FC = () => {
@@ -43,14 +45,6 @@ const PaintToolbar: React.FC = () => {
         }
     };
 
-    /* This hook ensures that when the activeCard state changes, 
-    the page scrolls to the new content. The effect triggers the scrollIntoView method, 
-    which scrolls the page to the start of the new content area.
-
-    CSS Classes for Visibility and div: By toggling between visible and hidden CSS classes, 
-    the solution maintains the scroll position without jumping back up when the content changes. 
-    The hidden content is not removed from the DOM, preventing the page from scrolling back up.
-    */
     useEffect(() => {
         if (activeCard && contentRef.current) {
             contentRef.current.scrollIntoView({ block: 'end', behavior: 'smooth' });
@@ -154,19 +148,11 @@ const PaintToolbar: React.FC = () => {
                 </div>
 
                 <div className={activeCard === 'threshold' ? 'visible' : 'hidden'}>
-                    <ThresholdCard isVisible={activeCard === 'magicWand'} />
+                    <ThresholdCard isVisible={activeCard === 'threshold'} />
                 </div>
 
                 <div className={activeCard === 'removeIsland' ? 'visible' : 'hidden'}>
-                    <IonCard>
-                        <IonCardContent>
-                            <IonList>
-                                <IonItem button>Remove Island Option 1</IonItem>
-                                <IonItem button>Remove Island Option 2</IonItem>
-                                <IonItem button>Remove Island Option 3</IonItem>
-                            </IonList>
-                        </IonCardContent>
-                    </IonCard>
+                    <RemoveIslandsCard isVisible={activeCard === 'removeIsland'} />
                 </div>
 
                 <div className={activeCard === 'labeling' ? 'visible' : 'hidden'}>
@@ -182,15 +168,7 @@ const PaintToolbar: React.FC = () => {
                 </div>
 
                 <div className={activeCard === 'objectSeparation' ? 'visible' : 'hidden'}>
-                    <IonCard>
-                        <IonCardContent>
-                            <IonList>
-                                <IonItem button>Object Separation Option 1</IonItem>
-                                <IonItem button>Object Separation Option 2</IonItem>
-                                <IonItem button>Object Separation Option 3</IonItem>
-                            </IonList>
-                        </IonCardContent>
-                    </IonCard>
+                    <ObjectSeparationCard isVisible={activeCard === 'objectSeparation'} />
                 </div>
             </div>
         </IonCardContent>
