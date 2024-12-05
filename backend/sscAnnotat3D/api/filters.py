@@ -222,7 +222,7 @@ def anisodiff_preview(input_id: str, output_id: str):
 
         anisotropic_diffusion3D(input_img_vol, total_iterations, delta_t, kappa, diffusion_option)
 
-        output_img = input_img_vol[slice_num_map]
+        output_img = input_img_vol[..., 5]
 
     else:
         slice_range = utils.get_3d_slice_range_from(axis, slice_num)
@@ -255,13 +255,17 @@ def anisodiff_apply(input_id: str, output_id: str):
     aniso3D = request.json["aniso3D"]
 
     if aniso3D:
-        output_img = input_img.astype("float32")
-        anisotropic_diffusion3D(output_img, total_iterations, delta_t, kappa, diffusion_option)
+        output_img = input_img.astype("float32").copy()
+        try:
+            anisotropic_diffusion3D(output_img, total_iterations, delta_t, kappa, diffusion_option)
+        except Exception as e:
+            print("Error" + str(e))
+            return "Error " + str(e), 400
     else:
         # apply 2D aniso diffusion in xy slices
         output_img = []
         for image_slice in input_img:
-            image_slice = image_slice.astype("float32")
+            image_slice = image_slice.astype("float32").copy()
             anisotropic_diffusion2D(image_slice, total_iterations, delta_t, kappa, diffusion_option)
             output_img.append(image_slice)
 

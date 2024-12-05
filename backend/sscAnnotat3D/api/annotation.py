@@ -857,3 +857,68 @@ def apply_active_contour(input_id: str, mode_id: str):
 
     print(f"Execution completed in {time.time() - start_time:.2f} seconds")
     return jsonify(coords_list)
+
+@app.route("/active_contour_checkboard/<input_id>", methods=["POST"])
+@cross_origin()
+def apply_active_contour_checkboard(input_id: str):
+    """
+    Apply active contours using the checkboard initialization method.
+
+    Args:
+        input_id (str): Identifier for the input.
+
+    Returns:
+        JSON or str: Coordinates list for execution or "success" for finalization.
+    """
+    import time
+
+    start_time = time.time()
+
+    # Step 1: Parse Parameters
+    try:
+        params = {
+            "label": request.json["label"],
+            "slice_num": request.json["slice_num"],
+            "axis": request.json["axis"],
+            "iterations": int(request.json["iterations"]),
+            "smoothing": int(request.json["smoothing"]),
+            "weight": float(request.json["weight"]),
+            "checkboard_size": int(request.json.get("checkboard_size", 3)),
+            "background": bool(request.json.get("background", True))
+        }
+    except Exception as e:
+        return handle_exception(str(e))
+
+    annot_module = module_repo.get_module("annotation")
+
+    # Step 2: Preprocessing - Set Up Current Slice and Axis
+    axis_dim = utils.get_axis_num(params["axis"])
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(params["slice_num"])
+
+    # Get image slice and convert to float
+    slice_range = utils.get_3d_slice_range_from(params["axis"], params["slice_num"])
+    img_slice = img_as_float32(data_repo.get_image(input_id)[slice_range])
+    
+    # Step 3: Initialize Level Set using Checkerboard
+    init_ls = np.zeros(img_slice.shape, dtype=bool)
+    level_set = checkerboard_level_set(img_slice.shape, params["checkboard_size"]) > 0
+    init_ls[1:-1, 1:-1] = level_set[1:-1, 1:-1]
+
+    level_set = morph_2D_chan_vese(
+        img_slice, init_ls, params["iterations"],
+        lambda1=params["weight"], lambda2=1.0, smoothing=params["smoothing"]
+    )
+
+    # Step 5: Adjust Level Set for Intensity
+    if (params["background"]==True):
+        print('\n invert level set \n')
+        level_set[1:-1, 1:-1] = ~level_set[1:-1, 1:-1]
+
+    # Step 6: Finalization Logic
+    # Update annotation with the final level set
+    mk_id = annot_module.current_mk_id
+    annot_module.labelmask_update(level_set, params["label"], mk_id, new_click=True)
+
+    print(f"Finalization of checkboard completed in {time.time() - start_time:.2f} seconds")
+    return jsonify(annot_module.current_mk_id)

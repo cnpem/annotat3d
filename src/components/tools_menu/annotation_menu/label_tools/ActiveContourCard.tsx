@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     IonList,
     IonItem,
@@ -12,11 +12,14 @@ import {
     IonSelectOption,
     IonToggle,
     IonText,
+    IonButton,
+    IonCheckbox,
 } from '@ionic/react';
 import '../../vis_menu/HistogramAlignment.css';
 import { dispatch } from '../../../../utils/eventbus';
 import { useStorageState } from 'react-storage-hooks';
 import InfoPopover from '../../utils/InfoPopover'; // Reusable InfoPopover Component
+import { sfetch } from '../../../../utils/simplerequest';
 
 interface ActiveContourCardProps {
     isVisible: boolean;
@@ -36,6 +39,11 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
     const [threshold, setThreshold] = useStorageState<number>(sessionStorage, 'GeodesicThreshold', 40);
     const [sigma, setSigma] = useStorageState<number>(sessionStorage, 'GeodesicSigma', 1);
     const [balloonForce, setBalloonForce] = useStorageState<boolean>(sessionStorage, 'BalloonForce', true);
+
+    // New Checkboard Parameters
+    const [useCheckboard, setUseCheckboard] = useState<boolean>(false);
+    const [checkboardSize, setCheckboardSize] = useState<number>(3);
+    const [backgroundAnnot, setBackgroundAnnot] = useState<boolean>(true);
 
     useEffect(() => {
         if (isVisible) {
@@ -73,8 +81,40 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
                 case 'sigma':
                     setSigma(parsedValue as number);
                     break;
+                case 'checkboardSize':
+                    setCheckboardSize(parsedValue as number);
+                    break;
             }
         }
+    };
+
+    const applyCheckboardLevelSet = () => {
+        const sliceValue = parseInt(sessionStorage.getItem('sliceValue') || '0', 10);
+        const selectedLabel = parseInt(sessionStorage.getItem('selectedLabel') || '0', 10);
+        const sliceName = JSON.parse(sessionStorage.getItem('sliceName') || '"XY"');
+        const params = {
+            iterations,
+            smoothing,
+            weight,
+            method,
+            threshold,
+            balloon_force: balloonForce,
+            sigma,
+            axis: sliceName,
+            slice_num: sliceValue,
+            label: selectedLabel,
+            checkboard_size: checkboardSize,
+            background: backgroundAnnot,
+        };
+        // Send finalization request to backend
+        sfetch('POST', '/active_contour_checkboard/image', JSON.stringify(params), 'json')
+            .then((finalizeReponse) => {
+                console.log('Active contour finalized:', finalizeReponse);
+                dispatch('annotationChanged', null); // Notify annotation changes
+            })
+            .catch((error) => {
+                console.error('Error finalizing active contour:', error);
+            });
     };
 
     return (
@@ -152,6 +192,44 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
                             content="Determines the algorithm's focus on regions inside or outside the contour: Weight > 1 emphasizes inside pixels, Weight < 1 emphasizes outside pixels, and Weight = 1 gives equal importance to both."
                         />
                     </IonItem>
+
+                    {/* Checkboard Settings */}
+                    <IonItem>
+                        <IonLabel>Use Checkboard: </IonLabel>
+                        <IonToggle
+                            checked={useCheckboard}
+                            onIonChange={(e: CustomEvent) => setUseCheckboard(e.detail.checked)}
+                        />
+                    </IonItem>
+
+                    {useCheckboard && (
+                        <>
+                            <IonItem>
+                                <IonLabel>Checkboard Size: </IonLabel>
+                                <IonInput
+                                    type="number"
+                                    inputMode="numeric"
+                                    value={checkboardSize}
+                                    onIonChange={(e: CustomEvent) =>
+                                        handleValueChange('checkboardSize', e.detail.value!)
+                                    }
+                                    placeholder="Enter checkboard size"
+                                />
+                            </IonItem>
+
+                            <IonItem>
+                                <IonLabel>Background: </IonLabel>
+                                <IonCheckbox
+                                    checked={backgroundAnnot}
+                                    onIonChange={(e: CustomEvent) => setBackgroundAnnot(e.detail.checked)}
+                                />
+                            </IonItem>
+
+                            <IonItem>
+                                <IonButton onClick={applyCheckboardLevelSet}>Apply Checkboard Level Set</IonButton>
+                            </IonItem>
+                        </>
+                    )}
                 </>
             )}
 
@@ -216,7 +294,7 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
                             value={sigma.toString()}
                             onIonChange={(e: CustomEvent) => handleValueChange('sigma', e.detail.value!)}
                             placeholder="Enter threshold value"
-                            step="1"
+                            step="0.5"
                         />
                         <InfoPopover
                             triggerId="geodesicSigmaInfo"

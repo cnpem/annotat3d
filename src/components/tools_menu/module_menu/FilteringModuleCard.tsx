@@ -463,7 +463,7 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
             delta_t: timeStep,
             kappa,
             diffusion_option: diffusionOption,
-            aniso3D: anisoNeighbour === '2D',
+            aniso3D: anisoNeighbour === '3D',
             axis: curSlice.axis,
             slice: curSlice.slice,
         };
@@ -494,7 +494,7 @@ const AnisotropicDiffusionFilteringModuleCard: React.FC = () => {
             delta_t: timeStep,
             kappa,
             diffusion_option: diffusionOption,
-            aniso3D: anisoNeighbour === '2D',
+            aniso3D: anisoNeighbour === '3D',
             axis: curSlice.axis,
             slice: curSlice.slice,
         };
