@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     IonCard,
     IonCardContent,
@@ -9,11 +9,15 @@ import {
     IonSelectOption,
     IonInput,
     IonButton,
+    IonRadioGroup,
+    IonRadio,
+    IonRow,
+    IonCol,
+    IonGrid,
 } from '@ionic/react';
 
 import { sfetch } from '../../../../utils/simplerequest';
 import { dispatch, useEventBus } from '../../../../utils/eventbus';
-
 interface MorphologyCardProps {
     isVisible: boolean;
 }
@@ -22,6 +26,14 @@ const MorphologyCard: React.FC<MorphologyCardProps> = ({ isVisible }) => {
     const [operation, setOperation] = useState<string | undefined>();
     const [kernelShape, setKernelShape] = useState<string | undefined>();
     const [kernelSize, setKernelSize] = useState<number>(1);
+    const [imageType, setImageType] = useState('annotation');
+    const [kernelShapeOptions, setKernelShapeOptions] = useState([
+        'square',
+        'circle',
+        'vertical_line',
+        'horizontal_line',
+        'cross',
+    ]);
 
     const handleOperationChange = (selectedValue: string | undefined) => {
         setOperation(selectedValue);
@@ -51,13 +63,14 @@ const MorphologyCard: React.FC<MorphologyCardProps> = ({ isVisible }) => {
                 slice: parseInt(sessionStorage.getItem('sliceValue') || '0', 10), // For numbers
                 axis: JSON.parse(sessionStorage.getItem('sliceName') || '"XY"'), // For strings with JSON-like quotes
             };
-            //const flaskPath = '/morphology/binary/' + operation + '/';
-            const flaskPath = '/morphology/binary/morphology/';
+            console.log('Data passed to morphology function:', data); // Log the data
+            const flaskPath = '/morphology/binary/morphology/' + imageType + '/';
             console.log('flaskPath: ', flaskPath);
             sfetch('POST', flaskPath, JSON.stringify(data), '')
                 .then(() => {
                     console.log('Applied ', operation, ' operation!');
                     dispatch('annotationChanged', null);
+                    dispatch('labelChanged', '');
                 })
                 .catch((error) => {
                     console.log(error.error_msg);
@@ -67,11 +80,52 @@ const MorphologyCard: React.FC<MorphologyCardProps> = ({ isVisible }) => {
 
     const isFillHoles = operation === 'fillholes';
 
+    // Update kernel shape options based on imageType selection
+    useEffect(() => {
+        if (imageType === 'label3D') {
+            setKernelShapeOptions([
+                'cube',
+                'sphere',
+                'vertical_cylinder',
+                'horizontal_rectangle_x',
+                'horizontal_rectangle_y',
+                'horizontal_rectangle_z',
+                '3D_cross',
+            ]);
+        } else {
+            setKernelShapeOptions(['square', 'circle', 'vertical_line', 'horizontal_line', 'cross']);
+        }
+    }, [imageType]);
+
     return (
         <div className={isVisible ? 'visible' : 'hidden'}>
             <IonCard>
                 <IonCardContent>
                     <IonList>
+                        <IonItem>
+                            <IonRadioGroup
+                                value={imageType}
+                                onIonChange={(e) => setImageType(e.detail.value)} // Use new handler
+                                style={{ width: '100%' }}
+                            >
+                                <IonGrid>
+                                    <IonRow class="ion-justify-content-center ion-align-items-center">
+                                        <IonCol size="auto">
+                                            <IonItem lines="none">
+                                                <IonRadio slot="start" value="annotation2D" />
+                                                <IonLabel>Annotation (2D)</IonLabel>
+                                            </IonItem>
+                                        </IonCol>
+                                        <IonCol size="auto">
+                                            <IonItem lines="none">
+                                                <IonRadio slot="start" value="label3D" />
+                                                <IonLabel>Label (3D)</IonLabel>
+                                            </IonItem>
+                                        </IonCol>
+                                    </IonRow>
+                                </IonGrid>
+                            </IonRadioGroup>
+                        </IonItem>
                         <IonItem>
                             <IonLabel>Operation</IonLabel>
                             <IonSelect
@@ -101,11 +155,12 @@ const MorphologyCard: React.FC<MorphologyCardProps> = ({ isVisible }) => {
                                 onIonChange={(e) => setKernelShape(e.detail.value)}
                                 disabled={isFillHoles}
                             >
-                                <IonSelectOption value="square">Square</IonSelectOption>
-                                <IonSelectOption value="circle">Circle</IonSelectOption>
-                                <IonSelectOption value="vertical_line">Vertical Line</IonSelectOption>
-                                <IonSelectOption value="horizontal_line">Horizontal Line</IonSelectOption>
-                                <IonSelectOption value="cross">Cross</IonSelectOption>
+                                {kernelShapeOptions.map((option) => (
+                                    <IonSelectOption key={option} value={option}>
+                                        {option.charAt(0).toUpperCase() + option.slice(1)}{' '}
+                                        {/* Capitalize the first letter */}
+                                    </IonSelectOption>
+                                ))}
                             </IonSelect>
                         </IonItem>
                         <IonItem>
