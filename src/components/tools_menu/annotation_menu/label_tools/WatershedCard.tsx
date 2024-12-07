@@ -67,19 +67,6 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
         <IonCard>
             <IonCardContent>
                 <IonList>
-                    {/* Watershed Algorithm Selection */}
-                    <IonItem button onClick={() => setIsAlgorithmOpen(!isAlgorithmOpen)}>
-                        <IonLabel>Watershed Algorithms</IonLabel>
-                    </IonItem>
-                    {isAlgorithmOpen && (
-                        <IonRadioGroup value={algorithm} onIonChange={(e) => setAlgorithm(e.detail.value)}>
-                            <IonItem lines="none">
-                                <IonLabel>Meyers Algorithm</IonLabel>
-                                <IonRadio value="meyers-algorithm" />
-                            </IonItem>
-                        </IonRadioGroup>
-                    )}
-
                     {/* Input Filter Selection */}
                     <IonItem button onClick={() => setIsInputFilterOpen(!isInputFilterOpen)}>
                         <IonLabel>Input Image Filter</IonLabel>
