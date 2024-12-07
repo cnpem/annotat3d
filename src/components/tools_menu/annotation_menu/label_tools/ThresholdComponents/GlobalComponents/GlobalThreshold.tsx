@@ -103,6 +103,7 @@ const GlobalThreshold: React.FC = () => {
         min: 100,
     });
 
+    const [otsuValue, setOtsuValue] = useState<number>(0);
     const [currentValue, setCurrentValue] = useState({
         lower: 0,
         upper: 100,
@@ -164,13 +165,14 @@ const GlobalThreshold: React.FC = () => {
                         ],
                     };
                     setHistogramData(updatedHistogram);
-                    void setShowLoadingCompPS(false);
                     sethistogramMinMaxValue({ min: histogram.minValue, max: histogram.maxValue });
+                    setOtsuValue(histogram.otsu); // Update the Otsu value here
+                    setShowLoadingCompPS(false);
                 })
                 .catch((error) => {
                     console.log('Error while acquiring histogram');
                     console.log(error.error_msg);
-                    void setShowLoadingCompPS(false);
+                    setShowLoadingCompPS(false);
                 });
         } else if (selectedDimension === '3D') {
             // Fetch or compute 3D histogram data
@@ -195,6 +197,7 @@ const GlobalThreshold: React.FC = () => {
                     };
                     setHistogramData(updatedHistogram);
                     sethistogramMinMaxValue({ min: histogram.minValue, max: histogram.maxValue });
+                    setOtsuValue(histogram.otsu); // Update the Otsu value here
                     setShowLoadingCompPS(false);
                 })
                 .catch((error) => {
@@ -339,7 +342,7 @@ const GlobalThreshold: React.FC = () => {
             </IonItem>
 
             <IonItem>
-                <OtsuThreshold lower={currentValue.lower} upper={currentValue.upper} onChange={handleValueChange} />
+                <IonLabel>Otsu Value: {otsuValue}</IonLabel>
             </IonItem>
         </IonList>
     );

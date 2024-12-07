@@ -922,3 +922,838 @@ def apply_active_contour_checkboard(input_id: str):
 
     print(f"Finalization of checkboard completed in {time.time() - start_time:.2f} seconds")
     return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/niblack_preview/<input_id>", methods=["POST"])
+@cross_origin()
+def niblack_preview(input_id: str):
+    from harpia.threshold import threshold as threshold_H
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    try:
+        N = request.json["Kernel"]
+        W = request.json["Weight"]
+        slice_num = request.json["current_slice"]
+        axis = request.json["current_axis"]
+        label = request.json["label"]
+        curret_thresh_marker = request.json["curret_thresh_marker"]
+
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    #update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    img_slice = data_repo.get_image(input_id)[slice_range]
+
+    input_img_3d = np.ascontiguousarray(img_slice.reshape((1, *img_slice.shape)),dtype=np.float32)
+
+    output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
+
+    z,x,y = output_img.shape
+ 
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n',mk_id,curret_thresh_marker)
+    #New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    #its not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    #label_mask = img_slice >= 34000
+    threshold_H.niblack(input_img_3d,output_img,W,x,y,z,N,N,1)
+
+    label_mask = output_img>0
+
+    annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/niblack_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def niblack_apply(input_id: str):
+    from harpia.threshold import threshold as threshold_H
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        N = request.json["Kernel"]  # Kernel size
+        W = request.json["Weight"]  # Weight
+        convType = request.json["convolutionType"]  # Convolution type (2d or 3d)
+        slice_num = request.json["current_slice"]  # Current slice number
+        axis = request.json["current_axis"]  # Axis: XY, XZ, YZ
+        label = request.json["label"]  # Label to associate with mask
+        curret_thresh_marker = request.json["curret_thresh_marker"]  # Current marker
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id), dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img), dtype=np.float32)
+
+    z, x, y = input_img.shape
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, curret_thresh_marker)
+    # New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    # It's not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    if convType == "2d":
+        # convolution in x, y applied for all slices in the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[axis]
+        typeImg2d = input_img[0].dtype
+        # Apply threshold based on axis direction
+        if axisIndex == 0:  # XY plane
+            img = input_img[slice_num]
+            threshold_H.niblack(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, x, y, 1, N, N, 1)
+
+        elif axisIndex == 1:  # XZ plane
+            input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            z, x, y = out.shape
+            threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
+            output_img[:, slice_num, :] = out
+
+        elif axisIndex == 2:  # YZ plane
+            input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            z, x, y = out.shape
+            threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
+            output_img[:, :, slice_num] = out
+
+        annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
+
+    elif convType == "3d":
+        # Apply convolution in all x, y, z directions
+        threshold_H.niblack(input_img, output_img, W, x, y, z, N, N, N)
+
+        img_label = np.where(output_img > 0, label, -1)
+
+        data_repo.set_image("label",img_label)
+
+    #label_mask = output_img > 0
+    #annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/sauvola_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def sauvola_apply(input_id: str):
+    from harpia.threshold import threshold as threshold_H
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        N = request.json["Kernel"]  # Kernel size
+        W = request.json["Weight"]  # Weight
+        R = request.json['Range'] # range
+        convType = request.json["convolutionType"]  # Convolution type (2d or 3d)
+        slice_num = request.json["current_slice"]  # Current slice number
+        axis = request.json["current_axis"]  # Axis: XY, XZ, YZ
+        label = request.json["label"]  # Label to associate with mask
+        curret_thresh_marker = request.json["curret_thresh_marker"]  # Current marker
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id), dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img), dtype=np.float32)
+
+    z, x, y = input_img.shape
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, curret_thresh_marker)
+    # New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    # It's not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    if convType == "2d":
+        # convolution in x, y applied for all slices in the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[axis]
+        typeImg2d = input_img[0].dtype
+        # Apply threshold based on axis direction
+        if axisIndex == 0:  # XY plane
+            img = input_img[slice_num]
+            threshold_H.sauvola(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, R, x, y, 1, N, N, 1)
+
+        elif axisIndex == 1:  # XZ plane
+            input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            z, x, y = out.shape
+            threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
+            output_img[:, slice_num, :] = out
+
+        elif axisIndex == 2:  # YZ plane
+            input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            z, x, y = out.shape
+            threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
+            output_img[:, :, slice_num] = out
+
+        annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
+
+
+    elif convType == "3d":
+        # Apply convolution in all x, y, z directions
+        threshold_H.sauvola(input_img, output_img, W, R, x, y, z, N, N, N)
+
+        img_label = np.where(output_img > 0, label, -1)
+
+        data_repo.set_image("label",img_label)
+
+    #label_mask = output_img > 0
+    #annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)
+
+@app.route("/local_mean_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def local_mean_apply(input_id: str):
+    from harpia.threshold import threshold as threshold_H
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        N = request.json["Kernel"]  # Kernel size
+        W = request.json["Threshold"]  # Weight
+        convType = request.json["convolutionType"]  # Convolution type (2d or 3d)
+        slice_num = request.json["current_slice"]  # Current slice number
+        axis = request.json["current_axis"]  # Axis: XY, XZ, YZ
+        label = request.json["label"]  # Label to associate with mask
+        curret_thresh_marker = request.json["curret_thresh_marker"]  # Current marker
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id), dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img), dtype=np.float32)
+
+    z, x, y = input_img.shape
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, curret_thresh_marker)
+    # New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    # It's not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    if convType == "2d":
+        # convolution in x, y applied for all slices in the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[axis]
+        typeImg2d = input_img[0].dtype
+        # Apply threshold based on axis direction
+        if axisIndex == 0:  # XY plane
+            img = input_img[slice_num]
+            threshold_H.local_mean(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, x, y, 1, N, N, 1)
+
+        elif axisIndex == 1:  # XZ plane
+            input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            z, x, y = out.shape
+            threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
+            output_img[:, slice_num, :] = out
+
+        elif axisIndex == 2:  # YZ plane
+            input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            z, x, y = out.shape
+            threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
+            output_img[:, :, slice_num] = out
+
+        annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
+
+    elif convType == "3d":
+        # Apply convolution in all x, y, z directions
+        threshold_H.local_mean(input_img, output_img, W, x, y, z, N, N, N)
+
+        img_label = np.where(output_img > 0, label, -1)
+
+        data_repo.set_image("label",img_label)
+
+    #label_mask = output_img > 0
+    #annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/local_gaussian_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def local_gaussian_apply(input_id: str):
+    from harpia.threshold import threshold as threshold_H
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        S = request.json["Sigma"]  # Kernel size
+        W = request.json["Threshold"]  # Weight
+        convType = request.json["convolutionType"]  # Convolution type (2d or 3d)
+        slice_num = request.json["current_slice"]  # Current slice number
+        axis = request.json["current_axis"]  # Axis: XY, XZ, YZ
+        label = request.json["label"]  # Label to associate with mask
+        curret_thresh_marker = request.json["curret_thresh_marker"]  # Current marker
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id), dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img), dtype=np.float32)
+
+    z, x, y = input_img.shape
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, curret_thresh_marker)
+    # New annotation
+    if mk_id != curret_thresh_marker:
+        new_click = True
+    # It's not a new annotation (overwrite current annotation)
+    else:
+        new_click = False
+
+    if convType == "2d":
+        # convolution in x, y applied for all slices in the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[axis]
+        typeImg2d = input_img[0].dtype
+        # Apply threshold based on axis direction
+        if axisIndex == 0:  # XY plane
+            img = input_img[slice_num]
+            threshold_H.local_gaussian(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), x, y, 1, S,W,0)
+
+        elif axisIndex == 1:  # XZ plane
+            input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            z, x, y = out.shape
+            threshold_H.local_gaussian(input, out, x, y, z, S,W,0)
+            output_img[:, slice_num, :] = out
+
+        elif axisIndex == 2:  # YZ plane
+            input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            z, x, y = out.shape
+            threshold_H.local_gaussian(input, out, x, y, z, S, W,0)
+            output_img[:, :, slice_num] = out
+
+        #annot_module.annotation_image[slice_range] = output_img[slice_range]
+        annot_module.labelmask_update(output_img, label, mk_id, new_click)
+
+    elif convType == "3d":
+        # Apply convolution in all x, y, z directions
+        threshold_H.local_gaussian(input_img, output_img, x, y, z, S,W,1)
+
+        img_label = np.where(output_img > 0, label, -1)
+
+        data_repo.set_image("label",img_label)
+
+
+    #label_mask = output_img > 0
+    #annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
+    print(request.json)
+
+    return jsonify(annot_module.current_mk_id)
+
+@app.route("/watershed_apply_2d/<input_id>", methods=["POST"])
+@cross_origin()
+def watershed_apply(input_id: str):
+    from harpia.filters import (canny, sobel, prewitt)
+    from harpia.watershed import watershed
+    from harpia.quantification import quantification
+    print(dir(quantification))
+
+    print(request.json)
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        #parameters
+        input_filter = request.json.get("inputFilter")
+        algorithm = request.json.get("algorithm")
+        dimension = request.json.get("dimension")
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id), dtype=np.float32)
+    relief_img = np.zeros_like(input_img, dtype=np.float32)
+
+    z, x, y = input_img.shape
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, current_thresh_marker)
+    # New annotation
+    if mk_id != current_thresh_marker:
+        new_click = True
+    else:
+        new_click = False
+    if dimension == '2d':
+        # convolution in x, y applied for all slices in the z direction
+        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+        axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+        axisIndex = axisIndexDict[axis]
+        typeImg2d = input_img[0].dtype
+        # Apply threshold based on axis direction
+        if axisIndex == 0:  # XY plane
+            img = input_img[slice_num]
+
+            if input_filter == 'sobel':
+                sobel(img.reshape(1, x, y), relief_img[slice_num].reshape(1, x, y), x, y, 1, 0)
+
+            elif input_filter == 'prewitt':
+                prewitt(img.reshape(1, x, y), relief_img[slice_num].reshape(1, x, y), x, y, 1, 0)
+
+        elif axisIndex == 1:  # XZ plane
+            input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(relief_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            z, x, y = out.shape
+
+            if input_filter == 'sobel':
+                sobel(input, out, x, y, z,0)
+
+            elif input_filter == 'prewitt':
+                prewitt(input, out, x, y, z,0)
+
+            relief_img[:, slice_num, :] = out
+
+        elif axisIndex == 2:  # YZ plane
+            input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            out = np.ascontiguousarray(relief_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            z, x, y = out.shape
+                    
+            if input_filter == 'sobel':
+                sobel(input, out, x, y, z,0)
+
+            elif input_filter == 'prewitt':
+                prewitt(input, out, x, y, z,0)
+                        
+            relief_img[:, :, slice_num] = out
+
+        #now we get the markers using the labels
+        markers = annot_module.annotation_image[slice_range].astype(np.int32)
+
+        watershed_relief = -relief_img[slice_range].astype(np.int32)
+        x,y = markers.shape
+
+        watershed.watershed_meyers_2d(watershed_relief,markers,-1,x,y)
+
+        label_mask = np.zeros_like(relief_img)
+        label_mask[slice_range] = markers
+        annot_module.annotation_image[slice_range] = markers
+
+    else:
+        if input_filter == 'sobel':
+            sobel(input_img, relief_img, x, y, z, 1)
+
+        elif input_filter == 'prewitt':
+            prewitt(input_img, relief_img, x, y, z, 1)
+
+        markers = data_repo.get_image('label').astype(np.int32)
+        watershed_relief = -relief_img.astype(np.int32)
+
+        print('relief shape:',watershed_relief.shape)
+        print('markers shape:',markers.shape)
+
+        #watershed.watershed_meyers_3d(watershed_relief,markers,-1,x,y,z)
+        z,x,y = watershed_relief.shape
+
+        for i in range(z):
+            watershed.watershed_meyers_2d(watershed_relief[i], markers[i], -1, x, y)
+
+        img_label = data_repo.get_image('label')
+
+        if img_label is None:
+            img_label = np.zeros_like(input_img)
+
+        print("img_label shape:", img_label.shape)
+
+        img_label[markers >= 0] = markers[markers >= 0]
+
+        data_repo.set_image("label",markers)
+
+    return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/remove_islands_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def remove_islands_apply(input_id: str):
+    from harpia.quantification import quantification
+    from skimage import morphology #for testing, because my remove islands has another logic and it may results in some bugs
+
+    print(request.json)
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        #parameters
+        dimension = request.json.get("dimension")
+        min_size = request.json.get('minSize')
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, current_thresh_marker)
+    # New annotation
+    if mk_id != current_thresh_marker:
+        new_click = True
+    else:
+        new_click = False
+
+    if dimension == '2d':
+        #now we get the markers using the labels
+        label_mask = annot_module.annotation_image[slice_range].astype(np.int32)
+        x,y = label_mask.shape
+
+        input_mask = label_mask.astype(np.int32)
+        output_mask = np.zeros_like(input_mask,dtype=np.int32)
+
+        print('out mask before:',input_mask)
+
+        #quantification.removeIslands(input_mask,output_mask,min_size,x,y,1)
+        #there is a bug in cuda i dont understand yet, therefore i will use skimage for now... sorry for this
+        labelling_mask = morphology.label(input_mask+2,connectivity=2)
+
+        output_mask = morphology.remove_small_objects(labelling_mask,min_size=min_size,connectivity=2)
+
+        input_mask[output_mask==0]=-1
+
+        print('out mask after:',output_mask)
+
+        annot_module.annotation_image[slice_range] = input_mask
+
+    else:
+        input_img = data_repo.get_image('image')
+
+        input_mask = data_repo.get_image('label')
+
+        if input_mask is None:
+            pass
+
+        labelling_mask = morphology.label(input_mask+2,connectivity=2)
+
+        output_mask = morphology.remove_small_objects(labelling_mask,min_size=min_size,connectivity=2)
+
+        input_mask[output_mask==0]=-1 
+
+        data_repo.set_image("label",input_mask)
+
+    return jsonify(annot_module.current_mk_id)
+
+
+
+@app.route("/quantification_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def quantification_apply(input_id: str):
+    from harpia.quantification import quantification
+    import numpy as np
+    import time
+
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        elif isinstance(x, (str,)):
+            return str(x)
+        else:
+            raise ValueError(f"Unsupported data type: {type(x)}")
+
+    try:
+        # Parameters
+        dimension = request.json.get("dimension")
+        metrics = request.json.get("metrics", [])  # Initialize as empty list if not provided
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+
+        print(f"Received dimension: {dimension}, slice_num: {slice_num}, metrics: {metrics}")
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module("annotation")
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    mk_id = annot_module.current_mk_id
+    new_click = mk_id != current_thresh_marker
+
+    if dimension == "2D":
+        # Get the markers using the labels
+        label_mask = annot_module.annotation_image[slice_range].astype(np.int32)
+        x, y = label_mask.shape
+
+        input_mask = label_mask.reshape(1, x, y) + 1
+        perimeter = np.zeros_like(input_mask, dtype=np.uint32)
+        area = np.zeros_like(input_mask, dtype=np.uint32)
+
+        quantification.compute_perimeter(input_mask, perimeter, x, y, 1)
+        quantification.compute_area(input_mask, area, x, y, 1, 0)
+
+        perimeter = perimeter.ravel()
+        area = area.ravel()
+
+        print("area: ", area)
+
+        # Recalculate the metrics
+        metrics.clear()  # Clear existing metrics before recalculating
+
+        for idx in range(1, np.max(input_mask) + 1):
+            label_perimeter = perimeter[idx]
+            label_area = area[idx]
+
+            metrics.append({
+                "label": python_typer(idx - 1),
+                "dimension": dimension,
+                "perimeter": python_typer(label_perimeter),
+                "area": python_typer(label_area),
+            })
+
+    else:  # 3D case
+        input_mask = data_repo.get_image("label").astype(np.int32) + 1
+
+        if input_mask is None:
+            return jsonify({"error": "No input mask available"}), 400
+
+        z, x, y = input_mask.shape
+
+        # Allocate buffers for metrics
+        volume = np.zeros_like(input_mask, dtype=np.uint32)
+        surface_area = np.zeros_like(input_mask, dtype=np.uint32)
+
+        # Compute metrics
+        quantification.compute_volume(input_mask, volume, x, y, z)
+        quantification.compute_area(input_mask, surface_area, x, y, z,1)  # Replace area with surface_area
+
+        # Flatten arrays for easier iteration
+        volume = volume.ravel()
+        surface_area = surface_area.ravel()
+
+        print("volume: ", volume)
+        print("surface_area: ", surface_area)  # Update the log to surface_area
+
+        # Update metrics
+        for idx in range(1, np.max(input_mask) + 1):
+            label_volume = volume[idx]
+            label_surface_area = surface_area[idx]  # Use surface_area here
+
+            # Update or append metrics for this label
+            updated = False
+            for metric in metrics:
+                if metric["label"] == idx - 1:
+                    metric["volume"] = python_typer(label_volume)
+                    metric["surface_area"] = python_typer(label_surface_area)  # Update surface_area
+                    updated = True
+                    break
+
+            if not updated:
+                metrics.append({
+                    "label": python_typer(idx - 1),
+                    "dimension": dimension,
+                    "volume": python_typer(label_volume),
+                    "surface_area": python_typer(label_surface_area),  # Use surface_area here
+                })
+
+    # Log the final result before returning
+    print(f"Updated Metrics: {metrics}")
+
+    # Return the updated metrics as a JSON response
+    return jsonify({"data": metrics})
+
+
+@app.route("/object_separation_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def object_separation_apply(input_id: str):
+    from harpia.watershed import watershed
+    from harpia.filters import (sobel, prewitt)
+    from harpia.distanceTransform import distance_transform_log_sum_kernel
+    from skimage.feature import peak_local_max
+    from scipy import ndimage as ndi
+
+    print(request.json)
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        #parameters
+        algorithm = request.json.get("algorithm")
+        dimension = request.json.get("dimension")
+        sigma = request.json.get("sigma")
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    mk_id = annot_module.current_mk_id
+    new_click = mk_id != current_thresh_marker
+
+    img_label = data_repo.get_image('label')
+
+    if img_label is None:
+            return None
+    
+    z,x,y = img_label.shape
+    edt = distance_transform_log_sum_kernel.distance_transform(img_label,sigma,1,z,x,y)
+
+    # Check for NaN or inf values in edt and raise an error if found
+    if np.isnan(edt).any() or np.isinf(edt).any():
+        return handle_exception("Error: edt contains NaN or infinite values.")
+    
+    print('local max')
+    coords = peak_local_max(edt, footprint=np.ones((5, 5, 5)), min_distance=11,labels=img_label.reshape(edt.shape))
+
+    print('zeroes mask')
+    mask = np.zeros(edt.shape, dtype=bool)
+    mask[tuple(coords.T)] = True
+
+    print('markers generation')
+    markers, _ = ndi.label(mask)
+
+    print('relief creation')
+    relief = -edt.astype(np.int32)
+
+    print('watershed start')
+    for i in range(z):
+            watershed.watershed_meyers_2d(relief[i], markers[i], 0, x, y)
+
+    markers = markers*(img_label>0)
+    data_repo.set_image('label',markers.astype(np.int32))
+
+    return jsonify(annot_module.current_mk_id)
