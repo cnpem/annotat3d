@@ -10,7 +10,6 @@ import {
     IonRadio,
     IonButton,
     IonInput,
-    IonCheckbox,
     IonGrid,
     IonRow,
     IonCol,
@@ -47,11 +46,15 @@ const RemoveIslandsCard: React.FC<RemoveIslandsCardProps> = ({ isVisible }) => {
         };
 
         try {
+            setShowLoadingCompPS(true);
+            setLoadingMsg('Applying Remove Islands...');
             const result = await sfetch('POST', '/remove_islands_apply/image', JSON.stringify(data), 'json');
             console.log('Remove Islands applied successfully:', result);
             dispatch('removeIslandsApplied', result);
         } catch (error) {
             console.error('Error applying Remove Islands:', error);
+        } finally {
+            setShowLoadingCompPS(false);
         }
     };
 
@@ -93,8 +96,17 @@ const RemoveIslandsCard: React.FC<RemoveIslandsCardProps> = ({ isVisible }) => {
                         />
                     </IonItem>
                 </IonList>
+
+                {/* Loading Component */}
+                {showLoadingCompPS && (
+                    <div>
+                        <LoadingComponent openLoadingWindow={false} loadingText={''} />
+                        <p>{loadingMsg}</p>
+                    </div>
+                )}
+
                 {/* Apply Button */}
-                <IonButton expand="block" onClick={handleApply}>
+                <IonButton expand="block" onClick={handleApply} disabled={showLoadingCompPS}>
                     Apply
                 </IonButton>
             </IonCardContent>
