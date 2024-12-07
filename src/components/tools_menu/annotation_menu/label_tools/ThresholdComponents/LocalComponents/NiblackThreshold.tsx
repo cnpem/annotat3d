@@ -151,7 +151,7 @@ const NiblackThreshold: React.FC<NiblackThresholdProps> = ({
 
             {/* Convolution Type */}
             <IonItem>
-                <IonLabel>Convolution Type:</IonLabel>
+                <IonLabel>Annotation(2D) or Label (3D):</IonLabel>
             </IonItem>
             <IonRadioGroup value={ConvolutionType} onIonChange={(e) => setConvolutionType(e.detail.value)}>
                 <IonGrid>
