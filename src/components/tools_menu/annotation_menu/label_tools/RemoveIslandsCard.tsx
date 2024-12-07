@@ -42,7 +42,7 @@ const RemoveIslandsCard: React.FC<RemoveIslandsCardProps> = ({ isVisible }) => {
             current_thresh_marker: markerID,
             current_slice: sliceValue,
             current_axis: sliceName,
-            label: selectedLabel, // Add selectedLabel to the data payload
+            label: selectedLabel,
         };
 
         try {
@@ -64,20 +64,23 @@ const RemoveIslandsCard: React.FC<RemoveIslandsCardProps> = ({ isVisible }) => {
                 <IonList>
                     {/* Dimension Selection */}
                     <IonItem>
-                        <IonLabel>Neighborhood</IonLabel>
-                        <IonRadioGroup value={dimension} onIonChange={(e) => setDimension(e.detail.value)}>
+                        <IonRadioGroup
+                            value={dimension}
+                            onIonChange={(e) => setDimension(e.detail.value)}
+                            style={{ width: '100%' }}
+                        >
                             <IonGrid>
-                                <IonRow>
-                                    <IonCol>
+                                <IonRow class="ion-justify-content-center ion-align-items-center">
+                                    <IonCol size="auto">
                                         <IonItem lines="none">
-                                            <IonLabel>2D</IonLabel>
-                                            <IonRadio value="2d" />
+                                            <IonRadio slot="start" value="2d" />
+                                            <IonLabel>Annotation (2D)</IonLabel>
                                         </IonItem>
                                     </IonCol>
-                                    <IonCol>
+                                    <IonCol size="auto">
                                         <IonItem lines="none">
-                                            <IonLabel>3D</IonLabel>
-                                            <IonRadio value="3d" />
+                                            <IonRadio slot="start" value="3d" />
+                                            <IonLabel>Label (3D)</IonLabel>
                                         </IonItem>
                                     </IonCol>
                                 </IonRow>
