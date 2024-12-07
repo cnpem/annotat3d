@@ -110,7 +110,7 @@ const RemoveIslandsCard: React.FC<RemoveIslandsCardProps> = ({ isVisible }) => {
 
                 {/* Apply Button */}
                 <IonButton expand="block" onClick={handleApply} disabled={showLoadingCompPS}>
-                    Apply
+                    Apply Remove Islands
                 </IonButton>
             </IonCardContent>
         </IonCard>
