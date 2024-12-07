@@ -1149,6 +1149,9 @@ def local_gaussian_apply(input_id: str):
 def watershed_apply(input_id: str):
     from harpia.filters import (canny, sobel, prewitt)
     from harpia.watershed import watershed
+    from harpia.quantification import quantification
+    print(dir(quantification))
+
     print(request.json)
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
@@ -1276,3 +1279,217 @@ def watershed_apply(input_id: str):
         data_repo.set_image("label",markers)
 
     return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/remove_islands_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def remove_islands_apply(input_id: str):
+    from harpia.quantification import quantification
+    from skimage import morphology #for testing, because my remove islands has another logic and it may results in some bugs
+
+    print(request.json)
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        #parameters
+        dimension = request.json.get("dimension")
+        min_size = request.json.get('minSize')
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, current_thresh_marker)
+    # New annotation
+    if mk_id != current_thresh_marker:
+        new_click = True
+    else:
+        new_click = False
+
+    if dimension == '2d':
+        #now we get the markers using the labels
+        label_mask = annot_module.annotation_image[slice_range].astype(np.int32)
+        x,y = label_mask.shape
+
+        input_mask = label_mask.astype(np.int32)
+        output_mask = np.zeros_like(input_mask,dtype=np.int32)
+
+        print('out mask before:',input_mask)
+
+        #quantification.removeIslands(input_mask,output_mask,min_size,x,y,1)
+        #there is a bug in cuda i dont understand yet, therefore i will use skimage for now... sorry for this
+        labelling_mask = morphology.label(input_mask+2,connectivity=2)
+
+        output_mask = morphology.remove_small_objects(labelling_mask,min_size=min_size,connectivity=2)
+
+        input_mask[output_mask==0]=-1
+
+        print('out mask after:',output_mask)
+
+        annot_module.annotation_image[slice_range] = input_mask
+
+    else:
+        input_img = data_repo.get_image('image')
+
+        input_mask = data_repo.get_image('label')
+
+        if input_mask is None:
+            pass
+
+        labelling_mask = morphology.label(input_mask+2,connectivity=2)
+
+        output_mask = morphology.remove_small_objects(labelling_mask,min_size=min_size,connectivity=2)
+
+        input_mask[output_mask==0]=-1 
+
+        data_repo.set_image("label",input_mask)
+
+    return jsonify(annot_module.current_mk_id)
+
+
+
+@app.route("/quantification_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def quantification_apply(input_id: str):
+    from harpia.quantification import quantification
+    import numpy as np
+    import time
+
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        elif isinstance(x, (str,)):
+            return str(x)
+        else:
+            raise ValueError(f"Unsupported data type: {type(x)}")
+
+    try:
+        # Parameters
+        dimension = request.json.get("dimension")
+        metrics = request.json.get("metrics", [])  # Initialize as empty list if not provided
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+
+        print(f"Received dimension: {dimension}, slice_num: {slice_num}, metrics: {metrics}")
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module("annotation")
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    mk_id = annot_module.current_mk_id
+    new_click = mk_id != current_thresh_marker
+
+    if dimension == "2D":
+        # Get the markers using the labels
+        label_mask = annot_module.annotation_image[slice_range].astype(np.int32)
+        x, y = label_mask.shape
+
+        input_mask = label_mask.reshape(1, x, y) + 1
+        perimeter = np.zeros_like(input_mask, dtype=np.uint32)
+        area = np.zeros_like(input_mask, dtype=np.uint32)
+
+        quantification.compute_perimeter(input_mask, perimeter, x, y, 1)
+        quantification.compute_area(input_mask, area, x, y, 1, 0)
+
+        perimeter = perimeter.ravel()
+        area = area.ravel()
+
+        print("area: ", area)
+
+        # Recalculate the metrics
+        metrics.clear()  # Clear existing metrics before recalculating
+
+        for idx in range(1, np.max(input_mask) + 1):
+            label_perimeter = perimeter[idx]
+            label_area = area[idx]
+
+            metrics.append({
+                "label": python_typer(idx - 1),
+                "dimension": dimension,
+                "perimeter": python_typer(label_perimeter),
+                "area": python_typer(label_area),
+            })
+
+    else:  # 3D case
+        input_mask = data_repo.get_image("label").astype(np.int32) + 1
+
+        if input_mask is None:
+            return jsonify({"error": "No input mask available"}), 400
+
+        z, x, y = input_mask.shape
+
+        # Allocate buffers for metrics
+        volume = np.zeros_like(input_mask, dtype=np.uint32)
+        surface_area = np.zeros_like(input_mask, dtype=np.uint32)
+
+        # Compute metrics
+        quantification.compute_volume(input_mask, volume, x, y, z)
+        quantification.compute_area(input_mask, surface_area, x, y, z,1)  # Replace area with surface_area
+
+        # Flatten arrays for easier iteration
+        volume = volume.ravel()
+        surface_area = surface_area.ravel()
+
+        print("volume: ", volume)
+        print("surface_area: ", surface_area)  # Update the log to surface_area
+
+        # Update metrics
+        for idx in range(1, np.max(input_mask) + 1):
+            label_volume = volume[idx]
+            label_surface_area = surface_area[idx]  # Use surface_area here
+
+            # Update or append metrics for this label
+            updated = False
+            for metric in metrics:
+                if metric["label"] == idx - 1:
+                    metric["volume"] = python_typer(label_volume)
+                    metric["surface_area"] = python_typer(label_surface_area)  # Update surface_area
+                    updated = True
+                    break
+
+            if not updated:
+                metrics.append({
+                    "label": python_typer(idx - 1),
+                    "dimension": dimension,
+                    "volume": python_typer(label_volume),
+                    "surface_area": python_typer(label_surface_area),  # Use surface_area here
+                })
+
+    # Log the final result before returning
+    print(f"Updated Metrics: {metrics}")
+
+    # Return the updated metrics as a JSON response
+    return jsonify({"data": metrics})
+
+
+

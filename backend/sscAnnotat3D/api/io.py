@@ -115,6 +115,8 @@ def get_image_histogram(image_id):
 
     histogram_info['otsu'] = round(otsu_value,3)
 
+    print(jsonify(histogram_info))
+
     return jsonify(histogram_info)
 
 

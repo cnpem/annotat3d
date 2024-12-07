@@ -29,6 +29,7 @@ import MagicWandCard from './MagicWandCard'; // Ensure this path is correct
 import ThresholdCard from './ThresholdCard'; // Ensure this path is correct
 import WatershedCard from './WatershedCard'; // Ensure this path is correct
 import RemoveIslandsCard from './RemoveIslandsCard';
+import QuantificationCard from './QuantificationCard'; // Ensure QuantificationCard is imported
 import ObjectSeparationCard from './ObjectSeparationCard'; // Import the ObjectSeparationCard
 import { dispatch } from '../../../../utils/eventbus';
 
@@ -98,7 +99,7 @@ const PaintToolbar: React.FC = () => {
                         </IonButton>
                     </IonCol>
                     <IonCol>
-                        <IonButton onClick={() => handleButtonClick('labeling')} title="Object individualization">
+                        <IonButton onClick={() => handleButtonClick('quantification')} title="Quantification">
                             <IonIcon icon={pricetagsOutline} />
                         </IonButton>
                     </IonCol>
@@ -155,16 +156,8 @@ const PaintToolbar: React.FC = () => {
                     <RemoveIslandsCard isVisible={activeCard === 'removeIsland'} />
                 </div>
 
-                <div className={activeCard === 'labeling' ? 'visible' : 'hidden'}>
-                    <IonCard>
-                        <IonCardContent>
-                            <IonList>
-                                <IonItem button>Labeling Option 1</IonItem>
-                                <IonItem button>Labeling Option 2</IonItem>
-                                <IonItem button>Labeling Option 3</IonItem>
-                            </IonList>
-                        </IonCardContent>
-                    </IonCard>
+                <div className={activeCard === 'quantification' ? 'visible' : 'hidden'}>
+                    <QuantificationCard isVisible={activeCard === 'quantification'} />
                 </div>
 
                 <div className={activeCard === 'objectSeparation' ? 'visible' : 'hidden'}>
