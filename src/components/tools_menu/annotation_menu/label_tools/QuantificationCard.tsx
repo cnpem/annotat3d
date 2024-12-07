@@ -114,20 +114,23 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
             <IonCardContent>
                 <IonList>
                     <IonItem>
-                        <IonLabel>Dimension</IonLabel>
-                        <IonRadioGroup value={dimension} onIonChange={(e) => handleDimensionChange(e.detail.value)}>
+                        <IonRadioGroup
+                            value={dimension}
+                            onIonChange={(e) => handleDimensionChange(e.detail.value)}
+                            style={{ width: '100%' }}
+                        >
                             <IonGrid>
-                                <IonRow>
-                                    <IonCol>
+                                <IonRow class="ion-justify-content-center ion-align-items-center">
+                                    <IonCol size="auto">
                                         <IonItem lines="none">
-                                            <IonLabel>2D</IonLabel>
-                                            <IonRadio value="2D" />
+                                            <IonRadio slot="start" value="2D" />
+                                            <IonLabel>Annotation (2D)</IonLabel>
                                         </IonItem>
                                     </IonCol>
-                                    <IonCol>
+                                    <IonCol size="auto">
                                         <IonItem lines="none">
-                                            <IonLabel>3D</IonLabel>
-                                            <IonRadio value="3D" />
+                                            <IonRadio slot="start" value="3D" />
+                                            <IonLabel>Label (3D)</IonLabel>
                                         </IonItem>
                                     </IonCol>
                                 </IonRow>
@@ -159,7 +162,6 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
                                             border: '1px solid #ddd',
                                             padding: '12px 15px',
                                             textAlign: 'center',
-                                            backgroundColor: '',
                                             fontWeight: 'bold',
                                         }}
                                     >
@@ -170,7 +172,6 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
                                             border: '1px solid #ddd',
                                             padding: '12px 15px',
                                             textAlign: 'center',
-                                            backgroundColor: '',
                                             fontWeight: 'bold',
                                         }}
                                     >
@@ -183,7 +184,6 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
                                                     border: '1px solid #ddd',
                                                     padding: '12px 15px',
                                                     textAlign: 'center',
-                                                    backgroundColor: '',
                                                     fontWeight: 'bold',
                                                 }}
                                             >
@@ -194,7 +194,6 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
                                                     border: '1px solid #ddd',
                                                     padding: '12px 15px',
                                                     textAlign: 'center',
-                                                    backgroundColor: '',
                                                     fontWeight: 'bold',
                                                 }}
                                             >
@@ -209,7 +208,6 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
                                                     border: '1px solid #ddd',
                                                     padding: '12px 15px',
                                                     textAlign: 'center',
-                                                    backgroundColor: '',
                                                     fontWeight: 'bold',
                                                 }}
                                             >
@@ -220,7 +218,6 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
                                                     border: '1px solid #ddd',
                                                     padding: '12px 15px',
                                                     textAlign: 'center',
-                                                    backgroundColor: '',
                                                     fontWeight: 'bold',
                                                 }}
                                             >
@@ -238,7 +235,6 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
                                                 border: '1px solid #ddd',
                                                 padding: '12px 15px',
                                                 textAlign: 'center',
-                                                backgroundColor: '',
                                             }}
                                         >
                                             {data.label}
@@ -248,7 +244,6 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
                                                 border: '1px solid #ddd',
                                                 padding: '12px 15px',
                                                 textAlign: 'center',
-                                                backgroundColor: '',
                                             }}
                                         >
                                             {data.dimension}
@@ -260,7 +255,6 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
                                                         border: '1px solid #ddd',
                                                         padding: '12px 15px',
                                                         textAlign: 'center',
-                                                        backgroundColor: '',
                                                     }}
                                                 >
                                                     {data.perimeter}
@@ -270,7 +264,6 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
                                                         border: '1px solid #ddd',
                                                         padding: '12px 15px',
                                                         textAlign: 'center',
-                                                        backgroundColor: '',
                                                     }}
                                                 >
                                                     {data.area}
@@ -284,17 +277,15 @@ const QuantificationCard: React.FC<QuantificationCardProps> = ({ isVisible }) =>
                                                         border: '1px solid #ddd',
                                                         padding: '12px 15px',
                                                         textAlign: 'center',
-                                                        backgroundColor: '',
                                                     }}
                                                 >
-                                                    {data.surface_area}
+                                                    {data.surfaceArea}
                                                 </td>
                                                 <td
                                                     style={{
                                                         border: '1px solid #ddd',
                                                         padding: '12px 15px',
                                                         textAlign: 'center',
-                                                        backgroundColor: '',
                                                     }}
                                                 >
                                                     {data.volume}
