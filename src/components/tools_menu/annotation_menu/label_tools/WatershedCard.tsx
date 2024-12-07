@@ -55,11 +55,26 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
         };
 
         try {
+            console.log('Sending data to backend:', data);
             const result = await sfetch('POST', '/watershed_apply_2d/image', JSON.stringify(data), 'json');
-            console.log('Watershed applied successfully:', result);
+            console.log('Backend response:', result);
+
+            // Dispatch event after the watershed is applied
+            console.log('Watershed applied, dispatching event...');
             dispatch('watershedApplied', result);
+            console.log('Event dispatched.');
+
+            // Optionally, you can also update loading state or any other state here
+            setShowLoadingCompPS(true); // Hide loading if needed
         } catch (error) {
             console.error('Error applying watershed:', error);
+
+            // Cast 'error' to Error type to access 'message' safely
+            const typedError = error as Error;
+
+            // Optionally, dispatch an error or set loading state to false
+            setShowLoadingCompPS(false); // Hide loading if error occurs
+            dispatch('watershedError', { error: typedError.message });
         }
     };
 

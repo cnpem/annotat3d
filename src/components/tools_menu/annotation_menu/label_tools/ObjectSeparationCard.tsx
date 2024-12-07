@@ -30,7 +30,7 @@ interface ObjectSeparationCardProps {
 const ObjectSeparationCard: React.FC<ObjectSeparationCardProps> = ({ isVisible }) => {
     const [algorithm, setAlgorithm] = useState<string>('union-find');
     const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
-    const [sigma, setSigma] = useState<number>(1.0); // Default sigma for Euclidean distance
+    const [sigma, setSigma] = useState<number>(0.1); // Default sigma for Euclidean distance
     const [markerID, setMarkerId] = useState<number>(-1); // Marker ID
     const [dimension, setDimension] = useState<'2d' | '3d'>('2d'); // Default neighborhood
     const sliceValue = parseInt(sessionStorage.getItem('sliceValue') || '0', 10);
@@ -51,7 +51,7 @@ const ObjectSeparationCard: React.FC<ObjectSeparationCardProps> = ({ isVisible }
         };
 
         try {
-            const result = await sfetch('POST', '/object_separation/apply', JSON.stringify(data), 'json');
+            const result = await sfetch('POST', '/object_separation_apply/image', JSON.stringify(data), 'json');
             console.log('Object separation applied successfully:', result);
             dispatch('objectSeparationApplied', result);
         } catch (error) {
@@ -63,22 +63,31 @@ const ObjectSeparationCard: React.FC<ObjectSeparationCardProps> = ({ isVisible }
         <IonCard>
             <IonCardContent>
                 <IonList>
-                    {/* Algorithm Selection */}
-                    <IonItem button onClick={() => setIsAlgorithmOpen(!isAlgorithmOpen)}>
-                        <IonLabel>Object Separation Algorithms</IonLabel>
+                    {/* Watershed Algorithm Info Button */}
+                    <IonItem>
+                        <IonLabel>
+                            <strong>Object Separation</strong>
+                        </IonLabel>
+                        <IonButton id="showWatershedInfo" slot="end" size="small" fill="clear">
+                            <IonIcon icon={informationCircleOutline} />
+                        </IonButton>
+                        <IonPopover trigger="showWatershedInfo" reference="event">
+                            <IonContent>
+                                <IonCard>
+                                    <IonCardHeader>
+                                        <div style={{ fontWeight: 600, fontSize: 14 }}>Object Separation</div>
+                                    </IonCardHeader>
+                                    <IonCardContent>
+                                        This process uses the watershed algorithm to separate objects in an image. The
+                                        markers for the watershed algorithm are obtained by performing a distance
+                                        transform on the image. This helps identify boundaries and distinct regions
+                                        within the image for accurate object separation.It will be applied slice by
+                                        slice.
+                                    </IonCardContent>
+                                </IonCard>
+                            </IonContent>
+                        </IonPopover>
                     </IonItem>
-                    {isAlgorithmOpen && (
-                        <IonRadioGroup value={algorithm} onIonChange={(e) => setAlgorithm(e.detail.value)}>
-                            <IonItem lines="none">
-                                <IonLabel>Union-Find</IonLabel>
-                                <IonRadio value="union-find" />
-                            </IonItem>
-                            <IonItem lines="none">
-                                <IonLabel>Meyers Algorithm</IonLabel>
-                                <IonRadio value="meyers" />
-                            </IonItem>
-                        </IonRadioGroup>
-                    )}
 
                     {/* Sigma Selection */}
                     <IonItem>
@@ -106,29 +115,6 @@ const ObjectSeparationCard: React.FC<ObjectSeparationCardProps> = ({ isVisible }
                                 </IonCard>
                             </IonContent>
                         </IonPopover>
-                    </IonItem>
-
-                    {/* 2D or 3D Neighborhood Selection */}
-                    <IonItem>
-                        <IonLabel>Neighborhood</IonLabel>
-                        <IonRadioGroup value={dimension} onIonChange={(e) => setDimension(e.detail.value)}>
-                            <IonGrid>
-                                <IonRow>
-                                    <IonCol>
-                                        <IonItem lines="none">
-                                            <IonLabel>2D</IonLabel>
-                                            <IonRadio value="2d" />
-                                        </IonItem>
-                                    </IonCol>
-                                    <IonCol>
-                                        <IonItem lines="none">
-                                            <IonLabel>3D</IonLabel>
-                                            <IonRadio value="3d" />
-                                        </IonItem>
-                                    </IonCol>
-                                </IonRow>
-                            </IonGrid>
-                        </IonRadioGroup>
                     </IonItem>
                 </IonList>
                 {/* Apply Button */}

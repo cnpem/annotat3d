@@ -1492,4 +1492,78 @@ def quantification_apply(input_id: str):
     return jsonify({"data": metrics})
 
 
+@app.route("/object_separation_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def object_separation_apply(input_id: str):
+    from harpia.watershed import watershed
+    from harpia.filters import (sobel, prewitt)
+    from harpia.distanceTransform import distance_transform_log_sum_kernel
+    from skimage.feature import peak_local_max
+    from scipy import ndimage as ndi
 
+    print(request.json)
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        #parameters
+        algorithm = request.json.get("algorithm")
+        dimension = request.json.get("dimension")
+        sigma = request.json.get("sigma")
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    mk_id = annot_module.current_mk_id
+    new_click = mk_id != current_thresh_marker
+
+    img_label = data_repo.get_image('label')
+
+    if img_label is None:
+            return None
+    
+    z,x,y = img_label.shape
+    edt = distance_transform_log_sum_kernel.distance_transform(img_label,sigma,1,z,x,y)
+
+    # Check for NaN or inf values in edt and raise an error if found
+    if np.isnan(edt).any() or np.isinf(edt).any():
+        return handle_exception("Error: edt contains NaN or infinite values.")
+    
+    print('local max')
+    coords = peak_local_max(edt, footprint=np.ones((5, 5, 5)), min_distance=11,labels=img_label.reshape(edt.shape))
+
+    print('zeroes mask')
+    mask = np.zeros(edt.shape, dtype=bool)
+    mask[tuple(coords.T)] = True
+
+    print('markers generation')
+    markers, _ = ndi.label(mask)
+
+    print('relief creation')
+    relief = -edt.astype(np.int32)
+
+    print('watershed start')
+    for i in range(z):
+            watershed.watershed_meyers_2d(relief[i], markers[i], 0, x, y)
+
+    markers = markers*(img_label>0)
+    data_repo.set_image('label',markers.astype(np.int32))
+
+    return jsonify(annot_module.current_mk_id)
