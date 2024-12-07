@@ -1255,7 +1255,7 @@ def watershed_apply(input_id: str):
         elif input_filter == 'prewitt':
             prewitt(input_img, relief_img, x, y, z, 1)
 
-        markers = annot_module.annotation_image.astype(np.int32)
+        markers = data_repo.get_image('label').astype(np.int32)
         watershed_relief = -relief_img.astype(np.int32)
 
         print('relief shape:',watershed_relief.shape)
