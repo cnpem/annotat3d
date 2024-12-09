@@ -1571,6 +1571,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             };
 
             this.onContrastChanged = (payload: number[]) => {
+                console.log('Adjusting constrast', payload);
                 this.adjustContrast(payload[0], payload[1]);
             };
 

@@ -257,17 +257,15 @@ def anisodiff_preview(input_id: str, output_id: str):
 
         input_img_vol = input_img[slice_range].astype("float32")
 
-        anisotropic_diffusion3D(input_img_vol, total_iterations, delta_t, kappa, diffusion_option)
+        output_img = anisotropic_diffusion3D(input_img_vol, total_iterations, delta_t, kappa, diffusion_option, 0, 0.4, True)
 
-        output_img = input_img_vol[..., 5]
+        slice_range = utils.get_3d_slice_range_from(axis, slice_num_map, slice_num_map + 1)
+        output_img = output_img[slice_range].squeeze()
 
     else:
         slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
-        output_img = input_img[slice_range].copy()
-        output_img = output_img.astype("float32")
-
-        anisotropic_diffusion2D(output_img, total_iterations, delta_t, kappa, diffusion_option)
+        output_img = anisotropic_diffusion2D(input_img[slice_range].astype("float32"), total_iterations, delta_t, kappa, diffusion_option)
 
     output_img = output_img.reshape((1, *output_img.shape))
     data_repo.set_image(output_id, data=output_img)
@@ -292,9 +290,8 @@ def anisodiff_apply(input_id: str, output_id: str):
     aniso3D = request.json["aniso3D"]
 
     if aniso3D:
-        output_img = input_img.astype("float32").copy()
         try:
-            anisotropic_diffusion3D(output_img, total_iterations, delta_t, kappa, diffusion_option)
+            output_img = anisotropic_diffusion3D(input_img.astype("float32"), total_iterations, delta_t, kappa, diffusion_option, 1, 0.4, True)
         except Exception as e:
             print("Error" + str(e))
             return "Error " + str(e), 400
@@ -302,9 +299,8 @@ def anisodiff_apply(input_id: str, output_id: str):
         # apply 2D aniso diffusion in xy slices
         output_img = []
         for image_slice in input_img:
-            image_slice = image_slice.astype("float32").copy()
-            anisotropic_diffusion2D(image_slice, total_iterations, delta_t, kappa, diffusion_option)
-            output_img.append(image_slice)
+            slice_output = anisotropic_diffusion2D(image_slice.astype("float32"), total_iterations, delta_t, kappa, diffusion_option)
+            output_img.append(slice_output)
 
         output_img = np.asarray(output_img)
 

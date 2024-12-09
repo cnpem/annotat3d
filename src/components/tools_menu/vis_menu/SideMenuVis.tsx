@@ -287,7 +287,7 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
                     contrastRangeRef.current!.value = contrast;
                 }, 20);
 
-                dispatch('contrastChanged', [contrast.lower, contrast.upper]);
+                dispatch('contrastChanged', [contrastRangeRef.current!.min, contrastRangeRef.current!.max]);
             }
         }
         //now I am just dispatch all events on mount

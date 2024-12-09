@@ -29,7 +29,7 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
     const [method, setMethod] = useStorageState<string>(sessionStorage, 'ActiveContourMethod', 'chan-vese');
 
     // Shared Parameters
-    const [iterations, setIterations] = useStorageState<number>(sessionStorage, 'ActiveContourIterations', 10);
+    const [iterations, setIterations] = useStorageState<number>(sessionStorage, 'ActiveContourIterations', 100);
     const [smoothing, setSmoothing] = useStorageState<number>(sessionStorage, 'ActiveContourSmoothing', 1);
 
     // Chan-Vese Specific Parameters
@@ -200,6 +200,11 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
                             checked={useCheckboard}
                             onIonChange={(e: CustomEvent) => setUseCheckboard(e.detail.checked)}
                         />
+                        <InfoPopover
+                            triggerId="checkboardInfo"
+                            header="Create binary checkboard level set"
+                            content="Binary checkboard level set for chan-vese, useful for segmenting backgrounds"
+                        />
                     </IonItem>
 
                     {useCheckboard && (
@@ -215,13 +220,23 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
                                     }
                                     placeholder="Enter checkboard size"
                                 />
+                                <InfoPopover
+                                    triggerId="checkboardSize"
+                                    header="checkboard_size"
+                                    content="Determinate the size of checkboard"
+                                />
                             </IonItem>
 
                             <IonItem>
-                                <IonLabel>Background: </IonLabel>
+                                <IonLabel>Lowest intensity (Background): </IonLabel>
                                 <IonCheckbox
                                     checked={backgroundAnnot}
                                     onIonChange={(e: CustomEvent) => setBackgroundAnnot(e.detail.checked)}
+                                />
+                                <InfoPopover
+                                    triggerId="LowestCheckboard"
+                                    header="Lowest Checkboard"
+                                    content="Get lowest intensity mean value for the binary mask of the checkboard level set segmentation"
                                 />
                             </IonItem>
 

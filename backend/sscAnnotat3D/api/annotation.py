@@ -903,7 +903,7 @@ def apply_active_contour_checkboard(input_id: str):
     # Step 3: Initialize Level Set using Checkerboard
     init_ls = np.zeros(img_slice.shape, dtype=bool)
     level_set = checkerboard_level_set(img_slice.shape, params["checkboard_size"]) > 0
-    init_ls[1:-1, 1:-1] = level_set[1:-1, 1:-1]
+    init_ls = level_set
 
     level_set = morph_2D_chan_vese(
         img_slice, init_ls, params["iterations"],
@@ -912,9 +912,11 @@ def apply_active_contour_checkboard(input_id: str):
 
     # Step 5: Adjust Level Set for Intensity
     if (params["background"]==True):
-        print('\n invert level set \n')
-        level_set[1:-1, 1:-1] = ~level_set[1:-1, 1:-1]
-
+        if (img_slice[level_set].mean() > img_slice[~level_set].mean()):
+            level_set = ~level_set
+    elif ((img_slice[level_set].mean() < img_slice[~level_set].mean())):
+        level_set = ~level_set
+        
     # Step 6: Finalization Logic
     # Update annotation with the final level set
     mk_id = annot_module.current_mk_id
