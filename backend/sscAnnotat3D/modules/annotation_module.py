@@ -154,6 +154,18 @@ class AnnotationModule:
         self.set_marker_label_selection_type(self.__default_marker_label_selection_type)
 
         logging.debug("Reloading complete for annotation class")
+        
+    def update_image_shape(self, new_image_shape):
+        """
+        Update the shape of the image and reinitialize relevant attributes.
+        """
+        if len(new_image_shape) != 3:
+            raise ValueError("new_image_shape must be a tuple of three dimensions (z, y, x).")
+
+        logging.info(f"Updating image shape from {self.zsize, self.ysize, self.xsize} to {new_image_shape}")
+
+        # Update dimensions
+        self.zsize, self.ysize, self.xsize = new_image_shape
 
     def get_volume_grid_data(self, volume_data=None):
         d0, d1, d2 = self.zsize, self.ysize, self.xsize
@@ -603,6 +615,41 @@ class AnnotationModule:
 
         # print('draw backend time {}'.format(time()-start))
 
+    def draw_init_levelset(self, cursor_coords):
+        #same as funtion of draw_marker_curve, excpet it returns the bool image array
+
+        ### Creating the mask in the size of the brush ###
+        radius = 3
+        size = 2 * radius + 1
+        disk_mask = np.zeros((size, size), dtype=np.bool_)
+        rr, cc = draw.disk((radius, radius), radius)
+        disk_mask[rr, cc] = True
+
+        ### Create a mask image for adding the drawings ###
+        height, width = self.get_current_slice_shape()
+        image = np.zeros((height, width), dtype=np.bool_)
+        #print(image.shape)
+        for coord in cursor_coords:
+            # check if its valid coord, invert for y (or z),x mode. Coord inputs are in x,y (or z).
+            if self.valid_coords(coord):
+                x, y = list(map(int, np.floor(coord)))
+                # ensure the drawing of the disk is within the image range
+                x_start = max(0, x - radius)
+                y_start = max(0, y - radius)
+                x_end = min(height, x + radius + 1)
+                y_end = min(width, y + radius + 1)
+
+                mask_x_start = radius - (x - x_start)
+                mask_y_start = radius - (y - y_start)
+                mask_x_end = radius + (x_end - x)
+                mask_y_end = radius + (y_end - y)
+
+                # make the drawing
+                image[x_start:x_end, y_start:y_end] += disk_mask[mask_x_start:mask_x_end, mask_y_start:mask_y_end]
+        
+        return image
+        
+
     def __update_annotation_image(self, annotation, label=None):
         if label is not None:
             for c in annotation:
@@ -615,7 +662,7 @@ class AnnotationModule:
         return self.annotation
 
     def set_annotation(self, label_annotation: dict):
-        self.annotation = label_annotation
+        self.annotation = defaultdict(list, label_annotation)
         return self.annotation
 
     def update_annotation(self, annotations):

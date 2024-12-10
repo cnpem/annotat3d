@@ -8,6 +8,7 @@ from harpia.filters import (
     mean,
     median,
     unsharp_mask,
+    non_local_means,
 )
 from skimage.filters import gaussian as skimage_gaussian
 from sscAnnotat3D import utils
@@ -156,21 +157,23 @@ def nlm_preview(input_id: str, output_id: str):
     if input_img is None:
         return f"Image {input_id} not found.", 400
 
+    h = request.json['h']
     sigma = request.json["sigma"]
-    nlmStep = request.json["nlmStep"]
-    gaussianStep = request.json["gaussianStep"]
+    bigWindow = request.json["bigWindow"]
+    smallWindow = request.json["smallWindow"]
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
     input_img_slice = input_img[slice_range]
-    input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)))
+    x,y = input_img_slice.shape
+    input_img_2d = np.ascontiguousarray(input_img_slice,dtype=np.float32)
 
-    output_img = np.zeros_like(input_img_3d)
-    spin_nlm(output_img, input_img_3d, sigma, nlmStep, gaussianStep)
+    output_img = np.zeros_like(input_img_2d,dtype=np.float64)
+    non_local_means(input_img_2d,output_img, x,y,smallWindow,bigWindow,h,sigma)
 
-    data_repo.set_image(output_id, data=output_img)
+    data_repo.set_image(output_id, data=output_img.reshape((1,x,y)))
 
     return "success", 200
 
@@ -178,17 +181,51 @@ def nlm_preview(input_id: str, output_id: str):
 @app.route("/filters/nlm/apply/<input_id>/<output_id>", methods=["POST"])
 @cross_origin()
 def nlm_apply(input_id: str, output_id: str):
-    input_img = data_repo.get_image(input_id)
+    input_img = np.ascontiguousarray(data_repo.get_image(input_id),dtype=np.float32)
+    output_img = np.ascontiguousarray(np.zeros_like(input_img),dtype=np.float64)
 
     if input_img is None:
         return f"Image {input_id} not found.", 400
-
+    
+    h = request.json['h']
     sigma = request.json["sigma"]
-    nlmStep = request.json["nlmStep"]
-    gaussianStep = request.json["gaussianStep"]
+    bigWindow = request.json["bigWindow"]
+    smallWindow = request.json["smallWindow"]
 
-    output_img = np.zeros_like(input_img)
-    spin_nlm(output_img, input_img, sigma, nlmStep, gaussianStep)
+    z,x,y = input_img.shape
+
+
+    # convolution in x, y applied for all slices in the the z direction
+    # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
+    axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+    axisIndex = axisIndexDict[request.json["axis"]]
+    typeImg2d = input_img[0].dtype
+    for i in range(input_img.shape[axisIndex]):
+        # on the annotat3D legacy, this was implemented forcing the stack through the z axis
+        if axisIndex == 0:
+            # stack following the z axis
+            #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
+            img = input_img[i]
+                
+            non_local_means(img.reshape(x,y),output_img[i].reshape(x,y),x,y,smallWindow,bigWindow,h,sigma)
+
+        elif axisIndex == 1:
+            # stack following the y axis
+            #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
+            input = np.ascontiguousarray(input_img[:,i,:].reshape((input_img[:,i,:].shape)),dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:,i,:].reshape((input_img[:,i,:].shape)),dtype=np.float64)
+            x,y = out.shape
+            non_local_means(img.reshape(x,y),output_img[i].reshape(x,y),x,y,smallWindow,bigWindow,h,sigma)
+            output_img[:,i,:] = out
+
+        elif axisIndex == 2:
+            # stack following the x axis
+            #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
+            input = np.ascontiguousarray(input_img[:,:,i].reshape((input_img[:,:,i].shape)),dtype=np.float32)
+            out = np.ascontiguousarray(output_img[:,:,i].reshape((input_img[:,:,i].shape)),dtype=np.float64)
+            x,y = out.shape
+            non_local_means(img.reshape(x,y),output_img[i].reshape(x,y),x,y,smallWindow,bigWindow,h,sigma)
+            output_img[:,:,i] = out
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -220,17 +257,15 @@ def anisodiff_preview(input_id: str, output_id: str):
 
         input_img_vol = input_img[slice_range].astype("float32")
 
-        anisotropic_diffusion3D(input_img_vol, total_iterations, delta_t, kappa, diffusion_option)
+        output_img = anisotropic_diffusion3D(input_img_vol, total_iterations, delta_t, kappa, diffusion_option, 0, 0.4, True)
 
-        output_img = input_img_vol[slice_num_map]
+        slice_range = utils.get_3d_slice_range_from(axis, slice_num_map, slice_num_map + 1)
+        output_img = output_img[slice_range].squeeze()
 
     else:
         slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
-        output_img = input_img[slice_range].copy()
-        output_img = output_img.astype("float32")
-
-        anisotropic_diffusion2D(output_img, total_iterations, delta_t, kappa, diffusion_option)
+        output_img = anisotropic_diffusion2D(input_img[slice_range].astype("float32"), total_iterations, delta_t, kappa, diffusion_option)
 
     output_img = output_img.reshape((1, *output_img.shape))
     data_repo.set_image(output_id, data=output_img)
@@ -255,15 +290,17 @@ def anisodiff_apply(input_id: str, output_id: str):
     aniso3D = request.json["aniso3D"]
 
     if aniso3D:
-        output_img = input_img.astype("float32")
-        anisotropic_diffusion3D(output_img, total_iterations, delta_t, kappa, diffusion_option)
+        try:
+            output_img = anisotropic_diffusion3D(input_img.astype("float32"), total_iterations, delta_t, kappa, diffusion_option, 1, 0.4, True)
+        except Exception as e:
+            print("Error" + str(e))
+            return "Error " + str(e), 400
     else:
         # apply 2D aniso diffusion in xy slices
         output_img = []
         for image_slice in input_img:
-            image_slice = image_slice.astype("float32")
-            anisotropic_diffusion2D(image_slice, total_iterations, delta_t, kappa, diffusion_option)
-            output_img.append(image_slice)
+            slice_output = anisotropic_diffusion2D(image_slice.astype("float32"), total_iterations, delta_t, kappa, diffusion_option)
+            output_img.append(slice_output)
 
         output_img = np.asarray(output_img)
 

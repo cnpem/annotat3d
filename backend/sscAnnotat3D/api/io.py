@@ -1,14 +1,16 @@
 import os
 import os.path
 import time
+import logging
 
 import numpy as np
 import sscIO.io
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
 from sscAnnotat3D import utils
-from sscAnnotat3D.repository import data_repo
+from sscAnnotat3D.repository import data_repo, module_repo
 from werkzeug.exceptions import BadRequest
+from harpia.threshold import threshold as threshold_H
 
 app = Blueprint("io", __name__)
 
@@ -75,11 +77,23 @@ def get_image_histogram(image_id):
         img_min = np.min(img_slice)
 
     elif slice_num == -1:
-        histogram, bin_edges = np.histogram(image, bins=255)
-        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        img_max = np.max(image)
-        img_min = np.min(image)
+        image_info = data_repo.get_info(key="image_info")
 
+        hist_data =  data_repo.get_info(key= image_info['imageName'] + " 3Dhistogram")
+
+        if hist_data is not None:
+            histogram, bin_centers, img_max, img_min = hist_data['histogram'], hist_data['bin_edges'], hist_data['img_max'], hist_data['img_min']
+        else:
+            histogram, bin_edges = np.histogram(image, bins=255)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+            img_max = np.max(image)
+            img_min = np.min(image)
+
+            hist_data = {}
+            hist_data['histogram'], hist_data['bin_edges'], hist_data['img_max'], hist_data['img_min'] = histogram, bin_centers, img_max, img_min
+
+            data_repo.set_info(key= image_info['imageName'] + " 3Dhistogram", data=hist_data)
+            
     # round bin_centers for pretty show in frontend
     if np.issubdtype(bin_centers.dtype, np.floating):
         # Round the array to two decimal places
@@ -106,6 +120,15 @@ def get_image_histogram(image_id):
     histogram_info["maxValue"] = python_typer(img_max)
     histogram_info["minValue"] = python_typer(img_min)
     histogram_info["bins"] = bin_centers.tolist()
+
+    bins = len(histogram_info["bins"])
+    #computes otsu
+    value = threshold_H.otsu(histogram.astype(np.int32), int(bins) )
+    otsu_value = value*(img_max-img_min)/bins
+
+    histogram_info['otsu'] = round(otsu_value,3)
+
+    print(jsonify(histogram_info))
 
     return jsonify(histogram_info)
 
@@ -195,6 +218,21 @@ def open_image(image_id: str):
     label_list = []
     if image_id == "image":
         data_repo.set_info(data=image_info)
+        
+        try:
+            annot_module = module_repo.get_module("annotation")
+
+            if annot_module is not None:
+                #re_init annot_module
+                from sscAnnotat3D.modules import annotation_module
+                annot_module = annotation_module.AnnotationModule(image.shape)
+                module_repo.set_module("annotation", module=annot_module)
+            else:
+                logging.warning("Annotation module not found. Proceeding without updating image shape.")
+        
+        except Exception as e:
+            logging.error("An error occurred while processing the annotation module.", exc_info=True)
+            return handle_exception("Error processing annotation module\n", e)
 
     elif image_id == "label":
         set_unique_labels_id = np.unique(image)
