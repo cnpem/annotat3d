@@ -1433,12 +1433,10 @@ def watershed_apply(input_id: str):
 
         watershed_relief = -relief_img[slice_range].astype(np.int32)
         x,y = markers.shape
+        
+        watershed.watershed_meyers_2d(watershed_relief, markers, -1, x, y)
 
-        watershed.watershed_meyers_2d(watershed_relief,markers,-1,x,y)
-
-        label_mask = np.zeros_like(relief_img)
-        label_mask[slice_range] = markers
-        annot_module.annotation_image[slice_range] = markers
+        annot_module.multilabel_updated(markers, mk_id)
 
     else:
         if input_filter == 'sobel':
@@ -1533,11 +1531,7 @@ def remove_islands_apply(input_id: str):
 
         output_mask = morphology.remove_small_objects(labelling_mask,min_size=min_size,connectivity=2)
 
-        input_mask[output_mask==0]=-1
-
-        print('out mask after:',output_mask)
-
-        annot_module.annotation_image[slice_range] = input_mask
+        annot_module.labelmask_update(output_mask==0, -1, mk_id, True)
 
     else:
         input_img = data_repo.get_image('image')
@@ -1692,7 +1686,7 @@ def object_separation_apply(input_id: str):
     from harpia.distanceTransform import distance_transform_log_sum_kernel
     from skimage.feature import peak_local_max
     from scipy import ndimage as ndi
-
+    
     print(request.json)
     def python_typer(x):
         if isinstance(x, (float, np.floating)):

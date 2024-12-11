@@ -524,6 +524,41 @@ class AnnotationModule:
 
         self.__annotation_list.append(new_annotation)
 
+    def multilabel_updated(self, new_annot, marker_id, new_click = True):
+        
+        # Undo previous iteration        
+        if new_click == False:
+            self.undo()
+
+        ## Updating the markers with the current marker id ##
+        self.order_markers.add(marker_id)
+
+        if new_annot.ndim == 2:
+            # Get the coordinates where the mask is different to draw
+            old_annot = self.get_current_slice(self.__annotation_image)
+            rr,cc = np.nonzero(old_annot!=new_annot)
+
+            new_annotation = []
+            for coord2D in zip(rr,cc):
+                marker_lb = new_annot[coord2D]
+                coord3D = self.get_current_slice_3d_coord(coord2D)
+                self.__annotation[coord3D].append(marker_lb)
+                self.__annotation_image[coord3D] = marker_lb
+                #save the coords
+                new_annotation.append(coord3D)
+
+        else:
+            old_annot = self.__annotation_image
+            rr,cc,dd = np.nonzero(old_annot!=new_annot)
+            new_annotation = []
+            for coord3D in zip(rr,cc,dd):
+                marker_lb = new_annot[coord3D]
+                self.__annotation[coord3D].append(marker_lb)
+                self.__annotation_image[coord3D] = marker_lb
+                #save the coords
+                new_annotation.append(coord3D)
+
+        self.__annotation_list.append(new_annotation)
 
     def labelmask_multiupdate(self, label_masks, marker_lbs, marker_id, new_click):
 

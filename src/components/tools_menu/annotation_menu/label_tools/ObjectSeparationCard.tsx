@@ -53,7 +53,10 @@ const ObjectSeparationCard: React.FC<ObjectSeparationCardProps> = ({ isVisible }
         try {
             const result = await sfetch('POST', '/object_separation_apply/image', JSON.stringify(data), 'json');
             console.log('Object separation applied successfully:', result);
-            dispatch('objectSeparationApplied', result);
+            //dispatch('objectSeparationApplied', result);
+            if (dimension === '2d') {
+                dispatch('annotationChanged', null);
+            } else dispatch('labelChanged', '');
         } catch (error) {
             console.error('Error applying object separation:', error);
         }

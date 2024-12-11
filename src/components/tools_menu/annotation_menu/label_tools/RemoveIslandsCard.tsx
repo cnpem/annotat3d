@@ -50,7 +50,10 @@ const RemoveIslandsCard: React.FC<RemoveIslandsCardProps> = ({ isVisible }) => {
             setLoadingMsg('Applying Remove Islands...');
             const result = await sfetch('POST', '/remove_islands_apply/image', JSON.stringify(data), 'json');
             console.log('Remove Islands applied successfully:', result);
-            dispatch('removeIslandsApplied', result);
+            //dispatch('removeIslandsApplied', result);
+            if (dimension === '2d') {
+                dispatch('annotationChanged', null);
+            } else dispatch('labelChanged', '');
         } catch (error) {
             console.error('Error applying Remove Islands:', error);
         } finally {

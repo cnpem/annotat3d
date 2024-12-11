@@ -21,8 +21,6 @@ import { dispatch } from '../../../../../../utils/eventbus';
 
 import LoadingComponent from '../../../../utils/LoadingComponent';
 
-import OtsuThreshold from './OtsuThreshold';
-
 //Vs-code is complaining about the svg file, so I disbaled the warning
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -240,7 +238,6 @@ const GlobalThreshold: React.FC = () => {
 
     return (
         <IonList>
-            <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
             <IonItem>
                 <IonRadioGroup
                     value={selectedDimension}
@@ -339,6 +336,7 @@ const GlobalThreshold: React.FC = () => {
                         )}
                     </IonRow>
                 </IonGrid>
+                <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
             </IonItem>
 
             <IonItem>

@@ -121,10 +121,10 @@ def get_image_histogram(image_id):
     histogram_info["minValue"] = python_typer(img_min)
     histogram_info["bins"] = bin_centers.tolist()
 
-    bins = len(histogram_info["bins"])
+    n_bins = len(histogram_info["bins"])
     #computes otsu
-    value = threshold_H.otsu(histogram.astype(np.int32), int(bins) )
-    otsu_value = value*(img_max-img_min)/bins
+    value = threshold_H.otsu(histogram.astype(np.int32), int(n_bins) )
+    otsu_value = value * (bin_centers.max()- bin_centers.min())/n_bins + bin_centers.min()
 
     histogram_info['otsu'] = round(otsu_value,3)
 

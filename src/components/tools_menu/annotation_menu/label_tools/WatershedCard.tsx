@@ -52,7 +52,11 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
             const result = await sfetch('POST', '/watershed_apply_2d/image', JSON.stringify(data), 'json');
             console.log('Backend response:', result);
 
-            dispatch('watershedApplied', result);
+            //dispatch('watershedApplied', result);
+            if (selectedDimension === '2D') {
+                dispatch('annotationChanged', null);
+            } else dispatch('labelChanged', '');
+
             setShowLoadingCompPS(true);
         } catch (error) {
             console.error('Error applying watershed:', error);
@@ -60,6 +64,7 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
             setShowLoadingCompPS(false);
             dispatch('watershedError', { error: typedError.message });
         }
+        setShowLoadingCompPS(false);
     };
 
     return (
