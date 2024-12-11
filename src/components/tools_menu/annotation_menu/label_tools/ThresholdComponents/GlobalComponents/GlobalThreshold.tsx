@@ -224,14 +224,18 @@ const GlobalThreshold: React.FC = () => {
             curret_thresh_marker: markerID,
         };
         console.log('new click threshold?', dataThreshold);
+        setLoadingMsg('Updating threshold annotation');
+        setShowLoadingCompPS(true);
         void sfetch('POST', '/threshold/image', JSON.stringify(dataThreshold), 'json')
             .then((backendMarkerID) => {
                 console.log('Threshold applied');
                 setMarkerId(backendMarkerID);
                 console.log('backendMarkerID', backendMarkerID);
                 dispatch('annotationChanged', null);
+                setShowLoadingCompPS(false);
             })
             .catch((error) => {
+                setShowLoadingCompPS(false);
                 console.log('Error while applying hist', error);
             });
     }, [currentValue]);

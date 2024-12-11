@@ -17,6 +17,7 @@ import { dispatch, useEventBus } from '../../../../utils/eventbus';
 import { useStorageState } from 'react-storage-hooks';
 import { sfetch } from '../../../../utils/simplerequest';
 import enter from '../../../../public/icon-park-solid--enter-key.svg';
+import LoadingComponent from '../../utils/LoadingComponent';
 
 interface MagicWandCardProps {
     isVisible: boolean;
@@ -114,6 +115,8 @@ const MagicWandCard: React.FC<MagicWandCardProps> = ({ isVisible }) => {
         x_coord: 0,
         y_coord: 0,
     });
+    const [loadingMsg, setLoadingMsg] = useState<string>('');
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
 
     const fetchDataWand = (newClick: boolean) => {
         const updatedDataWand = {
@@ -125,19 +128,27 @@ const MagicWandCard: React.FC<MagicWandCardProps> = ({ isVisible }) => {
             max_contrast: contrastRangeRefMaxValue,
             min_contrast: contrastRangeRefMinValue,
         };
-        console.log('Wand Applied');
-        void sfetch('POST', '/magic_wand/image', JSON.stringify(updatedDataWand), 'json').then((StartValue: number) => {
-            console.log('Magic wand applied!', 'Center pixel:', StartValue);
-            setVerticaline(StartValue);
-            dispatch('annotationChanged', null);
-            //change bars for when is a new click
-            if (newClick) {
-                skipEffectRef.current = true;
-                // Tolerance is set to 8% of the width in histogram
-                const Tolerance = (8 * (contrastRangeRefMaxValue - contrastRangeRefMinValue)) / 100;
-                setContrast({ lower: StartValue - Tolerance, upper: StartValue + Tolerance });
-            }
-        });
+        console.log('Applying MagicWand');
+        setLoadingMsg('Applying wand and updating annotation');
+        setShowLoadingComp(true);
+        void sfetch('POST', '/magic_wand/image', JSON.stringify(updatedDataWand), 'json')
+            .then((StartValue: number) => {
+                console.log('Magic wand applied!', 'Center pixel:', StartValue);
+                setVerticaline(StartValue);
+                dispatch('annotationChanged', null);
+                setShowLoadingComp(false);
+                //change bars for when is a new click
+                if (newClick) {
+                    skipEffectRef.current = true;
+                    // Tolerance is set to 8% of the width in histogram
+                    const Tolerance = (8 * (contrastRangeRefMaxValue - contrastRangeRefMinValue)) / 100;
+                    setContrast({ lower: StartValue - Tolerance, upper: StartValue + Tolerance });
+                }
+            })
+            .catch((error) => {
+                setShowLoadingComp(false);
+                console.log('Error while applying hist', error);
+            });
     };
 
     useEffect(() => {
@@ -188,6 +199,8 @@ const MagicWandCard: React.FC<MagicWandCardProps> = ({ isVisible }) => {
 
     return (
         <IonList>
+            <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={loadingMsg} />
+
             <IonItem>
                 <IonGrid>
                     <IonRow>
