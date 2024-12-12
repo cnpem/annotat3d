@@ -592,7 +592,15 @@ def apply_magicwand(input_id: str):
     #Marker id is not necessary for the magic wand logic.
     mk_id = annot_module.current_mk_id
 
-    annot_module.labelmask_update(mask_wand, label, mk_id, new_click)
+    if new_click:
+        data_repo.set_image(key="labelMask", data=mask_wand) #TODO: Frontend needs to tell backend to delete this at some point
+        annot_module.labelmask_update(mask_wand, label, mk_id, new_click)
+    else: #Only update what has changed
+        old_mask = data_repo.get_image(key="labelMask")
+        data_repo.set_image(key="labelMask", data=mask_wand)
+        write_mask = (~old_mask) & (mask_wand)  # 0 -> 1
+        erase_mask = (old_mask) & (~mask_wand)  # 1 -> 0
+        annot_module.labelmask_multiupdate([write_mask, erase_mask], [label, -1], mk_id, new_click)
 
     return jsonify(python_typer(img_slice[y_coord, x_coord]))
 
@@ -646,7 +654,15 @@ def threshold(input_id: str):
 
     label_mask = np.logical_and(img_slice >= lower_tresh, img_slice <= upper_tresh) 
 
-    annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+    if new_click:
+        data_repo.set_image(key="labelMask", data=label_mask) #TODO: Frontend needs to tell backend to delete this at some point
+        annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+    else: #Only update what has changed
+        old_mask = data_repo.get_image(key="labelMask")
+        data_repo.set_image(key="labelMask", data=label_mask)
+        write_mask = (~old_mask) & (label_mask)  # 0 -> 1
+        erase_mask = (old_mask) & (~label_mask)  # 1 -> 0
+        annot_module.labelmask_multiupdate([write_mask, erase_mask], [label, -1], mk_id, new_click)
 
     return jsonify(annot_module.current_mk_id)
 
@@ -1466,7 +1482,7 @@ def watershed_apply(input_id: str):
 
         img_label[markers >= 0] = markers[markers >= 0]
 
-        data_repo.set_image("label",markers)
+        data_repo.set_image("label", img_label)
 
     return jsonify(annot_module.current_mk_id)
 

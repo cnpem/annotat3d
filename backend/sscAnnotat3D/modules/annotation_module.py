@@ -564,7 +564,10 @@ class AnnotationModule:
 
         # Undo previous iteration        
         if new_click == False:
-            self.undo()
+            marker_to_remove = max(self.order_markers)
+            print("marker_to_remove", marker_to_remove)
+            self.order_markers.remove(marker_to_remove)
+            self.__annotation_list.pop()
 
         ## Updating the markers with the current marker id ##
         self.order_markers.add(marker_id)
