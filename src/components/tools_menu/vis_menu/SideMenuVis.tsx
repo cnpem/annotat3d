@@ -46,11 +46,6 @@ interface SideMenuVisProps {
 
 const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     const [lockVisCards, setLockVisCards] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
-    // This is the contrast that the user can change
-    const [contrast, setContrast] = useStorageState(sessionStorage, 'contrast', {
-        lower: 10,
-        upper: 90,
-    });
 
     useEventBus('LockComponents', (changeDisableVis) => {
         setLockVisCards(changeDisableVis);
@@ -133,16 +128,12 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         'contrastRangeRefMinValue',
         0
     );
+    // This is the contrast that the user can change
+    const [contrast, setContrast] = useStorageState(sessionStorage, 'contrast', {
+        lower: 0,
+        upper: 100,
+    });
 
-    const contrastRangeRef = useRef<HTMLIonRangeElement | null>(null);
-
-    function updateContrastRangeLimitValues() {
-        console.log('Range Updated:', contrastRangeRefMaxValue, contrastRangeRefMinValue);
-        contrastRangeRef.current!.max = contrastRangeRefMaxValue;
-        contrastRangeRef.current!.min = contrastRangeRefMinValue;
-        setContrast({ lower: contrastRangeRefMinValue, upper: contrastRangeRefMaxValue });
-        dispatch('contrastlimitschanged', { lower: contrastRangeRefMinValue, upper: contrastRangeRefMaxValue });
-    }
     // Function to generate background colors based on data and colormap settings
     function generateBackgroundColors({ data, colormapName, nshades }: ColormapData): string[] {
         // Generate a colormap based on the given range and colormap name
@@ -254,16 +245,14 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         // Store histogram max and min values
         setContrastRangeRefMaxValue(loadedHistogram.maxValue);
         setContrastRangeRefMinValue(loadedHistogram.minValue);
+        setContrast({ upper: loadedHistogram.maxValue, lower: loadedHistogram.minValue });
         console.log('I, the ImageHistogramLoaded event finished the execution');
     });
 
     useEffect(() => {
-        // This code runs after contrastRangeRefMaxValue and contrastRangeRefMinValue have been updated
-        updateContrastRangeLimitValues();
-    }, [contrastRangeRefMaxValue, contrastRangeRefMinValue]); // Dependencies
-
-    useEffect(() => {
         updateBackgroundColors();
+        console.log('contrast changed', contrast);
+        dispatch('contrastChanged', [contrast.lower, contrast.upper]);
     }, [selectedColor, contrast]);
 
     const [labelContour, setLabelContour] = useStorageState<boolean>(sessionStorage, 'labelContour', false);
@@ -275,33 +264,15 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     const [markerAlpha, setMarkerAlpha] = useStorageState<number>(sessionStorage, 'markerAlpha', 0.5);
     const [showAnnotations, setShowAnnotations] = useStorageState<boolean>(sessionStorage, 'showAnnotations', true);
     const [annotationAlpha, setAnnotationAlpha] = useStorageState<number>(sessionStorage, 'annotationAlpha', 0.75);
-
-    //for some weird reason, IonRange is ignoring value when using the value property,
-    //so I am manually setting it.
+    //Need to update canvas to new react to use react hooks
     useEffect(() => {
-        if (contrastRangeRef) {
-            console.log('Peixinho is sorry!');
-            if (!isEqual(contrastRangeRef.current!.value, contrast)) {
-                // this is used to reposition the slider markers to the last values set on contrast
-                setTimeout(() => {
-                    contrastRangeRef.current!.value = contrast;
-                }, 20);
-
-                dispatch('contrastChanged', [contrastRangeRef.current!.min, contrastRangeRef.current!.max]);
-            }
-        }
-        //now I am just dispatch all events on mount
-        //(however, I should change canvas container to store this state properly)
-        //to use the useStorageState I should migrate canvas container to new format (react hooks)
-        //If I did not have time to undo, and you are reading this, Peixinho says "I am sorry"
-
         dispatch('superpixelColorChanged', superpixelColor);
         dispatch('superpixelVisibilityChanged', showSuperpixel);
         dispatch('labelAlphaChanged', labelAlpha);
         dispatch('labelVisibilityChanged', showLabel);
         dispatch('annotationVisibilityChanged', showAnnotations);
         dispatch('annotationAlphaChanged', annotationAlpha);
-    });
+    }, [superpixelColor, showSuperpixel, labelAlpha, showLabel, showAnnotations, annotationAlpha]);
 
     return (
         <React.Fragment>
@@ -312,14 +283,14 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
                         <Line options={histogramOptions} data={histogramData} />
                         <IonRange
                             className="custom-range"
-                            ref={contrastRangeRef}
+                            max={contrastRangeRefMaxValue}
+                            min={contrastRangeRefMinValue}
                             pin={true}
+                            value={{ lower: contrast.lower, upper: contrast.upper }}
                             dualKnobs={true}
                             onIonKnobMoveEnd={(e: CustomEvent) => {
                                 if (e.detail.value) {
-                                    const range = e.detail.value;
-                                    setContrast(range);
-                                    dispatch('contrastChanged', [range.lower, range.upper]);
+                                    setContrast(e.detail.value);
                                 }
                             }}
                         ></IonRange>
