@@ -303,7 +303,7 @@ const GlobalThreshold: React.FC = () => {
                                             const target = e.target as HTMLInputElement;
                                             const inputValue = parseFloat(target.value);
                                             if (target.value && inputValue > histogramMinMaxValue.min) {
-                                                setCurrentValue({ lower: currentValue.lower, upper: inputValue });
+                                                setCurrentValue({ upper: currentValue.upper, lower: inputValue });
                                             }
                                         }
                                     }}
@@ -323,7 +323,10 @@ const GlobalThreshold: React.FC = () => {
                                             const target = e.target as HTMLInputElement;
                                             const inputValue = parseFloat(target.value);
                                             if (target.value && inputValue < histogramMinMaxValue.max) {
-                                                setCurrentValue({ upper: currentValue.upper, lower: inputValue });
+                                                setCurrentValue({
+                                                    upper: inputValue,
+                                                    lower: currentValue.lower,
+                                                });
                                             }
                                         }
                                     }}
@@ -335,7 +338,12 @@ const GlobalThreshold: React.FC = () => {
                     <IonRow class="ion-justify-content-center">
                         {selectedDimension === '3D' && (
                             <IonButton expand="block" onClick={handleApply3D}>
-                                Apply 3D Threshold as Label
+                                Apply threshold as 3D Label
+                            </IonButton>
+                        )}
+                        {selectedDimension === '2D' && (
+                            <IonButton expand="block" onClick={() => setMarkerId(markerID + 1)}>
+                                Start new annotation
                             </IonButton>
                         )}
                     </IonRow>
