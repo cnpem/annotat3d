@@ -627,7 +627,7 @@ def threshold(input_id: str):
         slice_num = request.json["current_slice"]
         axis = request.json["current_axis"]
         label = request.json["label"]
-        curret_thresh_marker = request.json["curret_thresh_marker"]
+        new_click = request.json["new_click"]
 
     except Exception as e:
         return handle_exception(str(e))
@@ -643,14 +643,6 @@ def threshold(input_id: str):
     img_slice = data_repo.get_image(input_id)[slice_range]
  
     mk_id = annot_module.current_mk_id
-
-    print('Current markers\n',mk_id,curret_thresh_marker)
-    #New annotation
-    if mk_id != curret_thresh_marker:
-        new_click = True
-    #its not a new annotation (overwrite current annotation)
-    else:
-        new_click = False
 
     label_mask = np.logical_and(img_slice >= lower_tresh, img_slice <= upper_tresh) 
 
@@ -692,7 +684,6 @@ def threshold_apply3D(input_id: str, output_id: str):
         upper_thresh = data["upper_thresh"]
         lower_thresh = data["lower_thresh"]
         label = data["label"]
-        curret_thresh_marker = data["curret_thresh_marker"]
 
     except KeyError as e:
         return handle_exception(f"Missing key in JSON: {str(e)}")
@@ -711,11 +702,10 @@ def threshold_apply3D(input_id: str, output_id: str):
 
     if output_id == 'annotation':
         # Determine new click status
-        new_click = mk_id != curret_thresh_marker
+        new_click = True
 
         annot_module.labelmask_update(label_mask, label, mk_id, new_click)
 
-        print('Current markers\n', mk_id, curret_thresh_marker)
     else:
         img_label = data_repo.get_image("label")
 

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IonList, IonItem, IonLabel, IonSelect, IonSelectOption } from '@ionic/react';
 
 import GlobalThreshold from './ThresholdComponents/GlobalComponents/GlobalThreshold';
 import LocalThreshold from './ThresholdComponents/LocalComponents/LocalThreshold';
+import { dispatch } from '../../../../utils/eventbus';
 
 interface ThresholdCardVisible {
     isVisible: boolean;
@@ -26,6 +27,19 @@ const ThresholdCard: React.FC<ThresholdCardVisible> = ({ isVisible }) => {
                 return null;
         }
     };
+
+    useEffect(() => {
+        //only execute if the button is pressed to be deactivated
+        console.log('Unrender threshold?', isVisible);
+        if (!isVisible) {
+            console.log('Unrender me');
+            dispatch('globalThresholdPreview', {
+                lower: 0,
+                upper: 0,
+                action: 'delete', // delete preview render in frontend
+            });
+        }
+    }, [isVisible]);
 
     return (
         <IonList>

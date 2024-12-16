@@ -369,6 +369,8 @@ class Annotation {
 
     private previousData: Uint8ClampedArray | null = null;
 
+    private originalImageData: ImageData | null = null; // Preserve the original image data
+
     constructor(colors: [number, number, number][], alphas: number[]) {
         this.canvas = document.createElement('canvas');
         //this.canvas.width = 0;
@@ -476,6 +478,50 @@ class Annotation {
 
     resetPreviousData() {
         this.previousData = null;
+        this.originalImageData = null;
+        this.sprite.texture.update();
+    }
+
+    /**
+     * Saves the current image state as `originalImageData`.
+     * This should be called before applying any annotations or thresholding.
+     */
+    saveOriginalImageData() {
+        this.originalImageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    /**
+     * Applies a threshold overlay on the annotation layer.
+     * @param imgData - The image slice as NdArray.
+     * @param lower - Lower threshold value.
+     * @param upper - Upper threshold value.
+     * @param label - Label index to determine color.
+     */
+    applyThreshold(imgData: NdArray<TypedArray>, lower: number, upper: number, label: number): void {
+        const { data, shape } = imgData;
+
+        // Restore the original image data before applying threshold
+        if (this.originalImageData) {
+            this.context.putImageData(this.originalImageData, 0, 0);
+        } else {
+            this.saveOriginalImageData();
+        }
+        const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        const canvasData = imageData.data;
+        const color = this.colors[label];
+        for (let i = 0; i < data.length; i++) {
+            const value = data[i];
+            if (value >= lower && value <= upper) {
+                const idx = i * 4;
+                canvasData[idx] = color[0]; // Red
+                canvasData[idx + 1] = color[1]; // Green
+                canvasData[idx + 2] = color[2]; // Blue
+                canvasData[idx + 3] = 255; // Alpha
+            }
+        }
+
+        this.context.putImageData(imageData, 0, 0);
+        this.sprite.texture.update();
     }
 }
 class Canvas {
@@ -1516,6 +1562,23 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.canvas!.setBrushMode(brush_mode);
     }
 
+    GlobalThreshold = (payload: { lower: number; upper: number; action: 'render' | 'delete'; label: number }) => {
+        const { lower, upper, action } = payload;
+
+        if (!this.canvas || !this.canvas.annotation) {
+            console.error('Canvas or Annotation not initialized.');
+            return;
+        }
+        if (action === 'render') {
+            // Render the threshold annotation
+            this.canvas.annotation.applyThreshold(this.canvas.imgData!, lower, upper, this.canvas.brush.label);
+        } else if (action === 'delete') {
+            // Clear the annotation overlay
+            this.canvas.annotation.resetPreviousData();
+            this.onAnnotationChanged(); // force the annotation to be rerendered, small fix
+        }
+    };
+
     componentDidMount() {
         // the element is the DOM object that we will use as container to add pixi stage(canvas)
         const elem = this.pixi_container;
@@ -1671,6 +1734,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('cropPreviewMode', this.onCropPreviewMode);
             subscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
             subscribe('activateSL', this.onActivateSL);
+            subscribe('globalThresholdPreview', this.GlobalThreshold); // Subscribe to the event
         }
     }
 
@@ -1697,6 +1761,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('cropPreviewMode', this.onCropPreviewMode);
         unsubscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
         unsubscribe('activateSL', this.onActivateSL);
+        unsubscribe('globalThresholdPreview', this.GlobalThreshold); // Subscribe to the event
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
