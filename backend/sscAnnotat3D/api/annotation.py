@@ -1533,37 +1533,35 @@ def remove_islands_apply(input_id: str):
 
     if dimension == '2d':
         #now we get the markers using the labels
-        label_mask = annot_module.annotation_image[slice_range].astype(np.int32)
-        x,y = label_mask.shape
+        annot_slice = annot_module.annotation_image[slice_range]
+        input_mask = annot_slice == label
 
-        input_mask = label_mask.astype(np.int32)
-        output_mask = np.zeros_like(input_mask,dtype=np.int32)
-
-        print('out mask before:',input_mask)
-
+        #x,y = label_mask.shape
         #quantification.removeIslands(input_mask,output_mask,min_size,x,y,1)
         #there is a bug in cuda i dont understand yet, therefore i will use skimage for now... sorry for this
-        labelling_mask = morphology.label(input_mask+2,connectivity=2)
+        output_mask = morphology.remove_small_objects(input_mask,min_size=min_size,connectivity=2)
+        #get what was removed
+        island_image = (~output_mask) * input_mask
 
-        output_mask = morphology.remove_small_objects(labelling_mask,min_size=min_size,connectivity=2)
-
-        annot_module.labelmask_update(output_mask==0, -1, mk_id, True)
+        annot_module.labelmask_update(island_image, -1, mk_id, True)
 
     else:
         input_img = data_repo.get_image('image')
 
-        input_mask = data_repo.get_image('label')
+        label_image = data_repo.get_image('label')
 
-        if input_mask is None:
+        if label_image is None:
             pass
 
-        labelling_mask = morphology.label(input_mask+2,connectivity=2)
+        input_mask  = label_image==label
+        output_mask = morphology.remove_small_objects(input_mask,min_size=min_size,connectivity=2)
 
-        output_mask = morphology.remove_small_objects(labelling_mask,min_size=min_size,connectivity=2)
+        #get what was removed
+        island_image = (~output_mask) * input_mask
 
-        input_mask[output_mask==0]=-1 
+        label_image[island_image]=-1 
 
-        data_repo.set_image("label",input_mask)
+        data_repo.set_image("label",label_image)
 
     return jsonify(annot_module.current_mk_id)
 
