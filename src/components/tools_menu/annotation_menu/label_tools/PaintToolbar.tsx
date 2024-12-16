@@ -1,21 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { IonButton, IonCard, IonCardContent, IonGrid, IonRow, IonCol, IonIcon, IonCardHeader } from '@ionic/react';
 import {
-    IonButton,
-    IonCard,
-    IonCardContent,
-    IonList,
-    IonItem,
-    IonGrid,
-    IonRow,
-    IonCol,
-    IonIcon,
-    IonCardHeader,
-} from '@ionic/react';
-import {
-    colorFilterOutline,
-    constructOutline,
     waterOutline,
-    funnelOutline,
     removeCircleOutline,
     pricetagsOutline,
     gitCompareOutline,
@@ -44,16 +30,16 @@ const PaintToolbar: React.FC = () => {
 
     const handleButtonClick = (cardType: string) => {
         setActiveCard(activeCard === cardType ? null : cardType);
-        if (cardType === 'lasso') {
-            dispatch('ChangeStateBrush', 'lasso');
-        } else {
-            dispatch('ChangeStateBrush', 'draw_brush');
-        }
     };
 
     useEffect(() => {
         if (activeCard && contentRef.current) {
             contentRef.current.scrollIntoView({ block: 'end', behavior: 'smooth' });
+        }
+        if (activeCard === 'lasso') {
+            dispatch('ChangeStateBrush', 'lasso');
+        } else if (!(activeCard === 'snakes' || activeCard === 'magicWand')) {
+            dispatch('ChangeStateBrush', 'draw_brush');
         }
     }, [activeCard]);
 

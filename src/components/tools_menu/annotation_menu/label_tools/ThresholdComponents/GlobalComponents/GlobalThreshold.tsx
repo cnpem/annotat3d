@@ -30,7 +30,6 @@ import '../../../../vis_menu/HistogramAlignment.css';
 const GlobalThreshold: React.FC = () => {
     const [loadingMsg, setLoadingMsg] = useState<string>('');
     const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
-    const [markerID, setMarkerId] = useState<number>(-1);
 
     const baseHistogram = {
         labels: [0],
@@ -122,10 +121,15 @@ const GlobalThreshold: React.FC = () => {
         const dataThreshold = {
             upper_thresh: currentValue.upper,
             lower_thresh: currentValue.lower,
-            curret_thresh_marker: markerID,
             label: selectedLabel,
         };
         console.log('new 3D threshold', dataThreshold);
+
+        dispatch('globalThresholdPreview', {
+            lower: currentValue.lower,
+            upper: currentValue.upper,
+            action: 'delete', // delete preview render in frontend
+        });
         void sfetch('POST', '/threshold_apply3D/image/label', JSON.stringify(dataThreshold), 'json')
             .then((backendMarkerID) => {
                 console.log('3D Threshold applied in label');
@@ -210,18 +214,22 @@ const GlobalThreshold: React.FC = () => {
         fetchHistogramData();
     }, [selectedDimension]); // Effect will run when selectedDimension changes[
 
-    useEffect(() => {
+    const apply2Dthrehsold = () => {
         const sliceValue = parseInt(sessionStorage.getItem('sliceValue') || '0', 10); // For numbers
         const selectedLabel = parseInt(sessionStorage.getItem('selectedLabel') || '0', 10); // For numbers
         const sliceName = JSON.parse(sessionStorage.getItem('sliceName') || '"XY"'); // For strings with JSON-like quotes
-
+        dispatch('globalThresholdPreview', {
+            lower: currentValue.lower,
+            upper: currentValue.upper,
+            action: 'delete', // delete preview render in frontend
+        });
         const dataThreshold = {
             upper_tresh: currentValue.upper,
             lower_tresh: currentValue.lower,
             current_slice: sliceValue,
             current_axis: sliceName,
             label: selectedLabel,
-            curret_thresh_marker: markerID,
+            new_click: true,
         };
         console.log('new click threshold?', dataThreshold);
         setLoadingMsg('Updating threshold annotation');
@@ -229,7 +237,6 @@ const GlobalThreshold: React.FC = () => {
         void sfetch('POST', '/threshold/image', JSON.stringify(dataThreshold), 'json')
             .then((backendMarkerID) => {
                 console.log('Threshold applied');
-                setMarkerId(backendMarkerID);
                 console.log('backendMarkerID', backendMarkerID);
                 dispatch('annotationChanged', null);
                 setShowLoadingCompPS(false);
@@ -238,6 +245,14 @@ const GlobalThreshold: React.FC = () => {
                 setShowLoadingCompPS(false);
                 console.log('Error while applying hist', error);
             });
+    };
+
+    useEffect(() => {
+        dispatch('globalThresholdPreview', {
+            lower: currentValue.lower,
+            upper: currentValue.upper,
+            action: 'render', // Render or delete
+        });
     }, [currentValue]);
 
     return (
@@ -337,13 +352,13 @@ const GlobalThreshold: React.FC = () => {
                     </IonRow>
                     <IonRow class="ion-justify-content-center">
                         {selectedDimension === '3D' && (
-                            <IonButton expand="block" onClick={handleApply3D}>
+                            <IonButton expand="block" onClick={() => handleApply3D()}>
                                 Apply threshold as 3D Label
                             </IonButton>
                         )}
                         {selectedDimension === '2D' && (
-                            <IonButton expand="block" onClick={() => setMarkerId(markerID + 1)}>
-                                Start new annotation
+                            <IonButton expand="block" onClick={() => apply2Dthrehsold()}>
+                                Apply 2D annotation
                             </IonButton>
                         )}
                     </IonRow>
