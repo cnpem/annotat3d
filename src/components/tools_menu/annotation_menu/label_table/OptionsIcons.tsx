@@ -87,13 +87,18 @@ const OptionsIcons: React.FC<OptionsProps> = (props: OptionsProps) => {
     const [alpha, setAlpha] = useStorageState<number>(sessionStorage, 'labelAlpha.' + String(props.label.id), 1);
 
     // State to handle view/hide toggle
-    const [isEyeOpen, setIsEyeOpen] = useState<boolean>(true);
+    const [isEyeOpen, setIsEyeOpen] = useState<boolean>(props.label.alpha === 1);
 
     useEffect(() => {
         if (userDeleteOp && props.label.id !== 0) {
             props.onChangeLabelList(props.label);
         }
     }, [userDeleteOp, props]);
+
+    // Add useEffect to sync with props and keep the eye shut
+    useEffect(() => {
+        setIsEyeOpen(props.label.alpha === 1);
+    }, [props.label.alpha]);
 
     useEventBus('changeLockButton', (flag: boolean) => {
         setLockMenu(flag);

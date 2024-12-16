@@ -7,4 +7,5 @@ export interface HistogramInfoPayload {
     bins: number[];
     maxValue: number;
     minValue: number;
+    otsu: number;
 }

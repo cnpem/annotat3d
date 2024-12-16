@@ -158,7 +158,8 @@ const TimeStepInputWithInfo: React.FC<TimeStepInputWithInfoProps> = ({ timeStep,
                             <div style={{ fontWeight: 600, fontSize: 14 }}>Time Step Size</div>
                         </IonCardHeader>
                         <IonCardContent>
-                            A smaller time step can lead to more precise but slower convergence.
+                            Usually, this parameter should be fixed at 0.1. A smaller time step can lead to more precise
+                            but slower convergence.
                         </IonCardContent>
                     </IonCard>
                 </IonContent>
