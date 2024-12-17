@@ -33,14 +33,21 @@
     --ion-grid-width: 75%;
 }
 
-.paint-toolbar ion-row {
+.paint-toolbar > ion-grid > ion-row {
     flex-wrap: nowrap; /* Prevent wrapping */
 }
 
-.paint-toolbar ion-col {
+.paint-toolbar > ion-grid > ion-row > ion-col {
     flex: 1 1 0; /* Equal distribution of columns */
     min-width: 0; /* Prevent overflow */
     text-align: center; /* Align content */
+}
+
+/* Target only direct IonButtons inside PaintToolbar */
+.paint-toolbar > ion-grid > ion-row > ion-col > ion-button {
+    font-size: 0.85rem; /* Adjust button font size */
+    padding: 6px 12px; /* Adjust padding */
+    --border-radius: 8px; /* Optional: Rounded corners */
 }
 
 
