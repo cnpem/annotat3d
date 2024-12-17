@@ -1,5 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { IonButton, IonCard, IonCardContent, IonGrid, IonRow, IonCol, IonIcon, IonCardHeader } from '@ionic/react';
+import {
+    IonButton,
+    IonCard,
+    IonCardContent,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonIcon,
+    IonCardHeader,
+    IonLabel,
+    IonNote,
+} from '@ionic/react';
 import {
     waterOutline,
     removeCircleOutline,
@@ -46,59 +57,72 @@ const PaintToolbar: React.FC = () => {
     return (
         <IonCardContent className="paint-toolbar" scroll-y="false">
             <IonCardHeader>
-                <div style={{ fontWeight: 600, fontSize: 18, textAlign: 'center' }}>Label tools</div>
+                <IonLabel style={{ fontWeight: 600, fontSize: '1.2rem', textAlign: 'center', display: 'block' }}>
+                    Label Tools
+                </IonLabel>
             </IonCardHeader>
             <IonGrid fixed={true}>
                 <IonRow>
-                    <IonCol>
+                    <IonCol className="ion-text-center">
                         <IonButton onClick={() => handleButtonClick('magicWand')} title="Magic Wand">
                             <IonIcon icon={colorFillOutline} />
                         </IonButton>
+                        <IonNote className="small-note">Magic Wand</IonNote>
                     </IonCol>
-                    <IonCol>
-                        <IonButton onClick={() => handleButtonClick('lasso')} title="Lasso tool">
+                    <IonCol className="ion-text-center">
+                        <IonButton onClick={() => handleButtonClick('lasso')} title="Lasso Tool">
                             <IonIcon size="medium" src={lassoCursor} />
                         </IonButton>
+                        <IonNote className="small-note">Lasso Tool</IonNote>
                     </IonCol>
-                    <IonCol>
-                        <IonButton onClick={() => handleButtonClick('snakes')} title="Snakes tool">
-                            <IonIcon icon={snakesCursor} />
+                    <IonCol className="ion-text-center">
+                        <IonButton onClick={() => handleButtonClick('snakes')} title="Snakes Tool">
+                            <IonIcon src={snakesCursor} />
                         </IonButton>
+                        <IonNote className="small-note">Snakes Tool</IonNote>
                     </IonCol>
                 </IonRow>
                 <IonRow>
-                    <IonCol>
+                    <IonCol className="ion-text-center">
                         <IonButton onClick={() => handleButtonClick('threshold')} title="Threshold">
-                            <IonIcon icon={thresholdIcon} />
+                            <IonIcon src={thresholdIcon} />
                         </IonButton>
+                        <IonNote className="small-note">Threshold</IonNote>
                     </IonCol>
-                    <IonCol>
+                    <IonCol className="ion-text-center">
                         <IonButton onClick={() => handleButtonClick('morphology')} title="Morphology">
                             <IonIcon icon={gridOutline} />
                         </IonButton>
+                        <IonNote className="small-note">Morphology</IonNote>
                     </IonCol>
-                    <IonCol>
-                        <IonButton onClick={() => handleButtonClick('watershed')} title="Watershed">
-                            <IonIcon icon={waterOutline} />
-                        </IonButton>
-                    </IonCol>
-                </IonRow>
-                <IonRow>
-                    <IonCol>
+                    <IonCol className="ion-text-center">
                         <IonButton onClick={() => handleButtonClick('removeIsland')} title="Remove Islands">
                             <IonIcon icon={removeCircleOutline} />
                         </IonButton>
+                        <IonNote className="small-note">Trim Islands</IonNote>
                     </IonCol>
-                    <IonCol>
+                </IonRow>
+                <IonRow>
+                    <IonCol className="ion-text-center"></IonCol>
+                    <IonCol className="ion-text-center">
                         <IonButton onClick={() => handleButtonClick('quantification')} title="Quantification">
                             <IonIcon icon={pricetagsOutline} />
                         </IonButton>
+                        <IonNote className="small-note">Quantification</IonNote>
                     </IonCol>
-                    <IonCol>
-                        <IonButton onClick={() => handleButtonClick('objectSeparation')} title="Object separation">
+                    <IonCol className="ion-text-center"></IonCol>
+                    {/*                     <IonCol className="ion-text-center">
+                        <IonButton onClick={() => handleButtonClick('objectSeparation')} title="Object Separation">
                             <IonIcon icon={gitCompareOutline} />
                         </IonButton>
+                        <IonNote className="small-note">Split</IonNote>
                     </IonCol>
+                    <IonCol className="ion-text-center">
+                        <IonButton onClick={() => handleButtonClick('watershed')} title="Watershed">
+                            <IonIcon icon={waterOutline} />
+                        </IonButton>
+                        <IonNote className="small-note">Watershed</IonNote>
+                    </IonCol> */}
                 </IonRow>
             </IonGrid>
 

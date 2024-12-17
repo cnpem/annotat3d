@@ -117,7 +117,7 @@ const KappaInputWithInfo: React.FC<KappaInputWithInfoProps> = ({ kappa, setKappa
                         <IonCardContent>
                             Kappa is a parameter used in anisotropic diffusion filtering that controls the level of
                             diffusion. Higher values result in stronger smoothing effects, while lower values preserve
-                            more detail.
+                            more detail. Try changing this value to higher value if you are not seing changes.
                         </IonCardContent>
                     </IonCard>
                 </IonContent>

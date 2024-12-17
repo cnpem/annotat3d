@@ -22,10 +22,27 @@
     text-align: center;
 }
 
+.paint-toolbar .small-note {
+    margin-bottom: 0;
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
 /* Limit the grid width to PaintToolbar */
 .paint-toolbar > ion-grid {
     --ion-grid-width: 75%;
 }
+
+.paint-toolbar ion-row {
+    flex-wrap: nowrap; /* Prevent wrapping */
+}
+
+.paint-toolbar ion-col {
+    flex: 1 1 0; /* Equal distribution of columns */
+    min-width: 0; /* Prevent overflow */
+    text-align: center; /* Align content */
+}
+
 
 /* Toggle visibility explicitly for PaintToolbar */
 .hidden {
