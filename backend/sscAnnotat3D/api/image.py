@@ -46,7 +46,7 @@ def get_image_slice(image_id: str):
     get_contour = request.json.get("contour", False)
 
     if get_contour:
-        img_slice = label.label_slice_contour(img_slice)
+        img_slice = label.label_slice_contour(img_slice + 1) - 1
 
     import time
 
@@ -255,7 +255,7 @@ def crop_merge():
     # ---
     label_img = data_repo.get_image("label")
     if label_img is not None:
-        output_label_img = np.zeros_like(output_img)
+        output_label_img = np.zeros_like(output_img, dtype='int32') - 1
         # does numpy optimizes this?
         print("Painting labeled section on the original image.", label_img.shape)
         output_label_img[zlo:zhi, ylo:yhi, xlo:xhi] = label_img
