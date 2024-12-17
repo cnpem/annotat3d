@@ -563,15 +563,21 @@ class AnnotationModule:
     def labelmask_multiupdate(self, label_masks, marker_lbs, marker_id, new_click):
 
         # Undo previous iteration        
+        """         if new_click == False:
+            try:
+                marker_to_remove = max(self.order_markers)
+                print("marker_to_remove", marker_to_remove)
+                self.order_markers.remove(marker_to_remove)
+                new_annotation = self.__annotation_list.pop()
+            except:
+                new_annotation = []
+        else:
+            new_annotation = [] """
         if new_click == False:
-            marker_to_remove = max(self.order_markers)
-            print("marker_to_remove", marker_to_remove)
-            self.order_markers.remove(marker_to_remove)
-            self.__annotation_list.pop()
+            self.undo()
 
         ## Updating the markers with the current marker id ##
-        self.order_markers.add(marker_id)
-        
+        self.order_markers.add(marker_id)        
         new_annotation = []
         for label_mask, marker_lb in zip(label_masks, marker_lbs):
             if label_mask.ndim == 2:

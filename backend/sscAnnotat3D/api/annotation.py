@@ -592,7 +592,7 @@ def apply_magicwand(input_id: str):
     #Marker id is not necessary for the magic wand logic.
     mk_id = annot_module.current_mk_id
 
-    if new_click:
+    """     if new_click:
         data_repo.set_image(key="labelMask", data=mask_wand) #TODO: Frontend needs to tell backend to delete this at some point
         annot_module.labelmask_update(mask_wand, label, mk_id, new_click)
     else: #Only update what has changed
@@ -600,7 +600,9 @@ def apply_magicwand(input_id: str):
         data_repo.set_image(key="labelMask", data=mask_wand)
         write_mask = (~old_mask) & (mask_wand)  # 0 -> 1
         erase_mask = (old_mask) & (~mask_wand)  # 1 -> 0
-        annot_module.labelmask_multiupdate([write_mask, erase_mask], [label, -1], mk_id, new_click)
+        annot_module.labelmask_multiupdate([write_mask, erase_mask], [label, -1], mk_id, new_click) """
+
+    annot_module.labelmask_update(mask_wand, label, mk_id, new_click)
 
     return jsonify(python_typer(img_slice[y_coord, x_coord]))
 
