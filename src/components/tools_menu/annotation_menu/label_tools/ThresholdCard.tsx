@@ -30,9 +30,7 @@ const ThresholdCard: React.FC<ThresholdCardVisible> = ({ isVisible }) => {
 
     useEffect(() => {
         //only execute if the button is pressed to be deactivated
-        console.log('Unrender threshold?', isVisible);
         if (!isVisible) {
-            console.log('Unrender me');
             dispatch('globalThresholdPreview', {
                 lower: 0,
                 upper: 0,

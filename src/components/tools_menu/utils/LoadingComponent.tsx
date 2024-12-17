@@ -5,6 +5,7 @@ interface LoadingComponentInterface {
     openLoadingWindow: boolean;
     loadingText: string;
     closeDelay?: number;
+    delayBeforeShow?: number; // Delay before showing the loading component
 }
 
 /**
@@ -18,23 +19,30 @@ const LoadingComponent: React.FC<LoadingComponentInterface> = ({
     openLoadingWindow,
     loadingText,
     closeDelay = 300,
+    delayBeforeShow = 600, // Default 800ms delay before showing
 }) => {
     /* this is a fix for firefox, since if it loads too quickly it doesn't give enough time for DOM to rerender the state without the popver
     i.e the popover continues even after the state is set to close, maybe this is fixed in new IONIC versions, current version is v6 */
     const [isOpen, setIsOpen] = useState(openLoadingWindow);
 
     const handleOpenChange = useCallback(() => {
+        let timer: NodeJS.Timeout;
+
         if (openLoadingWindow) {
-            setIsOpen(true);
+            // Add a delay before showing the loading component
+            timer = setTimeout(() => {
+                setIsOpen(true);
+            }, delayBeforeShow);
         } else {
-            // Delay closing the popover to ensure proper rendering across all browsers
-            const timer = setTimeout(() => {
+            // Add a delay before closing the loading component
+            timer = setTimeout(() => {
                 setIsOpen(false);
             }, closeDelay);
-
-            return () => clearTimeout(timer);
         }
-    }, [openLoadingWindow, closeDelay]);
+
+        // Cleanup the timer on dependency change or unmount
+        return () => clearTimeout(timer);
+    }, [openLoadingWindow, delayBeforeShow, closeDelay]);
 
     useEffect(handleOpenChange, [handleOpenChange]);
 
