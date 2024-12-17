@@ -4,7 +4,7 @@
     --background-hover: var(--ion-color-light-tint);
     --background-focused: var(--ion-color-light-shade);
     --color: var(--ion-color-primary);
-    --font-size: 1.2em;
+    --font-size: 2.2em;
     --padding-start: 1.2em;
     --padding-end: 1.2em;
     --padding-top: 1.2em;
@@ -45,8 +45,7 @@
 
 /* Target only direct IonButtons inside PaintToolbar */
 .paint-toolbar > ion-grid > ion-row > ion-col > ion-button {
-    font-size: 0.85rem; /* Adjust button font size */
-    padding: 6px 12px; /* Adjust padding */
+    font-size: 0.90rem; /* Adjust button font size */
     --border-radius: 8px; /* Optional: Rounded corners */
 }
 
