@@ -57,7 +57,21 @@ const PaintToolbar: React.FC = () => {
     return (
         <IonCardContent className="paint-toolbar" scroll-y="false">
             <IonCardHeader>
-                <IonLabel style={{ fontWeight: 600, fontSize: '1.2rem', textAlign: 'center', display: 'block' }}>
+                <IonLabel
+                    style={{
+                        fontWeight: 700,
+                        fontSize: '1.2rem',
+                        textAlign: 'center',
+                        display: 'block',
+                        color: 'white',
+                        background:
+                            'linear-gradient(135deg,rgba(60, 130, 252, 0.85),rgba(130, 177, 252, 0.85)' /* Smooth gradient */,
+                        padding: '0.5rem 1rem' /* Adds padding */,
+                        borderRadius: '16px' /* Rounded edges */,
+                        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)' /* Soft shadow */,
+                        letterSpacing: '1px' /* Spacing for a clean look */,
+                    }}
+                >
                     Label Tools
                 </IonLabel>
             </IonCardHeader>
