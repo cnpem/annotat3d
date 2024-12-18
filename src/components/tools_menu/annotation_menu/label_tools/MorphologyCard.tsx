@@ -18,11 +18,15 @@ import {
 
 import { sfetch } from '../../../../utils/simplerequest';
 import { dispatch, useEventBus } from '../../../../utils/eventbus';
+import LoadingComponent from '../../utils/LoadingComponent';
+
 interface MorphologyCardProps {
     isVisible: boolean;
 }
 
 const MorphologyCard: React.FC<MorphologyCardProps> = ({ isVisible }) => {
+    const [loadingMsg, setLoadingMsg] = useState<string>('');
+    const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
     const [operation, setOperation] = useState<string | undefined>();
     const [kernelShape, setKernelShape] = useState<string | undefined>();
     const [kernelSize, setKernelSize] = useState<number>(1);
@@ -66,13 +70,17 @@ const MorphologyCard: React.FC<MorphologyCardProps> = ({ isVisible }) => {
             console.log('Data passed to morphology function:', data); // Log the data
             const flaskPath = '/morphology/binary/morphology/' + imageType + '/';
             console.log('flaskPath: ', flaskPath);
+            setLoadingMsg('Applying ' + operation);
+            setShowLoadingComp(true);
             sfetch('POST', flaskPath, JSON.stringify(data), '')
                 .then(() => {
+                    setShowLoadingComp(false);
                     console.log('Applied ', operation, ' operation!');
                     dispatch('annotationChanged', null);
                     dispatch('labelChanged', '');
                 })
                 .catch((error) => {
+                    setShowLoadingComp(false);
                     console.log(error.error_msg);
                 });
         }
@@ -102,6 +110,8 @@ const MorphologyCard: React.FC<MorphologyCardProps> = ({ isVisible }) => {
             <IonCard>
                 <IonCardContent>
                     <IonList>
+                        <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={loadingMsg} />
+
                         <IonItem>
                             <IonRadioGroup
                                 value={imageType}
