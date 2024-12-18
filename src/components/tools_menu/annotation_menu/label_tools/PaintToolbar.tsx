@@ -65,8 +65,8 @@ const PaintToolbar: React.FC = () => {
                         display: 'block',
                         color: 'white',
                         background:
-                            'linear-gradient(135deg,rgba(60, 130, 252, 0.85),rgba(130, 177, 252, 0.85)' /* Smooth gradient */,
-                        padding: '0.5rem 1rem' /* Adds padding */,
+                            'linear-gradient(135deg,rgba(60, 130, 252, 0.85),rgba(130, 177, 252, 0.85))' /* Smooth gradient */,
+                        margin: '0 1.5rem' /* Adds left and right spacing */,
                         borderRadius: '16px' /* Rounded edges */,
                         boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)' /* Soft shadow */,
                         letterSpacing: '1px' /* Spacing for a clean look */,
