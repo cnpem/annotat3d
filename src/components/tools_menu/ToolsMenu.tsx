@@ -19,6 +19,7 @@ import SlicesMenu from './SlicesMenu';
 import { eyeOutline, brushOutline, colorWandOutline } from 'ionicons/icons';
 import { ImageInfoInterface } from '../main_menu/file/utils/ImageInfoInterface';
 import { useEventBus, dispatch } from '../../utils/eventbus';
+import { sfetch } from '../../utils/simplerequest';
 
 interface SideMenuProps {
     hideMenu: boolean;
@@ -52,6 +53,25 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
             x: imgInfo.imageShape.x,
             y: imgInfo.imageShape.y,
             z: imgInfo.imageShape.z,
+        });
+    });
+
+    useEventBus('LockComponents', (LockComponents: boolean) => {
+        void sfetch('POST', '/get_image_info/image_info', '', 'json').then((imgInfo: ImageInfoInterface) => {
+            const newShape = {
+                x: imgInfo.imageShape.x,
+                y: imgInfo.imageShape.y,
+                z: imgInfo.imageShape.z,
+            };
+
+            setImageShape((prevShape) => {
+                if (JSON.stringify(prevShape) !== JSON.stringify(newShape)) {
+                    console.log('Image shape updated in nav bar', newShape);
+                    return newShape;
+                }
+                console.log('Image shape unchanged');
+                return prevShape;
+            });
         });
     });
 
