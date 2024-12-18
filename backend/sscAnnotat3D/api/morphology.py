@@ -85,7 +85,7 @@ def morphology_apply_3D():
     operation = request.json["operation"]
     label = request.json["label"]
 
-    image_label = data_repo.get_image("label")
+    image_label = data_repo.get_image("label").astype('int32')
     if image_label is None:
         return "error - there is no label image to operate on", 404
     binary_mask_3d = (image_label == label).astype('int32')
@@ -124,6 +124,7 @@ def morphology_apply_3D():
     image_label[output_mask_3d == 1] = label
         
     # Rewrite the new data back to the label
+    print('label image type: ', type(image_label))
     data_repo.set_image(key="label", data=image_label)
         
     return "success", 200
