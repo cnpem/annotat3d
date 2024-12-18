@@ -643,6 +643,11 @@ class Canvas {
         this.cropSlice.alpha = 0.2;
         this.cropSlice.blendMode = PIXI.BLEND_MODES.ADD;
         this.cropSlice.visible = false;
+        this.cropShape = {
+            cropX: { lower: 0, upper: 0 },
+            cropY: { lower: 0, upper: 0 },
+            cropZ: { lower: 0, upper: 0 },
+        }; // initialize crop to avoid annoying msg of undefined in dev
 
         this.futureSlice = new PIXI.Sprite();
         this.futureSlice.visible = false;

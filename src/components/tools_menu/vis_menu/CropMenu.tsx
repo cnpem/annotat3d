@@ -82,12 +82,12 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
     const [showToast] = useIonToast();
     const toastTime = 2000;
 
-    // positional range references for sliders
+    /*     // positional range references for sliders
     const rangeRefX = useRef<HTMLIonRangeElement | null>(null);
     const rangeRefY = useRef<HTMLIonRangeElement | null>(null);
     const rangeRefZ = useRef<HTMLIonRangeElement | null>(null);
-
-    // updating positional range references with the new values from the sliders
+ */
+    /*     // updating positional range references with the new values from the sliders
     useEffect(() => {
         if (rangeRefX) {
             if (!isEqual(rangeRefX.current!.value, cropSliderX)) {
@@ -110,7 +110,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                 }, 20);
             }
         }
-    });
+    }); */
 
     const handleSliderChangeX = (e: CustomEvent) => {
         const newCropLims = e.detail.value;
@@ -300,7 +300,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                             <IonRange
                                 disabled={!toggleCropMode}
                                 name={'cropRangeX'}
-                                ref={rangeRefX}
+                                value={{ lower: cropSliderX.lower, upper: cropSliderX.upper }}
                                 dualKnobs={true}
                                 min={0}
                                 max={props.imageShape.x}
@@ -319,7 +319,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                             <IonRange
                                 disabled={!toggleCropMode}
                                 name={'cropRangeY'}
-                                ref={rangeRefY}
+                                value={{ lower: cropSliderY.lower, upper: cropSliderY.upper }}
                                 dualKnobs={true}
                                 min={0}
                                 max={props.imageShape.y}
@@ -338,7 +338,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                             <IonRange
                                 disabled={!toggleCropMode}
                                 name={'cropRangeZ'}
-                                ref={rangeRefZ}
+                                value={{ lower: cropSliderZ.lower, upper: cropSliderZ.upper }}
                                 dualKnobs={true}
                                 min={0}
                                 max={props.imageShape.z}
