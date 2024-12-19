@@ -1439,7 +1439,7 @@ def watershed_apply(input_id: str):
         #now we get the markers using the labels
         markers = annot_module.annotation_image[slice_range].astype(np.int32)
 
-        watershed_relief = -relief_img[slice_range].astype(np.int32)
+        watershed_relief = relief_img[slice_range].astype(np.int32)
         x,y = markers.shape
         
         watershed.watershed_meyers_2d(watershed_relief, markers, -1, x, y)
@@ -1454,7 +1454,7 @@ def watershed_apply(input_id: str):
             prewitt(input_img, relief_img, x, y, z, 1)
 
         markers = data_repo.get_image('label').astype(np.int32)
-        watershed_relief = -relief_img.astype(np.int32)
+        watershed_relief = relief_img.astype(np.int32)
 
         print('relief shape:',watershed_relief.shape)
         print('markers shape:',markers.shape)
