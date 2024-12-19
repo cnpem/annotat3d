@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import React, { useState } from 'react';
 import {
@@ -12,6 +13,7 @@ import {
     IonGrid,
     IonRow,
     IonCol,
+    IonPopover,
 } from '@ionic/react';
 import { sfetch } from '../../../../utils/simplerequest';
 import { dispatch } from '../../../../utils/eventbus';
@@ -33,10 +35,17 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
     const [isInputFilterOpen, setIsInputFilterOpen] = useState(false);
 
     const [selectedDimension, setSelectedDimension] = useState<'2D' | '3D'>('2D');
+    const [showPopover, setShowPopover] = useState<boolean>(false);
+    const [canContinue, setCanContinue] = useState<boolean>(false);
 
     if (!isVisible) return null;
 
     const handleApply = async () => {
+        if (!canContinue) {
+            setShowPopover(true);
+            return;
+        }
+
         const selectedLabel = parseInt(sessionStorage.getItem('selectedLabel') || '0', 10);
         const data = {
             algorithm,
@@ -53,7 +62,6 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
             const result = await sfetch('POST', '/watershed_apply_2d/image', JSON.stringify(data), 'json');
             console.log('Backend response:', result);
 
-            //dispatch('watershedApplied', result);
             if (selectedDimension === '2D') {
                 dispatch('annotationChanged', null);
             } else dispatch('labelChanged', '');
@@ -121,6 +129,31 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
                 <IonButton expand="block" onClick={handleApply}>
                     Apply Watershed
                 </IonButton>
+
+                {/* Popover for Warning */}
+                <IonPopover isOpen={showPopover} onDidDismiss={() => setShowPopover(false)}>
+                    <div style={{ padding: '16px', textAlign: 'center' }}>
+                        <p>
+                            Due to memory constraints, the algorithm may require multiple iterations to fully expand all
+                            seeds. This means the watershed operation might not complete in one run. If you understand
+                            this limitation and wish to proceed, click "Continue.".
+                        </p>
+                        <IonButton
+                            color="primary"
+                            onClick={() => {
+                                setCanContinue(true);
+                                setShowPopover(false);
+                                // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                                handleApply(); // Continue with the operation
+                            }}
+                        >
+                            Continue
+                        </IonButton>
+                        <IonButton color="secondary" onClick={() => setShowPopover(false)}>
+                            Close
+                        </IonButton>
+                    </div>
+                </IonPopover>
             </IonCardContent>
         </IonCard>
     );
