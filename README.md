@@ -2,7 +2,7 @@
 
 ## Description
 
-**Annotat3D** is a modern web application designed for interactive segmentation of volumetric images, tailored to meet the needs of the imaging beamlines at [Sirius](https://lnls.cnpem.br/sirius-en/), mantained by the [Brazilian Synchrotron Light Laboratory ([LNLS](https://lnls.cnpem.br/)). LNLS is part of the Brazilian Center for Research in Energy and Materials ([CNPEM](https://cnpem.br/)), in Campinas (SP), a private non-profit organization under the supervision of the Brazilian Ministry of Science, Technology, and Innovations ([MCTI](https://www.gov.br/mcti/pt-br)).
+**Annotat3D** is a modern web application designed for interactive segmentation of volumetric images, tailored to meet the needs of the imaging beamlines at [Sirius](https://lnls.cnpem.br/sirius-en/).
 
 Annotat3D leverages human-in-the-loop strategies to facilitate the annotation of large tomographic datasets, enabling domain experts to inject their knowledge efficiently while collaborating with machine learning models. Here are the main features of Annotat3D:
 
