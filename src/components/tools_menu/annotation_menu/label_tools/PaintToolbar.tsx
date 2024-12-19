@@ -117,7 +117,14 @@ const PaintToolbar: React.FC = () => {
                     </IonCol>
                 </IonRow>
                 <IonRow>
-                    <IonCol className="ion-text-center"></IonCol>
+                    {/*                     <IonCol className="ion-text-center"></IonCol>
+                     */}{' '}
+                    <IonCol className="ion-text-center">
+                        <IonButton onClick={() => handleButtonClick('watershed')} title="Watershed">
+                            <IonIcon icon={waterOutline} />
+                        </IonButton>
+                        <IonNote className="small-note">Watershed</IonNote>
+                    </IonCol>
                     <IonCol className="ion-text-center">
                         <IonButton onClick={() => handleButtonClick('quantification')} title="Quantification">
                             <IonIcon icon={pricetagsOutline} />
@@ -131,12 +138,7 @@ const PaintToolbar: React.FC = () => {
                         </IonButton>
                         <IonNote className="small-note">Split</IonNote>
                     </IonCol>
-                    <IonCol className="ion-text-center">
-                        <IonButton onClick={() => handleButtonClick('watershed')} title="Watershed">
-                            <IonIcon icon={waterOutline} />
-                        </IonButton>
-                        <IonNote className="small-note">Watershed</IonNote>
-                    </IonCol> */}
+                     */}
                 </IonRow>
             </IonGrid>
 
