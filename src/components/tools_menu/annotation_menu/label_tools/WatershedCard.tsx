@@ -82,6 +82,7 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
 
             <IonCardContent>
                 <IonList>
+                    <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
                     {/* Input Filter Selection */}
                     <IonItem button onClick={() => setIsInputFilterOpen(!isInputFilterOpen)}>
                         <IonLabel>Input Image Filter</IonLabel>
