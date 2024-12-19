@@ -15,6 +15,7 @@ import {
 } from '@ionic/react';
 import { sfetch } from '../../../../utils/simplerequest';
 import { dispatch } from '../../../../utils/eventbus';
+import LoadingComponent from '../../utils/LoadingComponent';
 
 interface WatershedCardProps {
     isVisible: boolean;
@@ -71,6 +72,7 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
         <IonCard>
             <IonCardContent>
                 <IonList>
+                    <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
                     {/* Input Filter Selection */}
                     <IonItem button onClick={() => setIsInputFilterOpen(!isInputFilterOpen)}>
                         <IonLabel>Input Image Filter</IonLabel>
