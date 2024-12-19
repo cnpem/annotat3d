@@ -13,4 +13,4 @@ scikit-image==0.18.3
 sscIO>=0.2.1
 sscPySpin>=0.6.0
 werkzeug>=3.0.0 #there seems to be some bug on the newer versions that randomly causes 405 responses
-harpia==2.2.1 #need to fix the version (with anoter three dots), otherwise it will another module from pip global
+harpia==2.2.0 #need to fix the version (with anoter three dots), otherwise it will another module from pip global
