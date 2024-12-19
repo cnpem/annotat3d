@@ -14,6 +14,8 @@ import numpy as np
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D import utils
 
+MAX_SIZE = 1660120000 #equivalent to a 1520x1520x700 elements
+HALF_MARGIN_SIZE = 50 #how many slices will be used to correct margin issues for chunked fill_holes
 app = Blueprint("morphology", __name__)
 
 @app.route("/morphology/binary/morphology/annotation2D/", methods=["POST"])
@@ -103,10 +105,17 @@ def morphology_apply_3D():
         return {"error": f"Invalid operation: {operation}"}, 400
 
     # Perform the selected morphological operation
+     # Perform the selected morphological operation
     if operation == "fillholes":
         original_dtype = binary_mask_3d.dtype
         binary_mask_3d_int8 = binary_mask_3d.astype(np.int8)
-        output_mask_3d_int8 = operations[operation](binary_mask_3d_int8)
+        print('image size: ', binary_mask_3d_int8.size)
+        if(binary_mask_3d_int8.size < MAX_SIZE):
+            print('normal fill holes')
+            output_mask_3d_int8 = operations[operation](binary_mask_3d_int8)
+        else:
+            print('chunked fill holes')
+            output_mask_3d_int8 = apply_chunked_fillholes(operations[operation], binary_mask_3d_int8)
         output_mask_3d = output_mask_3d_int8.astype(original_dtype)
     else:     
         # Create kernel
@@ -224,3 +233,41 @@ def custom_kernel3D(radius, shape="cube"):
     # Ensure memory contiguity
     kernel_3D = np.ascontiguousarray(kernel_3D)
     return kernel_3D
+
+def apply_chunked_fillholes(fillholes_func, input_image):
+    # Dimensions and processing parameters
+    depth_size = input_image.shape[0]
+
+    slice_size = input_image.shape[1]*input_image.shape[2]
+    max_chunk_size = np.floor(MAX_SIZE / slice_size).astype(int)  # Round down and convert to int
+    num_chunks = np.ceil(depth_size / max_chunk_size).astype(int)
+    margin_size = HALF_MARGIN_SIZE
+    chunk_depth = depth_size // num_chunks
+    print(f"max_chunk_size: {max_chunk_size}")
+    print(f"num_chunks: {num_chunks}")
+    print(f"chunk_depth: {chunk_depth}")
+
+    # Process the image in chunks
+    chunk_results = []
+    for chunk_idx in range(num_chunks):
+        start_depth = chunk_idx * chunk_depth
+        end_depth = depth_size if chunk_idx == num_chunks - 1 else (chunk_idx + 1) * chunk_depth
+        chunk = input_image[start_depth:end_depth, :, :]
+        chunk_results.append(fillholes_func(chunk))
+
+    # Combine results from chunks
+    chunk_combined_result = np.concatenate(chunk_results)
+
+    # Process margins between chunks
+    margin_results = np.zeros_like(input_image)
+    for chunk_idx in range(num_chunks - 1):
+        margin_start = (chunk_idx + 1) * chunk_depth - margin_size
+        margin_end = (chunk_idx + 1) * chunk_depth + margin_size
+        margin_slice = input_image[margin_start:margin_end, :, :]
+        margin_filled = fillholes_func(margin_slice)
+        margin_results[margin_start:margin_end, :, :] |= margin_filled
+
+    # Combine chunk results and margin results
+    final_result = chunk_combined_result | margin_results
+    
+    return final_result
