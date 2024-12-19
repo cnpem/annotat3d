@@ -712,7 +712,7 @@ def threshold_apply3D(input_id: str, output_id: str):
         img_label = data_repo.get_image("label")
 
         # Create the image label if not already present
-        if img_label is None or img.shape != img_label:
+        if img_label is None or img.shape != img_label.shape:
             img_label = np.zeros(img.shape, dtype='int32')
             img_label[~label_mask] = -1
 
