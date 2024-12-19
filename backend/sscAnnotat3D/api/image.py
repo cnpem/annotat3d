@@ -8,6 +8,7 @@ from flask_cors import cross_origin
 from sscAnnotat3D import label, utils
 from sscAnnotat3D.repository import data_repo, module_repo
 from werkzeug.exceptions import BadRequest
+from collections import defaultdict
 
 app = Blueprint("image", __name__)
 
@@ -45,7 +46,7 @@ def get_image_slice(image_id: str):
     get_contour = request.json.get("contour", False)
 
     if get_contour:
-        img_slice = label.label_slice_contour(img_slice)
+        img_slice = label.label_slice_contour(img_slice + 1) - 1
 
     import time
 
@@ -75,6 +76,8 @@ def get_image_info(image_info_key: str):
 
     if image_info == None:
         return handle_exception("Image info not found.")
+
+    print('get image info', image_info)
 
     return jsonify(image_info)
 
@@ -164,12 +167,17 @@ def crop_apply():
                 anot_crop[k_crop] = anot_full.pop(coords)
         # replaces the annotation dictionary with the new dictionary for the cropped image
         annot_module.set_annotation(anot_crop)
+        #convert default dict to dict
+        anot_full = dict(anot_full)
         # saves the remaining annotations related to the original image as backup in the repository
         data_repo.set_info(key="anot_backup", data=anot_full)
 
     data_repo.set_image("image", data=crop_img)
     data_repo.set_info(key="image_info", data=crop_img_info)
     data_repo.set_info(key="crop_info", data=crop_info)
+    #update image shape
+    annot_module = module_repo.get_module('annotation')
+    annot_module.update_image_shape(crop_img.shape)
 
     return jsonify(crop_img_info)
 
@@ -215,6 +223,9 @@ def crop_merge():
             shape=(imageFullShape["z"], imageFullShape["y"], imageFullShape["x"]),
             dtype=image_info["imageDtype"],
         )
+        #update image shape
+        annot_module = module_repo.get_module('annotation')
+        annot_module.update_image_shape(output_img.shape)
         data_repo.set_image("image", data=output_img)
     except:
         return handle_exception("Reopen original image failed")
@@ -244,7 +255,7 @@ def crop_merge():
     # ---
     label_img = data_repo.get_image("label")
     if label_img is not None:
-        output_label_img = np.zeros_like(output_img)
+        output_label_img = np.zeros_like(output_img, dtype='int32') - 1
         # does numpy optimizes this?
         print("Painting labeled section on the original image.", label_img.shape)
         output_label_img[zlo:zhi, ylo:yhi, xlo:xhi] = label_img
@@ -276,7 +287,6 @@ def crop_merge():
     # ---
     # update info on data_repo
     # ---
-
     image_info["imageShape"] = imageFullShape
     crop_info = {}
 

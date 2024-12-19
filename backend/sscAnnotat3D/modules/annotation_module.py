@@ -154,6 +154,18 @@ class AnnotationModule:
         self.set_marker_label_selection_type(self.__default_marker_label_selection_type)
 
         logging.debug("Reloading complete for annotation class")
+        
+    def update_image_shape(self, new_image_shape):
+        """
+        Update the shape of the image and reinitialize relevant attributes.
+        """
+        if len(new_image_shape) != 3:
+            raise ValueError("new_image_shape must be a tuple of three dimensions (z, y, x).")
+
+        logging.info(f"Updating image shape from {self.zsize, self.ysize, self.xsize} to {new_image_shape}")
+
+        # Update dimensions
+        self.zsize, self.ysize, self.xsize = new_image_shape
 
     def get_volume_grid_data(self, volume_data=None):
         d0, d1, d2 = self.zsize, self.ysize, self.xsize
@@ -480,6 +492,105 @@ class AnnotationModule:
         marker_id = max(self.order_markers) + 1 if self.order_markers else 1
         return marker_id
 
+    def labelmask_update(self, label_mask, marker_lb, marker_id, new_click):
+
+        # Undo previous iteration        
+        if new_click == False:
+            self.undo()
+
+        ## Updating the markers with the current marker id ##
+        self.order_markers.add(marker_id)
+
+        if label_mask.ndim == 2:
+            # Get the coordinates where the mask is non-zero to draw
+            rr,cc = np.nonzero(label_mask)
+
+            new_annotation = []
+            for coord2D in zip(rr,cc):
+                coord3D = self.get_current_slice_3d_coord(coord2D)
+                self.__annotation[coord3D].append(marker_lb)
+                self.__annotation_image[coord3D] = marker_lb
+                #save the coords
+                new_annotation.append(coord3D)
+
+        else:
+            rr,cc,dd = np.nonzero(label_mask)
+            new_annotation = []
+            for coord3D in zip(rr,cc,dd):
+                self.__annotation[coord3D].append(marker_lb)
+                self.__annotation_image[coord3D] = marker_lb
+                #save the coords
+                new_annotation.append(coord3D)
+
+        self.__annotation_list.append(new_annotation)
+
+    def multilabel_updated(self, new_annot, marker_id, new_click = True):
+        
+        # Undo previous iteration        
+        if new_click == False:
+            self.undo()
+
+        ## Updating the markers with the current marker id ##
+        self.order_markers.add(marker_id)
+
+        if new_annot.ndim == 2:
+            # Get the coordinates where the mask is different to draw
+            old_annot = self.get_current_slice(self.__annotation_image)
+            rr,cc = np.nonzero(old_annot!=new_annot)
+
+            new_annotation = []
+            for coord2D in zip(rr,cc):
+                marker_lb = new_annot[coord2D]
+                coord3D = self.get_current_slice_3d_coord(coord2D)
+                self.__annotation[coord3D].append(marker_lb)
+                self.__annotation_image[coord3D] = marker_lb
+                #save the coords
+                new_annotation.append(coord3D)
+
+        else:
+            old_annot = self.__annotation_image
+            rr,cc,dd = np.nonzero(old_annot!=new_annot)
+            new_annotation = []
+            for coord3D in zip(rr,cc,dd):
+                marker_lb = new_annot[coord3D]
+                self.__annotation[coord3D].append(marker_lb)
+                self.__annotation_image[coord3D] = marker_lb
+                #save the coords
+                new_annotation.append(coord3D)
+
+        self.__annotation_list.append(new_annotation)
+
+    def labelmask_multiupdate(self, label_masks, marker_lbs, marker_id, new_click):
+
+        # Undo previous iteration        
+        if new_click == False:
+            self.undo()
+
+        ## Updating the markers with the current marker id ##
+        self.order_markers.add(marker_id)
+        
+        new_annotation = []
+        for label_mask, marker_lb in zip(label_masks, marker_lbs):
+            if label_mask.ndim == 2:
+                # Get the coordinates where the mask is non-zero to draw
+                rr,cc = np.nonzero(label_mask)
+                for coord2D in zip(rr,cc):
+                    coord3D = self.get_current_slice_3d_coord(coord2D)
+                    self.__annotation[coord3D].append(marker_lb)
+                    self.__annotation_image[coord3D] = marker_lb
+                    #save the coords
+                    new_annotation.append(coord3D)
+
+            else:
+                rr,cc,dd = np.nonzero(label_mask)
+                for coord3D in zip(rr,cc,dd):
+                    self.__annotation[coord3D].append(marker_lb)
+                    self.__annotation_image[coord3D] = marker_lb
+                    #save the coords
+                    new_annotation.append(coord3D)
+
+        self.__annotation_list.append(new_annotation)
+
     def draw_marker_curve(self, cursor_coords, marker_id, marker_lb, erase=False):
 
         # from time import time
@@ -539,6 +650,41 @@ class AnnotationModule:
 
         # print('draw backend time {}'.format(time()-start))
 
+    def draw_init_levelset(self, cursor_coords):
+        #same as funtion of draw_marker_curve, excpet it returns the bool image array
+
+        ### Creating the mask in the size of the brush ###
+        radius = 3
+        size = 2 * radius + 1
+        disk_mask = np.zeros((size, size), dtype=np.bool_)
+        rr, cc = draw.disk((radius, radius), radius)
+        disk_mask[rr, cc] = True
+
+        ### Create a mask image for adding the drawings ###
+        height, width = self.get_current_slice_shape()
+        image = np.zeros((height, width), dtype=np.bool_)
+        #print(image.shape)
+        for coord in cursor_coords:
+            # check if its valid coord, invert for y (or z),x mode. Coord inputs are in x,y (or z).
+            if self.valid_coords(coord):
+                x, y = list(map(int, np.floor(coord)))
+                # ensure the drawing of the disk is within the image range
+                x_start = max(0, x - radius)
+                y_start = max(0, y - radius)
+                x_end = min(height, x + radius + 1)
+                y_end = min(width, y + radius + 1)
+
+                mask_x_start = radius - (x - x_start)
+                mask_y_start = radius - (y - y_start)
+                mask_x_end = radius + (x_end - x)
+                mask_y_end = radius + (y_end - y)
+
+                # make the drawing
+                image[x_start:x_end, y_start:y_end] += disk_mask[mask_x_start:mask_x_end, mask_y_start:mask_y_end]
+        
+        return image
+        
+
     def __update_annotation_image(self, annotation, label=None):
         if label is not None:
             for c in annotation:
@@ -551,7 +697,7 @@ class AnnotationModule:
         return self.annotation
 
     def set_annotation(self, label_annotation: dict):
-        self.annotation = label_annotation
+        self.annotation = defaultdict(list, label_annotation)
         return self.annotation
 
     def update_annotation(self, annotations):

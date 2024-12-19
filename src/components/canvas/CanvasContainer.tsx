@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import { IonFab, IonFabButton, IonIcon } from '@ionic/react';
-import { expand, brush, browsers, add, remove, eye, eyeOff, cogOutline } from 'ionicons/icons';
+import { expand, brush, browsers, add, remove, eye, eyeOff, colorFill } from 'ionicons/icons';
 import isEqual from 'lodash.isequal';
 import debounce from 'lodash.debounce';
 import * as PIXI from 'pixi.js';
@@ -24,8 +24,14 @@ import { CropAxisInterface, CropShapeInterface } from '../tools_menu/utils/CropI
 import { ImageShapeInterface } from '../tools_menu/utils/ImageShapeInterface';
 import { ImageInfoInterface } from '../main_menu/file/utils/ImageInfoInterface';
 import { ColorOptions } from '../../utils/colormaplist';
+import fillCursor from '../../public/fill_cursor.png';
+import lassoCursor from '../../public/lasso_cursor.png';
+import snakesCursor from '../../public/snakes_cursor.png';
+import eraserIcon from '../../public/eraser_icon.svg';
+import eraserCursor from '../../public/eraser.png';
+import brushCursor from '../../public/ion_brush.png';
 
-type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush';
+type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush' | 'magic_wand' | 'lasso' | 'snakes';
 
 class Brush {
     label: number;
@@ -96,6 +102,7 @@ class Brush {
     setLabel(l: number) {
         this.label = l;
         this.update();
+        this.updateColor();
     }
 
     setSize(s: number) {
@@ -134,6 +141,219 @@ class Brush {
     }
 }
 
+class Lasso {
+    color: number;
+
+    canvas: HTMLCanvasElement;
+
+    context: CanvasRenderingContext2D;
+
+    points: PIXI.Point[];
+
+    tempLine: PIXI.Graphics;
+
+    constructor() {
+        this.color = 0xffffff; // Default color (can be updated)
+        this.canvas = document.createElement('canvas');
+        this.context = this.canvas.getContext('2d')!;
+        this.points = [];
+        this.tempLine = new PIXI.Graphics();
+    }
+
+    // Start the lasso by setting the initial point and activating drawing mode
+    startLasso(x: number, y: number, color: number, context: CanvasRenderingContext2D) {
+        console.log('Lasso drawing', color, x, y);
+        this.color = color;
+        this.context = context;
+        this.points = [new PIXI.Point(x, y)];
+    }
+
+    // Add points to draw the straight lines between them
+    addPoint(x: number, y: number, context: CanvasRenderingContext2D) {
+        const lastPoint = this.points[this.points.length - 1];
+        context.beginPath();
+        context.moveTo(lastPoint.x, lastPoint.y);
+        context.lineTo(x, y);
+        context.strokeStyle = this.hexColor(this.color);
+        context.lineWidth = 2;
+        context.stroke();
+        this.points.push(new PIXI.Point(x, y));
+    }
+
+    // Finalize the lasso and fill the area inside
+    endLasso(context: CanvasRenderingContext2D, label: number, sliceNum: number, Currentaxis: string) {
+        console.log('Lasso endLasso');
+        context.beginPath();
+        context.moveTo(this.points[0].x, this.points[0].y);
+        console.log(this.points);
+        const lassoData = { lasso_points: this.points, slice_num: sliceNum, axis: Currentaxis, label };
+        sfetch('POST', '/apply_lasso/annotation', JSON.stringify(lassoData), 'json')
+            .then(() => {
+                dispatch('annotationChanged', null);
+            })
+            .catch((error) => {
+                console.log('Error while applying lasso');
+                console.log(error.error_msg);
+            });
+
+        /* // Connect the last point to the first point
+        for (let i = 1; i < this.points.length; i++) {
+            this.context.lineTo(this.points[i].x, this.points[i].y);
+        }
+        context.closePath();
+        context.fillStyle = this.hexColor(this.color);
+        context.fill(); */
+    }
+
+    private hexColor(color: number) {
+        return `#${color.toString(16).padStart(6, '0')}`;
+    }
+
+    drawTempLine(currentX: number, currentY: number) {
+        if (this.points.length > 0) {
+            const startPoint = this.points[0];
+            this.tempLine.clear();
+            this.tempLine.lineStyle(2, this.color, 1);
+            this.tempLine.moveTo(startPoint.x, startPoint.y);
+            this.tempLine.lineTo(currentX, currentY);
+        }
+    }
+
+    clearTempLine() {
+        this.tempLine.clear();
+    }
+}
+
+function applyMagicWand(
+    viewport: pixi_viewport.Viewport,
+    sliceNum: number,
+    Currentaxis: string,
+    brush_label: number,
+    event: any
+) {
+    const currPositionw = viewport.toWorld(event.data.global);
+    const dataWand = {
+        slice: sliceNum,
+        axis: Currentaxis,
+        label: brush_label,
+        x_coord: Math.round(currPositionw.x),
+        y_coord: Math.round(currPositionw.y),
+    };
+
+    dispatch('magicwand', dataWand);
+}
+
+class ActiveContour {
+    private canvas: HTMLCanvasElement;
+
+    private context: CanvasRenderingContext2D;
+
+    private points: PIXI.Point[] = [];
+
+    private lastSendTime = 0;
+
+    private debounceTime = 150; // 100ms debounce
+
+    private radius = 3; // Fixed radius
+
+    constructor() {
+        this.canvas = document.createElement('canvas');
+        this.context = this.canvas.getContext('2d')!;
+    }
+
+    drawContour(
+        x: number,
+        y: number,
+        label: number,
+        sliceNum: number,
+        axis: string,
+        process: string
+    ): Promise<[number[], number[]] | null> {
+        // Draw locally
+        this.context.beginPath();
+        this.context.arc(x + 0.5, y + 0.5, this.radius, 0, 2 * Math.PI);
+        this.context.fill();
+
+        // Add the point
+        this.points.push(new PIXI.Point(x, y));
+
+        const currentTime = Date.now();
+
+        // If debounce time has passed, send to the backend
+        if (currentTime - this.lastSendTime >= this.debounceTime) {
+            // Prepare parameters
+            const params = {
+                points: this.points,
+                label,
+                slice_num: sliceNum,
+                axis,
+                iterations: parseInt(sessionStorage.getItem('ActiveContourIterations') || '10', 10),
+                smoothing: parseInt(sessionStorage.getItem('ActiveContourSmoothing') || '1', 10),
+                weight: parseFloat(sessionStorage.getItem('ActiveContourWeight') || '1.0'),
+                method: (sessionStorage.getItem('ActiveContourMethod') || 'chan-vese').replace(/^"|"$/g, ''), // Retrieve method from sessionStorage and sanitize
+                threshold: parseFloat(sessionStorage.getItem('GeodesicThreshold') || '0.5'),
+                balloon_force: sessionStorage.getItem('BalloonForce') === 'true', // Boolean stored as string
+                sigma: parseFloat(sessionStorage.getItem('GeodesicSigma') || '1.0'),
+            };
+            // Update the last send time
+            this.lastSendTime = currentTime;
+
+            // Return the backend response as a promise
+            return sfetch('POST', '/active_contour/image/' + process, JSON.stringify(params), 'json')
+                .then((response) => {
+                    if (response && Array.isArray(response[0]) && Array.isArray(response[1])) {
+                        return response as [number[], number[]];
+                    } else {
+                        console.error('Invalid response format:', response);
+                        return null;
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error updating active contour:', error);
+                    return null;
+                });
+        }
+
+        // If debounce time has not passed, return null
+        return Promise.resolve(null);
+    }
+
+    finalize(label: number, sliceNum: number, axis: string): void {
+        if (this.points.length === 0) return; // Ensure points exist before finalizing
+
+        // Prepare parameters
+        const params = {
+            points: this.points,
+            label,
+            slice_num: sliceNum,
+            axis,
+            iterations: parseInt(sessionStorage.getItem('ActiveContourIterations') || '10', 10),
+            smoothing: parseInt(sessionStorage.getItem('ActiveContourSmoothing') || '1', 10),
+            weight: parseFloat(sessionStorage.getItem('ActiveContourWeight') || '1.0'),
+            method: (sessionStorage.getItem('ActiveContourMethod') || 'chan-vese').replace(/^"|"$/g, ''), // Retrieve method from sessionStorage and sanitize
+            threshold: parseFloat(sessionStorage.getItem('GeodesicThreshold') || '0.5'),
+            balloon_force: sessionStorage.getItem('BalloonForce') === 'true', // Boolean stored as string
+            sigma: parseFloat(sessionStorage.getItem('GeodesicSigma') || '1.0'),
+        };
+
+        // Send finalization request to backend
+        sfetch('POST', '/active_contour/image/finalize', JSON.stringify(params), 'json')
+            .then((finalizeReponse) => {
+                console.log('Active contour finalized:', finalizeReponse);
+                this.points = []; // Clear points after successful finalization
+                dispatch('annotationChanged', null); // Notify annotation changes
+            })
+            .catch((error) => {
+                console.error('Error finalizing active contour:', error);
+            });
+    }
+
+    clear(): void {
+        this.points = []; // Clear stored points
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height); // Clear the canvas
+    }
+}
+
 class Annotation {
     canvas: HTMLCanvasElement;
 
@@ -146,6 +366,10 @@ class Annotation {
     alphas: number[];
 
     annotData?: NdArray<TypedArray>;
+
+    private previousData: Uint8ClampedArray | null = null;
+
+    private originalImageData: ImageData | null = null; // Preserve the original image data
 
     constructor(colors: [number, number, number][], alphas: number[]) {
         this.canvas = document.createElement('canvas');
@@ -210,8 +434,96 @@ class Annotation {
         this.context.putImageData(imageData, 0, 0);
         this.sprite.texture.update();
     }
-}
 
+    drawOver(coords: [number[], number[]], label: number) {
+        if (!this.annotData) return;
+
+        // Get the current image data
+        const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+
+        // Update `previousData` if not already set
+        if (!this.previousData) {
+            console.log('initializing previous data');
+            this.previousData = new Uint8ClampedArray(imageData.data); // Create a copy of the initial data
+        }
+
+        // Use existing `previousData` or initialize it
+        const data = new Uint8ClampedArray(this.previousData);
+
+        const colors = this.colors[label % this.colors.length];
+        const alpha = this.alphas[label % this.alphas.length];
+
+        // Define a helper function to set pixel data
+        const setPixel = (x: number, y: number, r: number, g: number, b: number, a: number) => {
+            const idx = (y * this.canvas.width + x) * 4;
+            data[idx] = r; // Red
+            data[idx + 1] = g; // Green
+            data[idx + 2] = b; // Blue
+            data[idx + 3] = a; // Alpha
+        };
+
+        // Update pixels with new coordinates
+        coords[0].forEach((y, i) => {
+            const x = coords[1][i];
+            setPixel(x, y, colors[0], colors[1], colors[2], Math.round(alpha * 255));
+        });
+
+        // Write back the updated data to imageData
+        imageData.data.set(data);
+
+        // Apply the updated image data back to the canvas
+        this.context.putImageData(imageData, 0, 0);
+        this.sprite.texture.update();
+    }
+
+    resetPreviousData() {
+        this.previousData = null;
+        this.originalImageData = null;
+        this.sprite.texture.update();
+    }
+
+    /**
+     * Saves the current image state as `originalImageData`.
+     * This should be called before applying any annotations or thresholding.
+     */
+    saveOriginalImageData() {
+        this.originalImageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    /**
+     * Applies a threshold overlay on the annotation layer.
+     * @param imgData - The image slice as NdArray.
+     * @param lower - Lower threshold value.
+     * @param upper - Upper threshold value.
+     * @param label - Label index to determine color.
+     */
+    applyThreshold(imgData: NdArray<TypedArray>, lower: number, upper: number, label: number): void {
+        const { data, shape } = imgData;
+
+        // Restore the original image data before applying threshold
+        if (this.originalImageData) {
+            this.context.putImageData(this.originalImageData, 0, 0);
+        } else {
+            this.saveOriginalImageData();
+        }
+        const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        const canvasData = imageData.data;
+        const color = this.colors[label];
+        for (let i = 0; i < data.length; i++) {
+            const value = data[i];
+            if (value >= lower && value <= upper) {
+                const idx = i * 4;
+                canvasData[idx] = color[0]; // Red
+                canvasData[idx + 1] = color[1]; // Green
+                canvasData[idx + 2] = color[2]; // Blue
+                canvasData[idx + 3] = 255; // Alpha
+            }
+        }
+
+        this.context.putImageData(imageData, 0, 0);
+        this.sprite.texture.update();
+    }
+}
 class Canvas {
     /* ... */
 
@@ -283,6 +595,10 @@ class Canvas {
 
     activateSequentialLabel: boolean;
 
+    lasso: Lasso;
+
+    activeContour: ActiveContour;
+
     constructor(
         div: HTMLDivElement,
         colors: [number, number, number][],
@@ -296,6 +612,17 @@ class Canvas {
             //backgroundAlpha: 0.99,
             backgroundColor: 0x303030,
         });
+        //cursor styles here
+        if (this.app.renderer.plugins.interaction) {
+            this.app.renderer.plugins.interaction.cursorStyles = {
+                default: 'default',
+                draw_brush: `url(${brushCursor}) 0 32, auto`,
+                erase_brush: `url(${eraserCursor}) 0 32, auto`,
+                magic_wand: `url(${fillCursor}) 0 0, auto`,
+                lasso: `url(${lassoCursor}) 16 16, auto`,
+                snakes: `url(${snakesCursor}) 16 16, auto`,
+            };
+        }
 
         this.viewport = new pixi_viewport.Viewport({
             interaction: this.app.renderer.plugins.interaction,
@@ -316,6 +643,11 @@ class Canvas {
         this.cropSlice.alpha = 0.2;
         this.cropSlice.blendMode = PIXI.BLEND_MODES.ADD;
         this.cropSlice.visible = false;
+        this.cropShape = {
+            cropX: { lower: 0, upper: 0 },
+            cropY: { lower: 0, upper: 0 },
+            cropZ: { lower: 0, upper: 0 },
+        }; // initialize crop to avoid annoying msg of undefined in dev
 
         this.futureSlice = new PIXI.Sprite();
         this.futureSlice.visible = false;
@@ -333,6 +665,8 @@ class Canvas {
 
         this.annotation = new Annotation(colors, alphas);
         this.brush = new Brush(colors);
+        this.lasso = new Lasso();
+        this.activeContour = new ActiveContour();
         this.brush_mode = 'draw_brush';
 
         this.colors = colors;
@@ -381,7 +715,6 @@ class Canvas {
         if (this.labelData) {
             this.setLabelImage(this.labelData);
         }
-
         this.annotation.update();
         this.brush.update();
     }
@@ -421,6 +754,40 @@ class Canvas {
             this.viewport.plugins.pause('drag');
             // canvas.brush.cursor.visible = false;
         }
+        if (this.brush_mode === 'lasso') {
+            this.isPainting = true;
+            const position = this.viewport.toWorld(event.data.global);
+            const context = this.annotation.context;
+            this.lasso.startLasso(position.x, position.y, this.brush.color, context);
+            this.annotation.sprite.texture.update();
+            this.viewport.addChild(this.lasso.tempLine);
+            return;
+        }
+        if (this.brush_mode === 'snakes') {
+            this.isPainting = true;
+            const position = this.viewport.toWorld(event.data.global);
+            const start = performance.now();
+            this.activeContour
+                .drawContour(
+                    Math.floor(position.x),
+                    Math.floor(position.y),
+                    this.brush.label,
+                    this.sliceNum,
+                    this.axis,
+                    'start'
+                )
+                .then((coords) => {
+                    // Ensure coords is not null before using it
+                    if (coords !== null) {
+                        this.annotation.drawOver(coords, this.brush.label);
+                        const end = performance.now();
+                        console.log(`Execution time activeContour Pointerdown: ${end - start} ms`);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error during drawPoint:', error);
+                });
+        }
 
         this.isPainting = true;
         this.prevPosition = this.viewport.toWorld(event.data.global);
@@ -448,11 +815,44 @@ class Canvas {
                 return;
             }
         }
+        if (this.brush_mode === 'lasso' && this.isPainting) {
+            const position = this.viewport.toWorld(event.data.global);
+            const context = this.annotation.context;
+            this.lasso.addPoint(position.x, position.y, context);
+            this.annotation.sprite.texture.update();
+            this.lasso.drawTempLine(position.x, position.y);
+            return;
+        }
 
+        if (this.brush_mode === 'snakes' && this.isPainting) {
+            const position = this.viewport.toWorld(event.data.global);
+            const start = performance.now();
+            this.activeContour
+                .drawContour(
+                    Math.floor(position.x),
+                    Math.floor(position.y),
+                    this.brush.label,
+                    this.sliceNum,
+                    this.axis,
+                    'execute'
+                )
+                .then((coords) => {
+                    // Ensure coords is not null before using it
+                    if (coords !== null) {
+                        this.annotation.drawOver(coords, this.brush.label);
+                        const end = performance.now();
+                        console.log(`Execution time activeContour Pointerdown: ${end - start} ms`);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error during drawPoint:', error);
+                });
+            return;
+        }
         this.brush.cursor.position.x = currPosition.x - Math.floor(this.brush.size / 2);
         this.brush.cursor.position.y = currPosition.y - Math.floor(this.brush.size / 2);
 
-        if (!this.isPainting) return;
+        if (!this.isPainting || this.brush_mode === 'magic_wand') return;
 
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
@@ -463,6 +863,32 @@ class Canvas {
         this.viewport.plugins.resume('drag');
 
         if (!this.isPainting) return;
+
+        if (this.brush_mode === 'magic_wand') {
+            this.viewport.plugins.pause('drag');
+            void applyMagicWand(this.viewport, this.sliceNum, this.axis, this.brush.label, event);
+            this.isPainting = false; // Reset painting flag
+            return; // Exit the method early since the magic wand logic is
+        }
+
+        if (this.brush_mode === 'lasso') {
+            this.isPainting = false; // Reset painting flag
+            const context = this.annotation.context;
+            this.lasso.endLasso(context, this.brush.label, this.sliceNum, this.axis);
+            this.lasso.clearTempLine();
+            this.viewport.removeChild(this.lasso.tempLine);
+            this.annotation.sprite.texture.update();
+            return;
+        }
+
+        if (this.brush_mode === 'snakes') {
+            void this.activeContour.finalize(this.brush.label, this.sliceNum, this.axis);
+            this.activeContour.clear();
+            // Clear the initial state after finalizing
+            this.isPainting = false;
+            this.annotation.resetPreviousData();
+            return;
+        }
 
         const currPosition = this.viewport.toWorld(event.data.global);
         currPosition.x = Math.floor(currPosition.x);
@@ -553,6 +979,9 @@ class Canvas {
     setBrushMode(mode: BrushModeType) {
         this.brush_mode = mode;
         this.brush.setMode(mode);
+        // Set the cursor mode
+        console.log('setting brush to mode:', mode);
+        this.viewport.cursor = mode;
     }
 
     setSuperpixelVisibility(visible = true) {
@@ -942,7 +1371,7 @@ const brushList = [
     },
     {
         id: 'erase_brush',
-        logo: browsers,
+        logo: eraserIcon,
     },
 ];
 
@@ -1138,6 +1567,23 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         this.canvas!.setBrushMode(brush_mode);
     }
 
+    GlobalThreshold = (payload: { lower: number; upper: number; action: 'render' | 'delete'; label: number }) => {
+        const { lower, upper, action } = payload;
+
+        if (!this.canvas || !this.canvas.annotation) {
+            console.error('Canvas or Annotation not initialized.');
+            return;
+        }
+        if (action === 'render') {
+            // Render the threshold annotation
+            this.canvas.annotation.applyThreshold(this.canvas.imgData!, lower, upper, this.canvas.brush.label);
+        } else if (action === 'delete') {
+            // Clear the annotation overlay
+            this.canvas.annotation.resetPreviousData();
+            this.onAnnotationChanged(); // force the annotation to be rerendered, small fix
+        }
+    };
+
     componentDidMount() {
         // the element is the DOM object that we will use as container to add pixi stage(canvas)
         const elem = this.pixi_container;
@@ -1193,6 +1639,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             };
 
             this.onContrastChanged = (payload: number[]) => {
+                console.log('Adjusting constrast', payload);
                 this.adjustContrast(payload[0], payload[1]);
             };
 
@@ -1292,6 +1739,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('cropPreviewMode', this.onCropPreviewMode);
             subscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
             subscribe('activateSL', this.onActivateSL);
+            subscribe('globalThresholdPreview', this.GlobalThreshold); // Subscribe to the event
         }
     }
 
@@ -1318,6 +1766,7 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('cropPreviewMode', this.onCropPreviewMode);
         unsubscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
         unsubscribe('activateSL', this.onActivateSL);
+        unsubscribe('globalThresholdPreview', this.GlobalThreshold); // Subscribe to the event
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {

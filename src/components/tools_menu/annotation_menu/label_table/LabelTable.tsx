@@ -24,6 +24,7 @@ import { arrowUndoOutline, eyedrop, trashOutline } from 'ionicons/icons';
 import { sfetch } from '../../../../utils/simplerequest';
 
 import ErrorInterface from '../../../main_menu/file/utils/ErrorInterface';
+import LoadingComponent from '../../utils/LoadingComponent';
 
 interface LabelTableProps {
     colors: [number, number, number][];
@@ -111,6 +112,8 @@ const WarningWindow: React.FC<WarningWindowInterface> = ({
  * @return this components returns the label table
  */
 const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
+    const [loadingMsg, setLoadingMsg] = useState<string>('');
+    const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
     const [newLabelId, setNewLabelId] = useStorageState<number>(sessionStorage, 'newLabelId', 1);
     const [labelList, setLabelList] = useStorageState<LabelInterface[]>(sessionStorage, 'labelList', [
         {
@@ -233,6 +236,8 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     }
 
     const undoAnnotation = () => {
+        setLoadingMsg('Undo Annotation');
+        setShowLoadingCompPS(true);
         void sfetch('POST', '/undo_annot', '', 'json').then((label_number: number) => {
             if (label_number !== -1) {
                 console.log('undid label, update label table');
@@ -244,8 +249,10 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
                 }
                 setRemovedLabels((prevRemovedLabels) => prevRemovedLabels.filter((l) => l.id !== label_number));
                 setLabelList((currentLabels) => [...currentLabels, labelToRestore]);
+                setShowLoadingCompPS(false);
             }
             dispatch('annotationChanged', null);
+            setShowLoadingCompPS(false);
         });
     };
 
@@ -290,6 +297,7 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
 
     return (
         <div>
+            <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
             <IonRow>
                 <IonCol>
                     <InputLabel

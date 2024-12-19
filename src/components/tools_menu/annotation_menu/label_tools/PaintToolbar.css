@@ -1,0 +1,63 @@
+/* Target ONLY buttons within PaintToolbar */
+.paint-toolbar > ion-grid > ion-row > ion-col > ion-button {
+    --background: var(--ion-color-light);
+    --background-hover: var(--ion-color-light-tint);
+    --background-focused: var(--ion-color-light-shade);
+    --color: var(--ion-color-primary);
+    --font-size: 2.2em;
+    --padding-start: 1.2em;
+    --padding-end: 1.2em;
+    --padding-top: 1.2em;
+    --padding-bottom: 1.2em;
+}
+
+/* Focus state for PaintToolbar buttons */
+.paint-toolbar > ion-grid > ion-row > ion-col > ion-button:focus {
+    --background: #005a96;
+    --color: white;
+}
+
+/* Center align ion-col in PaintToolbar */
+.paint-toolbar > ion-grid > ion-row > ion-col {
+    text-align: center;
+}
+
+.paint-toolbar .small-note {
+    margin-bottom: 0;
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+/* Limit the grid width to PaintToolbar */
+.paint-toolbar > ion-grid {
+    --ion-grid-width: 75%;
+}
+
+.paint-toolbar > ion-grid > ion-row {
+    flex-wrap: nowrap; /* Prevent wrapping */
+}
+
+.paint-toolbar > ion-grid > ion-row > ion-col {
+    flex: 1 1 0; /* Equal distribution of columns */
+    min-width: 0; /* Prevent overflow */
+    text-align: center; /* Align content */
+}
+
+/* Target only direct IonButtons inside PaintToolbar */
+.paint-toolbar > ion-grid > ion-row > ion-col > ion-button {
+    font-size: 0.90rem; /* Adjust button font size */
+    --border-radius: 8px; /* Optional: Rounded corners */
+}
+
+
+/* Toggle visibility explicitly for PaintToolbar */
+.hidden {
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+}
+
+.visible {
+    visibility: visible;
+    height: auto;
+}

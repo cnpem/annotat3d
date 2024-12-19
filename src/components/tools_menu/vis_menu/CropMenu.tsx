@@ -10,7 +10,7 @@ import {
     useIonToast,
 } from '@ionic/react';
 import isEqual from 'lodash.isequal';
-import { Fragment, useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { useStorageState } from 'react-storage-hooks';
 //ignoring types for react-color, as it seems broken
 //TODO: investigate if this is fixed, otherwise declare the types manually
@@ -22,6 +22,8 @@ import { sfetch } from '../../../utils/simplerequest';
 import { ImageInfoInterface } from '../../main_menu/file/utils/ImageInfoInterface';
 import { CropAxisInterface, CropShapeInterface } from '../utils/CropInterface';
 import { ImageShapeInterface } from '../utils/ImageShapeInterface';
+import LoadingComponent from '../utils/LoadingComponent';
+import ErrorInterface from '../../main_menu/file/utils/ErrorInterface';
 
 interface CropMenuProps {
     imageShape: ImageShapeInterface;
@@ -74,16 +76,18 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
         'cropPreviewColor',
         0xbf4040
     );
+    const [loadingMsg, setLoadingMsg] = useState<string>('');
+    const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
 
     const [showToast] = useIonToast();
     const toastTime = 2000;
 
-    // positional range references for sliders
+    /*     // positional range references for sliders
     const rangeRefX = useRef<HTMLIonRangeElement | null>(null);
     const rangeRefY = useRef<HTMLIonRangeElement | null>(null);
     const rangeRefZ = useRef<HTMLIonRangeElement | null>(null);
-
-    // updating positional range references with the new values from the sliders
+ */
+    /*     // updating positional range references with the new values from the sliders
     useEffect(() => {
         if (rangeRefX) {
             if (!isEqual(rangeRefX.current!.value, cropSliderX)) {
@@ -106,7 +110,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                 }, 20);
             }
         }
-    });
+    }); */
 
     const handleSliderChangeX = (e: CustomEvent) => {
         const newCropLims = e.detail.value;
@@ -178,8 +182,10 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
      * Calls a function on the backend that replaces the working image
      * with a smaller image based on the indexes given by cropShape
      */
-    function onApply() {
-        setToggleCropMode(false);
+    const handleApplyCrop = () => {
+        setLoadingMsg('Cropping image');
+        setShowLoadingCompPS(true);
+
         const yLength: number = props.imageShape.y;
         const cropShape: CropShapeInterface = {
             cropX: cropSliderX,
@@ -190,46 +196,75 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
             cropZ: cropSliderZ,
         };
         console.log('CropMenu: onApply', cropShape);
-        void sfetch('POST', '/crop_apply', JSON.stringify(cropShape), 'json').then((img_info: ImageInfoInterface) => {
-            console.log('CropMenu: onApply Success! ', img_info);
-            // loads crop image
-            dispatch('ImageLoaded', img_info);
-            // informs canvas that the superpixel image was deleted
-            dispatch('superpixelChanged', {});
-            // informs aboud annotation updates in the backend
-            dispatch('annotationChanged', null);
-            // deactivates crop preview mode on canvas
-            dispatch('cropPreviewMode', false);
-            const msg: string =
-                'Crop Applied cropShape: ' + String(cropShape) + ' new imageShape:' + String(img_info.imageShape);
-            void showToast(msg, toastTime);
-        });
-    }
+        console.log('Applying Crop');
+
+        // Calls a function on the backend to apply the crop
+        sfetch('POST', '/crop_apply', JSON.stringify(cropShape), 'json')
+            .then((img_info: ImageInfoInterface) => {
+                console.log('CropMenu: onApply Success!', img_info);
+
+                // Loads cropped image
+                dispatch('ImageLoaded', img_info);
+                // Informs canvas that the superpixel image was deleted
+                dispatch('superpixelChanged', {});
+                // Informs about annotation updates in the backend
+                dispatch('annotationChanged', null);
+                // Deactivates crop preview mode on canvas
+                dispatch('cropPreviewMode', false);
+
+                const msg = `Crop Applied cropShape: ${String(cropShape)} new imageShape: ${String(
+                    img_info.imageShape
+                )}`;
+                void showToast(msg, toastTime);
+            })
+            .catch((error: ErrorInterface) => {
+                console.log('Error in Crop Apply operation', error.error_msg);
+            })
+            .finally(() => {
+                setShowLoadingCompPS(false);
+            });
+    };
+
     /**
      * Calls a function on the backend that replaces the working cropped
-     * image with the original image opening it again and placing the labels
+     * image with the original image, opening it again and placing the labels
      * and annotations on their new positions relative to the original image.
      */
-    function onMerge() {
+    const handleMergeCrop = () => {
         setToggleCropMode(false);
-        void sfetch('POST', '/crop_merge', '', 'json').then((img_info: ImageInfoInterface) => {
-            console.log('CropMenu: onMerge Success! ', img_info);
-            // informs canvas that the original (bigger) image was loaded
-            dispatch('ImageLoaded', img_info);
-            // informs canvas that the superpixel image was deleted
-            dispatch('superpixelChanged', {});
-            // updates label image updated in the backend
-            dispatch('labelChanged', '');
-            // informs aboud annotation_menu updates in the backend
-            dispatch('annotationChanged', null);
-            // deactivates crop preview mode on canvas
-            dispatch('cropPreviewMode', false);
-            void showToast('Crop Merged', toastTime);
-        });
-    }
+        setLoadingMsg('Reloading original image');
+        setShowLoadingCompPS(true);
+        console.log('Merging Crop');
+
+        // Calls a function on the backend to merge the crop
+        sfetch('POST', '/crop_merge', '', 'json')
+            .then((img_info: ImageInfoInterface) => {
+                console.log('CropMenu: onMerge Success!', img_info);
+
+                // Informs canvas that the original (bigger) image was loaded
+                dispatch('ImageLoaded', img_info);
+                // Informs canvas that the superpixel image was deleted
+                dispatch('superpixelChanged', {});
+                // Updates label image in the backend
+                dispatch('labelChanged', '');
+                // Informs about annotation updates in the backend
+                dispatch('annotationChanged', null);
+                // Deactivates crop preview mode on canvas
+                dispatch('cropPreviewMode', false);
+
+                void showToast('Crop Merged', toastTime);
+            })
+            .catch((error: ErrorInterface) => {
+                console.log('Error in Crop Merge operation', error.error_msg);
+            })
+            .finally(() => {
+                setShowLoadingCompPS(false);
+            });
+    };
 
     return (
         <Fragment>
+            <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
             <IonCard disabled={props.disabled}>
                 {/* <IonCardHeader>
                     <div style={ { fontWeight: 600, fontSize: 18 } }>
@@ -265,7 +300,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                             <IonRange
                                 disabled={!toggleCropMode}
                                 name={'cropRangeX'}
-                                ref={rangeRefX}
+                                value={{ lower: cropSliderX.lower, upper: cropSliderX.upper }}
                                 dualKnobs={true}
                                 min={0}
                                 max={props.imageShape.x}
@@ -284,7 +319,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                             <IonRange
                                 disabled={!toggleCropMode}
                                 name={'cropRangeY'}
-                                ref={rangeRefY}
+                                value={{ lower: cropSliderY.lower, upper: cropSliderY.upper }}
                                 dualKnobs={true}
                                 min={0}
                                 max={props.imageShape.y}
@@ -303,7 +338,7 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                             <IonRange
                                 disabled={!toggleCropMode}
                                 name={'cropRangeZ'}
-                                ref={rangeRefZ}
+                                value={{ lower: cropSliderZ.lower, upper: cropSliderZ.upper }}
                                 dualKnobs={true}
                                 min={0}
                                 max={props.imageShape.z}
@@ -328,10 +363,20 @@ const CropMenu: React.FC<CropMenuProps> = (props: CropMenuProps) => {
                             </IonLabel>
                         </IonItem>
                         <IonRow class="ion-justify-content-center">
-                            <IonButton disabled={!toggleCropMode} color="primary" size="small" onClick={onApply}>
+                            <IonButton
+                                disabled={!toggleCropMode}
+                                color="primary"
+                                size="small"
+                                onClick={() => handleApplyCrop()}
+                            >
                                 Apply
                             </IonButton>
-                            <IonButton disabled={!toggleCropMode} color="primary" size="small" onClick={onMerge}>
+                            <IonButton
+                                disabled={!toggleCropMode}
+                                color="primary"
+                                size="small"
+                                onClick={() => handleMergeCrop()}
+                            >
                                 Merge
                             </IonButton>
                         </IonRow>
