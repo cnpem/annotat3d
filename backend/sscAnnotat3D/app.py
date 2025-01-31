@@ -24,6 +24,10 @@ from sscAnnotat3D.api.modules import (
 from sscAnnotat3D.modules import superpixel_segmentation_module
 from sscAnnotat3D.repository import data_repo
 
+from sentry_sdk import set_user
+
+set_user({"username": str(os.getenv("REACT_APP_USERNAME") or "user.unknown")})
+
 sentry_sdk.init(
    dsn="https://dcdb7e790b3747c3c10823e8ffcc0058@o4507488156057600.ingest.us.sentry.io/4507488327630848",
    # Set traces_sample_rate to 1.0 to capture 100%
