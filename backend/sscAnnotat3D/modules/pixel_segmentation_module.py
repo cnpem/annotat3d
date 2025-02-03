@@ -395,11 +395,9 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                             feature_extraction_time += end_feature_extraction_time - start_feature_extraction_time
                             test_time += test
                             assignment_time += assignment
-
                             cur_block_size = image_block.shape[0]
-                            # Considering only the number of feature channels when computing superpixel features blockwise
-                            features_shape += np.array(features_block.shape, dtype="int") * cur_block_size
-
+                            # I don't know why this was previously done like this, but it was bugged.
+                            #features_shape += np.array(features_block.shape, dtype="int") * cur_block_size
                             if len(total_predict_times) == 0:
                                 total_predict_times = predict_times
                             else:
@@ -409,8 +407,9 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                             # Feature shape is a weighted average combination of all feature shapes of each block
                             nblocks += cur_block_size
                         # Computing average amount of superpixel feature vectors computed per block
-                        features_shape = (features_shape / max(1, nblocks)).astype("int32")
-
+                        #features_shape = (features_shape / max(1, nblocks)).astype("int32")
+                        #get number of features and size of image for features shape
+                        features_shape = (features_block.shape[0], *image.shape)
                     else:
                         features_shape = features.shape
                         pred[...], assignment_time, test_time, total_predict_times = self._classify_pixels(features)
