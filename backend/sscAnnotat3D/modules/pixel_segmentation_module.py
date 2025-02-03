@@ -172,7 +172,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             self.auto_save_data(annotations)
 
             if selected_axis != 0:
-                valid, _ = self._validate_feature_extraction_memory_usage()
+                valid, _ = self._validate_feature_extraction_memory_usage(superpixel=False)
 
                 if not valid:
                     raise Exception(
@@ -331,7 +331,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             feature_extraction_time = 0.0
             with sentry_sdk.start_span(op="Feature extraction"):
                 if self._features is None or force_feature_extraction:
-                    valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(**kwargs)
+                    valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(superpixel=False, **kwargs)
                     if valid:
                         logging.debug("**** Extracting features for the entire image AT ONCE ****")
                         start_feature_extraction_time = time.time()

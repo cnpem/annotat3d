@@ -1170,7 +1170,7 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         return selected_slices_idx
 
-    def _estimate_feature_extraction_memory_usage(self, **kwargs):
+    def _estimate_feature_extraction_memory_usage(self, superpixel, **kwargs):
         feature_extraction_params = self._feature_extraction_params.copy()
         feature_extraction_params.update(kwargs)
 
@@ -1185,15 +1185,18 @@ class ClassifierSegmentationModule(SegmentationModule):
         ) * len(supervoxel_pooling)
         sizeof_float = np.dtype("float32").itemsize
         # Multiplying by 2 due to the
-        memory = 2 * nsuperpixels * num_features * sizeof_float
+        if superpixel:
+            memory = 2 * nsuperpixels * num_features * sizeof_float
+        else:
+            memory = 2 * self._image.size * num_features * sizeof_float
 
         return memory
 
     def _get_available_memory(self):
         return min(psutil.virtual_memory().available * __max_available_mem_usage_percentage__, __max_mem_usage__)
 
-    def _validate_feature_extraction_memory_usage(self, **kwargs):
-        estimated_memory = self._estimate_feature_extraction_memory_usage(**kwargs)
+    def _validate_feature_extraction_memory_usage(self, superpixel = True,**kwargs):
+        estimated_memory = self._estimate_feature_extraction_memory_usage(superpixel, **kwargs)
         available_memory = self._get_available_memory()
 
         has_enough_memory = estimated_memory <= available_memory

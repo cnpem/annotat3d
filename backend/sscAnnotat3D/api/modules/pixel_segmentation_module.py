@@ -501,9 +501,9 @@ def execute():
             unique_ids.add(value)
         if len(unique_ids) <= 1:
             return handle_exception(
-                "unable to preview!. Please, at least create one label and background annotation and try again the preprocess."
+                "unable to execute!. Please, at least create one label and background annotation and try again the preprocess."
             )
-        return handle_exception("unable to preview! {}".format(str(e)))
+        return handle_exception("unable to execute! {}".format(str(e)))
 
     data_repo.set_image("label", label)
 
