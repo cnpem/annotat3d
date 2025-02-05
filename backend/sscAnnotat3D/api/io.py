@@ -69,6 +69,7 @@ def get_image_histogram(image_id):
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
     print('slice_num: \n',slice_num, slice_num == -1)
+
     if slice_num >= 0:
         img_slice = image[slice_range]
         histogram, bin_edges = np.histogram(img_slice, bins=255)
@@ -94,18 +95,13 @@ def get_image_histogram(image_id):
 
             data_repo.set_info(key= image_info['imageName'] + " 3Dhistogram", data=hist_data)
             
-    # round bin_centers for pretty show in frontend
-    if np.issubdtype(bin_centers.dtype, np.floating):
-        # Round the array to two decimal places
-        bin_centers = np.round(bin_centers, decimals=2)
-
     end = time.process_time()
     print(f"Elapsed time during histogram calculation: {end-start} seconds")
 
     # it is necessary to convert the numpy datatype to a numpy datatype for json
     data_type = image.dtype
-    if data_type == float:
 
+    if np.issubdtype(data_type, np.floating):
         def python_typer(x):
             return float(x)
 
@@ -120,6 +116,7 @@ def get_image_histogram(image_id):
     histogram_info["maxValue"] = python_typer(img_max)
     histogram_info["minValue"] = python_typer(img_min)
     histogram_info["bins"] = bin_centers.tolist()
+    histogram_info["dataType"] = str(data_type)
 
     n_bins = len(histogram_info["bins"])
     #computes otsu
@@ -127,8 +124,6 @@ def get_image_histogram(image_id):
     otsu_value = value * (bin_centers.max()- bin_centers.min())/n_bins + bin_centers.min()
 
     histogram_info['otsu'] = round(otsu_value,3)
-
-    print(jsonify(histogram_info))
 
     return jsonify(histogram_info)
 

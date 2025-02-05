@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { IonCard, IonCardContent, IonRange, IonIcon, IonLabel, IonToggle, IonItem } from '@ionic/react';
-import { moon, sunny } from 'ionicons/icons';
+import { IonCard, IonCardContent, IonRange, IonLabel, IonToggle, IonItem } from '@ionic/react';
 import { dispatch, useEventBus } from '../../../utils/eventbus';
 import { useStorageState } from 'react-storage-hooks';
-import isEqual from 'lodash.isequal';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -38,6 +36,10 @@ interface ColormapData {
     data: number[];
     colormapName: string;
     nshades: number;
+    contrastLower: number;
+    contrastUpper: number;
+    contrastRangeMin: number;
+    contrastRangeMax: number;
 }
 
 interface SideMenuVisProps {
@@ -118,38 +120,74 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     const selectedColorRef = useRef(selectedColor); // Had to add this useRef otherwise it will get old values of cmap when slice changes
 
     const [histogramData, setHistogramData] = useStorageState(sessionStorage, 'histogramData', baseHistogram);
-    const [contrastRangeRefMaxValue, setContrastRangeRefMaxValue] = useStorageState(
+    const [contrastRangeRefMaxValue, setContrastRangeRefMaxValue] = useStorageState<number | null>(
         sessionStorage,
         'contrastRangeRefMaxValue',
-        100
+        null
     );
-    const [contrastRangeRefMinValue, setContrastRangeRefMinValue] = useStorageState(
+    const [contrastRangeRefMinValue, setContrastRangeRefMinValue] = useStorageState<number | null>(
         sessionStorage,
         'contrastRangeRefMinValue',
-        0
+        null
     );
-    // This is the contrast that the user can change
-    const [contrast, setContrast] = useStorageState(sessionStorage, 'contrast', {
+
+    // Contrast reference for rendering in canvas
+    const [contrast, setContrast] = useStorageState<{
+        lower: number | null;
+        upper: number | null;
+    }>(
+        sessionStorage,
+        'contrast',
+        { lower: null, upper: null } // Initialize as null to check when it's valid
+    );
+
+    // This is the bin index number that the user can change
+    const [bin, setBin] = useState({
         lower: 0,
-        upper: 100,
+        upper: 254,
     });
 
+    const [pinFormatter, setPinFormatter] = useState<(binNumber: number) => number>(
+        () => (binNumber: number) => binNumber
+    );
+
+    // Monitor change contrast when bin value changes
+    useEffect(() => {
+        if (histogramData.labels.length === 255) {
+            setContrast({ lower: histogramData.labels[bin.lower], upper: histogramData.labels[bin.upper] });
+        }
+    }, [bin]); // Dependencies
+
     // Function to generate background colors based on data and colormap settings
-    function generateBackgroundColors({ data, colormapName, nshades }: ColormapData): string[] {
+    function generateBackgroundColors({
+        data,
+        colormapName,
+        nshades,
+        contrastLower,
+        contrastUpper,
+        contrastRangeMin,
+        contrastRangeMax,
+    }: ColormapData): string[] | null {
         // Generate a colormap based on the given range and colormap name
         const cmap = colormap({
             colormap: colormapName,
             nshades,
             format: 'rgbaString', // Ensure the format is 'float' for RGB values between 0 and 1
         });
-
+        if (
+            contrastLower === null ||
+            contrastUpper === null ||
+            contrastRangeMax === null ||
+            contrastRangeMin === null
+        ) {
+            console.log('Skipping contrast update, values not initialized.');
+            return null;
+        }
         const deltaIndexMax = Math.floor(
-            (data.length / (contrastRangeRefMaxValue - contrastRangeRefMinValue)) *
-                (contrastRangeRefMaxValue - contrast.upper)
+            (data.length / (contrastRangeMax - contrastRangeMin)) * (contrastRangeMax - contrastUpper)
         );
         const deltaIndexMin = Math.floor(
-            (data.length / (contrastRangeRefMaxValue - contrastRangeRefMinValue)) *
-                (contrast.lower - contrastRangeRefMinValue)
+            (data.length / (contrastRangeMax - contrastRangeMin)) * (contrastLower - contrastRangeMin)
         );
         console.log('deltaIndexMin,deltaIndexMax', deltaIndexMin, deltaIndexMax);
 
@@ -174,7 +212,20 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         console.log('Selected color has changed to: ', selectedColor);
         setSelectedColor(selectedColor);
         selectedColorRef.current = selectedColor;
-
+        if (
+            contrast.lower === null ||
+            contrast.upper === null ||
+            contrastRangeRefMaxValue === null ||
+            contrastRangeRefMinValue === null
+        ) {
+            console.log(
+                'Skipping contrast update, values not initialized.',
+                contrast,
+                contrastRangeRefMaxValue,
+                contrastRangeRefMinValue
+            );
+            return;
+        }
         const nshades = Math.round(
             (histogramData.datasets[0].data.length / (contrastRangeRefMaxValue - contrastRangeRefMinValue)) *
                 (contrast.upper - contrast.lower)
@@ -191,32 +242,31 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
             data: histogramData.datasets[0].data,
             colormapName: selectedColor,
             nshades,
+            contrastLower: contrast.lower,
+            contrastUpper: contrast.upper,
+            contrastRangeMin: contrastRangeRefMinValue,
+            contrastRangeMax: contrastRangeRefMaxValue,
         };
         const generatedColors = generateBackgroundColors(newBackgroundColors);
         // Update the backgroundColor for the single dataset
+        if (generatedColors !== null) {
+            const updatedDataset = [
+                {
+                    ...histogramData.datasets[0],
+                    borderColor: generatedColors, // Apply the new borderColor array
+                    backgroundColor: generatedColors, // Apply the new background colors array
+                },
+            ];
 
-        const updatedDataset = [
-            {
-                ...histogramData.datasets[0],
-                borderColor: generatedColors, // Apply the new borderColor array
-                backgroundColor: generatedColors, // Apply the new background colors array
-            },
-        ];
+            // Update the state with the new dataset
+            setHistogramData((prev) => ({
+                ...prev,
+                datasets: updatedDataset,
+            }));
 
-        // Update the state with the new dataset
-        setHistogramData((prev) => ({
-            ...prev,
-            datasets: updatedDataset,
-        }));
-
-        dispatch('ColorMapChanged', selectedColor); // Change rendering in canvas
+            dispatch('ColorMapChanged', selectedColor); // Change rendering in canvas
+        }
     }
-
-    // Monitor histogramData Changes
-    useEffect(() => {
-        console.log('histogram data changed');
-        dispatch('histogramdatachanged', histogramData);
-    }, [histogramData]); // Dependencies
 
     useEventBus('ImageHistogramLoaded', (loadedHistogram: HistogramInfoPayload) => {
         // Update histogram data and labels (it is necessary to update a unique variable)
@@ -226,21 +276,44 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
             data: loadedHistogram.data,
             colormapName: selectedColorRef.current,
             nshades: loadedHistogram.data.length,
+            contrastLower: loadedHistogram.minValue,
+            contrastUpper: loadedHistogram.maxValue,
+            contrastRangeMin: loadedHistogram.minValue,
+            contrastRangeMax: loadedHistogram.maxValue,
         };
+        console.log('Loaded histogram Color map updated', updateColormapData);
+        // Define pinFormatter based on data type
+        const newPinFormatter = (binNumber: number): number => {
+            console.log(
+                'Loaded histogram includes int?',
+                loadedHistogram.dataType.includes('int'),
+                loadedHistogram.dataType
+            );
+            return loadedHistogram.dataType.includes('int')
+                ? Math.round(loadedHistogram.bins[binNumber])
+                : Math.round(loadedHistogram.bins[binNumber] * 100) / 100;
+        };
+        setPinFormatter(() => newPinFormatter); // Update state with new function
 
         console.log('Histogram Loding color', selectedColor);
-        const updatedHistogram = {
-            labels: loadedHistogram.bins,
-            datasets: [
-                {
-                    data: loadedHistogram.data,
-                    borderColor: generateBackgroundColors(updateColormapData),
-                    backgroundColor: generateBackgroundColors(updateColormapData),
-                    normalized: true,
-                },
-            ],
-        };
-        setHistogramData(updatedHistogram);
+
+        const borderColor = generateBackgroundColors(updateColormapData);
+        const backgroundColor = generateBackgroundColors(updateColormapData);
+
+        if (borderColor !== null && backgroundColor !== null) {
+            const updatedHistogram = {
+                labels: loadedHistogram.bins,
+                datasets: [
+                    {
+                        data: loadedHistogram.data,
+                        borderColor,
+                        backgroundColor,
+                        normalized: true,
+                    },
+                ],
+            };
+            setHistogramData(updatedHistogram);
+        }
 
         // Store histogram max and min values
         setContrastRangeRefMaxValue(loadedHistogram.maxValue);
@@ -250,8 +323,12 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     });
 
     useEffect(() => {
+        if (contrast.lower === null || contrast.upper === null) {
+            console.log('Skipping dispatch, contrast values not initialized.');
+            return;
+        }
         updateBackgroundColors();
-        console.log('contrast changed', contrast);
+        console.log('Dispatch contrastChanged', contrast);
         dispatch('contrastChanged', [contrast.lower, contrast.upper]);
     }, [selectedColor, contrast]);
 
@@ -283,14 +360,15 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
                         <Line options={histogramOptions} data={histogramData} />
                         <IonRange
                             className="custom-range"
-                            max={contrastRangeRefMaxValue}
-                            min={contrastRangeRefMinValue}
+                            max={histogramData.labels.length - 1}
+                            min={0}
                             pin={true}
-                            value={{ lower: contrast.lower, upper: contrast.upper }}
+                            pinFormatter={pinFormatter}
+                            value={{ lower: bin.lower, upper: bin.upper }}
                             dualKnobs={true}
                             onIonKnobMoveEnd={(e: CustomEvent) => {
                                 if (e.detail.value) {
-                                    setContrast(e.detail.value);
+                                    setBin(e.detail.value);
                                 }
                             }}
                         ></IonRange>

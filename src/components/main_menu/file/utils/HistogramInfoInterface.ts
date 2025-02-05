@@ -8,4 +8,5 @@ export interface HistogramInfoPayload {
     maxValue: number;
     minValue: number;
     otsu: number;
+    dataType: string;
 }
