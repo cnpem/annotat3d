@@ -104,7 +104,14 @@ class ClassifierSegmentationModule(SegmentationModule):
         self.max_superpixel_label = 0
         self._auto_save = auto_save
         self._workspace = workspace
-        self._image = image.astype("int32") if image.dtype != "int32" else image
+        if image.dtype == np.int32:
+            self._image = image
+        else:
+            img_max, img_min = image.max(), image.min()
+            if img_max == img_min:
+                self._image = np.zeros_like(image, dtype=np.int32)  # Handle constant images
+            else:
+                self._image = ((image - img_max) / (img_max - img_min) * (2**31)).astype(np.int32)
 
         self._training_features = []
         self._training_features_raw = []  # Raw training features before scaling, used for saving features if necessary
