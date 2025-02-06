@@ -192,11 +192,18 @@ const GlobalThreshold: React.FC = () => {
             setShowLoadingCompPS(true);
             sfetch('POST', '/get_image_histogram/image', JSON.stringify(params), 'json')
                 .then((loadedHistogram: HistogramInfoPayload) => {
+                    const binwithminmax = loadedHistogram.bins;
+                    const datawithminmax = loadedHistogram.data;
+                    binwithminmax.unshift(loadedHistogram.minValue);
+                    binwithminmax.push(loadedHistogram.maxValue);
+                    datawithminmax.unshift(1);
+                    datawithminmax.push(1);
+
                     const updatedHistogram = {
-                        labels: loadedHistogram.bins,
+                        labels: binwithminmax,
                         datasets: [
                             {
-                                data: loadedHistogram.data,
+                                data: datawithminmax,
                                 borderColor: ['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0.5)'],
                                 backgroundColor: ['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0.5)'],
                                 normalized: true,
@@ -236,6 +243,13 @@ const GlobalThreshold: React.FC = () => {
             setShowLoadingCompPS(true);
             sfetch('POST', '/get_image_histogram/image', JSON.stringify(params), 'json')
                 .then((loadedHistogram: HistogramInfoPayload) => {
+                    // add upper and lower min to bin so user can move in the ionbar to these values
+                    const binwithminmax = loadedHistogram.bins;
+                    const datawithminmax = loadedHistogram.data;
+                    binwithminmax.unshift(loadedHistogram.minValue);
+                    binwithminmax.push(loadedHistogram.maxValue);
+                    datawithminmax.unshift(1);
+                    datawithminmax.push(1);
                     const updatedHistogram = {
                         labels: loadedHistogram.bins,
                         datasets: [
