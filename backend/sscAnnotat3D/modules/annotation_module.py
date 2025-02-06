@@ -485,7 +485,7 @@ class AnnotationModule:
                     del self.__annotation[coord3D]
 
             return marker_to_remove, label_restored
-        return -1
+        return None, -1
 
     @property
     def current_mk_id(self):
