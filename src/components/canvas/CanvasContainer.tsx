@@ -1609,9 +1609,11 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
             this.onImageLoaded = (payload) => {
                 const promise = this.fetchAll(true);
-                this.getHistogram();
                 void promise?.then(() => {
+                    // ensures the image is rendered when loaded
+                    this.canvas!.recenter();
                     void sfetch('POST', '/is_annotation_empty', '', 'json').then((createNewAnnot: boolean) => {
+                        //creates new annotation if necessary
                         if (createNewAnnot) {
                             this.newAnnotation();
                         }
