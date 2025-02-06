@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { IonCard, IonCardContent, IonRange, IonLabel, IonToggle, IonItem } from '@ionic/react';
 import { dispatch, useEventBus } from '../../../utils/eventbus';
 import { useStorageState } from 'react-storage-hooks';
@@ -141,19 +141,36 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         { lower: null, upper: null } // Initialize as null to check when it's valid
     );
 
-    // This is the bin index number that the user can change
-    const [bin, setBin] = useState({
-        lower: 0,
-        upper: 254,
+    // This is the bin index number that the user can change, the storage state is for storing when selecting other components
+    const [bin, setBin] = useStorageState<{
+        lower: number;
+        upper: number;
+    }>(sessionStorage, 'binvizhistogram', { lower: 0, upper: 245 });
+
+    // Instead of trying to store the function, store the necessary data to recreate it
+    const [formatterConfig, setFormatterConfig] = useStorageState(sessionStorage, 'formatterConfig', {
+        bins: [] as number[],
+        dataType: '',
+        isInitialized: false,
     });
 
-    const [pinFormatter, setPinFormatter] = useState<(binNumber: number) => number>(
-        () => (binNumber: number) => binNumber
+    // Create the formatter function based on the stored config
+    const pinFormatter = useCallback(
+        (binNumber: number): number => {
+            console.log('Pinformatter execution');
+            if (!formatterConfig.isInitialized) {
+                return binNumber;
+            }
+            return formatterConfig.dataType.includes('int')
+                ? Math.round(formatterConfig.bins[binNumber])
+                : Math.round(formatterConfig.bins[binNumber] * 100) / 100;
+        },
+        [formatterConfig]
     );
 
-    // Monitor change contrast when bin value changes
     useEffect(() => {
-        if (histogramData.labels.length === 255) {
+        if (histogramData.labels.length > bin.upper) {
+            console.log('bin value updated', bin);
             setContrast({ lower: histogramData.labels[bin.lower], upper: histogramData.labels[bin.upper] });
         }
     }, [bin]); // Dependencies
@@ -282,18 +299,12 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
             contrastRangeMax: loadedHistogram.maxValue,
         };
         console.log('Loaded histogram Color map updated', updateColormapData);
-        // Define pinFormatter based on data type
-        const newPinFormatter = (binNumber: number): number => {
-            console.log(
-                'Loaded histogram includes int?',
-                loadedHistogram.dataType.includes('int'),
-                loadedHistogram.dataType
-            );
-            return loadedHistogram.dataType.includes('int')
-                ? Math.round(loadedHistogram.bins[binNumber])
-                : Math.round(loadedHistogram.bins[binNumber] * 100) / 100;
-        };
-        setPinFormatter(() => newPinFormatter); // Update state with new function
+        // Update formatter configuration instead of the function itself
+        setFormatterConfig({
+            bins: loadedHistogram.bins,
+            dataType: loadedHistogram.dataType,
+            isInitialized: true,
+        });
 
         console.log('Histogram Loding color', selectedColor);
 
