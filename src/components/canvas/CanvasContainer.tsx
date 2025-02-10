@@ -1772,19 +1772,27 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
+        // If no property has changed, do nothing.
         if (isEqual(prevProps, this.props)) return;
 
+        // If the canvasMode has changed, update only the brush mode.
         if (this.props.canvasMode !== prevProps.canvasMode) {
             if (this.props.canvasMode === 'imaging') {
                 this.setBrushMode('no_brush');
             } else {
                 this.setBrushMode('draw_brush');
             }
+            // DO NOT call fetchAll here, as we don't want to reload the image and histogram.
         }
-        this.setState({ ...this.state, future_sight_on: false });
-        this.canvas?.setSliceNum(this.props.slice);
-        this.canvas?.setAxis(this.props.axis);
-        void this.fetchAllDebounced(true);
+
+        // If the slice or the axis has changed, then reload the image, histogram, etc.
+        if (prevProps.slice !== this.props.slice || prevProps.axis !== this.props.axis) {
+            // Reinitialize any state that depends on these parameters.
+            this.setState({ ...this.state, future_sight_on: false });
+            this.canvas?.setSliceNum(this.props.slice);
+            this.canvas?.setAxis(this.props.axis);
+            void this.fetchAllDebounced(true);
+        }
     }
 
     adjustContrast(minimum: number, maximum: number) {
