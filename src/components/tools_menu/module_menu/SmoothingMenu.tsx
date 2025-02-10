@@ -24,16 +24,6 @@ const smoothingOptions = [
     { id: 'unsharp_mask_filter', label: 'Unsharp Mask Filter' },
 ];
 
-const canvas: Record<string, 'drawing' | 'imaging'> = {
-    bm3d_filter: 'imaging',
-    gaussian_filter: 'imaging',
-    nlm_filter: 'imaging',
-    aniso_filter: 'imaging',
-    mean_filter: 'imaging',
-    median_filter: 'imaging',
-    unsharp_mask_filter: 'imaging',
-};
-
 const SmoothingMenu: React.FC = () => {
     const [smoothModule, setSmoothModule] = useStorageState<string>(sessionStorage, 'curSmoothModule', 'bm3d_filter');
     const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
@@ -46,11 +36,6 @@ const SmoothingMenu: React.FC = () => {
     useEventBus('changeCurSmoothModule', (newModule: string) => {
         setSmoothModule(newModule);
     });
-
-    useEffect(() => {
-        dispatch('canvasModeChanged', canvas[smoothModule]);
-        console.log('Smoothing Module changed to:', smoothModule);
-    }, [smoothModule]);
 
     return (
         <Fragment>

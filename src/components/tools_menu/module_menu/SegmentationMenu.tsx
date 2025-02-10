@@ -12,11 +12,6 @@ const segmentationOptions = [
     { id: 'pixel', label: 'Pixel Segmentation' },
 ];
 
-const canvas: Record<string, 'drawing' | 'imaging'> = {
-    superpixel: 'drawing',
-    pixel: 'drawing',
-};
-
 const SegmentationMenu: React.FC = () => {
     const [segModule, setSegModule] = useStorageState<string>(sessionStorage, 'curSegModule', 'superpixel');
     const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
@@ -32,7 +27,6 @@ const SegmentationMenu: React.FC = () => {
     });
 
     useEffect(() => {
-        dispatch('canvasModeChanged', canvas[segModule]);
         console.log('Segmentation Module changed to:', segModule);
         if (segModule === 'superpixel' && !showSuperpixel) {
             dispatch('superpixelVisibilityChanged', true);
