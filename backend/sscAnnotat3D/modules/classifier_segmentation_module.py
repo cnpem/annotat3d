@@ -111,7 +111,7 @@ class ClassifierSegmentationModule(SegmentationModule):
             if img_max == img_min:
                 self._image = np.zeros_like(image, dtype=np.int32)  # Handle constant images
             else:
-                self._image = ((image - img_max) / (img_max - img_min) * (2**31)).astype(np.int32)
+                self._image = ((image - img_min) / (img_max - img_min) * (2**31)).astype(np.int32)
 
         self._training_features = []
         self._training_features_raw = []  # Raw training features before scaling, used for saving features if necessary
