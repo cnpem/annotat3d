@@ -638,15 +638,8 @@ def threshold(input_id: str):
 
     label_mask = np.logical_and(img_slice >= lower_tresh, img_slice <= upper_tresh) 
 
-    if new_click:
-        data_repo.set_image(key="labelMask", data=label_mask) #TODO: Frontend needs to tell backend to delete this at some point
-        annot_module.labelmask_update(label_mask, label, mk_id, new_click)
-    else: #Only update what has changed
-        old_mask = data_repo.get_image(key="labelMask")
-        data_repo.set_image(key="labelMask", data=label_mask)
-        write_mask = (~old_mask) & (label_mask)  # 0 -> 1
-        erase_mask = (old_mask) & (~label_mask)  # 1 -> 0
-        annot_module.labelmask_multiupdate([write_mask, erase_mask], [label, -1], mk_id, new_click)
+    annot_module.labelmask_update(label_mask, label, mk_id, new_click)
+
 
     return jsonify(annot_module.current_mk_id)
 

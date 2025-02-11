@@ -83,6 +83,8 @@ class AnnotationModule:
         self.selected_cmap = "grays"
         self.classifier = None
 
+        self.annotation_slice_dict = {}
+
     # So we need to pay attention if anything broke on the code
     @property
     def marker_mode_support(self):
@@ -524,7 +526,7 @@ class AnnotationModule:
 
         self.__annotation_list.append(new_annotation)
 
-    def multilabel_updated(self, new_annot, marker_id, new_click = True):
+    def multilabel_updated(self, new_annot, marker_id, new_click = True, annot_mask = None):
         
         # Undo previous iteration        
         if new_click == False:
@@ -536,7 +538,10 @@ class AnnotationModule:
         if new_annot.ndim == 2:
             # Get the coordinates where the mask is different to draw
             old_annot = self.get_current_slice(self.__annotation_image)
-            rr,cc = np.nonzero(old_annot!=new_annot)
+            if annot_mask is not None:
+                 rr,cc = np.nonzero(annot_mask)
+            else:
+                rr,cc = np.nonzero(old_annot!=new_annot)
 
             new_annotation = []
             for coord2D in zip(rr,cc):
