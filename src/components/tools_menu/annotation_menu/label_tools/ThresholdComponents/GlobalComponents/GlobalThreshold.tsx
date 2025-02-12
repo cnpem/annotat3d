@@ -103,13 +103,50 @@ const GlobalThreshold: React.FC = () => {
     const [otsuValue, setOtsuValue] = useState<number>(0);
     const [currentValue, setCurrentValue] = useState({
         lower: 0,
-        upper: 100,
+        upper: 0,
     });
 
     const [selectedDimension, setSelectedDimension] = useState('2D');
 
     const handleValueChange = (newValues: { lower: number; upper: number }) => {
         setCurrentValue(newValues);
+    };
+
+    const [pinFormatter, setPinFormatter] = useState<(binNumber: number) => number>(
+        () => (binNumber: number) => binNumber
+    );
+
+    // This is the bin index number that the user can change
+    const [bin, setBin] = useState({
+        lower: 0,
+        upper: 254,
+    });
+
+    // Function to update bin and adjust contrast accordingly
+    const updateBin = (newBin: { lower: number; upper: number }) => {
+        setBin(newBin);
+
+        // Example: Adjust contrast based on bin change (modify logic as needed)
+        setCurrentValue((prevContrast) => ({
+            lower: histogramData.labels[newBin.lower],
+            upper: histogramData.labels[newBin.upper],
+        }));
+    };
+    function getClosestIndex(arr: number[], target: number): number {
+        return arr.reduce(
+            (closestIndex, curr, index) =>
+                Math.abs(curr - target) < Math.abs(arr[closestIndex] - target) ? index : closestIndex,
+            0
+        );
+    }
+    // Function to update contrast by enter
+    const updateContrast = (newContrast: { lower: number; upper: number }) => {
+        setCurrentValue(newContrast);
+        // Example: Adjust contrast based on bin change (modify logic as needed)
+        setBin((prevBin) => ({
+            lower: getClosestIndex(histogramData.labels, newContrast.lower),
+            upper: getClosestIndex(histogramData.labels, newContrast.upper),
+        }));
     };
 
     const handleApply3D = () => {
@@ -154,12 +191,19 @@ const GlobalThreshold: React.FC = () => {
             setLoadingMsg('Loading 2D histogram');
             setShowLoadingCompPS(true);
             sfetch('POST', '/get_image_histogram/image', JSON.stringify(params), 'json')
-                .then((histogram: HistogramInfoPayload) => {
+                .then((loadedHistogram: HistogramInfoPayload) => {
+                    const binwithminmax = loadedHistogram.bins;
+                    const datawithminmax = loadedHistogram.data;
+                    binwithminmax.unshift(loadedHistogram.minValue);
+                    binwithminmax.push(loadedHistogram.maxValue);
+                    datawithminmax.unshift(1);
+                    datawithminmax.push(1);
+
                     const updatedHistogram = {
-                        labels: histogram.bins,
+                        labels: binwithminmax,
                         datasets: [
                             {
-                                data: histogram.data,
+                                data: datawithminmax,
                                 borderColor: ['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0.5)'],
                                 backgroundColor: ['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0.5)'],
                                 normalized: true,
@@ -167,9 +211,22 @@ const GlobalThreshold: React.FC = () => {
                         ],
                     };
                     setHistogramData(updatedHistogram);
-                    sethistogramMinMaxValue({ min: histogram.minValue, max: histogram.maxValue });
-                    setOtsuValue(histogram.otsu); // Update the Otsu value here
+                    sethistogramMinMaxValue({ min: loadedHistogram.minValue, max: loadedHistogram.maxValue });
+                    setOtsuValue(loadedHistogram.otsu); // Update the Otsu value here
                     setShowLoadingCompPS(false);
+
+                    // Define pinFormatter based on data type
+                    const newPinFormatter = (binNumber: number): number => {
+                        console.log(
+                            'Loaded histogram includes int?',
+                            loadedHistogram.dataType.includes('int'),
+                            loadedHistogram.dataType
+                        );
+                        return loadedHistogram.dataType.includes('int')
+                            ? Math.round(loadedHistogram.bins[binNumber])
+                            : Math.round(loadedHistogram.bins[binNumber] * 100) / 100;
+                    };
+                    setPinFormatter(() => newPinFormatter); // Update state with new function
                 })
                 .catch((error) => {
                     console.log('Error while acquiring histogram');
@@ -185,12 +242,19 @@ const GlobalThreshold: React.FC = () => {
             setLoadingMsg('Loading 3D histogram \n (calculated for the whole image)');
             setShowLoadingCompPS(true);
             sfetch('POST', '/get_image_histogram/image', JSON.stringify(params), 'json')
-                .then((histogram: HistogramInfoPayload) => {
+                .then((loadedHistogram: HistogramInfoPayload) => {
+                    // add upper and lower min to bin so user can move in the ionbar to these values
+                    const binwithminmax = loadedHistogram.bins;
+                    const datawithminmax = loadedHistogram.data;
+                    binwithminmax.unshift(loadedHistogram.minValue);
+                    binwithminmax.push(loadedHistogram.maxValue);
+                    datawithminmax.unshift(1);
+                    datawithminmax.push(1);
                     const updatedHistogram = {
-                        labels: histogram.bins,
+                        labels: loadedHistogram.bins,
                         datasets: [
                             {
-                                data: histogram.data,
+                                data: loadedHistogram.data,
                                 borderColor: ['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0.5)'],
                                 backgroundColor: ['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0.5)'],
                                 normalized: true,
@@ -198,9 +262,21 @@ const GlobalThreshold: React.FC = () => {
                         ],
                     };
                     setHistogramData(updatedHistogram);
-                    sethistogramMinMaxValue({ min: histogram.minValue, max: histogram.maxValue });
-                    setOtsuValue(histogram.otsu); // Update the Otsu value here
+                    sethistogramMinMaxValue({ min: loadedHistogram.minValue, max: loadedHistogram.maxValue });
+                    setOtsuValue(loadedHistogram.otsu); // Update the Otsu value here
                     setShowLoadingCompPS(false);
+                    // Define pinFormatter based on data type
+                    const newPinFormatter = (binNumber: number): number => {
+                        console.log(
+                            'Loaded histogram includes int?',
+                            loadedHistogram.dataType.includes('int'),
+                            loadedHistogram.dataType
+                        );
+                        return loadedHistogram.dataType.includes('int')
+                            ? Math.round(loadedHistogram.bins[binNumber])
+                            : Math.round(loadedHistogram.bins[binNumber] * 100) / 100;
+                    };
+                    setPinFormatter(() => newPinFormatter); // Update state with new function
                 })
                 .catch((error) => {
                     console.log('Error while acquiring histogram');
@@ -291,14 +367,15 @@ const GlobalThreshold: React.FC = () => {
                 <IonRange
                     className="custom-range"
                     step={1}
-                    max={histogramMinMaxValue.max}
-                    min={histogramMinMaxValue.min}
-                    value={{ lower: currentValue.lower, upper: currentValue.upper }}
+                    max={histogramData.labels.length - 1}
+                    min={0}
+                    value={{ lower: bin.lower, upper: bin.upper }}
+                    pinFormatter={pinFormatter}
                     pin={true}
                     dualKnobs={true}
                     onIonKnobMoveEnd={(e: CustomEvent) => {
                         if (e.detail.value) {
-                            setCurrentValue(e.detail.value);
+                            updateBin(e.detail.value);
                         }
                     }}
                 ></IonRange>
@@ -318,7 +395,7 @@ const GlobalThreshold: React.FC = () => {
                                             const target = e.target as HTMLInputElement;
                                             const inputValue = parseFloat(target.value);
                                             if (target.value && inputValue > histogramMinMaxValue.min) {
-                                                setCurrentValue({ upper: currentValue.upper, lower: inputValue });
+                                                updateContrast({ upper: currentValue.upper, lower: inputValue });
                                             }
                                         }
                                     }}
@@ -338,7 +415,7 @@ const GlobalThreshold: React.FC = () => {
                                             const target = e.target as HTMLInputElement;
                                             const inputValue = parseFloat(target.value);
                                             if (target.value && inputValue < histogramMinMaxValue.max) {
-                                                setCurrentValue({
+                                                updateContrast({
                                                     upper: inputValue,
                                                     lower: currentValue.lower,
                                                 });

@@ -343,35 +343,6 @@ def preprocess():
     return "success", 200
 
 
-def _merge_label(label_merging_scribbles: dict, img_label: np.ndarray, segm_module: object):
-    """
-    Build-in function that makes the merge of labels
-
-    Notes:
-        TODO : Need to implement a better way to merge the labels
-
-    Args:
-        label_merging_scribbles (dict): dict of annotations to merge
-        img_label (np.ndarray): label imagem
-        segm_module (object): classifier object that will merge this labels
-
-    Returns:
-        (np.ndarray): returns the new label image
-
-    """
-
-    label = np.empty(img_label.shape, dtype="int32")
-    label[...] = img_label
-
-    # all points that not are background
-    coords = [coord for coord in label_merging_scribbles.keys() if label[coord] > 0]
-    mk_lb = next(iter(label_merging_scribbles.values()))[0]
-    spin_flood_fill(label, coords, mk_lb)
-
-    segm_module.reset_classifier()
-    return label
-
-
 def _convert_dtype_to_str(img_dtype: np.dtype):
     """
     Build-in function to convert dtype to a str
@@ -384,43 +355,6 @@ def _convert_dtype_to_str(img_dtype: np.dtype):
 
     """
     return np.dtype(img_dtype).name
-
-
-def _split_label(labels_to_split: dict, user_annotations: dict, label_img: np.ndarray):
-    """
-    Build-in function that split labels
-
-    Args:
-        labels_to_split(dict): dict that contains the annotations to split
-        user_annotations(dict): dict that contains all the annotations
-        label_img (np.ndarray): label image
-
-    Returns:
-        (np.ndarray): returns the new label image
-
-    """
-    label_splitting_annotations = {k: v for k, v in user_annotations.items() if label_img[k] in labels_to_split}
-
-    img = data_repo.get_image("image")
-
-    if img is None:
-        return None
-
-    if _convert_dtype_to_str(img_dtype=img.dtype) != "int32":
-        img = img.astype(np.int32)
-
-    forest = SPINImageForest(img, radius=1.0, cost_dtype="float32")
-    label_split = np.full(forest.img.shape, -1, dtype="int32")
-
-    logging.debug("run watershed ...")
-    with sentry_sdk.start_span(op="label split"):
-        spin_watershed_on_labels(
-            forest.img, forest.label, label_split, label_splitting_annotations, radius=1.0, conquer_background=True
-        )
-        logging.debug("watershed done.")
-
-    return forest.label
-
 
 @app.route("/pixel_segmentation_module/preview", methods=["POST"])
 @cross_origin()
@@ -501,9 +435,9 @@ def execute():
             unique_ids.add(value)
         if len(unique_ids) <= 1:
             return handle_exception(
-                "unable to preview!. Please, at least create one label and background annotation and try again the preprocess."
+                "unable to execute!. Please, at least create one label and background annotation and try again the preprocess."
             )
-        return handle_exception("unable to preview! {}".format(str(e)))
+        return handle_exception("unable to execute! {}".format(str(e)))
 
     data_repo.set_image("label", label)
 
