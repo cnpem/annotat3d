@@ -13,11 +13,7 @@ const People: React.FC = () => {
                 <IonLabel>Acknowledgements</IonLabel>
             </IonItem>
             <div slot="content" style={{ textAlign: 'center', padding: '1rem' }}>
-                <IonImg
-                    src="/assets/CNPEM.png" // Ensure this is the correct path
-                    alt="Company Logo"
-                    style={{ maxWidth: '100%', height: 'auto' }}
-                />
+                <IonImg src="CNPEM.png" alt="Company Logo" style={{ maxWidth: '100%', height: 'auto' }} />
                 <div style={{ marginTop: '1rem' }}>
                     <a
                         href="https://github.com/cnpem/annotat3d"

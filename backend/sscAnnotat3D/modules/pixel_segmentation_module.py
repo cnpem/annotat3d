@@ -172,7 +172,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             self.auto_save_data(annotations)
 
             if selected_axis != 0:
-                valid, _ = self._validate_feature_extraction_memory_usage()
+                valid, _ = self._validate_feature_extraction_memory_usage(superpixel=False)
 
                 if not valid:
                     raise Exception(
@@ -331,7 +331,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             feature_extraction_time = 0.0
             with sentry_sdk.start_span(op="Feature extraction"):
                 if self._features is None or force_feature_extraction:
-                    valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(**kwargs)
+                    valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(superpixel=False, **kwargs)
                     if valid:
                         logging.debug("**** Extracting features for the entire image AT ONCE ****")
                         start_feature_extraction_time = time.time()
@@ -395,11 +395,9 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                             feature_extraction_time += end_feature_extraction_time - start_feature_extraction_time
                             test_time += test
                             assignment_time += assignment
-
                             cur_block_size = image_block.shape[0]
-                            # Considering only the number of feature channels when computing superpixel features blockwise
-                            features_shape += np.array(features_block.shape, dtype="int") * cur_block_size
-
+                            # I don't know why this was previously done like this, but it was bugged.
+                            #features_shape += np.array(features_block.shape, dtype="int") * cur_block_size
                             if len(total_predict_times) == 0:
                                 total_predict_times = predict_times
                             else:
@@ -409,8 +407,9 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                             # Feature shape is a weighted average combination of all feature shapes of each block
                             nblocks += cur_block_size
                         # Computing average amount of superpixel feature vectors computed per block
-                        features_shape = (features_shape / max(1, nblocks)).astype("int32")
-
+                        #features_shape = (features_shape / max(1, nblocks)).astype("int32")
+                        #get number of features and size of image for features shape
+                        features_shape = (features_block.shape[0], *image.shape)
                     else:
                         features_shape = features.shape
                         pred[...], assignment_time, test_time, total_predict_times = self._classify_pixels(features)
