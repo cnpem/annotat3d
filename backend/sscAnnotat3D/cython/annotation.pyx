@@ -18,7 +18,7 @@ from cython.parallel cimport prange
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef superpixel_majority_voting(dict annotation_dict, int[:,:,:] superpixels):
+cpdef superpixel_majority_voting(set annotation_set, int[:,:,:] annotation_image, int[:,:,:] superpixels):
 
     cdef int coord_x, coord_y, coord_z
     cdef int label, marker
@@ -28,10 +28,11 @@ cpdef superpixel_majority_voting(dict annotation_dict, int[:,:,:] superpixels):
 
     # for i in prange(n, nogil=True):
     # st = time.time()
-    for (coord_x, coord_y, coord_z), (label, mk_id) in annotation_dict.items():
+    for (coord_x, coord_y, coord_z) in annotation_set:
         superpixel_id = superpixels[coord_x, coord_y, coord_z]
         # # Ensuring that 0-valued superpixels are disconsidered due to old bug that was fixed Nvidia Tesla K80. That bug was fixed.
         if superpixel_id > 0:
+            label = annotation_image[(coord_x, coord_y, coord_z)]
             preincrement(superpixel_marker_labels[superpixel_id][label])
     # en = time.time()
     # print('dict iteration time: ', en-st)

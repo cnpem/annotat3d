@@ -55,13 +55,13 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
     def _get_annotations_bounding_box(self, annotations):
         if len(annotations) > 0:
-            coords = np.array([coord for coord in annotations.keys()])
+            coords = np.array(list(annotations))
             bbox_min = coords.min(axis=0)
             bbox_max = coords.max(axis=0) + 1
             return bbox_min, bbox_max
 
-    def _extract_voxel_features_for_training_by_annotations(self, annotations, **kwargs):
-        image = self._image.astype("int32") if self._image.dtype != "int32" else self._image
+    def _extract_voxel_features_for_training_by_annotations(self, annotations, annotation_image, **kwargs):
+        image = self._image
 
         # find bounding box for feature extraction
         bbox_min, bbox_max = self._get_annotations_bounding_box(annotations)
@@ -75,16 +75,17 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         n_feats = pixel_map.shape[0]
         self._training_features_raw = np.empty((n_annotations, n_feats), dtype="float32")
         self._training_labels_raw = np.empty(n_annotations, dtype="float32")
-
-        for idx, (coord, (label, mk_id)) in enumerate(list(annotations.items())):
+        idx = 0
+        for coord in annotations:
             self._training_features_raw[idx] = pixel_map[
                 (slice(None), *(coord - bbox_min))
             ]  # get all features from coordinate
-            self._training_labels_raw[idx] = label
+            self._training_labels_raw[idx] = annotation_image[coord]
+            idx += 1
 
-    def _extract_features_for_training(self, annotations, features, **kwargs):
+    def _extract_features_for_training(self, annotations, annotation_image, features, **kwargs):
 
-        self._extract_voxel_features_for_training(annotations, features, **kwargs)
+        self._extract_voxel_features_for_training(annotations, annotation_image, features, **kwargs)
 
     def _extract_features(self, image, **kwargs):
         features = self._extract_features_pixel(image, **kwargs)
@@ -114,11 +115,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         logging.debug("-- Calling gc")
         return pred_map, assignment_time, test_time, prediction_times
 
-    def _select_training_pixel_features(self, annotations, pixel_features):
-
-        coords = [coord for coord in annotations.keys()]
-
-        # bbox_min, bbox_max = self._get_annotations_bounding_box(annotations)#TODO: avoid compute twice
+    def _select_training_pixel_features(self, annotations, annotation_image, pixel_features):
 
         n_annotations = len(annotations)
         n_feats = pixel_features.shape[0]
@@ -130,23 +127,23 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         pixel_map = pixel_features
 
         idx = 0
-        for coord, (label, mk_id) in annotations.items():
+        for coord in annotations:
             self._training_features_raw[idx] = pixel_map[(slice(None), *(coord))]
-            self._training_labels_raw[idx] = label
+            self._training_labels_raw[idx] = annotation_image[coord]
             idx += 1
 
-    def _extract_voxel_features_for_training(self, annotations, pixel_features, **kwargs):
+    def _extract_voxel_features_for_training(self, annotations, annotation_image, pixel_features, **kwargs):
         if pixel_features is None:
             self._extract_voxel_features_for_training_by_annotations(
-                annotations, **{**kwargs, **self._feature_extraction_params}
+                annotations, annotation_image, **{**kwargs, **self._feature_extraction_params}
             )
         else:
-            self._select_training_pixel_features(annotations, pixel_features)
+            self._select_training_pixel_features(annotations, annotation_image, pixel_features)
 
         self._training_labels = np.array(self._training_labels_raw)
         self._training_features = np.array(self._training_features_raw)
 
-    def preview(self, annotations, selected_slices, selected_axis, **kwargs):
+    def preview(self, annotations, annotation_image, selected_slices, selected_axis, **kwargs):
         """
         This function is responsible to make all operations when the user click in the "preview" option bar
 
@@ -168,8 +165,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             image_params = {"shape": self._image.shape, "dtype": self._image.dtype}
             if len(annotations) <= 0:
                 return
-
-            self.auto_save_data(annotations)
 
             if selected_axis != 0:
                 valid, _ = self._validate_feature_extraction_memory_usage(superpixel=False)
@@ -233,14 +228,14 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                 # necessary, since it caches superpixel features as well
                 with sentry_sdk.start_span(op="Training classifier for preview"):
                     classifier_trained, training_time, selected_features_names = self._train_classifier(
-                        annotations, None
+                        annotations, annotation_image, None
                     )
             else:
                 preview_features = self._features[[slice(None), *selected_slices_idx]]
                 logging.debug("Training classifier for preview from features estimated for the entire image")
                 with sentry_sdk.start_span(op="Training classifier for preview"):
                     classifier_trained, training_time, selected_features_names = self._train_classifier(
-                        annotations, self._features
+                        annotations, annotation_image, self._features
                     )
 
             pred = None
@@ -279,7 +274,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                     superpixel_features_shape=tuple(preview_features.shape),
                     preview_bounding_box=str(preview_bounding_box),
                     num_annotated_voxels=len(annotations),
-                    num_selected_markers=len(np.unique(list(map(itemgetter(1), annotations.values())))),
                     feature_extraction_params=str(self._feature_extraction_params),
                     classifier_params=str(self._classifier_params),
                     classifier_trained=classifier_trained,
@@ -297,7 +291,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
             return pred, selected_features_names
 
-    def execute(self, annotations, force_feature_extraction=False, **kwargs):
+    def execute(self, annotations, annotation_image, force_feature_extraction=False, **kwargs):
         """
         This function is responsible to make all operations when the user click in the "execute" option bar
 
@@ -316,8 +310,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             sentry_sdk.set_context("Image Params", image_params)
             if len(annotations) <= 0:
                 return
-
-            self.auto_save_data(annotations)
 
             mainbar = progressbar.get("main")
 
@@ -352,7 +344,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             mainbar.inc()
             with sentry_sdk.start_span(op="Training classifier"):
                 classifier_trained, training_time, selected_features_names = self._train_classifier(
-                    annotations, features
+                    annotations, annotation_image, features
                 )
 
             pred = None
@@ -437,7 +429,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                     image_dtype=str(self._image.dtype),
                     superpixel_features_shape=tuple(map(int, features_shape)),
                     num_annotated_voxels=len(annotations),
-                    num_selected_markers=len(np.unique(list(map(itemgetter(1), annotations.values())))),
                     feature_extraction_params=str(self._feature_extraction_params),
                     classifier_params=str(self._classifier_params),
                     classifier_trained=classifier_trained,

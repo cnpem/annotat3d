@@ -154,17 +154,17 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         features = self._extract_features_superpixel(image, **kwargs)
         return features
 
-    def _extract_features_for_training(self, annotations, features, **kwargs):
-        self._extract_supervoxel_features_for_training(annotations, features, **kwargs)
+    def _extract_features_for_training(self, annotations, annotation_image, features, **kwargs):
+        self._extract_supervoxel_features_for_training(annotations, annotation_image, features, **kwargs)
 
-    def _selected_superpixels(self, annotations, selected_slices, selected_axis):
+    def _selected_superpixels(self, selected_slices, selected_axis):
         selected_slices_idx = self._selected_slices_idx(selected_slices, selected_axis)
         superpixels_slice = self._superpixels[selected_slices_idx]
         superpixel_ids = np.unique(superpixels_slice)
         selected_superpixels = [s for s in superpixel_ids if s > 0]
         return selected_superpixels
 
-    def _preview_bounding_box(self, annotations, selected_slices, selected_axis):
+    def _preview_bounding_box(self, selected_slices, selected_axis):
         min_slice = min(selected_slices)
         max_slice = max(selected_slices)
 
@@ -201,11 +201,9 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         self._min_superpixel_label = superpixel_limits["min"]
         self._max_superpixel_label = superpixel_limits["max"]
 
-    def preview(self, annotations, selected_slices, selected_axis, **kwargs):
+    def preview(self, annotations, annotation_image, selected_slices, selected_axis, **kwargs):
         with sentry_sdk.start_transaction(name="Superpixel Segmentation Preview", op="superpixel classification") as t:
             image_params = {"shape": self._image.shape, "dtype": self._image.dtype, "params": self._superpixel_params}
-            self.auto_save_data(annotations)
-
             # TODO: Estimate superpixels by blocks of slices because previews done across the Z-axis may present a high number
             # of superpixel ids, which will generate a large matrix
             if selected_axis != 0:
@@ -227,7 +225,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
             mainbar.inc()
             total_time_start = time.time()
 
-            image = self._image.astype("int32") if self._image.dtype != "int32" else self._image
+            image = self._image
 
             mainbar.inc()
             start = time.time()
@@ -240,7 +238,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                 min_coord = np.zeros(ndim, dtype="int32")
                 max_coord = np.array(self._superpixels.shape, dtype="int32") - 1
 
-                preview_bounding_box = self._preview_bounding_box(annotations, selected_slices, selected_axis)
+                preview_bounding_box = self._preview_bounding_box(selected_slices, selected_axis)
                 print("Selected axis and slices", selected_axis, selected_slices)
                 end = time.time()
 
@@ -272,7 +270,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
             with sentry_sdk.start_span(op="Training classifier for preview"):
                 classifier_trained, training_time, selected_features_names = self._train_classifier(
-                    annotations, self._features, min_superpixel_id=self._min_superpixel_label
+                    annotations, annotation_image, self._features, min_superpixel_id=self._min_superpixel_label
                 )
 
             pred = None
@@ -287,7 +285,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                     preview_superpixel_limits = spin_img.spin_min_max_region_id(preview_superpixels, True)
                     min_superpixel_label = preview_superpixel_limits["min"]
                     max_superpixel_label = preview_superpixel_limits["max"]
-                    selected_superpixels = self._selected_superpixels(annotations, selected_slices, selected_axis)
+                    selected_superpixels = self._selected_superpixels(selected_slices, selected_axis)
                     assignment_time, test_time, predict_times = self._classify_superpixels(
                         self._features,
                         pred[z0 : z1 + 1, y0 : y1 + 1, x0 : x1 + 1],
@@ -330,7 +328,6 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                     superpixel_features_shape=tuple(self._features.shape),
                     preview_bounding_box=str(preview_bounding_box),
                     num_annotated_voxels=len(annotations),
-                    num_selected_markers=len(np.unique(list(map(itemgetter(1), annotations.values())))),
                     feature_extraction_params=str(self._feature_extraction_params),
                     classifier_params=str(self._classifier_params),
                     classifier_trained=classifier_trained,
@@ -369,11 +366,10 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
             cached_features = False
         return cached_features
 
-    def execute(self, annotations, force_feature_extraction=False, **kwargs):
+    def execute(self, annotations, annotation_image, force_feature_extraction=False, **kwargs):
         with sentry_sdk.start_transaction(name="Superpixel Segmentation Apply", op="superpixel classification") as t:
             image_params = {"shape": self._image.shape, "dtype": self._image.dtype, "params": self._superpixel_params}
             sentry_sdk.set_context("Image Params", image_params)
-            self.auto_save_data(annotations)
 
             mainbar = progressbar.get("main")
 
@@ -426,7 +422,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
             mainbar.inc()
             with sentry_sdk.start_span(op="Training classifier"):
                 classifier_trained, training_time, selected_features_names = self._train_classifier(
-                    annotations, features, min_superpixel_id=min_superpixel_label
+                    annotations, annotation_image, features, min_superpixel_id=min_superpixel_label
                 )
 
             pred = None
@@ -533,7 +529,6 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                     image_dtype=str(self._image.dtype),
                     superpixel_features_shape=tuple(map(int, features_shape)),
                     num_annotated_voxels=len(annotations),
-                    num_selected_markers=len(np.unique(list(map(itemgetter(1), annotations.values())))),
                     feature_extraction_params=str(self._feature_extraction_params),
                     classifier_params=str(self._classifier_params),
                     classifier_trained=classifier_trained,
@@ -656,14 +651,16 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
     # get labels for each trainining superpixel, using the majority voting of annotated pixel labels inside it
     # @timecall(immediate=False)
-    def annotate_training_superpixels(self, annotation):
+    def annotate_training_superpixels(self, annotation, annotation_image):
         logging.debug("Annotating training superpixels")
         self._training_features = []
         self._training_features_raw = []
 
         if len(annotation) > 0:
             mstart = time.time()
-            superpixel_marker_labels = cython.annotation.superpixel_majority_voting(annotation, self._superpixels)
+            if annotation_image.dtype != np.int32:
+                annotation_image = annotation_image.astype(np.int32)
+            superpixel_marker_labels = cython.annotation.superpixel_majority_voting(annotation, annotation_image, self._superpixels)
             mend = time.time()
 
             logging.debug("Majority voting ... {}".format(mend - mstart))
@@ -720,13 +717,13 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         #     for f in self._loaded_training_superpixel_features:
         #         self._training_features_raw.append(f)
 
-    def _extract_supervoxel_features_for_training(self, annotations, superpixel_features, **kwargs):
+    def _extract_supervoxel_features_for_training(self, annotations, annotation_image, superpixel_features, **kwargs):
         min_superpixel_id = kwargs["min_superpixel_id"]
         logging.debug("__extract_supervoxel_features_for_training -> kwargs {}".format(kwargs))
 
         logging.debug("Features pre-extracted for the entire image. Annotating superpixels and selecting features")
         start = time.time()
-        self.annotate_training_superpixels(annotations)
+        self.annotate_training_superpixels(annotations, annotation_image)
         end = time.time()
         logging.debug("Superpixel annotation time: {}s".format(end - start))
         start = time.time()
@@ -734,336 +731,6 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         end = time.time()
         logging.debug("Training superpixel selection run time: {}s".format(end - start))
 
-    def _extract_supervoxel_features_for_training_by_annotations(self, annotations, **kwargs):
-        logging.debug("[REMOVETHISCOMMENT FIXME]__extract_supervoxel_features_for_training_by_annotations")
-
-        image = self._image.astype("int32") if self._image.dtype != "int32" else self._image
-
-        if self._superpixel_bboxes is None:
-            self._superpixel_bboxes = {}
-            start = time.time()
-            values = spin_img.min_max_value(image, True)
-            end = time.time()
-            logging.debug(
-                "Pre-computing image range for common usage in superpixel feature extraction for each scribble run time",
-                end - start,
-            )
-            self._image_range = (values["min"], values["max"])
-
-        # list of all slices crossed by each marker
-        marker_slices = self._slices_per_marker(annotations)
-        # annotations contained within each slice
-        single_slice_markers = self._single_slice_markers(marker_slices)
-        # slices that contain annotation along axis Z (XZ or YZ)
-        multi_slice_markers = self._multiple_slice_markers(marker_slices)
-
-        logging.debug("training per slice ...")
-
-        self._update_superpixel_bounding_boxes(annotations)
-
-        # FIRST, we compute superpixel features for scribbles that were drawn on single slices, by extracting the feature maps
-        # for each marked slice and then copying the superpixel feature vectors for the superpixels that were marked on a same slice
-        slice_superpixel_features_dict = self._extract_supervoxel_features_for_training_per_slice(
-            image, annotations, [list(marker_slices[mk_id])[0] for mk_id in single_slice_markers]
-        )
-
-        logging.debug("training others ...")
-
-        self._update_superpixel_bounding_boxes(annotations)
-
-        # THEN, we compute training features on a per marker basis for markers that extend multiple slices (i.e., drawn on Z axis)
-        superpixel_features_dict_multi_slice = self._extract_supervoxel_features_for_training_per_marker(
-            image, annotations, multi_slice_markers
-        )
-
-        superpixel_features_dict = {**slice_superpixel_features_dict, **superpixel_features_dict_multi_slice}
-
-        start = time.time()
-
-        # HACK: setting min_superpixel_id to 0, since we are using duck typing to force __select_training_superpixel_features
-        # to interpret the superpixel_features_dict dictionary as an array.
-        self._select_training_superpixel_features(superpixel_features_dict, min_superpixel_id=0)
-
-        end = time.time()
-
-        logging.info("**** Superpixel training feature selection run time: {}s".format(end - start))
-
-    def _extract_supervoxel_features_for_training_per_marker(self, image, annotations, multi_slice_markers, **kwargs):
-        superpixel_features_dict = {}
-
-        if len(annotations) > 0 and len(multi_slice_markers) > 0:
-            # Determining all marker ids
-            marker_ids = multi_slice_markers
-
-            ndim = image.ndim
-
-            # Initializing the bounding boxes for each marker
-            min_coord = np.zeros(ndim, dtype="int32")
-            max_coord = np.array(image.shape, dtype="int32") - 1
-            init_bbox = np.concatenate((max_coord, min_coord))
-            bbox_markers = {mk_id: np.copy(init_bbox) for mk_id in multi_slice_markers}
-
-            # ignore the single slice markers, included before
-            multi_slice_annotations = {
-                coord: (label, mk_id) for coord, (label, mk_id) in annotations.items() if mk_id in multi_slice_markers
-            }
-
-            start = time.time()
-            superpixels_per_mk_id = {}
-            # Computing the bounding boxes for each marker
-            for coord, v in multi_slice_annotations.items():
-                mk_id = v[1]
-                superpixel_id = self._superpixels[coord]
-                # Ensuring that 0-valued superpixels are disconsidered due to old bug that was fixed Nvidia Tesla K80. That bug was fixed.
-                if superpixel_id > 0:
-
-                    try:
-                        bbox_markers[mk_id][:ndim] = np.minimum(
-                            bbox_markers[mk_id][:ndim], self._superpixel_bboxes[superpixel_id][:ndim]
-                        )
-                        bbox_markers[mk_id][ndim:] = np.maximum(
-                            bbox_markers[mk_id][ndim:], self._superpixel_bboxes[superpixel_id][ndim:]
-                        )
-
-                        if mk_id not in superpixels_per_mk_id:
-                            superpixels_per_mk_id[mk_id] = set()
-
-                        superpixels_per_mk_id[mk_id].add(superpixel_id)
-                    except Exception as e:
-                        logging.debug("mk_id: {}".format(mk_id))
-                        logging.debug("superpixel_id: {}".format(superpixel_id))
-                        import sys
-
-                        sys.exit(1)
-
-            end = time.time()
-
-            logging.debug("****Superpixel box estimation run time: {}s".format(end - start))
-
-            # feat_extraction_context_margin = self._feat_extraction_context_margin()
-
-            for mk_id in marker_ids:
-                bbox = bbox_markers[mk_id]
-
-                # bbox_min = np.maximum(min_coord, bbox[:ndim] - feat_extraction_context_margin)
-                # bbox_max = np.minimum(max_coord, bbox[ndim:] + feat_extraction_context_margin)
-
-                bbox = self._bounding_box_for_feat_extraction(bbox, min_coord, max_coord)
-
-                bbox_min = bbox[:ndim]
-                bbox_max = bbox[ndim:]
-
-                start = time.time()
-                image_crop = image[
-                    bbox_min[0] : bbox_max[0] + 1, bbox_min[1] : bbox_max[1] + 1, bbox_min[2] : bbox_max[2] + 1
-                ]
-                superpixels_crop = self._superpixels[
-                    bbox_min[0] : bbox_max[0] + 1, bbox_min[1] : bbox_max[1] + 1, bbox_min[2] : bbox_max[2] + 1
-                ]
-                end = time.time()
-
-                logging.info("**** Image cropping time: {}s".format(end - start))
-
-                start = time.time()
-                values = spin_img.spin_min_max_region_id(superpixels_crop)
-                min_superpixel_id, max_superpixel_id = values["min"], values["max"]
-                end = time.time()
-
-                logging.info(
-                    "**** Minimum/maximum superpixel value estimation in crop region run time {}s".format(end - start)
-                )
-
-                start = time.time()
-                image_min = self._image_range[0]
-                image_max = self._image_range[1]
-                superpixel_features = self._extract_features_superpixel(
-                    image_crop,
-                    superpixels_crop,
-                    min_superpixel_id,
-                    max_superpixel_id,
-                    image_min=image_min,
-                    image_max=image_max,
-                )
-                end = time.time()
-
-                logging.info("**** Cropped image feature extraction run time {}s".format(end - start))
-
-                start = time.time()
-                for s in superpixels_per_mk_id[mk_id]:
-                    superpixel_features_dict[s] = np.copy(superpixel_features[s - min_superpixel_id])
-
-                end = time.time()
-                logging.info("**** Superpixel feature dict creation run time: {}".format(end - start))
-
-        return superpixel_features_dict
-
-        # counts number of slices trespassed by a marker
-        # helps to find single slice annotations and multiple slices annotations
-
-    def _slices_per_marker(self, annotations):
-        marker_slices = {}  # stores all slices that are reached by each marker
-        for coord, (label, mk_id) in annotations.items():
-            z = coord[0]
-            if mk_id not in marker_slices:
-                marker_slices[mk_id] = {z}
-            else:
-                marker_slices[mk_id].add(z)
-        return marker_slices
-
-    def _annotations_coords_per_slices(self, annotations):
-        slice_coords = {}
-        for coord, (label, mk_id) in annotations.items():
-            z = coord[0]
-            if z not in slice_coords:
-                slice_coords[z] = {coord}
-            else:
-                slice_coords[z].add(coord)
-        return slice_coords
-
-    def _single_slice_markers(self, marker_slices):
-        return [mk_id for mk_id in marker_slices if len(marker_slices[mk_id]) == 1]
-
-    def _multiple_slice_markers(self, marker_slices):
-        return [mk_id for mk_id in marker_slices if len(marker_slices[mk_id]) > 1]
-
-    def _update_superpixel_bounding_boxes(self, annotations):
-        # Computing the bounding boxes for each superpixel
-        for coord, (label, mk_id) in annotations.items():
-            superpixel_id = self._superpixels[coord]
-            # Ensuring that 0-valued superpixels are disconsidered due to old bug that was fixed Nvidia Tesla K80. That bug was fixed.
-            if superpixel_id > 0:
-                if superpixel_id not in self._superpixel_bboxes:
-                    self._superpixel_bboxes[superpixel_id] = spin_img.spin_selected_label_bounding_box(
-                        self._superpixels, coord, radius=1.0
-                    )
-
-    def _extract_supervoxel_features_for_training_per_slice(self, image, annotations, slices, **kwargs):
-        logging.debug("[REMOVETHISCOMMENT FIXME]__extract_supervoxel_features_for_training_per_slice")
-
-        superpixel_features_dict = {}
-
-        if len(slices) > 0:
-            ndim = image.ndim
-            min_coord = np.zeros(ndim, dtype="int32")
-            max_coord = np.array(self._superpixels.shape, dtype="int32") - 1
-
-            # feat_extraction_context_margin = int(max(self._feature_extraction_params['sigmas']))
-
-            coords_per_slices = self._annotations_coords_per_slices(annotations)
-
-            for z in sorted(slices):
-                logging.debug("\n\n**** Computing training features for slice %03d****\n" % z)
-
-                # get all annotations on the slice z
-                slice_annotations = {coord: annotations[coord] for coord in coords_per_slices[z]}
-
-                bbox_slice = np.zeros(6, dtype="int32")
-                bbox_slice[:ndim] = min_coord
-                bbox_slice[ndim:] = max_coord
-                bbox_slice[0] = bbox_slice[3] = z
-
-                start = time.time()
-                marked_superpixels = {self._superpixels[coord] for coord in coords_per_slices[z]}
-
-                # Computing the bounding boxes for each superpixel
-                for coord in slice_annotations.keys():
-                    superpixel_id = self._superpixels[coord]
-                    # Ensuring that 0-valued superpixels are disconsidered due to old bug that was fixed Nvidia Tesla K80. That bug was fixed.
-                    if superpixel_id > 0:
-                        bbox_slice[0] = np.minimum(bbox_slice[0], self._superpixel_bboxes[superpixel_id][0])
-                        bbox_slice[3] = np.maximum(bbox_slice[3], self._superpixel_bboxes[superpixel_id][3])
-
-                end = time.time()
-
-                logging.info("**** Superpixel box estimation run time {}".format(end - start))
-
-                # bbox_slice[:ndim] = np.maximum(min_coord, bbox_slice[:ndim] - feat_extraction_context_margin)
-                # bbox_slice[ndim:] = np.minimum(max_coord, bbox_slice[ndim:] + feat_extraction_context_margin
-
-                bbox_slice = self._bounding_box_for_feat_extraction(bbox_slice, min_coord, max_coord)
-
-                bbox_min = bbox_slice[:ndim]
-                bbox_max = bbox_slice[ndim:]
-
-                start = time.time()
-                image_crop = image[
-                    bbox_min[0] : bbox_max[0] + 1, bbox_min[1] : bbox_max[1] + 1, bbox_min[2] : bbox_max[2] + 1
-                ]
-                superpixels_crop = self._superpixels[
-                    bbox_min[0] : bbox_max[0] + 1, bbox_min[1] : bbox_max[1] + 1, bbox_min[2] : bbox_max[2] + 1
-                ]
-                end = time.time()
-
-                logging.debug("\n\n**** Image cropping time {}s".format(end - start))
-
-                start = time.time()
-                values = spin_img.spin_min_max_region_id(superpixels_crop)
-                min_superpixel_id, max_superpixel_id = values["min"], values["max"]
-                end = time.time()
-
-                logging.info(
-                    "**** Minimum/maximum superpixel value estimation in crop region run time {}s".format(end - start)
-                )
-
-                start = time.time()
-                image_min = self._image_range[0]
-                image_max = self._image_range[1]
-
-                extract_feats = False
-                if self._cached_superpixel_features_dict is not None:
-                    A = set(marked_superpixels)
-                    B = set(self._cached_superpixel_features_dict.keys())
-                    if A != B:  # if new superpixels features not cached
-                        extract_feats = True
-                else:
-                    extract_feats = True
-
-                if extract_feats:
-                    use_cached_preview_slice_features = False
-                    # If features have been computed for the preview slice and the superpixels are contained within them, then
-                    # we try to create a training superpixel feature dictionary using them. NOTE THAT the minimum and maximum superpixel
-                    # ids must match, since we just do not want to recompute the features for the current preview region (this should prevent
-                    # issue with supervoxels -- i.e, 3D superpixels)
-
-                    if self._cached_superpixel_features_preview is not None:
-                        if (
-                            min_superpixel_id == self._cached_superpixel_features_ids[0]
-                            and max_superpixel_id == self._cached_superpixel_features_ids[1]
-                        ):
-                            superpixel_features = self._cached_superpixel_features_preview
-                            use_cached_preview_slice_features = True
-
-                    # Otherwise, we extract features for the given slices
-                    if not use_cached_preview_slice_features:
-                        superpixel_features = self._extract_features_superpixel(
-                            image_crop,
-                            superpixels_crop,
-                            min_superpixel_id,
-                            max_superpixel_id,
-                            image_min=image_min,
-                            image_max=image_max,
-                        )
-                end = time.time()
-
-                logging.debug("**** Cropped image feature extraction run time {}s".format(end - start))
-
-                start = time.time()
-                if extract_feats:
-                    logging.debug("**** Caching training superpixel features")
-                    for s in marked_superpixels:
-                        superpixel_features_dict[s] = np.copy(superpixel_features[s - min_superpixel_id])
-
-                    self._cached_superpixel_features_dict = superpixel_features_dict
-                else:
-                    logging.debug("**** Using cached features for training")
-                    superpixel_features_dict = self._cached_superpixel_features_dict
-
-                end = time.time()
-                logging.debug("**** Superpixel feature dict creation run time {}s".format(end - start))
-
-        return superpixel_features_dict
-
-    # TODO : don't forget to document this function
     def load_classifier(self, path: str = ""):
         """
         Function that load the classifier as .model extension

@@ -138,23 +138,13 @@ def open_annot():
 
 
     with open(annot_path, "rb") as f:
-        loaded_annot = pickle.load(f)
+        annot_data = pickle.load(f)
 
+    label_list, annotation_set = annot_data
     annot_module = annotation_module.AnnotationModule(img.shape)
-    annot_module.annotation = loaded_annot
+    annot_module.set_annotationset(annotation_set)
 
     module_repo.set_module('annotation', module=annot_module)
-
-    label_list = []
-    annotation = set()
-    for label in annot_module.get_annotation().values():
-        if (label[0] not in annotation):
-            annotation.add(label[0])
-            label_list.append({
-                "labelName": "Label {}".format(label[0]) if label[0] > 0 else "Background",
-                "id": label[0],
-                "color": []
-            })
 
     return jsonify(label_list)
 
@@ -208,26 +198,27 @@ def save_annot():
     """
 
     annot_module = module_repo.get_module('annotation')
-    annot = annot_module.annotation
+    annot_image = annot_module.annotation_image
 
-    if annot is None:
+    annotations = annot_module.get_annotationset()
+
+    if len(annotations) == 0:
         return handle_exception("Failed to fetch annotation")
-
     try:
-        annot_path = request.json["annot_path"]
+        annot_path  = request.json["annot_path"]
+        label_names = request.json["label_names"]
     except:
         return handle_exception("Failed to receive annotation path")
 
-    from collections import defaultdict
-    clean_annot = defaultdict(list)
+    annotation_dict = {}
 
-    for coord3D, label_list in annot.items():
-        if label_list and label_list[-1] != -1:  # Check if the list is not empty and ignore erase coords
-            if clean_annot[coord3D] != -1:
-                clean_annot[coord3D].append(label_list[-1])
+    for coord3D in annotations:
+        annotation_dict[coord3D] = annot_image[coord3D]
+
+    annot_data = [label_names, annotation_dict]
 
     with open(annot_path, "wb") as f:
-        pickle.dump(clean_annot, f)
+        pickle.dump(annot_data, f)
 
     return "success", 200
 

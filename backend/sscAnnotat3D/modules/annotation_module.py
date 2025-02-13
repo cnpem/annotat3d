@@ -7,9 +7,9 @@ from operator import itemgetter
 import numpy as np
 from skimage import draw
 from sscAnnotat3D import aux_functions
+from time import time
 
-
-class Label(object):
+""" class Label(object):
     def __init__(self, id, name=None):
         self.name = name
         self.id = id
@@ -31,7 +31,7 @@ class Label(object):
 
     def __hash__(self):
         return hash(self.id)
-
+ """
 
 class AnnotationModule:
     """docstring for Annotation"""
@@ -67,6 +67,8 @@ class AnnotationModule:
 
         # initialize annotation property, therefore creating underscore itens
         self.annotation = defaultdict(list)
+
+        self.annotationset = set()
 
         # list that appends every new annotation in order
         self.__annotation_list = []
@@ -142,7 +144,7 @@ class AnnotationModule:
         self.clipping_plane_grid[:, :, 0] = grid_x
         self.clipping_plane_grid[:, :, 1] = grid_y
 
-    def reload(self, image, **kwargs):
+        """     def reload(self, image, **kwargs):
         logging.info("Reloading annotation class")
 
         self.__image_path = kwargs["path"] if "path" in kwargs else ""
@@ -155,7 +157,7 @@ class AnnotationModule:
         self.__default_marker_label_selection_type = "from_user"
         self.set_marker_label_selection_type(self.__default_marker_label_selection_type)
 
-        logging.debug("Reloading complete for annotation class")
+        logging.debug("Reloading complete for annotation class") """
         
     def update_image_shape(self, new_image_shape):
         """
@@ -478,7 +480,7 @@ class AnnotationModule:
 
                 # take last label from this coords, garantee to have since it's on the list
                 self.__annotation[coord3D].pop()
-
+                self.annotationset.discard(coord3D)
                 # if there is one label, it writes as the previous label, otherwise it will write as -1
                 if len(self.__annotation[coord3D]) > 0:
                     self.__annotation_image[coord3D] = self.__annotation[coord3D][-1]
@@ -508,9 +510,11 @@ class AnnotationModule:
             rr,cc = np.nonzero(label_mask)
 
             new_annotation = []
+            
             for coord2D in zip(rr,cc):
                 coord3D = self.get_current_slice_3d_coord(coord2D)
                 self.__annotation[coord3D].append(marker_lb)
+                self.annotationset.add(coord3D)
                 self.__annotation_image[coord3D] = marker_lb
                 #save the coords
                 new_annotation.append(coord3D)
@@ -520,6 +524,7 @@ class AnnotationModule:
             new_annotation = []
             for coord3D in zip(rr,cc,dd):
                 self.__annotation[coord3D].append(marker_lb)
+                self.annotationset.add(coord3D)
                 self.__annotation_image[coord3D] = marker_lb
                 #save the coords
                 new_annotation.append(coord3D)
@@ -548,6 +553,7 @@ class AnnotationModule:
                 marker_lb = new_annot[coord2D]
                 coord3D = self.get_current_slice_3d_coord(coord2D)
                 self.__annotation[coord3D].append(marker_lb)
+                self.annotationset.add(coord3D)
                 self.__annotation_image[coord3D] = marker_lb
                 #save the coords
                 new_annotation.append(coord3D)
@@ -559,6 +565,7 @@ class AnnotationModule:
             for coord3D in zip(rr,cc,dd):
                 marker_lb = new_annot[coord3D]
                 self.__annotation[coord3D].append(marker_lb)
+                self.annotationset.add(coord3D)
                 self.__annotation_image[coord3D] = marker_lb
                 #save the coords
                 new_annotation.append(coord3D)
@@ -581,6 +588,7 @@ class AnnotationModule:
                 rr,cc = np.nonzero(label_mask)
                 for coord2D in zip(rr,cc):
                     coord3D = self.get_current_slice_3d_coord(coord2D)
+                    self.annotationset.add(coord3D)
                     self.__annotation[coord3D].append(marker_lb)
                     self.__annotation_image[coord3D] = marker_lb
                     #save the coords
@@ -590,6 +598,7 @@ class AnnotationModule:
                 rr,cc,dd = np.nonzero(label_mask)
                 for coord3D in zip(rr,cc,dd):
                     self.__annotation[coord3D].append(marker_lb)
+                    self.annotationset.add(coord3D)
                     self.__annotation_image[coord3D] = marker_lb
                     #save the coords
                     new_annotation.append(coord3D)
@@ -647,6 +656,7 @@ class AnnotationModule:
         for coord2D in zip(cc, rr):
             coord3D = self.get_current_slice_3d_coord(coord2D)
             self.__annotation[coord3D].append(marker_lb)
+            self.annotationset.add(coord3D)
             self.__annotation_image[coord3D] = marker_lb
             # save the coords
             new_annotation.append(coord3D)
@@ -690,22 +700,29 @@ class AnnotationModule:
         return image
         
 
-    def __update_annotation_image(self, annotation, label=None):
+        """     def __update_annotation_image(self, annotation, label=None):
         if label is not None:
             for c in annotation:
                 self.__annotation_image[c] = label
         else:
             for c, v in annotation.items():
-                self.__annotation_image[c] = v[-1]
+                self.__annotation_image[c] = v[-1] """
 
     def get_annotation(self):
         return self.annotation
+
+    def get_annotationset(self):
+        return self.annotationset
+    
+    def set_annotationset(self, annotation_set):
+        self.annotationset = annotation_set
+        return self.annotationset
 
     def set_annotation(self, label_annotation: dict):
         self.annotation = defaultdict(list, label_annotation)
         return self.annotation
 
-    def update_annotation(self, annotations):
+    """     def update_annotation(self, annotations):
         # Drawing markers on top of the marker label/id images
         labels = aux_functions.get_label_ids(annotations)
 
@@ -732,47 +749,4 @@ class AnnotationModule:
         for i in sorted(labels):
             if i not in self.added_labels:
                 self.added_labels.append(Label(i))
-        self.added_labels = sorted(self.added_labels)
-
-    def save_annotation(self, path):
-
-        if len(self.annotation) > 0:
-            with open(path, "wb") as f:
-                pickle.dump(self.annotation, f)
-                return True
-        else:
-            raise Exception("Empty annotation file. Please annotate the image before saving.")
-
-    def load_annotation(self, path):
-        success = False
-
-        annotation = {}
-
-        with open(path, "rb") as f:
-            try:
-                annotation = pickle.load(f)
-            finally:
-                max_coords = np.zeros(3, dtype="int32")
-                # Looking up maximum coordinates
-                for coords in annotation:
-                    c = np.array(coords, dtype="int32")
-                    max_coords = np.maximum(max_coords, c)
-
-                if np.all(max_coords < np.array((self.zsize, self.ysize, self.xsize))):
-                    logging.debug("Loading annotation: {}".format(len(annotation)))
-                    self.update_annotation(annotation)
-                    success = True
-                else:
-                    raise Exception(
-                        "Annotated image coordinates do not match the current image! (Maximum annotated coordinates: %s. Image size %s)"
-                        % (str(max_coords), str(self.volume_data.shape))
-                    )
-
-        if success:
-            aux_functions.log_usage(
-                op_type="load_annotation",
-                num_annotated_voxels=len(annotation),
-                num_selected_markers=len(np.unique(list(map(itemgetter(1), annotation.values())))),
-            )
-
-        return success
+        self.added_labels = sorted(self.added_labels) """
