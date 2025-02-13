@@ -227,7 +227,7 @@ def nlm_apply(input_id: str, output_id: str):
             non_local_means(input,out,x,y,smallWindow,bigWindow,h,sigma)
             output_img[:,:,i] = out
 
-    data_repo.set_image(output_id, data=output_img)
+    data_repo.set_image(output_id, data=output_img.astype(np.float32))
 
     return "success", 200
 
