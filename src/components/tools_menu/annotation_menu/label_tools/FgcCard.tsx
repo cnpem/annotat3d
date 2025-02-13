@@ -18,7 +18,7 @@ import {
     IonContent,
     IonToggle,
 } from '@ionic/react';
-import { helpCircle } from 'ionicons/icons';
+import { informationCircleOutline } from 'ionicons/icons';
 import { sfetch } from '../../../../utils/simplerequest';
 import { dispatch } from '../../../../utils/eventbus';
 import LoadingComponent from '../../utils/LoadingComponent';
@@ -124,7 +124,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                                 )
                             }
                         >
-                            <IonIcon icon={helpCircle} />
+                            <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </IonItem>
                     {isAnchorFinderOpen && (
@@ -146,7 +146,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                                         )
                                     }
                                 >
-                                    <IonIcon icon={helpCircle} />
+                                    <IonIcon icon={informationCircleOutline} />
                                 </IonButton>
                             </IonItem>
                         </>
@@ -169,7 +169,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                                 )
                             }
                         >
-                            <IonIcon icon={helpCircle} />
+                            <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </IonItem>
 
@@ -190,7 +190,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                                 )
                             }
                         >
-                            <IonIcon icon={helpCircle} />
+                            <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </IonItem>
 
@@ -211,7 +211,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                                 )
                             }
                         >
-                            <IonIcon icon={helpCircle} />
+                            <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </IonItem>
 
@@ -232,7 +232,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                                 )
                             }
                         >
-                            <IonIcon icon={helpCircle} />
+                            <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </IonItem>
 
@@ -253,7 +253,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                                 )
                             }
                         >
-                            <IonIcon icon={helpCircle} />
+                            <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </IonItem>
 
@@ -275,7 +275,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                                 )
                             }
                         >
-                            <IonIcon icon={helpCircle} />
+                            <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </IonItem>
 
@@ -296,7 +296,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                                 )
                             }
                         >
-                            <IonIcon icon={helpCircle} />
+                            <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </IonItem>
                 </IonList>
