@@ -1792,7 +1792,6 @@ def fgc_apply(input_id: str):
 
     input_img = data_repo.get_image(input_id).astype(np.float32)
 
-    z, rows, cols = input_img.shape
     mk_id = annot_module.current_mk_id
 
     print('Current markers\n', mk_id, current_thresh_marker)
