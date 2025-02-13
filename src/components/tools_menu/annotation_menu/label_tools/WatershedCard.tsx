@@ -56,31 +56,32 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
             current_axis: sliceName,
             label: selectedLabel,
         };
+        setLoadingMsg('Applying watershed');
+        setShowLoadingCompPS(true);
 
         try {
             console.log('Sending data to backend:', data);
             const result = await sfetch('POST', '/watershed_apply_2d/image', JSON.stringify(data), 'json');
             console.log('Backend response:', result);
-
+            setShowLoadingCompPS(false);
             if (selectedDimension === '2D') {
                 dispatch('annotationChanged', null);
             } else dispatch('labelChanged', '');
-
-            setShowLoadingCompPS(true);
         } catch (error) {
             console.error('Error applying watershed:', error);
             const typedError = error as Error;
             setShowLoadingCompPS(false);
             dispatch('watershedError', { error: typedError.message });
+            setShowLoadingCompPS(false);
         }
-        setShowLoadingCompPS(false);
     };
 
     return (
         <IonCard>
+            <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
+
             <IonCardContent>
                 <IonList>
-                    <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
                     {/* Input Filter Selection */}
                     <IonItem button onClick={() => setIsInputFilterOpen(!isInputFilterOpen)}>
                         <IonLabel>Input Image Filter</IonLabel>

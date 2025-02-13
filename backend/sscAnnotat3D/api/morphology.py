@@ -72,12 +72,17 @@ def morphology_apply_2D():
     # Ensure masks are 2D by removing singleton dimensions
     write_mask_2D = np.squeeze(write_mask)
     erase_mask_2D = np.squeeze(erase_mask)
+    
+    #mask that quickly tracks all changes in image for quick annotation
+    pixel_change = np.logical_or(erase_mask_2D, write_mask_2D)
+    
+    erase_label = -1
+    annotation_slice[write_mask_2D] = label
+    annotation_slice[erase_mask_2D] = erase_label
 
     # Marker id is not necessary for the magic wand logic.
-    erase_label = -1
     mk_id = annot_module.current_mk_id
-    annot_module.labelmask_multiupdate([erase_mask_2D, write_mask_2D], [erase_label, label], mk_id, True)
-
+    annot_module.multilabel_updated(annotation_slice, mk_id, True, pixel_change)
         
     return "success", 200
 
