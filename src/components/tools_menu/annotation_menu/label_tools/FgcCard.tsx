@@ -217,7 +217,9 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                         <IonButton
                             slot="end"
                             fill="clear"
-                            onClick={(e) => openPopover(e, 'Smooth Improves smooth transitions between classes.')}
+                            onClick={(e) =>
+                                openPopover(e, 'Smooth Regularization: Improves smooth transitions between classes.')
+                            }
                         >
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
