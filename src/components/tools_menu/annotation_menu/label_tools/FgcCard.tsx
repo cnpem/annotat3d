@@ -109,46 +109,23 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                 <IonList>
                     <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
 
-                    <IonItem button onClick={() => setIsAnchorFinderOpen(!isAnchorFinderOpen)}>
-                        <IonLabel>Anchor Finder</IonLabel>
+                    {/* Separate Use Whole Image Toggle */}
+                    <IonItem>
+                        <IonLabel>Use Whole Image</IonLabel>
+                        <IonToggle checked={useWholeImage} onIonChange={(e) => setUseWholeImage(e.detail.checked)} />
                         <IonButton
                             slot="end"
                             fill="clear"
                             onClick={(e) =>
                                 openPopover(
                                     e,
-                                    'Anchor Finder: Determines the method used to select anchor points. "Random" selects anchor points randomly, while "K-Means" uses the K-Means algorithm for better representation of the dataset.'
+                                    'Use Whole Image: When enabled, the algorithm will find the anchor points using the whole image, instead of the annotations.'
                                 )
                             }
                         >
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </IonItem>
-                    {isAnchorFinderOpen && (
-                        <>
-                            {/* Separate Use Whole Image Toggle */}
-                            <IonItem>
-                                <IonLabel>Use Whole Image</IonLabel>
-                                <IonToggle
-                                    checked={useWholeImage}
-                                    onIonChange={(e) => setUseWholeImage(e.detail.checked)}
-                                />
-                                <IonButton
-                                    slot="end"
-                                    fill="clear"
-                                    onClick={(e) =>
-                                        openPopover(
-                                            e,
-                                            'Use Whole Image: When enabled, the algorithm will process the entire image instead of specific slices or regions.'
-                                        )
-                                    }
-                                >
-                                    <IonIcon icon={informationCircleOutline} />
-                                </IonButton>
-                            </IonItem>
-                        </>
-                    )}
-
                     <IonItem>
                         <IonLabel position="floating">Number of Phases</IonLabel>
                         <IonInput
@@ -162,7 +139,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                             onClick={(e) =>
                                 openPopover(
                                     e,
-                                    'Number of Phases: Specifies the number of distinct phases or stages the algorithm will use during the graph construction for clustering.'
+                                    'Number of Phases: Specifies the number of resulting phases (Due to its nature, the algorithm will not maintain the original annotations in the current slice).'
                                 )
                             }
                         >
@@ -204,7 +181,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                             onClick={(e) =>
                                 openPopover(
                                     e,
-                                    'Number of Iterations: Sets the maximum number of iterations the algorithm will perform when refining the anchor graph.'
+                                    'Number of Iterations: Sets the maximum number of iterations during the optimization.'
                                 )
                             }
                         >
@@ -223,10 +200,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                             slot="end"
                             fill="clear"
                             onClick={(e) =>
-                                openPopover(
-                                    e,
-                                    'Regularization: Introduces a penalty term to the objective function to prevent overfitting by smoothing the graph.'
-                                )
+                                openPopover(e, 'Regularization: Prevents degenerate embeddings and improves stability.')
                             }
                         >
                             <IonIcon icon={informationCircleOutline} />
@@ -243,12 +217,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                         <IonButton
                             slot="end"
                             fill="clear"
-                            onClick={(e) =>
-                                openPopover(
-                                    e,
-                                    'Smooth Regularization: Controls the level of smoothness applied to the graph. A higher value results in a smoother graph.'
-                                )
-                            }
+                            onClick={(e) => openPopover(e, 'Smooth Improves smooth transitions between classes.')}
                         >
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
@@ -265,12 +234,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                         <IonButton
                             slot="end"
                             fill="clear"
-                            onClick={(e) =>
-                                openPopover(
-                                    e,
-                                    'Window Size: Determines the size of the window used during processing. Larger window sizes include more neighbors in the computation.'
-                                )
-                            }
+                            onClick={(e) => openPopover(e, 'Window Size: Controls spatial influence between pixels.')}
                         >
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
@@ -301,6 +265,10 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                 <IonButton expand="block" onClick={handleApply}>
                     Generate Annotations
                 </IonButton>
+
+                <IonPopover isOpen={!!popover} event={popover?.event} onDidDismiss={closePopover}>
+                    <IonContent className="ion-padding">{popover?.info}</IonContent>
+                </IonPopover>
             </IonCardContent>
         </IonCard>
     );
