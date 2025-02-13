@@ -85,10 +85,6 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
             setShowLoadingCompPS(true);
             const result = await sfetch('POST', '/fgc_apply/image', JSON.stringify(data), 'json');
             console.log('Backend response:', result);
-
-            if (selectedDimension === '2D') {
-                dispatch('annotationChanged', null);
-            } else dispatch('labelChanged', '');
         } catch (error) {
             console.error('Error applying watershed:', error);
             const typedError = error as Error;
@@ -96,6 +92,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
             dispatch('watershedError', { error: typedError.message });
         }
         setShowLoadingCompPS(false);
+        dispatch('annotationChanged', null);
     };
 
     const openPopover = (event: any, info: string) => {
