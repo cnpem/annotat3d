@@ -82,14 +82,13 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
 
         try {
             console.log('Sending data to backend:', data);
+            setShowLoadingCompPS(true);
             const result = await sfetch('POST', '/fgc_apply/image', JSON.stringify(data), 'json');
             console.log('Backend response:', result);
 
             if (selectedDimension === '2D') {
                 dispatch('annotationChanged', null);
             } else dispatch('labelChanged', '');
-
-            setShowLoadingCompPS(true);
         } catch (error) {
             console.error('Error applying watershed:', error);
             const typedError = error as Error;
