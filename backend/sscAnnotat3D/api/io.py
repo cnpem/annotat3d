@@ -200,8 +200,6 @@ def open_image(image_id: str):
         print(e)
         return handle_exception(error_msg)
 
-    data_repo.set_image(key=image_id, data=image)
-
     image_info = {
         "imageShape": {"x": image_shape[2], "y": image_shape[1], "z": image_shape[0]},
         "imageExt": extension,
@@ -212,6 +210,7 @@ def open_image(image_id: str):
 
     label_list = []
     if image_id == "image":
+        data_repo.set_image(key=image_id, data=image)
         data_repo.set_info(data=image_info)
         
         try:
@@ -231,6 +230,15 @@ def open_image(image_id: str):
 
     elif image_id == "label":
         set_unique_labels_id = np.unique(image)
+        if (set_unique_labels_id >= 2**8).any():
+             return handle_exception("Error loading label image, image with very high values\n", 
+             "Label was read as" + image.dtype + " ideal format is int16")
+        if (set_unique_labels_id < 0).any():
+             set_unique_labels_id = set_unique_labels_id[set_unique_labels_id >= 0]
+
+        data_repo.set_image(key=image_id, data=image)
+        print(set_unique_labels_id)
+
         for label_value in set_unique_labels_id:
             # I force label_value to be int just jsonify doen't accept numpy dtypes.
             label_value = int(label_value)
