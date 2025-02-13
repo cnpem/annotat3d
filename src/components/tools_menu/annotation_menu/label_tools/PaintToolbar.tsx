@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     IonButton,
-    IonCard,
     IonCardContent,
+    IonCardHeader,
+    IonLabel,
+    IonNote,
     IonGrid,
     IonRow,
     IonCol,
     IonIcon,
-    IonCardHeader,
-    IonLabel,
-    IonNote,
+    IonCard,
 } from '@ionic/react';
 import {
     waterOutline,
@@ -18,21 +18,21 @@ import {
     gitCompareOutline,
     colorFillOutline,
     gridOutline,
+    gitNetworkOutline,
 } from 'ionicons/icons';
-import './PaintToolbar.css'; // Ensure this path is correct
+import './PaintToolbar.css';
 import lassoCursor from '../../../../public/lasso_cursor.svg';
 import snakesCursor from '../../../../public/snakes_cursor.svg';
 import thresholdIcon from '../../../../public/threshold_icon.svg';
 
-import MagicWandCard from './MagicWandCard'; // Ensure this path is correct
-import ThresholdCard from './ThresholdCard'; // Ensure this path is correct
-import MorphologyCard from './MorphologyCard'; // Ensure this path is correct
-import ActiveContourCard from './ActiveContourCard'; // Ensure this path is correct
-
-import WatershedCard from './WatershedCard'; // Ensure this path is correct
+import MagicWandCard from './MagicWandCard';
+import ThresholdCard from './ThresholdCard';
+import MorphologyCard from './MorphologyCard';
+import ActiveContourCard from './ActiveContourCard';
+import WatershedCard from './WatershedCard';
 import RemoveIslandsCard from './RemoveIslandsCard';
-import QuantificationCard from './QuantificationCard'; // Ensure QuantificationCard is imported
-import ObjectSeparationCard from './ObjectSeparationCard'; // Import the ObjectSeparationCard
+import QuantificationCard from './QuantificationCard';
+import FgcCard from './FgcCard'; // Ensure FgcCard is imported
 import { dispatch } from '../../../../utils/eventbus';
 
 const PaintToolbar: React.FC = () => {
@@ -64,12 +64,11 @@ const PaintToolbar: React.FC = () => {
                         textAlign: 'center',
                         display: 'block',
                         color: 'white',
-                        background:
-                            'linear-gradient(135deg,rgba(60, 130, 252, 0.85),rgba(130, 177, 252, 0.85))' /* Smooth gradient */,
-                        margin: '0 1.5rem' /* Adds left and right spacing */,
-                        borderRadius: '16px' /* Rounded edges */,
-                        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)' /* Soft shadow */,
-                        letterSpacing: '1px' /* Spacing for a clean look */,
+                        background: 'linear-gradient(135deg,rgba(60, 130, 252, 0.85),rgba(130, 177, 252, 0.85))',
+                        margin: '0 1.5rem',
+                        borderRadius: '16px',
+                        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+                        letterSpacing: '1px',
                     }}
                 >
                     Label Tools
@@ -117,8 +116,6 @@ const PaintToolbar: React.FC = () => {
                     </IonCol>
                 </IonRow>
                 <IonRow>
-                    {/*                     <IonCol className="ion-text-center"></IonCol>
-                     */}{' '}
                     <IonCol className="ion-text-center">
                         <IonButton onClick={() => handleButtonClick('watershed')} title="Watershed">
                             <IonIcon icon={waterOutline} />
@@ -131,14 +128,12 @@ const PaintToolbar: React.FC = () => {
                         </IonButton>
                         <IonNote className="small-note">Quantification</IonNote>
                     </IonCol>
-                    <IonCol className="ion-text-center"></IonCol>
-                    {/*                     <IonCol className="ion-text-center">
-                        <IonButton onClick={() => handleButtonClick('objectSeparation')} title="Object Separation">
-                            <IonIcon icon={gitCompareOutline} />
+                    <IonCol className="ion-text-center">
+                        <IonButton onClick={() => handleButtonClick('fgc')} title="Fgc Tool">
+                            <IonIcon icon={gitNetworkOutline} />
                         </IonButton>
-                        <IonNote className="small-note">Split</IonNote>
+                        <IonNote className="small-note">Fgc Tool</IonNote>
                     </IonCol>
-                     */}
                 </IonRow>
             </IonGrid>
 
@@ -175,8 +170,8 @@ const PaintToolbar: React.FC = () => {
                     <QuantificationCard isVisible={activeCard === 'quantification'} />
                 </div>
 
-                <div className={activeCard === 'objectSeparation' ? 'visible' : 'hidden'}>
-                    <ObjectSeparationCard isVisible={activeCard === 'objectSeparation'} />
+                <div className={activeCard === 'fgc' ? 'visible' : 'hidden'}>
+                    <FgcCard isVisible={activeCard === 'fgc'} />
                 </div>
             </div>
         </IonCardContent>

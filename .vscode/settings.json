@@ -50,5 +50,9 @@
     "eslint.options": {
         "overrideConfigFile": ".eslintrc.json"
     },
-    "stylelint.validate": ["css", "scss"]
+    "stylelint.validate": [
+        "css",
+        "scss"
+    ],
+    "makefile.configureOnOpen": false
 }
