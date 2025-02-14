@@ -302,17 +302,12 @@ def save_image(image_id: str):
         print(e)
         return handle_exception("Error while trying to get the image path")
 
-    try:
-        image_dtype = request.json["image_dtype"]
-    except Exception as e:
-        print(e)
-        return handle_exception("Error while trying to get the image dtype")
 
     image = data_repo.get_image(key=image_id)
-
     if image.size == 0:
         return handle_exception("Unable to retrieve the image !")
-
+    image_dtype = image.dtype.name
+    
     save_status = sscIO.io.save_volume(image_path, image_dtype, image)
 
     if save_status["error_msg"] != "":
