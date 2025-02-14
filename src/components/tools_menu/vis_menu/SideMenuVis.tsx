@@ -157,7 +157,6 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     // Create the formatter function based on the stored config
     const pinFormatter = useCallback(
         (binNumber: number): number => {
-            console.log('Pinformatter execution');
             if (!formatterConfig.isInitialized) {
                 return binNumber;
             }
