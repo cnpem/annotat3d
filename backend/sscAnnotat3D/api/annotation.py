@@ -1749,6 +1749,7 @@ def object_separation_apply(input_id: str):
 def fgc_apply(input_id: str):
     import sys
     from harpia.fastGraphClustering import fgc
+    from skimage.feature import local_binary_pattern
     import numpy as np
     from sklearn.cluster import KMeans
 
@@ -1834,24 +1835,23 @@ def fgc_apply(input_id: str):
             print("basis: ", c)
             basis.append(c)
     else:
-        x = input_slice.reshape(1, input_slice.size)
+        #x = input_slice.reshape(1, input_slice.size)
+        lbp = local_binary_pattern(input_slice,5,window,method="uniform")
+        x = np.vstack([lbp.ravel(),input_slice.ravel()])
+        print("shape: ",x.shape)
         basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T
-        print("basis: ", basis)
 
     basis = np.array(basis).ravel()
-    basis = basis.reshape(1, basis.size)
+    basis = basis.reshape(2, anchor_points)
     print("basis shape: ", basis.shape)
     print('applying fgc')
 
-    x = input_slice.reshape(1, input_slice.size)
-    mask = x > -np.inf
-    x_filtered = x[mask]
-    x_filtered = x_filtered.reshape(1, x_filtered.size)
+    #x = input_slice.reshape(1, input_slice.size)
 
     print("rows,cols = ",rows, cols)
 
     fgc_instance = fgc.general_fgc(
-        x_filtered,
+        x,
         rows,
         cols,
         basis=basis,
@@ -1866,21 +1866,26 @@ def fgc_apply(input_id: str):
     fgc_instance.classification()
 
     kmeans = KMeans(n_clusters=phases)
-    labels = kmeans.fit_predict(fgc_instance.y)
+    labels = kmeans.fit_predict(fgc_instance.y).reshape(input_slice.shape)
 
-    processed_x = -np.ones_like(x, dtype=labels.dtype)
-    processed_x[mask] = labels
-    processed_x = processed_x.reshape(input_slice.shape)
+    unique_labels = np.unique(labels)
+    label_means = {i: (input_slice[labels == i].mean()) for i in unique_labels}
+
+    sorted_labels = sorted(label_means, key=label_means.get)
+
+    label_remap = {old_label: new_label for new_label, old_label in enumerate(sorted_labels)}
+
+    remapped_labels = np.vectorize(label_remap.get)(labels)
 
     # Explicit conditionals for updating `out`
     out = annot_module.annotation_image.copy()
 
     if axisIndex == 0:  # XY plane
-        out[slice_num] = processed_x
+        out[slice_num] = remapped_labels
     elif axisIndex == 1:  # XZ plane
-        out[:, slice_num, :] = processed_x
+        out[:, slice_num, :] = remapped_labels
     elif axisIndex == 2:  # YZ plane
-        out[:, :, slice_num] = processed_x
+        out[:, :, slice_num] = remapped_labels
 
 
     annot_module.multilabel_updated(out, mk_id)
