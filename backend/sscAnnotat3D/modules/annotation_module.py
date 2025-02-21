@@ -393,16 +393,16 @@ class AnnotationModule:
     def get_labels(self):
         return [l.id for l in self.added_labels]
 
-    def include_labels(self, labels):
+    """     def include_labels(self, labels):
         new_labels = set(labels).union(set([l.id for l in self.added_labels]))
-        self.added_labels = [Label(l) for l in sorted(new_labels)]
+        self.added_labels = [Label(l) for l in sorted(new_labels)] 
 
     def add_label(self, name=None, new_base_label=0):
         # Increasing the maximum available label id by 1
         added_labels = [l.id for l in self.added_labels]
         new_label = new_base_label + (np.max(added_labels) if len(self.added_labels) > 0 else 0) + 1
 
-        self.added_labels.append(Label(new_label, name))
+        self.added_labels.append(Label(new_label, name))"""
 
     def remove_label(self, label_id: int, marker_id: int):
 
