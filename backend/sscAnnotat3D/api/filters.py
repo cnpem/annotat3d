@@ -215,7 +215,7 @@ def nlm_apply(input_id: str, output_id: str):
             input = np.ascontiguousarray(input_img[:,i,:].reshape((input_img[:,i,:].shape)),dtype=np.float32)
             out = np.ascontiguousarray(output_img[:,i,:].reshape((input_img[:,i,:].shape)),dtype=np.float64)
             x,y = out.shape
-            non_local_means(img.reshape(x,y),output_img[i].reshape(x,y),x,y,smallWindow,bigWindow,h,sigma)
+            non_local_means(input,out,x,y,smallWindow,bigWindow,h,sigma)
             output_img[:,i,:] = out
 
         elif axisIndex == 2:
@@ -224,10 +224,10 @@ def nlm_apply(input_id: str, output_id: str):
             input = np.ascontiguousarray(input_img[:,:,i].reshape((input_img[:,:,i].shape)),dtype=np.float32)
             out = np.ascontiguousarray(output_img[:,:,i].reshape((input_img[:,:,i].shape)),dtype=np.float64)
             x,y = out.shape
-            non_local_means(img.reshape(x,y),output_img[i].reshape(x,y),x,y,smallWindow,bigWindow,h,sigma)
+            non_local_means(input,out,x,y,smallWindow,bigWindow,h,sigma)
             output_img[:,:,i] = out
 
-    data_repo.set_image(output_id, data=output_img)
+    data_repo.set_image(output_id, data=output_img.astype(np.float32))
 
     return "success", 200
 

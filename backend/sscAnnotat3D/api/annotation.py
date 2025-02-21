@@ -1733,3 +1733,152 @@ def object_separation_apply(input_id: str):
     data_repo.set_image('label',markers.astype(np.int32))
 
     return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/fgc_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def fgc_apply(input_id: str):
+    import sys
+    from harpia.fastGraphClustering import fgc
+    from skimage.feature import local_binary_pattern
+    import numpy as np
+    from sklearn.cluster import KMeans
+
+    print(request.json)
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        #parameters
+        
+        dimension = request.json.get("dimension")
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+        anchor = request.json.get('anchorFinder')
+        phases = request.json.get('numPhases')
+        anchor_points = request.json.get('numRepresentativePoints')
+        iterations = request.json.get('numIterations')
+        lmbd = request.json.get('regularization')
+        beta = request.json.get('smoothRegularization')
+        window = request.json.get('windowSize')
+        tol = request.json.get('tolerance')
+        use_all = request.json.get('useWholeImage')
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = data_repo.get_image(input_id).astype(np.float32)
+
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, current_thresh_marker)
+    # New annotation
+    if mk_id != current_thresh_marker:
+        new_click = True
+    else:
+        new_click = False
+    axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+    axisIndex = axisIndexDict[axis]
+
+    if axisIndex == 0:  # XY plane
+        input_slice = input_img[slice_num]
+    elif axisIndex == 1:  # XZ plane
+        input_slice = input_img[:, slice_num, :]
+    elif axisIndex == 2:  # YZ plane
+        input_slice = input_img[:, :, slice_num]
+
+    print(input_slice.shape)
+    rows, cols = input_slice.shape
+
+    basis = []
+    print('computing basis')
+
+    if not use_all:
+        markers_img = annot_module.annotation_image[slice_range].astype(np.int32)
+        markers = np.arange(0, markers_img.max() + 1, step=1)
+
+        for i in markers:
+            x = input_slice * (markers_img == i)
+            x_non_zero = x[x != 0]
+
+            if x_non_zero.size == 0:
+                continue
+
+            x_non_zero = x_non_zero.reshape(1, x_non_zero.size)
+            print("non zeroes shape: ", x_non_zero.shape)
+
+            c = KMeans(n_clusters=anchor_points, n_init="auto").fit(x_non_zero.T).cluster_centers_.T
+            print("basis: ", c)
+            basis.append(c)
+    else:
+        #x = input_slice.reshape(1, input_slice.size)
+        lbp = local_binary_pattern(input_slice,5,window,method="uniform")
+        x = np.vstack([lbp.ravel(),input_slice.ravel()])
+        print("shape: ",x.shape)
+        basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T
+
+    basis = np.array(basis).ravel()
+    basis = basis.reshape(2, anchor_points)
+    print("basis shape: ", basis.shape)
+    print('applying fgc')
+
+    #x = input_slice.reshape(1, input_slice.size)
+
+    print("rows,cols = ",rows, cols)
+
+    fgc_instance = fgc.general_fgc(
+        x,
+        rows,
+        cols,
+        basis=basis,
+        lmbd=lmbd,
+        beta=beta,
+        k=anchor_points,
+        iterations=iterations,
+        tol=tol,
+        size=window,
+    )
+
+    fgc_instance.classification()
+
+    kmeans = KMeans(n_clusters=phases)
+    labels = kmeans.fit_predict(fgc_instance.y).reshape(input_slice.shape)
+
+    unique_labels = np.unique(labels)
+    label_means = {i: (input_slice[labels == i].mean()) for i in unique_labels}
+
+    sorted_labels = sorted(label_means, key=label_means.get)
+
+    label_remap = {old_label: new_label for new_label, old_label in enumerate(sorted_labels)}
+
+    remapped_labels = np.vectorize(label_remap.get)(labels)
+
+    # Explicit conditionals for updating `out`
+    out = annot_module.annotation_image.copy()
+
+    if axisIndex == 0:  # XY plane
+        out[slice_num] = remapped_labels
+    elif axisIndex == 1:  # XZ plane
+        out[:, slice_num, :] = remapped_labels
+    elif axisIndex == 2:  # YZ plane
+        out[:, :, slice_num] = remapped_labels
+
+
+    annot_module.multilabel_updated(out, mk_id)
+
+    return jsonify(annot_module.current_mk_id)

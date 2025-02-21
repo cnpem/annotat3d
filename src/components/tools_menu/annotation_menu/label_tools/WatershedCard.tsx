@@ -28,8 +28,6 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
     const [loadingMsg, setLoadingMsg] = useState<string>('');
     const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
     const [markerID, setMarkerId] = useState<number>(-1);
-    const sliceValue = parseInt(sessionStorage.getItem('sliceValue') || '0', 10);
-    const sliceName = JSON.parse(sessionStorage.getItem('sliceName') || '"XY"');
 
     const [inputFilter, setInputFilter] = useState<string>('prewitt');
     const [isInputFilterOpen, setIsInputFilterOpen] = useState(false);
@@ -47,6 +45,8 @@ const WatershedCard: React.FC<WatershedCardProps> = ({ isVisible }) => {
         }
 
         const selectedLabel = parseInt(sessionStorage.getItem('selectedLabel') || '0', 10);
+        const sliceValue = parseInt(sessionStorage.getItem('sliceValue') || '0', 10);
+        const sliceName = JSON.parse(sessionStorage.getItem('sliceName') || '"XY"');
         const data = {
             algorithm,
             inputFilter,
