@@ -41,6 +41,8 @@ def get_image_slice(image_id: str):
     axis = request.json["axis"]
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
+    data_repo.set_info(key="current_slice", data = {'slice_num': slice_num, 'axis': axis })
+
     img_slice = image[slice_range]
 
     get_contour = request.json.get("contour", False)
