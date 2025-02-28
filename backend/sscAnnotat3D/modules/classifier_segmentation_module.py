@@ -272,7 +272,7 @@ class ClassifierSegmentationModule(SegmentationModule):
     def load_label(self, label):
         pass
 
-    def _train_classifier(self, annotations, annotation_image, superpixel_features, **kwargs):
+    def _train_classifier(self, annotation_slice_dict, annotation_image, superpixel_features, **kwargs):
 
         logging.info("Train classifier ...")
 
@@ -283,13 +283,13 @@ class ClassifierSegmentationModule(SegmentationModule):
             "loaded_training_superpixel_features: {}".format(np.array(self._loaded_training_superpixel_features).shape)
         )
 
-        if len(annotations) > 0 or len(self._loaded_training_superpixel_features) > 0:
+        if len(annotation_slice_dict) > 0 or len(self._loaded_training_superpixel_features) > 0:
 
-            self._verify_loaded_classifier_update(annotations)
+            self._verify_loaded_classifier_update(annotation_slice_dict)
 
             self.reset_classifier()
 
-            self._extract_features_for_training(annotations, annotation_image, superpixel_features, **kwargs)
+            self._extract_features_for_training(annotation_slice_dict, annotation_image, superpixel_features, **kwargs)
 
             if len(self._loaded_training_superpixel_features) > 0:
                 logging.debug("--- (Training features loaded): Incorporating loaded training features")
@@ -978,12 +978,12 @@ class ClassifierSegmentationModule(SegmentationModule):
     def undo(self, checkpoint):
         return True
 
-    def _verify_loaded_classifier_update(self, annotations):
+    def _verify_loaded_classifier_update(self, annotation_slice_dict):
         msg = ""
         title = ""
         msg_type = ""
 
-        if len(annotations) > 0 or len(self._loaded_training_superpixel_features) > 0:
+        if len(annotation_slice_dict) > 0 or len(self._loaded_training_superpixel_features) > 0:
             if self._flag_classifier_loaded:
                 msg += (
                     "A pre-loaded classifier has been detected. Since new training data were added, there is currently no way "

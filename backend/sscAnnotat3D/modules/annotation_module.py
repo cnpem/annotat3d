@@ -10,30 +10,6 @@ from sscAnnotat3D import aux_functions
 from time import time
 from itertools import repeat
 
-""" class Label(object):
-    def __init__(self, id, name=None):
-        self.name = name
-        self.id = id
-
-    def __lt__(self, other):
-        return self.id < other.id
-
-    def __str__(self):
-        return "Label(name={}, id={})".format(self.name, self.id)
-
-    def __repr__(self):
-        return str(self)
-
-    def __eq__(self, other):
-        if type(other) is type(self):
-            return self.id == other.id
-        else:
-            return False
-
-    def __hash__(self):
-        return hash(self.id)
- """
-
 class AnnotationModule:
     """docstring for Annotation"""
 
@@ -559,6 +535,14 @@ class AnnotationModule:
                 image[x_start:x_end, y_start:y_end] += disk_mask[mask_x_start:mask_x_end, mask_y_start:mask_y_end]
         
         return image
+
+    def get_annotation_slice_dict(self):
+        total_subitems = sum(len(subset) for subset in self.annotation_slice_dict.values())
+        #return empty dict in case there no annotation
+        if total_subitems == 0:
+            return {}
+        else:
+            return self.annotation_slice_dict
         
     def get_annotationset(self):
         annotationset = set()
