@@ -10,6 +10,7 @@ from pathlib import Path
 
 import numpy as np
 import scipy as sp
+from collections import defaultdict
 import sentry_sdk
 import sscPySpin.classification as spin_class
 import sscPySpin.feature_extraction as spin_feat_extraction
@@ -154,8 +155,8 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         features = self._extract_features_superpixel(image, **kwargs)
         return features
 
-    def _extract_features_for_training(self, annotations, annotation_image, features, **kwargs):
-        self._extract_supervoxel_features_for_training(annotations, annotation_image, features, **kwargs)
+    def _extract_features_for_training(self, annotation_slice_dict, annotation_image, features, **kwargs):
+        self._extract_supervoxel_features_for_training(annotation_slice_dict, annotation_image, features, **kwargs)
 
     def _selected_superpixels(self, selected_slices, selected_axis):
         selected_slices_idx = self._selected_slices_idx(selected_slices, selected_axis)
@@ -201,7 +202,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         self._min_superpixel_label = superpixel_limits["min"]
         self._max_superpixel_label = superpixel_limits["max"]
 
-    def preview(self, annotations, annotation_image, selected_slices, selected_axis, **kwargs):
+    def preview(self, annotation_slice_dict, annotation_image, selected_slices, selected_axis, **kwargs):
         with sentry_sdk.start_transaction(name="Superpixel Segmentation Preview", op="superpixel classification") as t:
             image_params = {"shape": self._image.shape, "dtype": self._image.dtype, "params": self._superpixel_params}
             # TODO: Estimate superpixels by blocks of slices because previews done across the Z-axis may present a high number
@@ -270,7 +271,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
             with sentry_sdk.start_span(op="Training classifier for preview"):
                 classifier_trained, training_time, selected_features_names = self._train_classifier(
-                    annotations, annotation_image, self._features, min_superpixel_id=self._min_superpixel_label
+                    annotation_slice_dict, annotation_image, self._features, min_superpixel_id=self._min_superpixel_label
                 )
 
             pred = None
@@ -327,7 +328,6 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                     num_selected_superpixels=len(selected_superpixels),
                     superpixel_features_shape=tuple(self._features.shape),
                     preview_bounding_box=str(preview_bounding_box),
-                    num_annotated_voxels=len(annotations),
                     feature_extraction_params=str(self._feature_extraction_params),
                     classifier_params=str(self._classifier_params),
                     classifier_trained=classifier_trained,
@@ -366,7 +366,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
             cached_features = False
         return cached_features
 
-    def execute(self, annotations, annotation_image, force_feature_extraction=False, **kwargs):
+    def execute(self, annotation_slice_dict, annotation_image, force_feature_extraction=False, **kwargs):
         with sentry_sdk.start_transaction(name="Superpixel Segmentation Apply", op="superpixel classification") as t:
             image_params = {"shape": self._image.shape, "dtype": self._image.dtype, "params": self._superpixel_params}
             sentry_sdk.set_context("Image Params", image_params)
@@ -422,7 +422,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
             mainbar.inc()
             with sentry_sdk.start_span(op="Training classifier"):
                 classifier_trained, training_time, selected_features_names = self._train_classifier(
-                    annotations, annotation_image, features, min_superpixel_id=min_superpixel_label
+                    annotation_slice_dict, annotation_image, features, min_superpixel_id=min_superpixel_label
                 )
 
             pred = None
@@ -528,7 +528,6 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                     image_shape=tuple(self._image.shape),
                     image_dtype=str(self._image.dtype),
                     superpixel_features_shape=tuple(map(int, features_shape)),
-                    num_annotated_voxels=len(annotations),
                     feature_extraction_params=str(self._feature_extraction_params),
                     classifier_params=str(self._classifier_params),
                     classifier_trained=classifier_trained,
@@ -649,18 +648,50 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
     def get_superpixel(self):
         return self._superpixels
 
+
+    def superpixel_majority_voting(self, annotation_slice_dict, annotation_image, superpixels):
+        superpixel_slices_ids = []
+        pixel_labels = []
+        for axis, slice_nums in annotation_slice_dict.items():
+            annot_slices = np.take(annotation_image, list(slice_nums), axis=axis)
+            superpixel_slices = np.take(superpixels, list(slice_nums), axis=axis)
+
+            bool_mask = annot_slices >= 0
+
+            superpixel_slices_ids.append(superpixel_slices[bool_mask])
+            pixel_labels.append(annot_slices[bool_mask])
+
+        superpixel_slices_ids = np.concatenate(superpixel_slices_ids)
+        pixel_labels = np.concatenate(pixel_labels)
+
+        majority = defaultdict(int) # Will hold the current candidate label for each superpixel.
+        majority_count = defaultdict(int) # Will hold the vote count for the candidate.
+        # Tally the votes for each label within each superpixel.
+        for sp_id, label in zip(superpixel_slices_ids, pixel_labels):
+            if majority_count[sp_id] == 0:
+                majority[sp_id] = label
+            if label == majority[sp_id]:
+                majority_count[sp_id] += 1
+            else:
+                majority_count[sp_id] -= 1
+
+        return dict(majority)
+
+
+
     # get labels for each trainining superpixel, using the majority voting of annotated pixel labels inside it
     # @timecall(immediate=False)
-    def annotate_training_superpixels(self, annotation, annotation_image):
+    def annotate_training_superpixels(self, annotation_slice_dict, annotation_image):
         logging.debug("Annotating training superpixels")
         self._training_features = []
         self._training_features_raw = []
 
-        if len(annotation) > 0:
+        if len(annotation_slice_dict) > 0:
             mstart = time.time()
             if annotation_image.dtype != np.int32:
                 annotation_image = annotation_image.astype(np.int32)
-            superpixel_marker_labels = cython.annotation.superpixel_majority_voting(annotation, annotation_image, self._superpixels)
+            #superpixel_marker_labels = cython.annotation.superpixel_majority_voting(annotation, annotation_image, self._superpixels)
+            superpixel_marker_labels = self.superpixel_majority_voting(annotation_slice_dict, annotation_image, self._superpixels)
             mend = time.time()
 
             logging.debug("Majority voting ... {}".format(mend - mstart))
@@ -717,13 +748,13 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         #     for f in self._loaded_training_superpixel_features:
         #         self._training_features_raw.append(f)
 
-    def _extract_supervoxel_features_for_training(self, annotations, annotation_image, superpixel_features, **kwargs):
+    def _extract_supervoxel_features_for_training(self, annotation_slice_dict, annotation_image, superpixel_features, **kwargs):
         min_superpixel_id = kwargs["min_superpixel_id"]
         logging.debug("__extract_supervoxel_features_for_training -> kwargs {}".format(kwargs))
 
         logging.debug("Features pre-extracted for the entire image. Annotating superpixels and selecting features")
         start = time.time()
-        self.annotate_training_superpixels(annotations, annotation_image)
+        self.annotate_training_superpixels(annotation_slice_dict, annotation_image)
         end = time.time()
         logging.debug("Superpixel annotation time: {}s".format(end - start))
         start = time.time()

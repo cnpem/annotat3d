@@ -331,10 +331,10 @@ def create():
     img = data_repo.get_image("image")
     img_superpixel = data_repo.get_image("superpixel")
 
-    annotations = module_repo.get_module("annotation").get_annotationset()
+    annotation_slice_dict = module_repo.get_module("annotation").get_annotation_slice_dict()
     added_labels = module_repo.get_module("annotation").added_labels
 
-    if len(annotations) == 0:
+    if len(annotation_slice_dict) == 0:
         return handle_exception(
             "unable to apply!. Please, at least create one label and background annotation and try again the preprocess."
         )
@@ -434,9 +434,9 @@ def preview():
     """
     segm_module = module_repo.get_module(key="superpixel_segmentation_module")
 
-    annotations = module_repo.get_module("annotation").get_annotationset()
+    annotation_slice_dict = module_repo.get_module("annotation").get_annotation_slice_dict()
     annotation_image = module_repo.get_module("annotation").annotation_image
-    if len(annotations) == 0:
+    if len(annotation_slice_dict) == 0:
         return handle_exception(
             "unable to preview!. Please, at least create one label and background annotation and try again the preprocess."
         )
@@ -453,7 +453,7 @@ def preview():
         return "This module does not have a preview", 400
 
     try:
-        label, selected_features_names = segm_module.preview(annotations, annotation_image, [slice_num], axis_dim)
+        label, selected_features_names = segm_module.preview(annotation_slice_dict, annotation_image, [slice_num], axis_dim)
     except Exception as e:
         return handle_exception("unable to preview! {}".format(str(e)))
 
@@ -477,10 +477,10 @@ def execute():
     """
     segm_module = module_repo.get_module(key="superpixel_segmentation_module")
 
-    annotations = module_repo.get_module("annotation").get_annotationset()
+    annotation_slice_dict = module_repo.get_module("annotation").get_annotation_slice_dict()
     annotation_image = module_repo.get_module("annotation").annotation_image
     
-    if len(annotations) == 0:
+    if len(annotation_slice_dict) == 0:
         return handle_exception(
             "unable to apply!. Please, at least create one label and background annotation and try again the preprocess."
         )
@@ -489,7 +489,7 @@ def execute():
         return "Not a valid segmentation module", 400
 
     try:
-        label, selected_features_names = segm_module.execute(annotations, annotation_image)
+        label, selected_features_names = segm_module.execute(annotation_slice_dict, annotation_image)
     except Exception as e:
         return handle_exception("unable to preview! {}".format(str(e)))
 

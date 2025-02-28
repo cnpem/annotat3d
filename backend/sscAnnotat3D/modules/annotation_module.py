@@ -544,29 +544,6 @@ class AnnotationModule:
         else:
             return self.annotation_slice_dict
         
-    def get_annotationset(self):
-        annotationset = set()
-        for axis, slice_nums in self.annotation_slice_dict.items():
-            for slice_num in slice_nums:
-                # Extract the appropriate slice along the given axis
-                annot_slice = np.take(self.__annotation_image, slice_num, axis=axis)
-                # Find indices where the annotation is greater than zero
-                rr, cc = np.nonzero(annot_slice >= 0)
-                
-                # Depending on the axis, build the coordinate tuples accordingly
-                if axis == 0:
-                    coords = zip(repeat(slice_num), rr, cc)
-                elif axis == 1:
-                    coords = zip(rr, repeat(slice_num), cc)
-                elif axis == 2:
-                    coords = zip(rr, cc, repeat(slice_num))
-                else:
-                    raise ValueError(f"Unsupported axis: {axis}")
-            
-                annotationset.update(coords)
-                
-        return annotationset
-
     def get_annotation_coords(self):
 
         # Accumulate coordinates separately for each axis (z, y, x)
