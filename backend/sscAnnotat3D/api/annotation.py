@@ -1728,17 +1728,6 @@ def fgc_apply(input_id: str):
 
     remapped_labels = np.vectorize(label_remap.get)(labels)
 
-    # Explicit conditionals for updating `out`
-    out = annot_module.annotation_image.copy()
-
-    if axisIndex == 0:  # XY plane
-        out[slice_num] = remapped_labels
-    elif axisIndex == 1:  # XZ plane
-        out[:, slice_num, :] = remapped_labels
-    elif axisIndex == 2:  # YZ plane
-        out[:, :, slice_num] = remapped_labels
-
-
-    annot_module.multilabel_updated(out, mk_id)
+    annot_module.multilabel_updated(remapped_labels, mk_id)
 
     return jsonify(annot_module.current_mk_id)
