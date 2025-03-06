@@ -652,6 +652,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
     def superpixel_majority_voting(self, annotation_slice_dict, annotation_image, superpixels):
         superpixel_slices_ids = []
         pixel_labels = []
+        start = time.time()
         for axis, slice_nums in annotation_slice_dict.items():
             annot_slices = np.take(annotation_image, list(slice_nums), axis=axis)
             superpixel_slices = np.take(superpixels, list(slice_nums), axis=axis)
@@ -664,18 +665,9 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         superpixel_slices_ids = np.concatenate(superpixel_slices_ids)
         pixel_labels = np.concatenate(pixel_labels)
 
-        majority = defaultdict(int) # Will hold the current candidate label for each superpixel.
-        majority_count = defaultdict(int) # Will hold the vote count for the candidate.
-        # Tally the votes for each label within each superpixel.
-        for sp_id, label in zip(superpixel_slices_ids, pixel_labels):
-            if majority_count[sp_id] == 0:
-                majority[sp_id] = label
-            if label == majority[sp_id]:
-                majority_count[sp_id] += 1
-            else:
-                majority_count[sp_id] -= 1
+        majority = cython.annotation.cython_majority_vote(superpixel_slices_ids, pixel_labels)
 
-        return dict(majority)
+        return majority
 
 
 
@@ -692,6 +684,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                 annotation_image = annotation_image.astype(np.int32)
             #superpixel_marker_labels = cython.annotation.superpixel_majority_voting(annotation, annotation_image, self._superpixels)
             superpixel_marker_labels = self.superpixel_majority_voting(annotation_slice_dict, annotation_image, self._superpixels)
+
             mend = time.time()
 
             logging.debug("Majority voting ... {}".format(mend - mstart))
