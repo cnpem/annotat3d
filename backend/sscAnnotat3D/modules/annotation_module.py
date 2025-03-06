@@ -591,5 +591,6 @@ class AnnotationModule:
 
     def set_annotation_from_dict(self, annotation_dict):
         for coord3D, marker_lb in annotation_dict.items():
+            marker_lb = marker_lb[0]
             self.__annotation_image[coord3D] = marker_lb
 

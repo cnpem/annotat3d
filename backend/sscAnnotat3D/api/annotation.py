@@ -143,7 +143,18 @@ def open_annot():
     if type(annot_data) != list:
         print('Old annotation stye, reading dictionary')
         annot_module.set_annotation_from_dict(annot_data)
-        label_names = None
+        label_names = []
+        annotation = set()
+        for label in annot_data.values():
+            label = label[0]
+            if (label not in annotation):
+                annotation.add(label)
+                label_names.append({
+                    "labelName": "Label {}".format(label) if label > 0 else "Background",
+                    "id": label,
+                    "color": []
+                })
+
     else:
         label_names, annotation_coords, annotation_labels = annot_data
         annot_img = annot_module.set_annotation_from_coords(annotation_coords, annotation_labels)
