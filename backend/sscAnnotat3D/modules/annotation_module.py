@@ -543,6 +543,9 @@ class AnnotationModule:
             return {}
         else:
             return self.annotation_slice_dict
+    
+    def set_annotation_slice_dict(self, annotation_slice_dict):
+        self.annotation_slice_dict = annotation_slice_dict
         
     def get_annotation_coords(self):
 

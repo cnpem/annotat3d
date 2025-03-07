@@ -156,8 +156,9 @@ def open_annot():
                 })
 
     else:
-        label_names, annotation_coords, annotation_labels = annot_data
+        label_names, annotation_coords, annotation_labels, annotation_slice_dict = annot_data
         annot_img = annot_module.set_annotation_from_coords(annotation_coords, annotation_labels)
+        annot_module.set_annotation_slice_dict(annotation_slice_dict)
 
     module_repo.set_module('annotation', module=annot_module)
 
@@ -215,6 +216,7 @@ def save_annot():
     annot_module = module_repo.get_module('annotation')
 
     annotation_coords, annotation_labels = annot_module.get_annotation_coords()
+    annotation_slice_dict = annot_module.get_annotation_slice_dict()
 
     if len(annotation_coords) == 0:
         return handle_exception("Failed to fetch annotation")
@@ -224,7 +226,7 @@ def save_annot():
     except:
         return handle_exception("Failed to receive annotation path")
 
-    annot_data = [label_names, annotation_coords, annotation_labels]
+    annot_data = [label_names, annotation_coords, annotation_labels, annotation_slice_dict]
 
     with open(annot_path, "wb") as f:
         pickle.dump(annot_data, f)
