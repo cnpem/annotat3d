@@ -286,6 +286,7 @@ def crop_merge():
     if annot_module is not None:
         annot_backup = data_repo.get_info(key="annot_backup")
         annot_cutted, annot_slices_backup = annot_backup["annot_cutted"], annot_backup["annot_slices_backup"]
+        data_repo.delete_info(key="annot_backup")
 
         annot_img_crop = annot_module.annotation_image
         annot_img_full = np.zeros_like(output_img, dtype='int16') - 1
