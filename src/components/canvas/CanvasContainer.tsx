@@ -1207,6 +1207,7 @@ class Canvas {
         console.log('toFloat32ColorArray exec');
         let scaleFunc: (value: number) => number;
         console.log(img.dtype);
+
         // Generalized function to extract bit depth and determine if it's unsigned
         const getBitDepthAndUnsigned = (dtype: string): [number, boolean] => {
             const isUnsigned = dtype.startsWith('u');
@@ -1217,26 +1218,30 @@ class Canvas {
         const [bitDepth, isUnsigned] = getBitDepthAndUnsigned(img.dtype);
         const maxDataTypeValue = isUnsigned ? Math.pow(2, bitDepth) - 1 : Math.pow(2, bitDepth - 1) - 1;
         console.log('imgminmax', this.imgMin, this.imgMax);
-        // General scaling function bazsed on whether it's signed or unsigned
-        if (isUnsigned) {
-            // Assuming imgMax and imgMin are for normalized scaling within the unsigned range
-            const max = this.imgMax;
-            const min = this.imgMin;
-            const range = max - min;
+
+        // General scaling function based on whether it's signed or unsigned
+        const max = this.imgMax;
+        const min = this.imgMin;
+        const range = max - min;
+
+        // Handle constant image values by checking if the range is zero.
+        if (range === 0) {
+            // In a constant image, you might choose to return a fixed intensity.
+            // For example, returning 1.0 for every value.
+            scaleFunc = (value: number) => 0.5;
+        } else if (isUnsigned) {
             scaleFunc = (value: number) => 1.0 - (max - clamp(min, value, max)) / range;
         } else {
-            // For signed types, adjust min and max if necessary based on expected range adjustments
-            const max = this.imgMax;
-            const min = this.imgMin;
-            const range = max - min;
             scaleFunc = (value: number) => 1.0 - Math.abs((max - clamp(min, value, max)) / range);
         }
-        // Generate a colormap, using float for only losting info in the final conversion, not during map
+
+        // Generate a colormap, using float for only loss of info in the final conversion, not during map
         const colors = colormap({
             colormap: colorname,
             nshades: 256,
             format: 'float',
         });
+
         // Apply the scaling function to each pixel
         const rgbaData = new Float32Array(len * 4);
         for (let i = 0; i < len; ++i) {
