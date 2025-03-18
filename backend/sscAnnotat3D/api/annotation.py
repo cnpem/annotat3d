@@ -1749,7 +1749,10 @@ def object_separation_apply(input_id: str):
 def fgc_apply(input_id: str):
     import sys
     from harpia.fastGraphClustering import fgc
+    from harpia.sparseUnmixing import nmf
+    from skimage import filters
     from skimage.feature import local_binary_pattern
+    from skimage.measure import shannon_entropy
     import numpy as np
     from sklearn.cluster import KMeans
 
@@ -1776,6 +1779,209 @@ def fgc_apply(input_id: str):
         iterations = request.json.get('numIterations')
         lmbd = request.json.get('regularization')
         beta = request.json.get('smoothRegularization')
+        window = request.json.get('windowSize')
+        tol = request.json.get('tolerance')
+        use_all = request.json.get('useWholeImage')
+        superpixel = data_repo.get_image("superpixel")
+        features =  request.json.get("selectedFeatures")
+        metric = request.json.get("selectedMetric")
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = data_repo.get_image(input_id).astype(np.float32)
+
+    print("features: ",features )
+    print("Metric: ",metric)
+
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, current_thresh_marker)
+    # New annotation
+    if mk_id != current_thresh_marker:
+        new_click = True
+    else:
+        new_click = False
+    axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+    axisIndex = axisIndexDict[axis]
+
+    if axisIndex == 0:  # XY plane
+        input_slice = input_img[slice_num]
+
+        if superpixel is not None and features[-1]=="Superpixel":
+            sp = superpixel[slice_num]
+            uniquelabels = np.unique(sp)
+
+    elif axisIndex == 1:  # XZ plane
+        input_slice = input_img[:, slice_num, :]
+
+        if superpixel is not None and features[-1]=="Superpixel":
+            sp = superpixel[:, slice_num, :]
+            uniquelabels = np.unique(sp)
+
+    elif axisIndex == 2:  # YZ plane
+        input_slice = input_img[:, :, slice_num]
+
+        if superpixel is not None and features[-1]=="Superpixel":
+            sp = superpixel[:, :, slice_num]
+            uniquelabels = np.unique(sp)
+
+    print(input_slice.shape)
+    rows, cols = input_slice.shape
+    
+    x = []
+
+    for feats in features:
+        print(feats)
+        if feats == "Original":
+            if superpixel is None or features[-1]!="Superpixel":
+                x.append(input_slice.ravel())  # 1D array
+            else:
+                means = np.zeros_like(input_slice, dtype=input_slice.dtype)
+                for m in uniquelabels:
+                    mean_value = input_slice[sp == m].mean()  # Compute mean for each superpixel
+                    means[sp == m] = mean_value  # Assign mean to all pixels in the superpixel
+                x.append(means.ravel())
+                
+
+        elif feats == "LBP":
+            lbp = local_binary_pattern(input_slice, 8, 1, method="default")
+
+            if superpixel is None or features[-1]!="Superpixel":
+                x.append(lbp.ravel())
+            else:
+                lbp_mean_img = np.zeros_like(lbp, dtype=lbp.dtype)
+                for m in uniquelabels:
+                    mean_value = lbp[sp == m].mean()  # Compute mean for each superpixel
+                    lbp_mean_img[sp == m] = mean_value
+                x.append(lbp_mean_img.ravel())
+
+        elif feats == "Entropy" and superpixel is not None:
+            from scipy.stats import entropy
+            entropy_img = np.zeros_like(input_slice, dtype=np.float32)
+            for label in uniquelabels:
+                values = input_slice[sp == label]
+                if values.size > 1:  # At least 2 values needed for entropy
+                    unique_vals, counts = np.unique(values, return_counts=True)  # Get unique values & their counts
+                    prob_dist = counts / counts.sum()  # Normalize to get probability distribution
+                    entropy_value = entropy(prob_dist, base=2)  # Compute entropy
+                else:
+                    entropy_value = 0
+                entropy_img[sp == label] = entropy_value
+
+        elif feats == "Sobel":
+            grad = filters.sobel(input_slice)
+
+            if superpixel is None or features[-1]!="Superpixel":
+                x.append(grad.ravel())
+            else:
+                grad_means_img = np.zeros_like(grad, dtype=grad.dtype)
+                for m in uniquelabels:
+                    mean_value = grad[sp == m].mean()  # Compute mean for each superpixel
+                    grad_means_img[sp == m] = mean_value
+                x.append(grad_means_img.ravel())
+
+    x = np.array(x).astype(np.float32)
+    print("shape: ",x.shape)
+    basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T.astype(np.float32)
+
+    fgc_instance = fgc.general_fgc(
+        x,
+        rows,
+        cols,
+        basis=basis,
+        lmbd=lmbd,
+        beta=beta,
+        k=anchor_points,
+        iterations=iterations,
+        tol=tol,
+        size=window,
+        metric=metric
+    )
+
+    print("classification starts")
+
+    fgc_instance.classification()
+
+    print('kmeans')
+    kmeans = KMeans(n_clusters=phases)
+    labels = kmeans.fit_predict(fgc_instance.y).reshape(input_slice.shape)
+
+    print('post processing labels')
+    unique_labels = np.unique(labels)
+    label_means = {i: (input_slice[labels == i].mean()) for i in unique_labels}
+
+    sorted_labels = sorted(label_means, key=label_means.get)
+
+    label_remap = {old_label: new_label for new_label, old_label in enumerate(sorted_labels)}
+
+    remapped_labels = np.vectorize(label_remap.get)(labels)
+
+    # Explicit conditionals for updating `out`
+    print("output casting")
+    print("remapped labels shape: ",remapped_labels.shape)
+    out = annot_module.annotation_image.copy()
+
+    print("out slice: ",out[slice_num])
+    print("out slice shape: ",out[slice_num].shape)
+    print("remapped: ",remapped_labels)
+    print("remapped shape: ",remapped_labels.shape)
+
+    if axisIndex == 0:  # XY plane
+        out[slice_num] = remapped_labels
+    elif axisIndex == 1:  # XZ plane
+        out[:, slice_num, :] = remapped_labels
+    elif axisIndex == 2:  # YZ plane
+        out[:, :, slice_num] = remapped_labels
+
+
+    print('last step')
+    annot_module.multilabel_updated(out, mk_id)
+    print("return json")
+    return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/nmf_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def nmf_apply(input_id: str):
+    import sys
+    from harpia.sparseUnmixing import nmf
+    from harpia.fastGraphClustering import fgc
+    from skimage.feature import local_binary_pattern
+    import numpy as np
+    from sklearn.cluster import KMeans
+
+    print(request.json)
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        #parameters
+        
+        dimension = request.json.get("dimension")
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+        anchor = request.json.get('anchorFinder')
+        phases = request.json.get('numPhases')
+        anchor_points = request.json.get('numRepresentativePoints')
+        iterations = request.json.get('numIterations')
+        lmbd = request.json.get('regularization')
+        gamma = request.json.get('graphRegularization')
         window = request.json.get('windowSize')
         tol = request.json.get('tolerance')
         use_all = request.json.get('useWholeImage')
@@ -1814,59 +2020,76 @@ def fgc_apply(input_id: str):
     print(input_slice.shape)
     rows, cols = input_slice.shape
 
-    basis = []
+    basis = np.empty((2, 0), dtype=np.float32)
     print('computing basis')
-
+    count = 0
     if not use_all:
         markers_img = annot_module.annotation_image[slice_range].astype(np.int32)
         markers = np.arange(0, markers_img.max() + 1, step=1)
-
         for i in markers:
             x = input_slice * (markers_img == i)
             x_non_zero = x[x != 0]
 
             if x_non_zero.size == 0:
                 continue
+            
+            lbp = local_binary_pattern(input_slice, 8, 1, method="default")
+            lbp_non_zero = lbp[markers_img == i]
 
             x_non_zero = x_non_zero.reshape(1, x_non_zero.size)
-            print("non zeroes shape: ", x_non_zero.shape)
+            lbp_non_zero = lbp_non_zero.reshape(1, lbp_non_zero.size)
+            
+            x_combined = np.vstack([lbp_non_zero, x_non_zero])
 
-            c = KMeans(n_clusters=anchor_points, n_init="auto").fit(x_non_zero.T).cluster_centers_.T
+            c = KMeans(n_clusters=anchor_points, n_init="auto").fit(x_combined.T).cluster_centers_.T
             print("basis: ", c)
-            basis.append(c)
+            basis = np.hstack([basis, c])
+            count = count+1
+        
     else:
         #x = input_slice.reshape(1, input_slice.size)
-        lbp = local_binary_pattern(input_slice,5,window,method="uniform")
+        lbp = local_binary_pattern(input_slice,8,1,method="default")
         x = np.vstack([lbp.ravel(),input_slice.ravel()])
         print("shape: ",x.shape)
         basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T
-
-    basis = np.array(basis).ravel()
-    basis = basis.reshape(2, anchor_points)
-    print("basis shape: ", basis.shape)
-    print('applying fgc')
+        print("basis shape: ", basis.shape)
 
     #x = input_slice.reshape(1, input_slice.size)
 
-    print("rows,cols = ",rows, cols)
+    print("basis shape: ", np.array(basis).shape)
 
+    print("x shape", x.shape)
+    x = np.vstack([lbp.ravel(),input_slice.ravel()]).astype(np.float32)
+
+    #creating anchor
     fgc_instance = fgc.general_fgc(
         x,
         rows,
         cols,
-        basis=basis,
-        lmbd=lmbd,
-        beta=beta,
+        basis=np.array(basis),
+        lmbd=0,
+        beta=0,
         k=anchor_points,
-        iterations=iterations,
+        iterations=0,
         tol=tol,
-        size=window,
+        size=0,
     )
 
-    fgc_instance.classification()
+    
+    y = np.ones((anchor_points, input_slice.size),dtype=np.float32)
 
+    z = fgc_instance.z.astype(np.float32).T
+
+    print('applying nmf')
+    nmf.solver_nmf(x,
+                   z,
+                   basis.astype(np.float32),
+                   y,
+                   beta=lmbd,gamma=gamma,iterations=iterations)
+
+    print(y)
     kmeans = KMeans(n_clusters=phases)
-    labels = kmeans.fit_predict(fgc_instance.y).reshape(input_slice.shape)
+    labels = kmeans.fit_predict(y.T).reshape(input_slice.shape)
 
     unique_labels = np.unique(labels)
     label_means = {i: (input_slice[labels == i].mean()) for i in unique_labels}
