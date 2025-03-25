@@ -9,6 +9,7 @@ from skimage import draw
 from sscAnnotat3D import aux_functions
 from time import time
 from itertools import repeat
+from collections import deque
 
 class AnnotationModule:
     """docstring for Annotation"""
@@ -39,7 +40,7 @@ class AnnotationModule:
         self.create_labels()
 
         self.annotation_slice_dict = {0: set(), 1: set(), 2: set()}
-        self.annotation_history = []
+        self.annotation_history = deque(maxlen=5)
 
     @property
     def clipping_plane_dist(self):
@@ -395,21 +396,22 @@ class AnnotationModule:
             marker_to_remove = max(self.order_markers)
             print("marker_to_remove", marker_to_remove)
             self.order_markers.remove(marker_to_remove)
+            
+            if len(self.annotation_history) > 0:
+                # get last annoted coords
+                last_activity = self.annotation_history.pop()
 
-            # get last annoted coords
-            last_activity = self.annotation_history.pop()
+                # we need to tell the frontend that the label has returned
+                if 'label_removed' in last_activity:
+                    _ , slices_coords_removed, label_restored = last_activity
+                    for coords_removed in slices_coords_removed:
+                        self.__annotation_image[coords_removed] = label_restored
+                else:
+                    label_restored = -1
+                    get_slice, last_slice = last_activity
+                    self.__annotation_image[get_slice] = last_slice
 
-            # we need to tell the frontend that the label has returned
-            if 'label_removed' in last_activity:
-                _ , slices_coords_removed, label_restored = last_activity
-                for coords_removed in slices_coords_removed:
-                    self.__annotation_image[coords_removed] = label_restored
-            else:
-                label_restored = -1
-                get_slice, last_slice = last_activity
-                self.__annotation_image[get_slice] = last_slice
-
-            return marker_to_remove, label_restored
+                return marker_to_remove, label_restored
         return None, -1
 
     @property
