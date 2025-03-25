@@ -251,7 +251,9 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                         <IonButton
                             slot="end"
                             fill="clear"
-                            onClick={(e) => openPopover(e, 'Window Size: Controls spatial influence between pixels.')}
+                            onClick={(e) =>
+                                openPopover(e, 'Window Size: Controls spatial influence between pixels or superpixels.')
+                            }
                         >
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
