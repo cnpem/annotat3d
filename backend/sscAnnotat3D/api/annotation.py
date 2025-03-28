@@ -1733,19 +1733,6 @@ def fgc_apply(input_id: str):
                     lbp_mean_img[sp == m] = mean_value
                 x.append(lbp_mean_img.ravel())
 
-        elif feats == "Entropy" and superpixel is not None:
-            from scipy.stats import entropy
-            entropy_img = np.zeros_like(input_slice, dtype=np.float32)
-            for label in uniquelabels:
-                values = input_slice[sp == label]
-                if values.size > 1:  # At least 2 values needed for entropy
-                    unique_vals, counts = np.unique(values, return_counts=True)  # Get unique values & their counts
-                    prob_dist = counts / counts.sum()  # Normalize to get probability distribution
-                    entropy_value = entropy(prob_dist, base=2)  # Compute entropy
-                else:
-                    entropy_value = 0
-                entropy_img[sp == label] = entropy_value
-
         elif feats == "Sobel":
             grad = filters.sobel(input_slice)
 
