@@ -120,15 +120,14 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
     const dispatchSaveAnnot = async (annotName?: string, currentPaths?: MultiplesPath) => {
         const paths = currentPaths || pathSaveFiles; // Use currentPaths if provided, otherwise fallback to state
         const newAnnotName = annotName || paths.annotPath; // Use annotName if provided, otherwise fallback to annotPath
-        const annotData = {
-            annot_path: paths.workspacePath ? paths.workspacePath + newAnnotName : newAnnotName,
-            label_names: JSON.parse(sessionStorage.getItem('labelList') || '"XY"'), // Construct full path
+        const annotPath = {
+            annot_path: paths.workspacePath ? paths.workspacePath + newAnnotName : newAnnotName, // Construct full path
         };
-        console.log('annotPathtoSave', annotData);
+        console.log('annotPathtoSave', annotPath);
 
         let msgReturned = '';
         let isError = false;
-        await sfetch('POST', '/save_annot', JSON.stringify(annotData), '')
+        await sfetch('POST', '/save_annot', JSON.stringify(annotPath), '')
             .then((success: string) => {
                 const imgName = newAnnotName.split('/');
                 msgReturned = `${imgName[imgName.length - 1]} saved as annotation`;

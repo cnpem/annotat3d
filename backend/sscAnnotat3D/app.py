@@ -28,7 +28,7 @@ from sentry_sdk import set_user
 
 set_user({"username": str(os.getenv("REACT_APP_USERNAME") or "user.unknown")})
 
-""" sentry_sdk.init(
+sentry_sdk.init(
    dsn="https://dcdb7e790b3747c3c10823e8ffcc0058@o4507488156057600.ingest.us.sentry.io/4507488327630848",
    # Set traces_sample_rate to 1.0 to capture 100%
    # of transactions for performance monitoring.
@@ -38,7 +38,6 @@ set_user({"username": str(os.getenv("REACT_APP_USERNAME") or "user.unknown")})
    # We recommend adjusting this value in production.
    profiles_sample_rate=1.0,
 )
- """
 
 app = Flask(__name__)
 # import pdb

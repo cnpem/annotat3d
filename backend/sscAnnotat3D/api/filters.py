@@ -12,7 +12,6 @@ from harpia.filters import (
 )
 from skimage.filters import gaussian as skimage_gaussian
 from sscAnnotat3D import utils
-from werkzeug.exceptions import BadRequest
 from sscAnnotat3D.repository import data_repo
 from sscPySpin.filters import filter_bm3d as spin_bm3d
 from sscPySpin.filters import non_local_means as spin_nlm
@@ -228,7 +227,7 @@ def nlm_apply(input_id: str, output_id: str):
             non_local_means(input,out,x,y,smallWindow,bigWindow,h,sigma)
             output_img[:,:,i] = out
 
-    data_repo.set_image(output_id, data=output_img.astype(input_img.dtype))
+    data_repo.set_image(output_id, data=output_img.astype(np.float32))
 
     return "success", 200
 
@@ -573,26 +572,5 @@ def median_apply(input_id: str, output_id: str):
         median(input_img,output_img,x,y,z,N,N,N)
 
     data_repo.set_image(output_id, data=output_img)
-
-    return "success", 200
-
-
-@app.route("/clipping_apply/<input_id>/<output_id>", methods=["POST"])
-@cross_origin()
-def clipping_apply(input_id: str, output_id: str):
-    input_img = data_repo.get_image(input_id)
-    output_img = np.zeros_like(input_img)
-
-    if input_img is None:
-        return f"Image {input_id} not found.", 400
-
-    max_value = request.json["max_value"]
-    min_value = request.json["min_value"]
-
-    print(max_value,min_value)
-    
-    output_img =  np.clip(input_img,min_value,max_value)
-
-    data_repo.set_image(output_id, data=output_img.astype(input_img.dtype))
 
     return "success", 200

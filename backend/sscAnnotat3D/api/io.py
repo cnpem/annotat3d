@@ -302,6 +302,7 @@ def save_image(image_id: str):
         print(e)
         return handle_exception("Error while trying to get the image path")
 
+
     image = data_repo.get_image(key=image_id)
     if image.size == 0:
         return handle_exception("Unable to retrieve the image !")

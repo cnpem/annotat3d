@@ -129,6 +129,8 @@ class ClassifierSegmentationModule(SegmentationModule):
         # Set containing the parameters that should not be modified by the user
         self._locked_params = set()
 
+        self._auto_saved_data_loaded = False
+
         # Available classifiers
         self._default_feat_scaler = StandardScaler()
         self._default_feat_selector = None
@@ -265,14 +267,14 @@ class ClassifierSegmentationModule(SegmentationModule):
         return dict(((k[len(key) :], val) for k, val in parameters.items() if k.startswith(key)))
 
     @abstractmethod
-    def _extract_features_for_training(self, annotations, annotation_image, features, **kwargs):
+    def _extract_features_for_training(self, annotations, features, **kwargs):
         pass
 
     # does not implement load label capability
     def load_label(self, label):
         pass
 
-    def _train_classifier(self, annotation_slice_dict, annotation_image, superpixel_features, **kwargs):
+    def _train_classifier(self, annotations, superpixel_features, **kwargs):
 
         logging.info("Train classifier ...")
 
@@ -283,13 +285,13 @@ class ClassifierSegmentationModule(SegmentationModule):
             "loaded_training_superpixel_features: {}".format(np.array(self._loaded_training_superpixel_features).shape)
         )
 
-        if len(annotation_slice_dict) > 0 or len(self._loaded_training_superpixel_features) > 0:
+        if len(annotations) > 0 or len(self._loaded_training_superpixel_features) > 0:
 
-            self._verify_loaded_classifier_update(annotation_slice_dict)
+            self._verify_loaded_classifier_update(annotations)
 
             self.reset_classifier()
 
-            self._extract_features_for_training(annotation_slice_dict, annotation_image, superpixel_features, **kwargs)
+            self._extract_features_for_training(annotations, superpixel_features, **kwargs)
 
             if len(self._loaded_training_superpixel_features) > 0:
                 logging.debug("--- (Training features loaded): Incorporating loaded training features")
@@ -724,6 +726,27 @@ class ClassifierSegmentationModule(SegmentationModule):
             # were selected
             self._unlock_params()
 
+    def update_annotations_with_auto_saved_data(self, annotations):
+        _annotations, _classif_params = self.load_auto_saved_data()
+
+        valid_data = self.verify_auto_saved_data()
+
+        if valid_data != 0:
+            if valid_data == 2:
+                logging.debug("Updating annotations with auto-saved data since the image info matches")
+
+                _annotations_aux = annotations.copy()
+                _annotations_aux.update(_annotations)
+                _annotations = _annotations_aux
+            else:
+                logging.debug("Error! Image information does not match for updating annotations with auto-saved data!")
+
+                _annotations = None
+        else:
+            logging.debug("No auto-saved data detected, using only input data")
+
+        return _annotations
+
     def create_auto_saved_data_folder(self):
         if self._auto_save:
             if not os.path.exists(self._workspace):
@@ -896,6 +919,9 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         logging.debug("\n\n***Classifier type after resetting {}".format(type(self._model)))
 
+    def __del__(self):
+        self.remove_auto_saved_data()
+
     def set_feature_extraction_parameters(self, **kwargs):
         for param, value in kwargs.items():
             if param in self._feature_extraction_params:
@@ -975,15 +1001,117 @@ class ClassifierSegmentationModule(SegmentationModule):
     def get_available_supervoxel_pooling_methods(self):
         return spin_feat_extraction.SPINSupervoxelPooling.available_pooling_methods()
 
+    def auto_save_data(self, annotations):
+        """
+        Function that automatically save the annotations image information
+
+        Args:
+            annotations (array): array that contain information about the image annotations
+
+        Returns:
+            None
+
+        """
+        # Erasing previously saved data
+        self.remove_auto_saved_data()
+        # Saving new data if required
+        if self._auto_save:
+            if len(annotations) > 0:
+                # (Re)creating folder to save the data
+                self.create_auto_saved_data_folder()
+                try:
+                    """IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
+                    not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
+                    data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
+                    besides being far more critical than classifier loading/saving."""
+                    with open(os.path.join(self._workspace, "annotations_latest.pkl"), "wb") as f:
+                        pickle.dump(annotations, f)
+                except Exception as e:
+                    f.close()
+                    logging.debug("-- Error!! Unable to auto-save annotations. Error: %s" % str(e))
+
+                else:
+
+                    classif_params = {"image_info": {"shape": self._image.shape, "dtype": self._image.dtype}}
+
+                    try:
+                        with open(os.path.join(self._workspace, "classifier_params_latest.pkl"), "wb") as f:
+                            pickle.dump(classif_params, f)
+                    except Exception as e:
+                        f.close()
+                        logging.debug("-- Error!! Unable to auto-save classifier parameters. Error: %s." % str(e))
+                    else:
+                        # After the first auto save, then we may assume that there is no need of auto saving the annotations
+                        self._auto_saved_data_loaded = True
+
+    def load_auto_saved_data(self):
+        annotations = None
+        classif_params = None
+        if self._auto_save:
+            annotations_file = os.path.join(self._workspace, "annotations_latest.pkl")
+            classifier_params = os.path.join(self._workspace, "classifier_params_latest.pkl")
+            if os.path.exists(annotations_file) and os.path.exists(classifier_params):
+                try:
+                    # IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
+                    # not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
+                    # data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
+                    # besides being far more critical than classifier loading/saving.
+                    with open(annotations_file, "rb") as f:
+                        annotations = pickle.load(f)
+                except Exception as e:
+                    f.close()
+                    logging.debug(
+                        "Error loading auto-saved annotation file: %s\nPlease erase auto-save data manually from %s."
+                        % (str(e), self._workspace)
+                    )
+                    raise e
+
+                try:
+                    with open(classifier_params, "rb") as f:
+                        classif_params = pickle.load(f)
+                except Exception as e:
+                    f.close()
+                    logging.debug(
+                        "Error loading auto-saved annotation file: %s\nPlease erase auto-save data manually from %s."
+                        % (str(e), self._workspace)
+                    )
+                    raise e
+
+        return annotations, classif_params
+
+    def auto_saved_data_loaded(self):
+        return self._auto_saved_data_loaded
+
+    def verify_auto_saved_data(self):
+        valid_data = 0
+        _annotations, _classif_params = self.load_auto_saved_data()
+
+        if _annotations is not None and _classif_params is not None:
+            if (
+                _classif_params["image_info"]["shape"] == self._image.shape
+                and _classif_params["image_info"]["dtype"] == self._image.dtype
+            ):
+                valid_data = 2
+            else:
+                valid_data = 1
+
+        return valid_data
+
+    def remove_auto_saved_data(self):
+        from os import path
+
+        if path.exists(self._workspace):
+            shutil.rmtree(self._workspace)
+
     def undo(self, checkpoint):
         return True
 
-    def _verify_loaded_classifier_update(self, annotation_slice_dict):
+    def _verify_loaded_classifier_update(self, annotations):
         msg = ""
         title = ""
         msg_type = ""
 
-        if len(annotation_slice_dict) > 0 or len(self._loaded_training_superpixel_features) > 0:
+        if len(annotations) > 0 or len(self._loaded_training_superpixel_features) > 0:
             if self._flag_classifier_loaded:
                 msg += (
                     "A pre-loaded classifier has been detected. Since new training data were added, there is currently no way "
