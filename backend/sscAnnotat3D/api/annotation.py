@@ -1,8 +1,3 @@
-"""
-This script contains functions used for annotations
-@Docs author : Gabriel Borin Macedo (gabriel.macedo@lnls.com.br or borinmacedo@gmail.com)
-"""
-
 import io
 import pickle
 import zlib
@@ -1781,26 +1776,8 @@ def fgc_apply(input_id: str):
 
     remapped_labels = np.vectorize(label_remap.get)(labels)
 
-    # Explicit conditionals for updating `out`
-    print("output casting")
-    print("remapped labels shape: ",remapped_labels.shape)
-    out = annot_module.annotation_image.copy()
-
-    print("out slice: ",out[slice_num])
-    print("out slice shape: ",out[slice_num].shape)
-    print("remapped: ",remapped_labels)
-    print("remapped shape: ",remapped_labels.shape)
-
-    if axisIndex == 0:  # XY plane
-        out[slice_num] = remapped_labels
-    elif axisIndex == 1:  # XZ plane
-        out[:, slice_num, :] = remapped_labels
-    elif axisIndex == 2:  # YZ plane
-        out[:, :, slice_num] = remapped_labels
-
-
     print('last step')
-    annot_module.multilabel_updated(out, mk_id)
+    annot_module.multilabel_updated(remapped_labels, mk_id)
     print("return json")
     return jsonify(annot_module.current_mk_id)
 

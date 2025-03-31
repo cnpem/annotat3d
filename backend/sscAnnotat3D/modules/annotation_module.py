@@ -593,11 +593,63 @@ class AnnotationModule:
     def set_annotation_from_coords(self, annotation_coords, annotation_labels):
         self.__annotation_image[annotation_coords] = annotation_labels
 
-
     def set_annotation_from_dict(self, annotation_dict):
         for coord3D, marker_lb in annotation_dict.items():
             marker_lb = marker_lb[0]
             self.__annotation_image[coord3D] = marker_lb
+
+        """
+        Extract slices by vectorizing the counting of unique values along each axis.
+        This function converts the coordinates into a NumPy array and uses np.unique 
+        to count how many times each value appears for each axis among the remaining points.
+        
+        At each iteration:
+        - For each axis, compute the unique values and their counts from the remaining points.
+        - Identify the (axis, value) pair with the highest count.
+        - Add that value to the slices dictionary for that axis.
+        - Eliminate all points with that value along the selected axis.
+        """
+        coords = list(annotation_dict.items())
+        remaining = coords.copy()
+        annotation_slice_dict = {0: set(), 1: set(), 2: set()}
+        # Convert the list of coordinates to a NumPy array
+        arr = np.array(coords)
+        
+        # Initialize the output dictionary
+        annotation_slice_dict = {0: set(), 1: set(), 2: set()}
+        
+        # Create a boolean mask for points that are still remaining (True means the point is not yet eliminated)
+        mask = np.ones(arr.shape[0], dtype=bool)
+        
+        while np.any(mask):
+            best_axis = None
+            best_value = None
+            best_count = 0
+            
+            # Evaluate each axis vectorized over the current (remaining) points
+            for axis in range(3):
+                # Extract the values for the current axis from remaining points
+                current_values = arr[mask, axis]
+                # Get unique values and their counts
+                uniq, counts = np.unique(current_values, return_counts=True)
+                if counts.size > 0:
+                    idx = np.argmax(counts)
+                    # Check if this axis/value pair is the best so far
+                    if counts[idx] > best_count:
+                        best_count = counts[idx]
+                        best_axis = axis
+                        best_value = uniq[idx]
+            
+            # If no valid best slice is found, break out of the loop
+            if best_axis is None:
+                break
+            
+            # Record the slice (axis and its value)
+            annotation_slice_dict[best_axis].add(best_value)
+            # Update the mask: remove all points that have best_value on best_axis
+            mask = mask & (arr[:, best_axis] != best_value)
+        
+        self.annotation_slice_dict = annotation_slice_dict
             
     def set_annotation_image(self, annotation_image):
         self.__annotation_image = annotation_image
