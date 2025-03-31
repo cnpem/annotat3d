@@ -1,8 +1,3 @@
-"""
-This script contains functions used for annotations
-@Docs author : Gabriel Borin Macedo (gabriel.macedo@lnls.com.br or borinmacedo@gmail.com)
-"""
-
 import io
 import pickle
 import zlib
