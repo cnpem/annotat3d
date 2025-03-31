@@ -125,6 +125,8 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         for axis, slice_nums in annotation_slice_dict.items():
             # Extract the appropriate slice along the given axis
             annot_slices = np.take(annotation_image, list(slice_nums), axis=axis)
+            # nfeats, z, y, x = pixel_map.shape
+            pixel_map = np.take(pixel_features, list(slice_nums), axis=axis + 1)
             #axis + 1 because of the new dimension at nfeat
             pixel_map = np.moveaxis(pixel_map, axis + 1 , 1) #+1 for the n feat axis at 0
             annot_slices = np.moveaxis(annot_slices, axis, 0)
