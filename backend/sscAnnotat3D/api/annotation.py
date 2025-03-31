@@ -129,34 +129,40 @@ def open_annot():
     if img is None:
         return handle_exception('No image associated')
 
-    annot_module = annotation_module.AnnotationModule(img.shape)
-
     try:
         annot_path = request.json["annot_path"]
     except:
         return handle_exception("Error while trying to get the annotation path")
 
-
     with open(annot_path, "rb") as f:
-        loaded_annot = pickle.load(f)
-
+        annot_data = pickle.load(f)
+    
+    
     annot_module = annotation_module.AnnotationModule(img.shape)
-    annot_module.annotation = loaded_annot
+    #compatibility with old annotated
+    if type(annot_data) != list:
+        print('Old annotation stye, reading dictionary')
+        annot_module.set_annotation_from_dict(annot_data)
+        label_names = []
+        annotation = set()
+        for label in annot_data.values():
+            label = label[0]
+            if (label not in annotation):
+                annotation.add(label)
+                label_names.append({
+                    "labelName": "Label {}".format(label) if label > 0 else "Background",
+                    "id": label,
+                    "color": []
+                })
+
+    else:
+        label_names, annotation_coords, annotation_labels, annotation_slice_dict = annot_data
+        annot_img = annot_module.set_annotation_from_coords(annotation_coords, annotation_labels)
+        annot_module.set_annotation_slice_dict(annotation_slice_dict)
 
     module_repo.set_module('annotation', module=annot_module)
 
-    label_list = []
-    annotation = set()
-    for label in annot_module.get_annotation().values():
-        if (label[0] not in annotation):
-            annotation.add(label[0])
-            label_list.append({
-                "labelName": "Label {}".format(label[0]) if label[0] > 0 else "Background",
-                "id": label[0],
-                "color": []
-            })
-
-    return jsonify(label_list)
+    return jsonify(label_names)
 
 
 @app.route("/close_annot", methods=["POST"])
@@ -177,7 +183,7 @@ def close_annot():
     """
     try:
         annot_module = module_repo.get_module('annotation')
-        annot_module.erase_all_markers()
+        annot_module.erase_all()
     except:
         return handle_exception("Failed to erase all markers")
 
@@ -208,26 +214,22 @@ def save_annot():
     """
 
     annot_module = module_repo.get_module('annotation')
-    annot = annot_module.annotation
 
-    if annot is None:
+    annotation_coords, annotation_labels = annot_module.get_annotation_coords()
+    annotation_slice_dict = annot_module.get_annotation_slice_dict()
+
+    if len(annotation_coords) == 0:
         return handle_exception("Failed to fetch annotation")
-
     try:
-        annot_path = request.json["annot_path"]
+        annot_path  = request.json["annot_path"]
+        label_names = request.json["label_names"]
     except:
         return handle_exception("Failed to receive annotation path")
 
-    from collections import defaultdict
-    clean_annot = defaultdict(list)
-
-    for coord3D, label_list in annot.items():
-        if label_list and label_list[-1] != -1:  # Check if the list is not empty and ignore erase coords
-            if clean_annot[coord3D] != -1:
-                clean_annot[coord3D].append(label_list[-1])
+    annot_data = [label_names, annotation_coords, annotation_labels, annotation_slice_dict]
 
     with open(annot_path, "wb") as f:
-        pickle.dump(clean_annot, f)
+        pickle.dump(annot_data, f)
 
     return "success", 200
 
@@ -320,23 +322,9 @@ def delete_label_annot():
     except Exception as e:
         return handle_exception(str(e))
 
-    try:
-        annot_module = module_repo.get_module('annotation')
-        marker_id = annot_module.current_mk_id
-        annot_module.remove_label(label_id, marker_id)
-    except Exception as e:
-        return handle_exception(str(e))
-
-    #label image is not affected
-    
-    #try:
-    #    label_img = data_repo.get_image(key="label")
-    #except Exception as e:
-    #    return handle_exception(str(e))
-
-    #if (label_img is not None and label_id is not 0):
-    #    label_img[label_img == label_id] = 0
-    #    data_repo.set_image(key="label", data=label_img)
+    annot_module = module_repo.get_module('annotation')
+    marker_id = annot_module.current_mk_id
+    annot_module.remove_label(label_id, marker_id)
 
     return "success", 200
 
@@ -391,75 +379,6 @@ def find_label_by_click():
     return jsonify(0)
 
 
-@app.route("/merge_labels", methods=["POST"])
-@cross_origin()
-def merge_labels():
-    """
-    Function that merge n labels into one label.
-
-    Notes:
-        the request.json["selected_labels"] receives only the parameter "selected_labels"(list[int]).
-
-    Returns:
-        (list[int]): this function returns a list that contains the labels to delete in front-end component label table
-
-    """
-
-    try:
-        selected_labels = request.json["selected_labels"]
-    except Exception as e:
-        return handle_exception(str(e))
-
-    if (len(selected_labels) <= 1):
-        return handle_exception("Please, choose at least 2 labels to merge")
-
-    try:
-        label_img = data_repo.get_image(key="label")
-    except Exception as e:
-        return handle_exception(str(e))
-
-    pivot_label = selected_labels[0]
-    annot_module = module_repo.get_module('annotation')
-    annotations = annot_module.get_annotation()
-
-    if (annotations != None and label_img is not None):
-        for i in range(1, len(selected_labels)):
-            label_to_find = selected_labels[i]
-
-            for key, value in annotations.items():
-                """
-                Notes:
-                    In this case, value is a tuple with coordinates (label, click_order)
-                    
-                Examples:
-                    (0, 4): label 0 (Background) was created on the 4 click  
-                """
-                if (label_to_find == value[0]):
-                    annotations[key] = (pivot_label, value[1])
-                    label_img[label_img == label_to_find] = pivot_label
-
-        data_repo.set_image(key="label", data=label_img)
-
-    elif (annotations != None):
-        for i in range(1, len(selected_labels)):
-            label_to_find = selected_labels[i]
-
-            for key, value in annotations.items():
-                """
-                Notes:
-                    In this case, value is a tuple with coordinates (label, click_order)
-
-                Examples:
-                    (0, 4): label 0 (Background) was created on the 4 click  
-                """
-                if (label_to_find == value[0]):
-                    annotations[key] = (pivot_label, value[1])
-
-    annot_module.set_annotation(annotations)
-    data_repo.set_annotation(data=annotations)
-
-    return jsonify(selected_labels[1:])
-
 @app.route("/is_annotation_empty", methods=["POST"])
 @cross_origin()
 def is_annotation_empty():
@@ -479,61 +398,6 @@ def is_annotation_empty():
         return jsonify(True)
 
     return jsonify(False)
-
-
-@app.route("/set_edit_label_options", methods=["POST"])
-@cross_origin()
-def set_edit_label_options():
-    """
-    Function that set the annotations for merge and split in merge menu
-
-    Notes:
-        TODO : merge and slipt isn't working properly. We need to think a better way to make this operations work
-
-    Returns:
-        (str): returns "success" if everything goes well and an error otherwise
-
-    """
-    try:
-        key = request.json["payload_key"]
-        flag = request.json["payload_flag"]
-    except Exception as e:
-        return handle_exception(str(e))
-
-    try:
-        _debugger_print("key value", key)
-        data_repo.set_edit_label_options(key, flag)
-        _debugger_print("getting the information", data_repo.get_edit_label_options(key))
-        if (key == "is_merge_activated" and flag):
-            data_repo.set_edit_label_options("is_split_activated", False)
-            if (not data_repo.get_edit_label_options("edit_label_merge_module")):
-                img = data_repo.get_image('image')
-                if img is None:
-                    return handle_exception('No image associated')
-                edit_label_annotation_module = annotation_module.AnnotationModule(img.shape)
-                _debugger_print("Creating module for", "merge_option")
-                data_repo.set_edit_label_options("edit_label_merge_module", edit_label_annotation_module)
-
-        elif (key == "is_split_activated" and flag):
-            data_repo.set_edit_label_options("is_merge_activated", False)
-            if (not data_repo.get_edit_label_options("edit_label_split_module")):
-                img = data_repo.get_image('image')
-                if img is None:
-                    return handle_exception('No image associated')
-                _debugger_print("Creating module for", "split_option")
-                edit_label_annotation_module = annotation_module.AnnotationModule(img.shape)
-                data_repo.set_edit_label_options("edit_label_split_module", edit_label_annotation_module)
-
-        else:
-            _debugger_print("None merge or split is activated", "")
-            _debugger_print("is_merge_activated", data_repo.get_edit_label_options("is_merge_activated"))
-            _debugger_print("is_split_activated", data_repo.get_edit_label_options("is_split_activated"))
-
-    except Exception as e:
-        return handle_exception(str(e))
-
-    return jsonify("success")
-
 
 @app.route("/magic_wand/<input_id>", methods=["POST"])
 @cross_origin()
@@ -592,7 +456,7 @@ def apply_magicwand(input_id: str):
     #Marker id is not necessary for the magic wand logic.
     mk_id = annot_module.current_mk_id
 
-    annot_module.labelmask_update(mask_wand, label, mk_id, new_click)
+    annot_module.labelmask_update(mask_wand > 0, label, mk_id, new_click)
 
     return jsonify(python_typer(img_slice[y_coord, x_coord]))
 
@@ -1747,7 +1611,205 @@ def object_separation_apply(input_id: str):
 @app.route("/fgc_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def fgc_apply(input_id: str):
+    import os
+    default_n_threads = 8
+    os.environ['OPENBLAS_NUM_THREADS'] = f"{default_n_threads}"
+    os.environ['MKL_NUM_THREADS'] = f"{default_n_threads}"
+    os.environ['OMP_NUM_THREADS'] = f"{default_n_threads}"
+
+    from harpia.fastGraphClustering import fgc
+    from harpia.sparseUnmixing import nmf
+    from skimage import filters
+    from skimage.feature import local_binary_pattern
+    from skimage.measure import shannon_entropy
+    import numpy as np
+    from sklearn.cluster import KMeans
+
+    print(request.json)
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        #parameters
+        
+        dimension = request.json.get("dimension")
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+        anchor = request.json.get('anchorFinder')
+        phases = request.json.get('numPhases')
+        anchor_points = request.json.get('numRepresentativePoints')
+        iterations = request.json.get('numIterations')
+        lmbd = request.json.get('regularization')
+        beta = request.json.get('smoothRegularization')
+        window = request.json.get('windowSize')
+        tol = request.json.get('tolerance')
+        use_all = request.json.get('useWholeImage')
+        superpixel = data_repo.get_image("superpixel")
+        features =  request.json.get("selectedFeatures")
+        metric = request.json.get("selectedMetric")
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = data_repo.get_image(input_id).astype(np.float32)
+
+    print("features: ",features )
+    print("Metric: ",metric)
+
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, current_thresh_marker)
+    # New annotation
+    if mk_id != current_thresh_marker:
+        new_click = True
+    else:
+        new_click = False
+    axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+    axisIndex = axisIndexDict[axis]
+
+    if axisIndex == 0:  # XY plane
+        input_slice = input_img[slice_num]
+
+        if superpixel is not None and features[-1]=="Superpixel":
+            sp = superpixel[slice_num]
+            uniquelabels = np.unique(sp)
+
+    elif axisIndex == 1:  # XZ plane
+        input_slice = input_img[:, slice_num, :]
+
+        if superpixel is not None and features[-1]=="Superpixel":
+            sp = superpixel[:, slice_num, :]
+            uniquelabels = np.unique(sp)
+
+    elif axisIndex == 2:  # YZ plane
+        input_slice = input_img[:, :, slice_num]
+
+        if superpixel is not None and features[-1]=="Superpixel":
+            sp = superpixel[:, :, slice_num]
+            uniquelabels = np.unique(sp)
+
+    print(input_slice.shape)
+    rows, cols = input_slice.shape
+    
+    x = []
+
+    for feats in features:
+        print(feats)
+        if feats == "Original":
+            if superpixel is None or features[-1]!="Superpixel":
+                x.append(input_slice.ravel())  # 1D array
+            else:
+                means = np.zeros_like(input_slice, dtype=input_slice.dtype)
+                for m in uniquelabels:
+                    mean_value = input_slice[sp == m].mean()  # Compute mean for each superpixel
+                    means[sp == m] = mean_value  # Assign mean to all pixels in the superpixel
+                x.append(means.ravel())
+                
+
+        elif feats == "LBP":
+            lbp = local_binary_pattern(input_slice, 8, 1, method="default")
+
+            if superpixel is None or features[-1]!="Superpixel":
+                x.append(lbp.ravel())
+            else:
+                lbp_mean_img = np.zeros_like(lbp, dtype=lbp.dtype)
+                for m in uniquelabels:
+                    mean_value = lbp[sp == m].mean()  # Compute mean for each superpixel
+                    lbp_mean_img[sp == m] = mean_value
+                x.append(lbp_mean_img.ravel())
+
+        elif feats == "Sobel":
+            grad = filters.sobel(input_slice)
+
+            if superpixel is None or features[-1]!="Superpixel":
+                x.append(grad.ravel())
+            else:
+                grad_means_img = np.zeros_like(grad, dtype=grad.dtype)
+                for m in uniquelabels:
+                    mean_value = grad[sp == m].mean()  # Compute mean for each superpixel
+                    grad_means_img[sp == m] = mean_value
+                x.append(grad_means_img.ravel())
+
+    x = np.array(x).astype(np.float32)
+    print("shape: ",x.shape)
+    basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T.astype(np.float32)
+
+    fgc_instance = fgc.general_fgc(
+        x,
+        rows,
+        cols,
+        basis=basis,
+        lmbd=lmbd,
+        beta=beta,
+        k=anchor_points,
+        iterations=iterations,
+        tol=tol,
+        size=window,
+        metric=metric
+    )
+
+    print("classification starts")
+
+    fgc_instance.classification()
+
+    print('kmeans')
+    kmeans = KMeans(n_clusters=phases)
+    labels = kmeans.fit_predict(fgc_instance.y).reshape(input_slice.shape)
+
+    print('post processing labels')
+    unique_labels = np.unique(labels)
+    label_means = {i: (input_slice[labels == i].mean()) for i in unique_labels}
+
+    sorted_labels = sorted(label_means, key=label_means.get)
+
+    label_remap = {old_label: new_label for new_label, old_label in enumerate(sorted_labels)}
+
+    remapped_labels = np.vectorize(label_remap.get)(labels)
+
+    # Explicit conditionals for updating `out`
+    print("output casting")
+    print("remapped labels shape: ",remapped_labels.shape)
+    out = annot_module.annotation_image.copy()
+
+    print("out slice: ",out[slice_num])
+    print("out slice shape: ",out[slice_num].shape)
+    print("remapped: ",remapped_labels)
+    print("remapped shape: ",remapped_labels.shape)
+
+    if axisIndex == 0:  # XY plane
+        out[slice_num] = remapped_labels
+    elif axisIndex == 1:  # XZ plane
+        out[:, slice_num, :] = remapped_labels
+    elif axisIndex == 2:  # YZ plane
+        out[:, :, slice_num] = remapped_labels
+
+
+    print('last step')
+    annot_module.multilabel_updated(out, mk_id)
+    print("return json")
+    return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/nmf_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def nmf_apply(input_id: str):
     import sys
+    from harpia.sparseUnmixing import nmf
     from harpia.fastGraphClustering import fgc
     from skimage.feature import local_binary_pattern
     import numpy as np
@@ -1775,7 +1837,7 @@ def fgc_apply(input_id: str):
         anchor_points = request.json.get('numRepresentativePoints')
         iterations = request.json.get('numIterations')
         lmbd = request.json.get('regularization')
-        beta = request.json.get('smoothRegularization')
+        gamma = request.json.get('graphRegularization')
         window = request.json.get('windowSize')
         tol = request.json.get('tolerance')
         use_all = request.json.get('useWholeImage')
@@ -1814,59 +1876,76 @@ def fgc_apply(input_id: str):
     print(input_slice.shape)
     rows, cols = input_slice.shape
 
-    basis = []
+    basis = np.empty((2, 0), dtype=np.float32)
     print('computing basis')
-
+    count = 0
     if not use_all:
         markers_img = annot_module.annotation_image[slice_range].astype(np.int32)
         markers = np.arange(0, markers_img.max() + 1, step=1)
-
         for i in markers:
             x = input_slice * (markers_img == i)
             x_non_zero = x[x != 0]
 
             if x_non_zero.size == 0:
                 continue
+            
+            lbp = local_binary_pattern(input_slice, 8, 1, method="default")
+            lbp_non_zero = lbp[markers_img == i]
 
             x_non_zero = x_non_zero.reshape(1, x_non_zero.size)
-            print("non zeroes shape: ", x_non_zero.shape)
+            lbp_non_zero = lbp_non_zero.reshape(1, lbp_non_zero.size)
+            
+            x_combined = np.vstack([lbp_non_zero, x_non_zero])
 
-            c = KMeans(n_clusters=anchor_points, n_init="auto").fit(x_non_zero.T).cluster_centers_.T
+            c = KMeans(n_clusters=anchor_points, n_init="auto").fit(x_combined.T).cluster_centers_.T
             print("basis: ", c)
-            basis.append(c)
+            basis = np.hstack([basis, c])
+            count = count+1
+        
     else:
         #x = input_slice.reshape(1, input_slice.size)
-        lbp = local_binary_pattern(input_slice,5,window,method="uniform")
+        lbp = local_binary_pattern(input_slice,8,1,method="default")
         x = np.vstack([lbp.ravel(),input_slice.ravel()])
         print("shape: ",x.shape)
         basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T
-
-    basis = np.array(basis).ravel()
-    basis = basis.reshape(2, anchor_points)
-    print("basis shape: ", basis.shape)
-    print('applying fgc')
+        print("basis shape: ", basis.shape)
 
     #x = input_slice.reshape(1, input_slice.size)
 
-    print("rows,cols = ",rows, cols)
+    print("basis shape: ", np.array(basis).shape)
 
+    print("x shape", x.shape)
+    x = np.vstack([lbp.ravel(),input_slice.ravel()]).astype(np.float32)
+
+    #creating anchor
     fgc_instance = fgc.general_fgc(
         x,
         rows,
         cols,
-        basis=basis,
-        lmbd=lmbd,
-        beta=beta,
+        basis=np.array(basis),
+        lmbd=0,
+        beta=0,
         k=anchor_points,
-        iterations=iterations,
+        iterations=0,
         tol=tol,
-        size=window,
+        size=0,
     )
 
-    fgc_instance.classification()
+    
+    y = np.ones((anchor_points, input_slice.size),dtype=np.float32)
 
+    z = fgc_instance.z.astype(np.float32).T
+
+    print('applying nmf')
+    nmf.solver_nmf(x,
+                   z,
+                   basis.astype(np.float32),
+                   y,
+                   beta=lmbd,gamma=gamma,iterations=iterations)
+
+    print(y)
     kmeans = KMeans(n_clusters=phases)
-    labels = kmeans.fit_predict(fgc_instance.y).reshape(input_slice.shape)
+    labels = kmeans.fit_predict(y.T).reshape(input_slice.shape)
 
     unique_labels = np.unique(labels)
     label_means = {i: (input_slice[labels == i].mean()) for i in unique_labels}
@@ -1877,17 +1956,6 @@ def fgc_apply(input_id: str):
 
     remapped_labels = np.vectorize(label_remap.get)(labels)
 
-    # Explicit conditionals for updating `out`
-    out = annot_module.annotation_image.copy()
-
-    if axisIndex == 0:  # XY plane
-        out[slice_num] = remapped_labels
-    elif axisIndex == 1:  # XZ plane
-        out[:, slice_num, :] = remapped_labels
-    elif axisIndex == 2:  # YZ plane
-        out[:, :, slice_num] = remapped_labels
-
-
-    annot_module.multilabel_updated(out, mk_id)
+    annot_module.multilabel_updated(remapped_labels, mk_id)
 
     return jsonify(annot_module.current_mk_id)

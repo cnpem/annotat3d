@@ -17,31 +17,17 @@ import {
     IonIcon,
     IonContent,
     IonToggle,
-    IonCheckbox,
-    IonSelect,
-    IonSelectOption,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
 import { sfetch } from '../../../../utils/simplerequest';
 import { dispatch } from '../../../../utils/eventbus';
 import LoadingComponent from '../../utils/LoadingComponent';
 
-interface FGCCardProps {
+interface NMFCardProps {
     isVisible: boolean;
 }
-const featureOptions = ['Original', 'LBP', 'Sobel', 'Superpixel'];
-const metricsOptions = [
-    'euclidean',
-    'cityblock',
-    'cosine',
-    'canberra',
-    'correlation',
-    'chebyshev',
-    'jensenshannon',
-    'braycurtis',
-];
 
-const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
+const NMFCard: React.FC<NMFCardProps> = ({ isVisible }) => {
     const [algorithm, setAlgorithm] = useState<string>('kmeans');
     const [loadingMsg, setLoadingMsg] = useState<string>('');
     const [showLoadingCompPS, setShowLoadingCompPS] = useState<boolean>(false);
@@ -53,17 +39,15 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
     const [numPhases, setNumPhases] = useState<number>(3);
     const [numRepresentativePoints, setNumRepresentativePoints] = useState<number>(5);
     const [numIterations, setNumIterations] = useState<number>(10);
-    const [regularization, setRegularization] = useState<number>(1);
-    const [smoothRegularization, setSmoothRegularization] = useState<number>(0.5);
-    const [windowSize, setWindowSize] = useState<number>(3);
+    const [regularization, setRegularization] = useState<number>(0.00001);
+    const [graphRegularization, setGraphRegularization] = useState<number>(0.5);
+    const [windowSize, setWindowSize] = useState<number>(15);
     const [tolerance, setTolerance] = useState<number>(0.01);
 
     const [selectedDimension, setSelectedDimension] = useState<'2D' | '3D'>('2D');
     const [canContinue, setCanContinue] = useState<boolean>(true);
     const [useWholeImage, setUseWholeImage] = useState<boolean>(true);
 
-    const [selectedFeatures, setSelectedFeatures] = useState<string[]>(['Original', 'LBP']);
-    const [selectedMetric, setSelectedMetric] = useState<'euclidean'>('euclidean');
     const [popover, setPopover] = useState<any>(null);
     const [stopProcess, setStopProcess] = useState<boolean>(false);
 
@@ -88,12 +72,10 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
             numRepresentativePoints,
             numIterations,
             regularization,
-            smoothRegularization,
+            graphRegularization,
             windowSize,
             tolerance,
             useWholeImage,
-            selectedFeatures,
-            selectedMetric,
             dimension: selectedDimension.toLowerCase(),
             current_thresh_marker: markerID,
             current_slice: sliceValue,
@@ -104,13 +86,13 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
         try {
             console.log('Sending data to backend:', data);
             setShowLoadingCompPS(true);
-            const result = await sfetch('POST', '/fgc_apply/image', JSON.stringify(data), 'json');
+            const result = await sfetch('POST', '/nmf_apply/image', JSON.stringify(data), 'json');
             console.log('Backend response:', result);
         } catch (error) {
-            console.error('Error applying fgc:', error);
+            console.error('Error applying nmf:', error);
             const typedError = error as Error;
             setShowLoadingCompPS(false);
-            dispatch('fgcError', { error: typedError.message });
+            dispatch('watershedError', { error: typedError.message });
         }
         setShowLoadingCompPS(false);
         dispatch('annotationChanged', null);
@@ -127,12 +109,6 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
     const handleStop = () => {
         setStopProcess(true);
         setShowLoadingCompPS(false);
-    };
-
-    const handleFeatureChange = (feature: string) => {
-        setSelectedFeatures((prev) =>
-            prev.includes(feature) ? prev.filter((f) => f !== feature) : [...prev, feature]
-        );
     };
 
     return (
@@ -163,7 +139,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                     </IonItem>
 
                     <IonItem>
-                        <IonLabel position="floating">Number of Representative Points</IonLabel>
+                        <IonLabel position="floating">Number of atoms</IonLabel>
                         <IonInput
                             type="number"
                             value={numRepresentativePoints}
@@ -175,7 +151,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                             onClick={(e) =>
                                 openPopover(
                                     e,
-                                    'Number of Representative Points: Defines how many anchor points are selected from the dataset to represent the underlying data distribution.'
+                                    'Number of atoms: Defines how many atoms/basis are selected from the dataset to represent the underlying data distribution.'
                                 )
                             }
                         >
@@ -205,7 +181,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                     </IonItem>
 
                     <IonItem>
-                        <IonLabel position="floating">Regularization</IonLabel>
+                        <IonLabel position="floating">Sparsity Regularization</IonLabel>
                         <IonInput
                             type="number"
                             value={regularization}
@@ -215,7 +191,10 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                             slot="end"
                             fill="clear"
                             onClick={(e) =>
-                                openPopover(e, 'Regularization: Prevents degenerate embeddings and improves stability.')
+                                openPopover(
+                                    e,
+                                    'Sparsity Regularization: Improves the sparsity of the embedding, using the p=1/2 norm.'
+                                )
                             }
                         >
                             <IonIcon icon={informationCircleOutline} />
@@ -223,36 +202,20 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                     </IonItem>
 
                     <IonItem>
-                        <IonLabel position="floating">Smooth Regularization</IonLabel>
+                        <IonLabel position="floating">Graph Regularization</IonLabel>
                         <IonInput
                             type="number"
-                            value={smoothRegularization}
-                            onIonChange={(e) => setSmoothRegularization(parseFloat(e.detail.value!))}
+                            value={graphRegularization}
+                            onIonChange={(e) => setGraphRegularization(parseFloat(e.detail.value!))}
                         />
                         <IonButton
                             slot="end"
                             fill="clear"
                             onClick={(e) =>
-                                openPopover(e, 'Smooth Regularization: Improves smooth transitions between classes.')
-                            }
-                        >
-                            <IonIcon icon={informationCircleOutline} />
-                        </IonButton>
-                    </IonItem>
-
-                    {/* Window Size */}
-                    <IonItem>
-                        <IonLabel position="floating">Window Size</IonLabel>
-                        <IonInput
-                            type="number"
-                            value={windowSize}
-                            onIonChange={(e) => setWindowSize(parseInt(e.detail.value!, 10))}
-                        />
-                        <IonButton
-                            slot="end"
-                            fill="clear"
-                            onClick={(e) =>
-                                openPopover(e, 'Window Size: Controls spatial influence between pixels or superpixels.')
+                                openPopover(
+                                    e,
+                                    'Graph Regularization: Improves the embedding, using trace minimization.'
+                                )
                             }
                         >
                             <IonIcon icon={informationCircleOutline} />
@@ -280,44 +243,6 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                         </IonButton>
                     </IonItem>
                 </IonList>
-                <IonList>
-                    <IonItem>
-                        <IonLabel>Features</IonLabel>
-                        <IonSelect
-                            placeholder="Select features"
-                            multiple
-                            value={selectedFeatures}
-                            onIonChange={(e) => setSelectedFeatures(e.detail.value)}
-                        >
-                            {featureOptions.map((feature) => (
-                                <IonSelectOption key={feature} value={feature}>
-                                    {feature}
-                                </IonSelectOption>
-                            ))}
-                        </IonSelect>
-                    </IonItem>
-                </IonList>
-
-                <IonList>
-                    <IonItem>
-                        <IonLabel>Metric</IonLabel>
-                        <IonSelect
-                            interface="popover"
-                            placeholder="Select metric"
-                            value={selectedMetric}
-                            onIonChange={(e) => setSelectedMetric(e.detail.value)}
-                        >
-                            {metricsOptions.map((metric) => (
-                                <IonSelectOption key={metric} value={metric}>
-                                    <IonItem>
-                                        <IonRadio slot="start" value={metric} />
-                                        <IonLabel>{metric}</IonLabel>
-                                    </IonItem>
-                                </IonSelectOption>
-                            ))}
-                        </IonSelect>
-                    </IonItem>
-                </IonList>
 
                 <IonButton expand="block" onClick={handleApply}>
                     Generate Annotations
@@ -331,4 +256,4 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
     );
 };
 
-export default FgcCard;
+export default NMFCard;

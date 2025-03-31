@@ -7,31 +7,9 @@ from operator import itemgetter
 import numpy as np
 from skimage import draw
 from sscAnnotat3D import aux_functions
-
-
-class Label(object):
-    def __init__(self, id, name=None):
-        self.name = name
-        self.id = id
-
-    def __lt__(self, other):
-        return self.id < other.id
-
-    def __str__(self):
-        return "Label(name={}, id={})".format(self.name, self.id)
-
-    def __repr__(self):
-        return str(self)
-
-    def __eq__(self, other):
-        if type(other) is type(self):
-            return self.id == other.id
-        else:
-            return False
-
-    def __hash__(self):
-        return hash(self.id)
-
+from time import time
+from itertools import repeat
+from collections import deque
 
 class AnnotationModule:
     """docstring for Annotation"""
@@ -40,10 +18,9 @@ class AnnotationModule:
 
         logging.debug("Creating Annotation_Canvas")
 
-        self.__image_path = kwargs["path"] if "path" in kwargs else ""
-        aux_functions.log_usage(op_type="load_image", image_path=self.__image_path, image_shape=image_shape)
-
         self.zsize, self.ysize, self.xsize = image_shape
+        self.__annotation_image = (-1) * np.ones((self.zsize, self.ysize, self.xsize), dtype="int16")
+
         self.volume_data = kwargs["image"] if "image" in kwargs else None
         self.xyslice = 0
         self.xzslice = 0
@@ -56,43 +33,14 @@ class AnnotationModule:
         self.order_markers = set()
         # Markers
         self.current_label = -1
-        self.__default_marker_label_selection_type = "from_user"
-        self.set_marker_label_selection_type(self.__default_marker_label_selection_type)
         self.added_labels = []
-
-        self.marker_mode = "add"
-        self.manual_marker_mode = False
 
         self.radius = 5
 
-        # initialize annotation property, therefore creating underscore itens
-        self.annotation = defaultdict(list)
-
-        # list that appends every new annotation in order
-        self.__annotation_list = []
-
-        self.removed_annotation = {}
-
-        # dicitionary with marker id (oder of operation) as entry and label id as key, necessary
-        # for restoration of labeltable in frontend after deleting whole label
-        # and pressing undo operation
-        self.__annot_label_removed = {}
-
         self.create_labels()
 
-        self.selected_cmap = "grays"
-        self.classifier = None
-
-        self.annotation_slice_dict = {}
-
-    # So we need to pay attention if anything broke on the code
-    @property
-    def marker_mode_support(self):
-        return self.classifier.marker_mode_support
-
-    @marker_mode_support.setter
-    def marker_mode_support(self, val):
-        pass
+        self.annotation_slice_dict = {0: set(), 1: set(), 2: set()}
+        self.annotation_history = deque(maxlen=5)
 
     @property
     def clipping_plane_dist(self):
@@ -102,22 +50,9 @@ class AnnotationModule:
     def clipping_plane_dist(self, val):
         self.__clipping_plane_dist = val
 
-    @property
-    def annotation(self):
-        return self.__annotation
-
-    @annotation.setter
-    def annotation(self, val):
-        self.__annotation = val
-
-        self.__annotation_image = (-1) * np.ones((self.zsize, self.ysize, self.xsize), dtype="int16")
-
-        for c, v in self.__annotation.items():
-            self.__annotation_image[c] = v[-1]
 
     def initialize(self):
         self.annotation = {}
-        self.removed_annotation = {}
 
         self.set_slice_xy(0, False)
         self.set_slice_xz(0, False)
@@ -142,21 +77,6 @@ class AnnotationModule:
         self.clipping_plane_grid[:, :, 0] = grid_x
         self.clipping_plane_grid[:, :, 1] = grid_y
 
-    def reload(self, image, **kwargs):
-        logging.info("Reloading annotation class")
-
-        self.__image_path = kwargs["path"] if "path" in kwargs else ""
-        aux_functions.log_usage(op_type="load_image", image_path=self.__image_path, image_shape=image.shape)
-
-        self.initialize()
-
-        self.create_labels()
-
-        self.__default_marker_label_selection_type = "from_user"
-        self.set_marker_label_selection_type(self.__default_marker_label_selection_type)
-
-        logging.debug("Reloading complete for annotation class")
-        
     def update_image_shape(self, new_image_shape):
         """
         Update the shape of the image and reinitialize relevant attributes.
@@ -333,6 +253,19 @@ class AnnotationModule:
     def get_current_slice(self, vol):
         return self.get_slice(vol, self.current_axis)
 
+    def _get_current_slice_indexing(self):
+            s = [slice(None, None, None), slice(None, None, None), slice(None, None, None)]
+            slice_num = [self.xyslice, self.xzslice, self.yzslice]
+            s[self.current_axis] = slice_num[self.current_axis]
+            return s
+
+    ##maybe add a remove slice annotated
+    def add_slice_annotated(self):
+        slice_num = [self.xyslice, self.xzslice, self.yzslice]
+        self.annotation_slice_dict[self.current_axis].add(slice_num[self.current_axis])
+        return (self.current_axis, slice_num[self.current_axis])
+
+    
     def get_slice(self, vol, axis):
         if axis == 0:
             try:
@@ -378,9 +311,6 @@ class AnnotationModule:
     def annotation_image(self):
         return self.__annotation_image
 
-    def set_marker_label_selection_type(self, type):
-        self.marker_label_selection_type = type
-
     def get_labels_object(self):
         return self.added_labels
 
@@ -391,34 +321,40 @@ class AnnotationModule:
     def get_labels(self):
         return [l.id for l in self.added_labels]
 
-    def include_labels(self, labels):
-        new_labels = set(labels).union(set([l.id for l in self.added_labels]))
-        self.added_labels = [Label(l) for l in sorted(new_labels)]
-
-    def add_label(self, name=None, new_base_label=0):
-        # Increasing the maximum available label id by 1
-        added_labels = [l.id for l in self.added_labels]
-        new_label = new_base_label + (np.max(added_labels) if len(self.added_labels) > 0 else 0) + 1
-
-        self.added_labels.append(Label(new_label, name))
-
     def remove_label(self, label_id: int, marker_id: int):
 
         # updating the marker id, the remove label is considered an erase (of label) action
         self.order_markers.add(marker_id)
 
-        self.__annot_label_removed[marker_id] = label_id
-
-        new_annotation = []
+        slices_coords_removed = []
         # iteration through all the dict to get last label added equal to label_id coords
-        for coord3D, label_list in self.__annotation.items():
-            if label_list[-1] == label_id:
-                # take last label from this coords, garantee to have since it's on the list
-                self.__annotation[coord3D].append(-1)
-                self.__annotation_image[coord3D] = -1
-                new_annotation.append(coord3D)
+        for axis, slice_nums in self.annotation_slice_dict.items():
+            for slice_num in slice_nums:
+                # Extract the appropriate slice along the given axis
+                annot_slice = np.take(self.__annotation_image, slice_num, axis=axis)
+                # Find where the label is located at
+                bool_mask = annot_slice == label_id
 
-        self.__annotation_list.append(new_annotation)
+                rr, cc = np.nonzero(bool_mask)
+                fixed_slice = np.zeros_like(rr)
+                fixed_slice[:] = slice_num
+                # Depending on the axis, build the coordinate tuples accordingly
+                if axis == 0:
+                    coords = (fixed_slice, rr, cc)
+                    slices_coords_removed.append(coords)
+                    self.__annotation_image[coords] = -1
+                elif axis == 1:
+                    coords = (fixed_slice, rr, cc)
+                    slices_coords_removed.append(coords)
+                    self.__annotation_image[coords] = -1
+                elif axis == 2:
+                    coords = (rr, cc, fixed_slice)
+                    slices_coords_removed.append(coords)
+                    self.__annotation_image[coords] = -1
+                else:
+                    raise ValueError(f"Unsupported axis: {axis}")
+        
+        self.annotation_history.append(['label_removed', slices_coords_removed, label_id])
 
         # update the label list
         added_labels = [l for l in self.added_labels if l.id != label_id]
@@ -426,13 +362,10 @@ class AnnotationModule:
 
         ###end###
 
-    def erase_all_markers(self):
-
-        self.annotation = defaultdict(list)
+    def erase_all(self):
         self.order_markers = set()
-
-    def clear_removed_data(self):
-        self.removed_annotation = {}
+        self.added_labels = []
+        self.__annotation_image = (-1) * np.ones((self.zsize, self.ysize, self.xsize), dtype="int16")
 
     def get_radius(self):
         return self.radius
@@ -463,30 +396,22 @@ class AnnotationModule:
             marker_to_remove = max(self.order_markers)
             print("marker_to_remove", marker_to_remove)
             self.order_markers.remove(marker_to_remove)
+            
+            if len(self.annotation_history) > 0:
+                # get last annoted coords
+                last_activity = self.annotation_history.pop()
 
-            # we need to tell the frontend that the label has returned
-            if marker_to_remove in self.__annot_label_removed.keys():
-                label_restored = self.__annot_label_removed[marker_to_remove]
-                del self.__annot_label_removed[marker_to_remove]
-            else:
-                label_restored = -1
-
-            # get last annoted coords
-            coords_to_remove = self.__annotation_list.pop()
-
-            for coord3D in coords_to_remove:
-
-                # take last label from this coords, garantee to have since it's on the list
-                self.__annotation[coord3D].pop()
-
-                # if there is one label, it writes as the previous label, otherwise it will write as -1
-                if len(self.__annotation[coord3D]) > 0:
-                    self.__annotation_image[coord3D] = self.__annotation[coord3D][-1]
+                # we need to tell the frontend that the label has returned
+                if 'label_removed' in last_activity:
+                    _ , slices_coords_removed, label_restored = last_activity
+                    for coords_removed in slices_coords_removed:
+                        self.__annotation_image[coords_removed] = label_restored
                 else:
-                    self.__annotation_image[coord3D] = -1
-                    del self.__annotation[coord3D]
+                    label_restored = -1
+                    get_slice, last_slice = last_activity
+                    self.__annotation_image[get_slice] = last_slice
 
-            return marker_to_remove, label_restored
+                return marker_to_remove, label_restored
         return None, -1
 
     @property
@@ -505,28 +430,18 @@ class AnnotationModule:
 
         if label_mask.ndim == 2:
             # Get the coordinates where the mask is non-zero to draw
-            rr,cc = np.nonzero(label_mask)
-
-            new_annotation = []
-            for coord2D in zip(rr,cc):
-                coord3D = self.get_current_slice_3d_coord(coord2D)
-                self.__annotation[coord3D].append(marker_lb)
-                self.__annotation_image[coord3D] = marker_lb
-                #save the coords
-                new_annotation.append(coord3D)
+            self.add_slice_annotated()
+            get_slice = self._get_current_slice_indexing()
+            self.annotation_history.append([get_slice, self.__annotation_image[get_slice].copy()])
+            self.__annotation_image[get_slice][label_mask] = marker_lb
 
         else:
-            rr,cc,dd = np.nonzero(label_mask)
-            new_annotation = []
-            for coord3D in zip(rr,cc,dd):
-                self.__annotation[coord3D].append(marker_lb)
-                self.__annotation_image[coord3D] = marker_lb
-                #save the coords
-                new_annotation.append(coord3D)
-
-        self.__annotation_list.append(new_annotation)
+            self.__annotation_image[label_mask] = marker_lb
 
     def multilabel_updated(self, new_annot, marker_id, new_click = True, annot_mask = None):
+        #if there are no changes do nothing
+        if annot_mask is not None and not annot_mask.any():
+            return
         
         # Undo previous iteration        
         if new_click == False:
@@ -536,65 +451,13 @@ class AnnotationModule:
         self.order_markers.add(marker_id)
 
         if new_annot.ndim == 2:
-            # Get the coordinates where the mask is different to draw
-            old_annot = self.get_current_slice(self.__annotation_image)
-            if annot_mask is not None:
-                 rr,cc = np.nonzero(annot_mask)
-            else:
-                rr,cc = np.nonzero(old_annot!=new_annot)
-
-            new_annotation = []
-            for coord2D in zip(rr,cc):
-                marker_lb = new_annot[coord2D]
-                coord3D = self.get_current_slice_3d_coord(coord2D)
-                self.__annotation[coord3D].append(marker_lb)
-                self.__annotation_image[coord3D] = marker_lb
-                #save the coords
-                new_annotation.append(coord3D)
-
+            # Get the coordinates where the mask is non-zero to draw
+                self.add_slice_annotated()
+                get_slice = self._get_current_slice_indexing()
+                self.annotation_history.append([get_slice, self.__annotation_image[get_slice].copy()])
+                self.__annotation_image[get_slice] = new_annot
         else:
-            old_annot = self.__annotation_image
-            rr,cc,dd = np.nonzero(old_annot!=new_annot)
-            new_annotation = []
-            for coord3D in zip(rr,cc,dd):
-                marker_lb = new_annot[coord3D]
-                self.__annotation[coord3D].append(marker_lb)
-                self.__annotation_image[coord3D] = marker_lb
-                #save the coords
-                new_annotation.append(coord3D)
-
-        self.__annotation_list.append(new_annotation)
-
-    def labelmask_multiupdate(self, label_masks, marker_lbs, marker_id, new_click):
-
-        # Undo previous iteration        
-        if new_click == False:
-            self.undo()
-
-        ## Updating the markers with the current marker id ##
-        self.order_markers.add(marker_id)
-        
-        new_annotation = []
-        for label_mask, marker_lb in zip(label_masks, marker_lbs):
-            if label_mask.ndim == 2:
-                # Get the coordinates where the mask is non-zero to draw
-                rr,cc = np.nonzero(label_mask)
-                for coord2D in zip(rr,cc):
-                    coord3D = self.get_current_slice_3d_coord(coord2D)
-                    self.__annotation[coord3D].append(marker_lb)
-                    self.__annotation_image[coord3D] = marker_lb
-                    #save the coords
-                    new_annotation.append(coord3D)
-
-            else:
-                rr,cc,dd = np.nonzero(label_mask)
-                for coord3D in zip(rr,cc,dd):
-                    self.__annotation[coord3D].append(marker_lb)
-                    self.__annotation_image[coord3D] = marker_lb
-                    #save the coords
-                    new_annotation.append(coord3D)
-
-        self.__annotation_list.append(new_annotation)
+            self.__annotation_image = new_annot
 
     def draw_marker_curve(self, cursor_coords, marker_id, marker_lb, erase=False):
 
@@ -610,13 +473,13 @@ class AnnotationModule:
         disk_mask[rr, cc] = True
 
         ### Create a mask image for adding the drawings ###
-        height, width = self.get_current_slice_shape()
-        image = np.zeros((width, height), dtype=np.bool_)
+        width, height = self.get_current_slice_shape()
+        pencil_drawing_bool = np.zeros((width, height), dtype=np.bool_)
 
         for coord in cursor_coords:
             # check if its valid coord, invert for y (or z),x mode. Coord inputs are in x,y (or z).
             if self.valid_coords(coord[::-1]):
-                x, y = list(map(int, np.floor(coord)))
+                y, x = list(map(int, np.floor(coord)))
                 # ensure the drawing of the disk is within the image range
                 x_start = max(0, x - radius)
                 y_start = max(0, y - radius)
@@ -629,29 +492,15 @@ class AnnotationModule:
                 mask_y_end = radius + (y_end - y)
 
                 # make the drawing
-                image[x_start:x_end, y_start:y_end] += disk_mask[mask_x_start:mask_x_end, mask_y_start:mask_y_end]
-
-        # print('first {}'.format(time()-start))
-
-        rr, cc = np.nonzero(image)
-
-        # print('second {}'.format(time()-start))
-
-        # all the coords are valid, therefore no need to use the self.get_valid_coords
+                pencil_drawing_bool[x_start:x_end, y_start:y_end] += disk_mask[mask_x_start:mask_x_end, mask_y_start:mask_y_end]
 
         if erase:
             marker_lb = -1
 
-        new_annotation = []
-        # since get_current_slice_3D gives, (z,y,x) coords, we need to provide cc,rr coords not rr,cc
-        for coord2D in zip(cc, rr):
-            coord3D = self.get_current_slice_3d_coord(coord2D)
-            self.__annotation[coord3D].append(marker_lb)
-            self.__annotation_image[coord3D] = marker_lb
-            # save the coords
-            new_annotation.append(coord3D)
-
-        self.__annotation_list.append(new_annotation)
+        self.add_slice_annotated()
+        get_slice = self._get_current_slice_indexing()
+        self.annotation_history.append([get_slice, self.__annotation_image[get_slice].copy()])
+        self.__annotation_image[get_slice][pencil_drawing_bool] = marker_lb
 
         # print('draw backend time {}'.format(time()-start))
 
@@ -688,91 +537,68 @@ class AnnotationModule:
                 image[x_start:x_end, y_start:y_end] += disk_mask[mask_x_start:mask_x_end, mask_y_start:mask_y_end]
         
         return image
+
+    def get_annotation_slice_dict(self):
+        total_subitems = sum(len(subset) for subset in self.annotation_slice_dict.values())
+        #return empty dict in case there no annotation
+        if total_subitems == 0:
+            return {}
+        else:
+            return self.annotation_slice_dict
+    
+    def set_annotation_slice_dict(self, annotation_slice_dict):
+        self.annotation_slice_dict = annotation_slice_dict
         
+    def get_annotation_coords(self):
 
-    def __update_annotation_image(self, annotation, label=None):
-        if label is not None:
-            for c in annotation:
-                self.__annotation_image[c] = label
-        else:
-            for c, v in annotation.items():
-                self.__annotation_image[c] = v[-1]
-
-    def get_annotation(self):
-        return self.annotation
-
-    def set_annotation(self, label_annotation: dict):
-        self.annotation = defaultdict(list, label_annotation)
-        return self.annotation
-
-    def update_annotation(self, annotations):
-        # Drawing markers on top of the marker label/id images
-        labels = aux_functions.get_label_ids(annotations)
-
-        marker_ids = aux_functions.get_marker_ids(annotations)
-        min_new_mk_id = min(marker_ids) if len(marker_ids) > 0 else 0
-
-        marker_ids = aux_functions.get_marker_ids(self.annotation)
-        max_old_mk_id = max(marker_ids) if len(marker_ids) > 0 else 0
-
-        logging.debug("Old len annotation: {}, new annotation len: {}".format(len(self.annotation), len(annotations)))
-        # Updating annotations and ensuring that the marker ids follow an ever growing sequence
-        self.annotation.update({(k, (v[0], v[1] - min_new_mk_id + max_old_mk_id + 1)) for k, v in annotations.items()})
-        self.__update_annotation_image(self.annotation)
-
-        logging.debug(
-            "Updated len annotation: {}, new annotation len: {}".format(len(self.annotation), len(annotations))
-        )
-
-        # updating the current marker id
-        marker_ids = aux_functions.get_marker_ids(self.annotation)
-        for marker in marker_ids:
-            self.order_markers.add(marker)
-
-        for i in sorted(labels):
-            if i not in self.added_labels:
-                self.added_labels.append(Label(i))
-        self.added_labels = sorted(self.added_labels)
-
-    def save_annotation(self, path):
-
-        if len(self.annotation) > 0:
-            with open(path, "wb") as f:
-                pickle.dump(self.annotation, f)
-                return True
-        else:
-            raise Exception("Empty annotation file. Please annotate the image before saving.")
-
-    def load_annotation(self, path):
-        success = False
-
-        annotation = {}
-
-        with open(path, "rb") as f:
-            try:
-                annotation = pickle.load(f)
-            finally:
-                max_coords = np.zeros(3, dtype="int32")
-                # Looking up maximum coordinates
-                for coords in annotation:
-                    c = np.array(coords, dtype="int32")
-                    max_coords = np.maximum(max_coords, c)
-
-                if np.all(max_coords < np.array((self.zsize, self.ysize, self.xsize))):
-                    logging.debug("Loading annotation: {}".format(len(annotation)))
-                    self.update_annotation(annotation)
-                    success = True
+        # Accumulate coordinates separately for each axis (z, y, x)
+        z_coords, y_coords, x_coords = [], [], []
+        for axis, slice_nums in self.annotation_slice_dict.items():
+            for slice_num in slice_nums:
+                # Extract the appropriate slice along the given axis.
+                annot_slice = np.take(self.__annotation_image, slice_num, axis=axis)
+                # Find where the condition holds.
+                rr, cc = np.nonzero(annot_slice >= 0)
+                # Create an array filled with the slice number.
+                fixed_slice = np.full(rr.shape, slice_num)
+                
+                if axis == 0:
+                    # For axis 0, the fixed coordinate is z.
+                    z_coords.append(fixed_slice)
+                    y_coords.append(rr)
+                    x_coords.append(cc)
+                elif axis == 1:
+                    # For axis 1, the fixed coordinate is y.
+                    z_coords.append(rr)
+                    y_coords.append(fixed_slice)
+                    x_coords.append(cc)
+                elif axis == 2:
+                    # For axis 2, the fixed coordinate is x.
+                    z_coords.append(rr)
+                    y_coords.append(cc)
+                    x_coords.append(fixed_slice)
                 else:
-                    raise Exception(
-                        "Annotated image coordinates do not match the current image! (Maximum annotated coordinates: %s. Image size %s)"
-                        % (str(max_coords), str(self.volume_data.shape))
-                    )
+                    raise ValueError(f"Unsupported axis: {axis}")
 
-        if success:
-            aux_functions.log_usage(
-                op_type="load_annotation",
-                num_annotated_voxels=len(annotation),
-                num_selected_markers=len(np.unique(list(map(itemgetter(1), annotation.values())))),
-            )
+        # Concatenate the lists into single NumPy arrays for each dimension.
+        z_all = np.concatenate(z_coords)
+        y_all = np.concatenate(y_coords)
+        x_all = np.concatenate(x_coords)
 
-        return success
+        # Use the tuple of coordinate arrays for advanced indexing.
+        annotation_labels = self.__annotation_image[(z_all, y_all, x_all)]
+
+        return (z_all, y_all, x_all), annotation_labels
+
+    def set_annotation_from_coords(self, annotation_coords, annotation_labels):
+        self.__annotation_image[annotation_coords] = annotation_labels
+
+
+    def set_annotation_from_dict(self, annotation_dict):
+        for coord3D, marker_lb in annotation_dict.items():
+            marker_lb = marker_lb[0]
+            self.__annotation_image[coord3D] = marker_lb
+            
+    def set_annotation_image(self, annotation_image):
+        self.__annotation_image = annotation_image
+
