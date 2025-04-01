@@ -147,7 +147,8 @@ def open_annot():
                 label_names.append({
                     "labelName": "Label {}".format(label) if label > 0 else "Background",
                     "id": label,
-                    "color": []
+                    "color": [],
+                    "alpha": 1
                 })
 
     else:

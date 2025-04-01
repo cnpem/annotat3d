@@ -396,7 +396,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         <IonLabel position="stacked">Image Path</IonLabel>
                                         <IonInput
                                             clearInput
-                                            placeholder={'/path/to/file.tif, .tiff, .raw or .b'}
+                                            placeholder={'file.tif, .tiff, .raw or .b'}
                                             value={pathSaveFiles.imagePath}
                                             onIonChange={(e: CustomEvent) =>
                                                 setSavePathFiles({
@@ -442,7 +442,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         <IonLabel position="stacked">{'Superpixel Path'}</IonLabel>
                                         <IonInput
                                             clearInput
-                                            placeholder={'/path/to/Superpixel.tif, .tiff, .raw or .b'}
+                                            placeholder={'Superpixel.tif, .tiff, .raw or .b'}
                                             value={pathSaveFiles.superpixelPath}
                                             onIonChange={(e: CustomEvent) =>
                                                 setSavePathFiles({
@@ -468,7 +468,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         <IonLabel position="stacked">{'Label image'}</IonLabel>
                                         <IonInput
                                             clearInput
-                                            placeholder={'/path/to/Label.tif, .tiff, .raw or .b'}
+                                            placeholder={'Label.tif, .tiff, .raw or .b'}
                                             value={pathSaveFiles.labelPath}
                                             onIonChange={(e: CustomEvent) =>
                                                 setSavePathFiles({
@@ -494,7 +494,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         <IonLabel position="stacked">{'Annotation file'}</IonLabel>
                                         <IonInput
                                             clearInput
-                                            placeholder={'/path/to/Annotation.pkl'}
+                                            placeholder={'Annotation.pkl'}
                                             value={pathSaveFiles.annotPath}
                                             onIonChange={(e: CustomEvent) =>
                                                 setSavePathFiles({
@@ -520,7 +520,7 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                         <IonLabel position="stacked">Classifier Path</IonLabel>
                                         <IonInput
                                             clearInput
-                                            placeholder={'/path/to/classifier.model'}
+                                            placeholder={'classifier.model'}
                                             value={pathSaveFiles.classificationPath}
                                             onIonChange={(e: CustomEvent) =>
                                                 setSavePathFiles({
