@@ -609,11 +609,13 @@ class AnnotationModule:
         - Add that value to the slices dictionary for that axis.
         - Eliminate all points with that value along the selected axis.
         """
-        coords = list(annotation_dict.items())
+        coords = list(annotation_dict.keys())
         remaining = coords.copy()
         annotation_slice_dict = {0: set(), 1: set(), 2: set()}
         # Convert the list of coordinates to a NumPy array
         arr = np.array(coords)
+        print(arr)
+        print(arr.shape)
         
         # Initialize the output dictionary
         annotation_slice_dict = {0: set(), 1: set(), 2: set()}
