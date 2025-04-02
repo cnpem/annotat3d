@@ -13,4 +13,4 @@ From: gitregistry.cnpem.br/gcd/data-science/segmentation/annotat3d:latest
     python3 -m pip install gunicorn
 
 %apprun Annotat3D
-    gunicorn --threads 32 --workers 1 sscAnnotat3D.app:app $@
+    gunicorn --timeout 3600 --threads 32 --workers 1 sscAnnotat3D.app:app $@

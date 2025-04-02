@@ -9,4 +9,4 @@ def fill_lasso(width, height, points):
     fill_color = 1  # Black fill (grayscale)
     cv2.drawContours(image, [contour], -1, fill_color, thickness=cv2.FILLED)
 
-    return image > 0
+    return image

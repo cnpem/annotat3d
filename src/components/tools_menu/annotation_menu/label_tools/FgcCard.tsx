@@ -17,9 +17,6 @@ import {
     IonIcon,
     IonContent,
     IonToggle,
-    IonCheckbox,
-    IonSelect,
-    IonSelectOption,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
 import { sfetch } from '../../../../utils/simplerequest';
@@ -29,17 +26,6 @@ import LoadingComponent from '../../utils/LoadingComponent';
 interface FGCCardProps {
     isVisible: boolean;
 }
-const featureOptions = ['Original', 'LBP', 'Sobel', 'Superpixel'];
-const metricsOptions = [
-    'euclidean',
-    'cityblock',
-    'cosine',
-    'canberra',
-    'correlation',
-    'chebyshev',
-    'jensenshannon',
-    'braycurtis',
-];
 
 const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
     const [algorithm, setAlgorithm] = useState<string>('kmeans');
@@ -52,20 +38,17 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
 
     const [numPhases, setNumPhases] = useState<number>(3);
     const [numRepresentativePoints, setNumRepresentativePoints] = useState<number>(5);
-    const [numIterations, setNumIterations] = useState<number>(10);
+    const [numIterations, setNumIterations] = useState<number>(100);
     const [regularization, setRegularization] = useState<number>(1);
     const [smoothRegularization, setSmoothRegularization] = useState<number>(0.5);
     const [windowSize, setWindowSize] = useState<number>(3);
     const [tolerance, setTolerance] = useState<number>(0.01);
 
     const [selectedDimension, setSelectedDimension] = useState<'2D' | '3D'>('2D');
-    const [canContinue, setCanContinue] = useState<boolean>(true);
-    const [useWholeImage, setUseWholeImage] = useState<boolean>(true);
+    const [canContinue, setCanContinue] = useState<boolean>(false);
+    const [useWholeImage, setUseWholeImage] = useState<boolean>(false);
 
-    const [selectedFeatures, setSelectedFeatures] = useState<string[]>(['Original', 'LBP']);
-    const [selectedMetric, setSelectedMetric] = useState<'euclidean'>('euclidean');
     const [popover, setPopover] = useState<any>(null);
-    const [stopProcess, setStopProcess] = useState<boolean>(false);
 
     if (!isVisible) return null;
 
@@ -74,8 +57,6 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
             setCanContinue(true);
             return;
         }
-
-        setStopProcess(false); // Reset stop flag
 
         const sliceValue = parseInt(sessionStorage.getItem('sliceValue') || '0', 10);
         const sliceName = JSON.parse(sessionStorage.getItem('sliceName') || '"XY"');
@@ -92,8 +73,6 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
             windowSize,
             tolerance,
             useWholeImage,
-            selectedFeatures,
-            selectedMetric,
             dimension: selectedDimension.toLowerCase(),
             current_thresh_marker: markerID,
             current_slice: sliceValue,
@@ -107,10 +86,10 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
             const result = await sfetch('POST', '/fgc_apply/image', JSON.stringify(data), 'json');
             console.log('Backend response:', result);
         } catch (error) {
-            console.error('Error applying fgc:', error);
+            console.error('Error applying watershed:', error);
             const typedError = error as Error;
             setShowLoadingCompPS(false);
-            dispatch('fgcError', { error: typedError.message });
+            dispatch('watershedError', { error: typedError.message });
         }
         setShowLoadingCompPS(false);
         dispatch('annotationChanged', null);
@@ -124,23 +103,29 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
         setPopover(null);
     };
 
-    const handleStop = () => {
-        setStopProcess(true);
-        setShowLoadingCompPS(false);
-    };
-
-    const handleFeatureChange = (feature: string) => {
-        setSelectedFeatures((prev) =>
-            prev.includes(feature) ? prev.filter((f) => f !== feature) : [...prev, feature]
-        );
-    };
-
     return (
         <IonCard style={{ display: isVisible ? 'block' : 'none' }}>
             <IonCardContent>
                 <IonList>
                     <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
 
+                    {/* Separate Use Whole Image Toggle */}
+                    <IonItem>
+                        <IonLabel>Use Whole Image</IonLabel>
+                        <IonToggle checked={useWholeImage} onIonChange={(e) => setUseWholeImage(e.detail.checked)} />
+                        <IonButton
+                            slot="end"
+                            fill="clear"
+                            onClick={(e) =>
+                                openPopover(
+                                    e,
+                                    'Use Whole Image: When enabled, the algorithm will find the anchor points using the whole image, instead of the annotations.'
+                                )
+                            }
+                        >
+                            <IonIcon icon={informationCircleOutline} />
+                        </IonButton>
+                    </IonItem>
                     <IonItem>
                         <IonLabel position="floating">Number of Phases</IonLabel>
                         <IonInput
@@ -251,9 +236,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                         <IonButton
                             slot="end"
                             fill="clear"
-                            onClick={(e) =>
-                                openPopover(e, 'Window Size: Controls spatial influence between pixels or superpixels.')
-                            }
+                            onClick={(e) => openPopover(e, 'Window Size: Controls spatial influence between pixels.')}
                         >
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
@@ -278,44 +261,6 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                         >
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
-                    </IonItem>
-                </IonList>
-                <IonList>
-                    <IonItem>
-                        <IonLabel>Features</IonLabel>
-                        <IonSelect
-                            placeholder="Select features"
-                            multiple
-                            value={selectedFeatures}
-                            onIonChange={(e) => setSelectedFeatures(e.detail.value)}
-                        >
-                            {featureOptions.map((feature) => (
-                                <IonSelectOption key={feature} value={feature}>
-                                    {feature}
-                                </IonSelectOption>
-                            ))}
-                        </IonSelect>
-                    </IonItem>
-                </IonList>
-
-                <IonList>
-                    <IonItem>
-                        <IonLabel>Metric</IonLabel>
-                        <IonSelect
-                            interface="popover"
-                            placeholder="Select metric"
-                            value={selectedMetric}
-                            onIonChange={(e) => setSelectedMetric(e.detail.value)}
-                        >
-                            {metricsOptions.map((metric) => (
-                                <IonSelectOption key={metric} value={metric}>
-                                    <IonItem>
-                                        <IonRadio slot="start" value={metric} />
-                                        <IonLabel>{metric}</IonLabel>
-                                    </IonItem>
-                                </IonSelectOption>
-                            ))}
-                        </IonSelect>
                     </IonItem>
                 </IonList>
 

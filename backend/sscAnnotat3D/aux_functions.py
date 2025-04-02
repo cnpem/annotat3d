@@ -146,6 +146,176 @@ def save_3d_image_to_shared_memory(image, xsize, ysize, zsize, dtype):
     image = spin_img.spin_save_image_to_shared_memory(image, xsize, ysize, zsize, dtype)
 
 
+# def load_3d_image_widget(path,
+# xsize=None,
+# ysize=None,
+# zsize=None,
+# out_dtype=None,
+# lock_size=False,
+# parent=None):
+# """
+# This function gets all the image information from a window that a user place values for X, Y, Z and dtype of
+# an image .raw or .b
+
+# Args:
+# path (string): filename path
+# xsize (int): the image x size
+# ysize (int): the image y size. In this actual point, y is not used
+# zsize (int): the image z size. In this actual point, z is not used
+# out_dtype (string): dtype image. In this actual point, out_dtype is not used
+# lock_size (bool): it's a flog to lock the window and places only the X, Y and Z values got from the load image.
+# parent (object): It's an object pass to the raw_widget. The default value is None
+
+# Returns:
+# array: Return the image loaded if everything goes well and None otherwise
+
+# """
+
+# extension_raw = ['.raw', '.b']
+# filename, extension = os.path.splitext(path)
+# x = y = z = dtype = None
+# error_msg = None
+
+# if extension.lower() in extension_raw:
+# volume_props, error_msg = io_info.get_volume_info(path)
+
+# if error_msg is not None:
+# logger.warning(error_msg)
+# utils.dialog_message(title='', message=error_msg, type='warning')
+
+# xsize = xsize if xsize is not None else 0
+# ysize = ysize if ysize is not None else 0
+# zsize = zsize if zsize is not None else 0
+# dtype = dtype if dtype is not None else 0
+
+# else:
+# xsize = xsize if xsize is not None else volume_props['shape'][2]
+# ysize = ysize if ysize is not None else volume_props['shape'][1]
+# zsize = zsize if zsize is not None else volume_props['shape'][0]
+# dtype = dtype if dtype is not None else volume_props['dtype']
+
+# file_info = {}
+# widget = raw_widget(filename,
+# extension,
+# file_info,
+# parent=parent,
+# xsize=xsize,
+# ysize=ysize,
+# zsize=zsize,
+# dtype=dtype,
+# lock_size=lock_size)
+# try:
+# if widget.exec_():
+# x = file_info['x']
+# y = file_info['y']
+# z = file_info['z']
+# filename = file_info['filename']
+# extension = file_info['extension']
+# dtype = file_info['type']
+# except Exception as e:
+# logger.exception(f'Invalid image information: {str(e)}')
+# else:
+# if x is not None:
+
+# while (x * y * z * np.dtype(dtype).itemsize !=
+# os.path.getsize(path)):
+
+# war_window = QMessageBox()
+# war_window.setIcon(QMessageBox.Warning)
+# war_window.setWindowTitle(
+# "Information bytes doesn't match !!!")
+# war_window.setText(
+# "The input image doesn't match with the total image size. Do you wish to change this values ?"
+# )
+# war_window.setStandardButtons(QMessageBox.Yes
+# | QMessageBox.No)
+
+# if (war_window.exec_() == QMessageBox.Yes):
+
+# try:
+# if widget.exec_():
+# x = file_info['x']
+# y = file_info['y']
+# z = file_info['z']
+# filename = file_info['filename']
+# extension = file_info['extension']
+# dtype = file_info['type']
+# except Exception as e:
+# logger.exception(
+# f'Invalid image information: {str(e)}')
+
+# else:
+
+# break
+
+# image, _ = io.read_volume(path,
+# "numpy",
+# dtype=dtype,
+# shape=(z, y, x))
+
+# return image if out_dtype is None else image.astype(out_dtype)
+# else:
+# image, _ = io.read_volume(path, "numpy")
+
+# return image if out_dtype is None else image.astype(out_dtype)
+
+# return None
+
+
+# def load_image_hdf5_widget(path, timepoint=None, parent=None):
+# """
+# Function that loads a hdf5 file and return an image
+
+# Args:
+# path (string): it's the image path
+# timepoint (int): it's the index which slice the user want. In this actual stage, channel does nothing in this function
+# parent (object): it's an object pass to the raw_widget. The default value is None. In the actual point, this variable is not being used
+
+# Returns:
+# array: returns a numpy.array image if everything goes well and None otherwise
+
+# """
+# filename, extension = os.path.splitext(path)
+
+# file_info = {}
+# logger.info('create hdf5 widget')
+# widget = hdf5_widget(filename, extension, file_info)
+# timepoint = None
+# try:
+# logger.debug('exec widget')
+# if widget.exec_():
+# logger.debug('executed widget')
+# logger.info(file_info)
+# timepoint = file_info['timepoint']
+# scan = file_info['scan']
+# except Exception as e:
+# logger.exception(f'Invalid image information: {str(e)}')
+# else:
+# if timepoint is not None:
+# # image, _min, _max = load_image_hdf5(path, timepoint=timepoint, scan=scan)
+# image, _ = io.read_volume(path,
+# "numpy",
+# timepoint=timepoint,
+# scan=scan)
+
+# if np.issubdtype(image.dtype, np.floating):
+# utils.dialog_message(
+# title='',
+# message=
+# 'This image is a floating type. To work with Annotat3D the image will be rescaled to integer.',
+# type='warning')
+
+# _min, _max = _min_max(image)
+# image -= _min
+# image /= (_max - _min)
+# image *= 2**15
+# image = image.astype('uint16')
+
+# return image
+
+# return None
+
+
 # TODO this can be slow in big data
 # but should be removed with float support on sscPySpin
 def _min_max(data):
