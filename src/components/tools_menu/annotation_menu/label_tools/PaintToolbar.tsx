@@ -33,6 +33,7 @@ import WatershedCard from './WatershedCard';
 import RemoveIslandsCard from './RemoveIslandsCard';
 import QuantificationCard from './QuantificationCard';
 import FgcCard from './FgcCard'; // Ensure FgcCard is imported
+import ClusteringCard from './ClusteringCard';
 import { dispatch } from '../../../../utils/eventbus';
 
 const PaintToolbar: React.FC = () => {
@@ -129,10 +130,10 @@ const PaintToolbar: React.FC = () => {
                         <IonNote className="small-note">Quantification</IonNote>
                     </IonCol>
                     <IonCol className="ion-text-center">
-                        <IonButton onClick={() => handleButtonClick('fgc')} title="Fgc Tool">
+                        <IonButton onClick={() => handleButtonClick('Clustering')} title="Clustering">
                             <IonIcon icon={gitNetworkOutline} />
                         </IonButton>
-                        <IonNote className="small-note">Fgc Tool</IonNote>
+                        <IonNote className="small-note">Clustering tool</IonNote>
                     </IonCol>
                 </IonRow>
             </IonGrid>
@@ -170,8 +171,8 @@ const PaintToolbar: React.FC = () => {
                     <QuantificationCard isVisible={activeCard === 'quantification'} />
                 </div>
 
-                <div className={activeCard === 'fgc' ? 'visible' : 'hidden'}>
-                    <FgcCard isVisible={activeCard === 'fgc'} />
+                <div className={activeCard === 'Clustering' ? 'visible' : 'hidden'}>
+                    <ClusteringCard isVisible={activeCard === 'Clustering'} />
                 </div>
             </div>
         </IonCardContent>
