@@ -34,7 +34,7 @@ def morphology_apply_2D():
     annot_module.set_current_slice(slice_num)
 
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
-    annotation_slice = annot_module.annotation_image[slice_range]
+    annotation_slice = annot_module.annotation_image[slice_range].copy() # need to copy to not change the annotation in memmory
     annotation_slice_3d = np.ascontiguousarray(annotation_slice.reshape((1, *annotation_slice.shape)))
     binary_mask_3d = (annotation_slice_3d == label).astype('int32')
 
@@ -65,7 +65,7 @@ def morphology_apply_2D():
 
         output_mask_3d = operations[operation](binary_mask_3d, kernel_3D, gpuMemory=0.41)
 
-    # Create masks
+    # Create masks NOTE: This operation is a time bottleneck
     write_mask = (binary_mask_3d == 0) & (output_mask_3d == 1)  # 0 -> 1
     erase_mask = (binary_mask_3d == 1) & (output_mask_3d == 0)  # 1 -> 0
 

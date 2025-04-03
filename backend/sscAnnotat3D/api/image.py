@@ -41,6 +41,8 @@ def get_image_slice(image_id: str):
     axis = request.json["axis"]
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
+    data_repo.set_info(key="current_slice", data = {'slice_num': slice_num, 'axis': axis })
+
     img_slice = image[slice_range]
 
     get_contour = request.json.get("contour", False)
@@ -152,25 +154,41 @@ def crop_apply():
     # ---
     # annotation
     # ---
-    annot_module = module_repo.get_module("annotation")  # bruno
+    annot_module = module_repo.get_module("annotation")
     if annot_module is not None:
-        anot_full = annot_module.get_annotation()
-        anot_crop = dict()
-        keylist = list(anot_full.keys())
-        for coords in keylist:
-            kz, ky, kx = coords
-            if zlo <= kz < zhi and ylo <= ky < yhi and xlo <= kx < xhi:
-                # removes annotation from annot_full and adds to annot_crop
-                # so it can work with the cropped image and when the merge operation occurs,
-                # annot_crop can be appended to the annot_full dictionary preserving its original order (ordered by clicks)
-                k_crop = (kz - zlo, ky - ylo, kx - xlo)  # new key with coordinates relative to the cropped image
-                anot_crop[k_crop] = anot_full.pop(coords)
+        annot_img = annot_module.annotation_image
+        output_annot_img = annot_img[zlo:zhi, ylo:yhi, xlo:xhi]
+
+        annotation_slice_dict = annot_module.get_annotation_slice_dict()     
+
+        axis_limit = [(zlo, zhi), (ylo, yhi), (xlo, xhi)]
+        annot_cutted = {0: set(), 1: set(), 2: set()}
+        new_annot_slice_dict = {0: set(), 1: set(), 2: set()}
+
+        annot_slices_backup = []
+
+        for axis, slice_nums in annotation_slice_dict.items():
+            for slice_num in slice_nums:
+                #save the annotation before the crop
+                slice_range = [slice(None, None, None), slice(None, None, None), slice(None, None, None)]
+                slice_range[axis] = slice_num
+
+                annot_slices_backup.append([(axis,slice_num), np.squeeze(annot_img[slice_range])])
+
+                if slice_num < axis_limit[axis][0] or slice_num >= axis_limit[axis][1]:
+                    #save that it was previously annotated
+                    annot_cutted[axis].add(slice_num)
+                else:
+                    #save the axis and slice_num as annot slice since it didn't get cut
+                    new_annot_slice_dict[axis].add(slice_num - axis_limit[axis][0])
+
         # replaces the annotation dictionary with the new dictionary for the cropped image
-        annot_module.set_annotation(anot_crop)
-        #convert default dict to dict
-        anot_full = dict(anot_full)
+        annot_module.set_annotation_slice_dict(new_annot_slice_dict)
         # saves the remaining annotations related to the original image as backup in the repository
-        data_repo.set_info(key="anot_backup", data=anot_full)
+        annot_backup = {"annot_cutted": annot_cutted, "annot_slices_backup": annot_slices_backup}
+        data_repo.set_info(key = "annot_backup", data = annot_backup)
+
+        annot_module.set_annotation_image(output_annot_img)
 
     data_repo.set_image("image", data=crop_img)
     data_repo.set_info(key="image_info", data=crop_img_info)
@@ -266,23 +284,42 @@ def crop_merge():
     # ---
     annot_module = module_repo.get_module("annotation")
     if annot_module is not None:
-        annot_full = data_repo.get_info(key="anot_backup")
-        if annot_full is None:
-            annot_full = dict()
-        anot_crop = annot_module.get_annotation()
-        for k in anot_crop.keys():
-            kz, ky, kx = k
-            kz_new, ky_new, kx_new = (kz + zlo, ky + ylo, kx + xlo)
-            zmax, ymax, xmax = (imageFullShape["z"], imageFullShape["y"], imageFullShape["x"])
-            if kz_new < zmax and ky_new < ymax and kx_new < xmax:
-                # saves new coordinates avoiding anotations outside the image shape
-                k_full = (kz_new, ky_new, kx_new)
-                annot_full[k_full] = anot_crop[k]
-            elif kz_new == zmax or ky_new == ymax or kx_new == xmax:
-                print("crop_merge: border -> ", (kz_new, ky_new, kx_new))
-            else:
-                print("crop_merge: outside bounds -> ", (kz_new, ky_new, kx_new))
-        annot_module.set_annotation(annot_full)
+        annot_backup = data_repo.get_info(key="annot_backup")
+        annot_cutted, annot_slices_backup = annot_backup["annot_cutted"], annot_backup["annot_slices_backup"]
+        data_repo.delete_info(key="annot_backup")
+
+        annot_img_crop = annot_module.annotation_image
+        annot_img_full = np.zeros_like(output_img, dtype='int16') - 1
+
+        annot_bool = np.ones(annot_img_full.shape, dtype='bool')
+        
+        annot_img_full[zlo:zhi, ylo:yhi, xlo:xhi] = annot_img_crop
+        #region forbidden to fill
+        annot_bool[zlo:zhi, ylo:yhi, xlo:xhi] = False
+
+        annotation_slice_dict = annot_module.get_annotation_slice_dict()     
+
+        axis_limit = [(xlo, xhi), (ylo, yhi), (zlo, zhi)]
+        new_annot_slice_dict = {0: set(), 1: set(), 2: set()}
+
+        #lets do a linear transform the coords space from cropped to full image and restore annot slices from full image
+        for axis, slice_nums in annotation_slice_dict.items():
+            #restore cutted annotatation
+            new_annot_slice_dict[axis].update(annot_cutted[axis])
+            for slice_num in slice_nums:
+                new_annot_slice_dict[axis].add(slice_num + axis_limit[axis][0])
+
+        #now lets retore the previous annot slices
+        for (axis, slice_num), slice_backup in annot_slices_backup:
+            slice_range = [slice(None, None, None), slice(None, None, None), slice(None, None, None)]
+            slice_range[axis] = slice_num
+
+            mask = annot_bool[slice_range]
+            indices = np.where(mask)
+            annot_img_full[slice_range][indices] = slice_backup[indices]
+
+    annot_module.set_annotation_image(annot_img_full)
+
 
     # ---
     # update info on data_repo

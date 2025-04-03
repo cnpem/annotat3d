@@ -331,20 +331,20 @@ def create():
     img = data_repo.get_image("image")
     img_superpixel = data_repo.get_image("superpixel")
 
-    annotations = module_repo.get_module("annotation").annotation
-    if annotations == {}:
+    annotation_slice_dict = module_repo.get_module("annotation").get_annotation_slice_dict()
+    added_labels = module_repo.get_module("annotation").added_labels
+
+    if len(annotation_slice_dict) == 0:
         return handle_exception(
             "unable to apply!. Please, at least create one label and background annotation and try again the preprocess."
         )
 
-    unique_ids = set()
-    for key, value in annotations.items():
-        unique_ids.add(value[-1])
-
-    if len(unique_ids) <= 1:
+    """     
+    if len(added_labels) <= 1:
         return handle_exception(
             "unable to preview!. Please, at least create one label and background annotation and try again the preprocess."
         )
+    """
 
     if _convert_dtype_to_str(img_superpixel.dtype) != "int32":
         img_superpixel = img_superpixel.astype("int32")
@@ -409,23 +409,6 @@ def create():
     return "success", 200
 
 
-@app.route("/superpixel_segmentation_module/preprocess", methods=["POST"])
-@cross_origin()
-def preprocess():
-    """
-    Notes:
-        This function isn't being called anywhere Annotat3D
-
-    Returns:
-        (str): returns a string "successes" if everything goes well and an error otherwise
-
-    """
-    segm_module = module_repo.get_module(key="superpixel_segmentation_module")
-    segm_module.preprocess()
-
-    return "success", 200
-
-
 def _convert_dtype_to_str(img_dtype: np.dtype):
     """
     Build-in function to convert dtype to a str
@@ -451,20 +434,12 @@ def preview():
     """
     segm_module = module_repo.get_module(key="superpixel_segmentation_module")
 
-    annotations = module_repo.get_module("annotation").annotation
-    if annotations == {}:
+    annotation_slice_dict = module_repo.get_module("annotation").get_annotation_slice_dict()
+    annotation_image = module_repo.get_module("annotation").annotation_image
+    if len(annotation_slice_dict) == 0:
         return handle_exception(
             "unable to preview!. Please, at least create one label and background annotation and try again the preprocess."
         )
-
-    # TODO: refactor all the superpixel and pixel segmentation modules to the new annotation dict, not the previous one
-    annotation_dict = {}
-    for key, value in annotations.items():
-        if value[-1] != -1:
-            annotation_dict[key] = (value[-1], 1)
-            annotations = annotation_dict
-
-    annotations = annotation_dict
 
     slice_num = request.json["slice"]
     axis = request.json["axis"]
@@ -478,15 +453,8 @@ def preview():
         return "This module does not have a preview", 400
 
     try:
-        label, selected_features_names = segm_module.preview(annotations, [slice_num], axis_dim)
+        label, selected_features_names = segm_module.preview(annotation_slice_dict, annotation_image, [slice_num], axis_dim)
     except Exception as e:
-        unique_ids = set()
-        for key, value in annotations.items():
-            unique_ids.add(value)
-        if len(unique_ids) <= 1:
-            return handle_exception(
-                "unable to preview!. Please, at least create one label and background annotation and try again the preprocess."
-            )
         return handle_exception("unable to preview! {}".format(str(e)))
 
     data_repo.set_image("label", label)
@@ -509,8 +477,10 @@ def execute():
     """
     segm_module = module_repo.get_module(key="superpixel_segmentation_module")
 
-    annotations = module_repo.get_module("annotation").annotation
-    if annotations == {}:
+    annotation_slice_dict = module_repo.get_module("annotation").get_annotation_slice_dict()
+    annotation_image = module_repo.get_module("annotation").annotation_image
+    
+    if len(annotation_slice_dict) == 0:
         return handle_exception(
             "unable to apply!. Please, at least create one label and background annotation and try again the preprocess."
         )
@@ -518,25 +488,9 @@ def execute():
     if segm_module is None:
         return "Not a valid segmentation module", 400
 
-    # TODO: refactor all the superpixel and pixel segmentation modules to the new annotation dict, not the previous one
-    annotation_dict = {}
-    for key, value in annotations.items():
-        if value[-1] != -1:
-            annotation_dict[key] = (value[-1], 1)
-            annotations = annotation_dict
-
-    annotations = annotation_dict
-
     try:
-        label, selected_features_names = segm_module.execute(annotations)
+        label, selected_features_names = segm_module.execute(annotation_slice_dict, annotation_image)
     except Exception as e:
-        unique_ids = set()
-        for key, value in annotations.items():
-            unique_ids.add(value)
-        if len(unique_ids) <= 1:
-            return handle_exception(
-                "unable to preview!. Please, at least create one label and background annotation and try again the preprocess."
-            )
         return handle_exception("unable to preview! {}".format(str(e)))
 
     data_repo.set_image("label", label)
