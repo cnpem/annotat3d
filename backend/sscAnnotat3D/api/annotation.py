@@ -325,54 +325,37 @@ def delete_label_annot():
     return "success", 200
 
 
-@app.route("/find_label_by_click", methods=["POST"])
+@app.route("/get_annotation_history", methods=["POST"])
 @cross_origin()
-def find_label_by_click():
+def get_annotation_history():
     """
-    Function that find label or annotations by click
+    Function that retrieves the annotation image and prepares data
+    for slice viewing in the frontend.
 
     Returns:
-        (int): returns a int that represents the id of a label
-
+        dict: JSON object containing index, values, and length
+        for each axis (XY, XZ, YZ).
     """
-    try:
-        x = request.json["x_coord"]
-        y = request.json["y_coord"]
-        slice = request.json["slice"]
-        axis = request.json["axis"]
-    except Exception as e:
-        return handle_exception(str(e))
+    annot_module = module_repo.get_module('annotation')
 
-    try:
-        annot_module = module_repo.get_module('annotation')
-        annotations = annot_module.get_annotation()
-    except Exception as e:
-        return handle_exception(str(e))
+    annot_slice_dict = annot_module.get_annotation_slice_dict()
+    if len(annot_slice_dict) == 0:
+        raise ValueError("There must be at least one annotated slice")
+    
+    XY, XZ, YZ = annot_slice_dict[0], annot_slice_dict[1], annot_slice_dict[2]
+    XY = sorted([int(c) for c in XY])
+    XZ = sorted([int(c) for c in XZ])
+    YZ = sorted([int(c) for c in YZ])
 
-    try:
-        label_img = data_repo.get_image(key="label")
-    except Exception as e:
-        return handle_exception(str(e))
+    hist = {
+        "XY": {"index": list(range(len(XY))), "values": XY, "length": len(XY)},
+        "XZ": {"index": list(range(len(XZ))), "values": XZ, "length": len(XZ)},
+        "YZ": {"index": list(range(len(YZ))), "values": YZ, "length": len(YZ)},
+    }
+    print(hist)
 
-    if (axis == "XY"):
-        data = (slice, y, x)
-
-    elif (axis == "XZ"):
-        data = (y, slice, x)
-
-    else:
-        data = (x, y, slice)
-
-    if (data in annotations):
-        print("data : {}".format(data))
-        print("data found by key : {}".format(annotations[data]))
-        return jsonify(annotations[data][0])
-
-    if (label_img is not None and np.max(label_img) > 0):
-        _debugger_print("id_data found", int(label_img[data]))
-        return jsonify(int(label_img[data]))
-
-    return jsonify(0)
+    # Return the data as a JSON response
+    return jsonify(hist)
 
 
 @app.route("/is_annotation_empty", methods=["POST"])

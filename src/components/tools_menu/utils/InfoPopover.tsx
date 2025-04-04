@@ -6,12 +6,13 @@ interface InfoPopoverProps {
     triggerId: string;
     header: string;
     content: string;
+    buttonSlot?: string;
 }
 
-const InfoPopover: React.FC<InfoPopoverProps> = ({ triggerId, header, content }) => {
+const InfoPopover: React.FC<InfoPopoverProps> = ({ triggerId, header, content, buttonSlot = 'end' }) => {
     return (
         <>
-            <IonButton id={triggerId} slot="end" size="small" fill="clear">
+            <IonButton id={triggerId} slot={buttonSlot} size="small" fill="clear">
                 <IonIcon icon={informationCircleOutline} />
             </IonButton>
             <IonPopover trigger={triggerId} reference="event">
