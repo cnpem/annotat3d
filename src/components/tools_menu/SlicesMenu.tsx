@@ -1,3 +1,4 @@
+import React, { Fragment, useEffect, useState } from 'react';
 import {
     IonButton,
     IonButtons,
@@ -8,21 +9,33 @@ import {
     IonRange,
     IonSegment,
     IonSegmentButton,
+    IonToggle,
 } from '@ionic/react';
-import { albumsOutline } from 'ionicons/icons';
-
-import { ImageShapeInterface } from './utils/ImageShapeInterface';
-
+import { albumsOutline, downloadOutline } from 'ionicons/icons';
 import { dispatch, useEventBus } from '../../utils/eventbus';
 import { SliceInfoInterface } from './utils/SliceInfoInterface';
 import { useStorageState } from 'react-storage-hooks';
-import { Fragment, useEffect } from 'react';
-
-interface SlicesMenuProps {
-    imageShape: ImageShapeInterface;
+import { sfetch } from '../../utils/simplerequest';
+import ErrorInterface from '../main_menu/file/utils/ErrorInterface';
+import InfoPopover from './utils/InfoPopover';
+// Backend-provided data structure for each axis
+interface AxisData {
+    index: number[]; // Sequential indices
+    values: number[]; // Mapped values
+    length: number; // Total length of the slider values
 }
 
-const buttonSliceName: Record<'XY' | 'XZ' | 'YZ', 'X' | 'Y' | 'Z'> = {
+interface BackendData {
+    XY: AxisData;
+    XZ: AxisData;
+    YZ: AxisData;
+}
+
+interface SlicesMenuProps {
+    imageShape: { x: number; y: number; z: number }; // Represents the dimensions of the image
+}
+
+const buttonSliceName = {
     XY: 'Z',
     XZ: 'Y',
     YZ: 'X',
@@ -35,38 +48,58 @@ const buttonSliceName: Record<'XY' | 'XZ' | 'YZ', 'X' | 'Y' | 'Z'> = {
 const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
     const [sliceName, setSliceName] = useStorageState<'XY' | 'XZ' | 'YZ'>(sessionStorage, 'sliceName', 'XY');
     const [sliceValue, setSliceValue] = useStorageState<number>(sessionStorage, 'sliceValue', 0);
-    const [LockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
+    const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', true);
+    const [customSliderActive, setCustomSliderActive] = useState<boolean>(false);
     const [cropPreviewMode, setCropPreviewMode] = useStorageState<boolean>(sessionStorage, 'cropPreviewMode', false);
+    const [currentIndex, setCurrentIndex] = useState<number>(0);
+
+    const [annotHistory, setAnnotHistory] = useState<BackendData>({
+        XY: { index: [0], values: [0], length: props.imageShape.z },
+        XZ: { index: [0], values: [0], length: props.imageShape.y },
+        YZ: { index: [0], values: [0], length: props.imageShape.x },
+    });
 
     const maxValSlider: Record<'XY' | 'XZ' | 'YZ', number> = {
-        XY: props.imageShape.z - 1,
-        XZ: props.imageShape.y - 1,
-        YZ: props.imageShape.x - 1,
+        XY: props.imageShape.z,
+        XZ: props.imageShape.y,
+        YZ: props.imageShape.x,
     };
-
     useEventBus('cropPreviewMode', (cropMode) => {
         setCropPreviewMode(cropMode);
     });
 
-    const handleSliceValue = (e: CustomEvent) => {
-        setSliceValue(+e.detail.value);
-        const payload: SliceInfoInterface = {
-            axis: sliceName,
-            slice: +e.detail.value,
-        };
-        dispatch('sliceChanged', payload);
-        dispatch('cropPreviewMode', cropPreviewMode);
+    const pinFormatter = (index: number): number => {
+        if (customSliderActive) {
+            const mappedValues = annotHistory[sliceName].values;
+            setCurrentIndex(index);
+            return mappedValues[index] !== undefined ? mappedValues[index] : index;
+        }
+        setCurrentIndex(index);
+        return index;
     };
 
-    const handleIonInputSliceValue = (e: CustomEvent) => {
-        setSliceValue(+e.detail.value);
+    const handleSliceValue = (e: CustomEvent) => {
+        const value = pinFormatter(+e.detail.value);
+        setSliceValue(value);
+
+        const payload: SliceInfoInterface = {
+            axis: sliceName,
+            slice: value,
+        };
+        dispatch('sliceChanged', payload);
     };
 
     const handleSliceName = (e: CustomEvent) => {
-        const curSliceName = e.detail.value as 'XY' | 'YZ' | 'XZ';
-        setSliceName(curSliceName);
-        const maxSliceValue = maxValSlider[curSliceName];
-        if (sliceValue > maxSliceValue) {
+        const selectedSliceName = e.detail.value as 'XY' | 'YZ' | 'XZ';
+        setSliceName(selectedSliceName);
+
+        const currentAxisData = annotHistory[selectedSliceName];
+        // Ensure the slice value doesn't exceed the current range
+        const maxSliceValue = currentAxisData.length - 1;
+
+        if (customSliderActive) {
+            setSliceValue(annotHistory[selectedSliceName].values[0]);
+        } else if (sliceValue > maxSliceValue) {
             setSliceValue(maxSliceValue);
         }
 
@@ -74,9 +107,36 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
             axis: e.detail.value,
             slice: sliceValue,
         };
-
         dispatch('sliceChanged', payload);
         dispatch('cropPreviewMode', cropPreviewMode);
+    };
+
+    const fetchSliceData = async () => {
+        if (!customSliderActive) {
+            return;
+        }
+        try {
+            let msgReturned = '';
+            let isError = false;
+
+            await sfetch('POST', '/get_annotation_history', '', 'json')
+                .then((data: BackendData) => {
+                    console.log('Fetched slice data:', data);
+                    setAnnotHistory(data);
+                })
+                .catch((error: ErrorInterface) => {
+                    msgReturned = error.error_msg;
+                    isError = true;
+                    console.error('Error fetching slice data:', error);
+                });
+
+            if (isError) {
+                dispatch('ShowToast', { message: 'Error fetching slice data', type: 'error' });
+                setCustomSliderActive(false);
+            }
+        } catch (error) {
+            console.error('Unexpected error fetching slice data:', error);
+        }
     };
 
     useEffect(() => {
@@ -86,53 +146,97 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         });
     });
 
+    useEffect(() => {
+        void fetchSliceData();
+    }, [customSliderActive]);
+
+    useEventBus('annotationChanged', () => {
+        void fetchSliceData();
+    });
     useEventBus('LockComponents', (changeLockMenu) => {
         setLockMenu(changeLockMenu);
     });
 
+    const downloadAnnotHistory = () => {
+        const filteredData = (Object.keys(annotHistory) as (keyof BackendData)[]).reduce((acc, key) => {
+            acc[key] = annotHistory[key].values;
+            return acc;
+        }, {} as Record<keyof BackendData, number[]>);
+
+        const fileData = JSON.stringify(filteredData, null, 2);
+        const blob = new Blob([fileData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'annotHistory.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <Fragment>
-            <IonSegment value={sliceName} onIonChange={handleSliceName} disabled={LockMenu}>
-                <IonSegmentButton value={'XY'}>
-                    <IonLabel>{'XY'}</IonLabel>
+            <IonSegment value={sliceName} onIonChange={handleSliceName} disabled={lockMenu}>
+                <IonSegmentButton value="XY">
+                    <IonLabel>XY</IonLabel>
                 </IonSegmentButton>
-
-                <IonSegmentButton value={'XZ'}>
-                    <IonLabel>{'XZ'}</IonLabel>
+                <IonSegmentButton value="XZ">
+                    <IonLabel>XZ</IonLabel>
                 </IonSegmentButton>
-
-                <IonSegmentButton value={'YZ'}>
-                    <IonLabel>{'YZ'}</IonLabel>
+                <IonSegmentButton value="YZ">
+                    <IonLabel>YZ</IonLabel>
                 </IonSegmentButton>
             </IonSegment>
 
             <IonItem>
                 <IonRange
                     min={0}
-                    max={maxValSlider[sliceName]}
-                    pin={true}
-                    value={sliceValue}
+                    max={customSliderActive ? annotHistory[sliceName].length - 1 : maxValSlider[sliceName]}
+                    pin
+                    ticks={customSliderActive}
+                    snaps={customSliderActive}
+                    value={customSliderActive ? currentIndex : sliceValue}
                     onIonKnobMoveEnd={handleSliceValue}
-                    disabled={LockMenu}
+                    disabled={lockMenu}
+                    {...(customSliderActive ? { pinFormatter } : {})}
                 >
-                    <IonIcon size={'small'} slot={'start'} icon={albumsOutline} />
+                    <IonIcon size="small" slot="start" icon={albumsOutline} />
                 </IonRange>
             </IonItem>
+
             <IonItem>
                 <IonButtons>
-                    <IonButton disabled={true} color={'dark'} size={'default'}>
+                    <IonButton disabled color="dark" size="default">
                         {buttonSliceName[sliceName]}
                     </IonButton>
                 </IonButtons>
                 <IonInput
-                    type={'number'}
+                    type="number"
                     min={0}
-                    max={maxValSlider[sliceName]}
-                    clearInput
+                    max={customSliderActive ? annotHistory[sliceName].length - 1 : maxValSlider[sliceName]}
                     value={sliceValue}
-                    onIonChange={handleIonInputSliceValue}
-                    disabled={LockMenu}
+                    onIonChange={handleSliceValue}
+                    disabled={lockMenu}
                 />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <InfoPopover
+                        triggerId="sliderinfo"
+                        header="Annotated Slices"
+                        content="Click toggle at right to allow slider with only annotated slices"
+                        buttonSlot="end"
+                    />
+                    <IonToggle
+                        slot="end"
+                        checked={customSliderActive}
+                        onIonChange={(e) => setCustomSliderActive(e.detail.checked)}
+                        disabled={lockMenu}
+                    />
+                    {customSliderActive && (
+                        <IonButton onClick={downloadAnnotHistory} size="small" fill="clear">
+                            <IonIcon slot="end" icon={downloadOutline} />
+                        </IonButton>
+                    )}
+                </div>
             </IonItem>
         </Fragment>
     );
