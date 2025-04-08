@@ -68,27 +68,53 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         setCropPreviewMode(cropMode);
     });
 
-    const pinFormatter = (index: number): number => {
+    const indexMapping = (index: number): number => {
         if (customSliderActive) {
             const mappedValues = annotHistory[sliceName].values;
-            setCurrentIndex(index);
             return mappedValues[index] !== undefined ? mappedValues[index] : index;
         }
-        setCurrentIndex(index);
         return index;
     };
 
-    const handleSliceValue = (e: CustomEvent) => {
-        const value = pinFormatter(+e.detail.value);
-        setSliceValue(value);
+    // Helper to update slice value based on the source
+    const updateSlice = (rawValue: number, source: 'range' | 'input') => {
+        if (isNaN(rawValue)) return;
+
+        let newSliceValue = rawValue;
+
+        if (source === 'range') {
+            // From IonRange: rawValue is the slider index.
+            setCurrentIndex(rawValue);
+            newSliceValue = customSliderActive ? indexMapping(rawValue) : rawValue;
+        } else if (source === 'input') {
+            // From IonInput: rawValue is already the mapped value.
+            if (customSliderActive) {
+                // Find the matching slider index from the annotHistory values.
+                const ionBarIndex = annotHistory[sliceName].values.indexOf(rawValue);
+                setCurrentIndex(ionBarIndex);
+            }
+            // newSliceValue remains the raw input.
+        }
+
+        setSliceValue(newSliceValue);
 
         const payload: SliceInfoInterface = {
             axis: sliceName,
-            slice: value,
+            slice: newSliceValue,
         };
         dispatch('sliceChanged', payload);
     };
 
+    // The event handlers now simply call the helper with the proper source.
+    const handleIonRangeValueChange = (e: CustomEvent) => {
+        const rawValue = +e.detail.value;
+        updateSlice(rawValue, 'range');
+    };
+
+    const handleIonInputValueChange = (e: CustomEvent) => {
+        const rawValue = +e.detail.value!;
+        updateSlice(rawValue, 'input');
+    };
     const handleSliceName = (e: CustomEvent) => {
         const selectedSliceName = e.detail.value as 'XY' | 'YZ' | 'XZ';
         setSliceName(selectedSliceName);
@@ -98,7 +124,7 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
         const maxSliceValue = currentAxisData.length - 1;
 
         if (customSliderActive) {
-            setSliceValue(annotHistory[selectedSliceName].values[0]);
+            setSliceValue(annotHistory[selectedSliceName].length > 0 ? annotHistory[selectedSliceName].values[0] : 0);
         } else if (sliceValue > maxSliceValue) {
             setSliceValue(maxSliceValue);
         }
@@ -195,10 +221,10 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                     pin
                     ticks={customSliderActive}
                     snaps={customSliderActive}
-                    value={customSliderActive ? currentIndex : sliceValue}
-                    onIonKnobMoveEnd={handleSliceValue}
+                    value={currentIndex}
+                    onIonKnobMoveEnd={handleIonRangeValueChange}
                     disabled={lockMenu}
-                    {...(customSliderActive ? { pinFormatter } : {})}
+                    pinFormatter={indexMapping}
                 >
                     <IonIcon size="small" slot="start" icon={albumsOutline} />
                 </IonRange>
@@ -213,9 +239,9 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                 <IonInput
                     type="number"
                     min={0}
-                    max={customSliderActive ? annotHistory[sliceName].length - 1 : maxValSlider[sliceName]}
+                    max={maxValSlider[sliceName]}
                     value={sliceValue}
-                    onIonChange={handleSliceValue}
+                    onIonChange={handleIonInputValueChange}
                     disabled={lockMenu}
                 />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
