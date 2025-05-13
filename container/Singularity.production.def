@@ -6,6 +6,10 @@ From: gitregistry.cnpem.br/gcd/data-science/segmentation/annotat3d:latest
     ./backend/requirements.txt /opt/annotat3dweb/requirements.txt
     ./backend/requirements-dev.txt /opt/annotat3dweb/requirements-dev.txt
 
+%environment
+    # Avoid loading local packages ~/.local
+    export PYTHONNOUSERSITE=1
+
 %post
     ls /opt/annotat3dweb/
     python3 -m pip install -r /opt/annotat3dweb/requirements.txt
