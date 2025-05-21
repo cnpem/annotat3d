@@ -1599,7 +1599,7 @@ def fgc_apply(input_id: str):
     from harpia.fastGraphClustering import fgc
     from harpia.sparseUnmixing import nmf
     from skimage import filters
-    from skimage.feature import local_binary_pattern
+    from skimage.feature import local_binary_pattern, shape_index, multiscale_basic_features
     from skimage.measure import shannon_entropy
     import numpy as np
     from sklearn.cluster import KMeans
@@ -1612,10 +1612,9 @@ def fgc_apply(input_id: str):
             return int(x)
         else:
             raise ValueError("Unsupported data type")
-    
+
     try:
-        #parameters
-        
+        # parameters
         dimension = request.json.get("dimension")
         slice_num = request.json.get("current_slice")
         axis = request.json.get("current_axis")
@@ -1626,14 +1625,21 @@ def fgc_apply(input_id: str):
         anchor_points = request.json.get('numRepresentativePoints')
         iterations = request.json.get('numIterations')
         lmbd = request.json.get('regularization')
+        gamma = request.json.get('labelregularization')
         beta = request.json.get('smoothRegularization')
         window = request.json.get('windowSize')
         tol = request.json.get('tolerance')
         use_all = request.json.get('useWholeImage')
         superpixel = data_repo.get_image("superpixel")
-        features =  request.json.get("selectedFeatures")
+        features = request.json.get("selectedFeatures")  # Keep for compatibility if needed
         metric = request.json.get("selectedMetric")
-        
+        nearest_neighbors = request.json.get("nearestNeighbors")
+
+        # Parameters for multiscale_basic_features
+        sigma_min = request.json.get('sigma_min', 1)
+        sigma_max = request.json.get('sigma_max', 16)
+        num_sigma = request.json.get('multiScaleNum', 3)
+
     except Exception as e:
         return handle_exception(str(e))
 
@@ -1647,121 +1653,165 @@ def fgc_apply(input_id: str):
 
     input_img = data_repo.get_image(input_id).astype(np.float32)
 
-    print("features: ",features )
-    print("Metric: ",metric)
+    print("features: ", features)
+    print("Metric: ", metric)
 
     mk_id = annot_module.current_mk_id
 
     print('Current markers\n', mk_id, current_thresh_marker)
     # New annotation
-    if mk_id != current_thresh_marker:
-        new_click = True
-    else:
-        new_click = False
+    new_click = (mk_id != current_thresh_marker)
     axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
     axisIndex = axisIndexDict[axis]
 
     if axisIndex == 0:  # XY plane
         input_slice = input_img[slice_num]
 
-        if superpixel is not None and features[-1]=="Superpixel":
+        if superpixel is not None and features[-1] == "Superpixel":
             sp = superpixel[slice_num]
             uniquelabels = np.unique(sp)
 
     elif axisIndex == 1:  # XZ plane
         input_slice = input_img[:, slice_num, :]
 
-        if superpixel is not None and features[-1]=="Superpixel":
+        if superpixel is not None and features[-1] == "Superpixel":
             sp = superpixel[:, slice_num, :]
             uniquelabels = np.unique(sp)
 
     elif axisIndex == 2:  # YZ plane
         input_slice = input_img[:, :, slice_num]
 
-        if superpixel is not None and features[-1]=="Superpixel":
+        if superpixel is not None and features[-1] == "Superpixel":
             sp = superpixel[:, :, slice_num]
             uniquelabels = np.unique(sp)
 
     print(input_slice.shape)
     rows, cols = input_slice.shape
-    
-    x = []
 
-    for feats in features:
-        print(feats)
-        if feats == "Original":
-            if superpixel is None or features[-1]!="Superpixel":
-                x.append(input_slice.ravel())  # 1D array
-            else:
-                means = np.zeros_like(input_slice, dtype=input_slice.dtype)
-                for m in uniquelabels:
-                    mean_value = input_slice[sp == m].mean()  # Compute mean for each superpixel
-                    means[sp == m] = mean_value  # Assign mean to all pixels in the superpixel
-                x.append(means.ravel())
-                
+    use_intensity = "Intensity" in features
+    use_edges = "Edges" in features or "Edge" in features
+    use_texture = "Texture" in features
 
-        elif feats == "LBP":
-            lbp = local_binary_pattern(input_slice, 8, 1, method="default")
-
-            if superpixel is None or features[-1]!="Superpixel":
-                x.append(lbp.ravel())
-            else:
-                lbp_mean_img = np.zeros_like(lbp, dtype=lbp.dtype)
-                for m in uniquelabels:
-                    mean_value = lbp[sp == m].mean()  # Compute mean for each superpixel
-                    lbp_mean_img[sp == m] = mean_value
-                x.append(lbp_mean_img.ravel())
-
-        elif feats == "Sobel":
-            grad = filters.sobel(input_slice)
-
-            if superpixel is None or features[-1]!="Superpixel":
-                x.append(grad.ravel())
-            else:
-                grad_means_img = np.zeros_like(grad, dtype=grad.dtype)
-                for m in uniquelabels:
-                    mean_value = grad[sp == m].mean()  # Compute mean for each superpixel
-                    grad_means_img[sp == m] = mean_value
-                x.append(grad_means_img.ravel())
-
-    x = np.array(x).astype(np.float32)
-    print("shape: ",x.shape)
-    basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T.astype(np.float32)
-
-    fgc_instance = fgc.general_fgc(
-        x,
-        rows,
-        cols,
-        basis=basis,
-        lmbd=lmbd,
-        beta=beta,
-        k=anchor_points,
-        iterations=iterations,
-        tol=tol,
-        size=window,
-        metric=metric
+    # Compute multiscale basic features
+    x_features = multiscale_basic_features(
+        input_slice,
+        intensity=use_intensity,
+        edges=use_edges,
+        texture=use_texture,
+        sigma_min=sigma_min,
+        sigma_max=sigma_max,
+        num_sigma=num_sigma,
     )
+    print("Multiscale basic features shape (rows, cols, features):", x_features.shape)
 
-    print("classification starts")
+    # If superpixel pooling is requested, do mean pooling over superpixels for each feature channel
+    if superpixel is not None and features[-1] == "Superpixel":
+        print("Applying superpixel mean pooling on multiscale features")
+        x_pooled = np.zeros_like(x_features, dtype=x_features.dtype)
+        for m in uniquelabels:
+            mask = (sp == m)
+            for feat_idx in range(x_features.shape[-1]):
+                mean_val = x_features[:, :, feat_idx][mask].mean()
+                x_pooled[:, :, feat_idx][mask] = mean_val
+        x_features = x_pooled
 
-    fgc_instance.classification()
+    # Reshape features: flatten spatial dims and transpose to (features, N_pixels)
+    x = x_features.reshape((-1, x_features.shape[-1])).T.astype(np.float32)
+    print("Feature matrix shape (features, pixels):", x.shape)
 
-    print('kmeans')
-    kmeans = KMeans(n_clusters=phases)
-    labels = kmeans.fit_predict(fgc_instance.y).reshape(input_slice.shape)
+    # ---- The rest of your processing ----
+    if gamma > 0:
+        print("Label Propagation")
 
-    print('post processing labels')
-    unique_labels = np.unique(labels)
-    label_means = {i: (input_slice[labels == i].mean()) for i in unique_labels}
+        markers_img = annot_module.annotation_image[slice_range]
+        unique_labels = np.unique(markers_img)
+        unique_labels = unique_labels[unique_labels >= 0]
 
-    sorted_labels = sorted(label_means, key=label_means.get)
+        anchors = []
+        anchor_labels = []
 
-    label_remap = {old_label: new_label for new_label, old_label in enumerate(sorted_labels)}
+        for class_index, label in enumerate(unique_labels):
+            mask = (markers_img == label).ravel()
+            if np.count_nonzero(mask) == 0:
+                continue
 
-    remapped_labels = np.vectorize(label_remap.get)(labels)
+            feature_subset = x[:, mask].T  # (N_pixels_in_class, N_features)
+            if feature_subset.shape[0] < anchor_points:
+                continue  # Skip if not enough pixels
 
-    print('last step')
-    annot_module.multilabel_updated(remapped_labels, mk_id)
+            kmeans = KMeans(n_clusters=anchor_points, n_init="auto", random_state=0).fit(feature_subset)
+            anchors.extend(kmeans.cluster_centers_)
+            anchor_labels.extend([class_index] * anchor_points)
+
+        if len(anchors) == 0:
+            return handle_exception("No valid labeled data to create anchors.")
+
+        anchors = np.array(anchors, dtype=np.float32).T  # shape: (features, anchors)
+        M = anchors.shape[1]
+        C = len(unique_labels)
+        U = np.zeros((M, C), dtype=np.float32)
+        U[np.arange(M), anchor_labels] = 1.0
+
+        print("Anchor shape:", anchors.shape)  # (features, M)
+        print("Label matrix U shape:", U.shape)
+
+        fgc_instance = fgc.general_fgc(
+            x,
+            rows,
+            cols,
+            basis=anchors,
+            lmbd=0,
+            beta=beta,
+            k=nearest_neighbors,
+            iterations=iterations,
+            tol=tol,
+            size=window,
+            metric=metric
+        )
+    
+        F = fgc_instance.z @ U
+        labels = F.argmax(axis=1).reshape(rows, cols)
+
+        print("Final labels shape:", labels.shape)
+        annot_module.multilabel_updated(labels, mk_id)
+
+    else:
+        print("Without labels regularization")
+        basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T.astype(np.float32)
+
+        fgc_instance = fgc.general_fgc(
+            x,
+            rows,
+            cols,
+            basis=basis,
+            lmbd=lmbd,
+            beta=beta,
+            k=anchor_points,
+            iterations=iterations,
+            tol=tol,
+            size=window,
+            metric=metric
+        )
+
+        fgc_instance.classification()
+
+        print('kmeans')
+        kmeans = KMeans(n_clusters=phases)
+        labels = kmeans.fit_predict(fgc_instance.y).reshape(input_slice.shape)
+
+        print('post processing labels')
+        unique_labels = np.unique(labels)
+        label_means = {i: (input_slice[labels == i].mean()) for i in unique_labels}
+
+        sorted_labels = sorted(label_means, key=label_means.get)
+
+        label_remap = {old_label: new_label for new_label, old_label in enumerate(sorted_labels)}
+
+        remapped_labels = np.vectorize(label_remap.get)(labels)
+
+        print('last step')
+        annot_module.multilabel_updated(remapped_labels, mk_id)
+
     print("return json")
     return jsonify(annot_module.current_mk_id)
 
@@ -1837,7 +1887,7 @@ def nmf_apply(input_id: str):
     print(input_slice.shape)
     rows, cols = input_slice.shape
 
-    basis = np.empty((2, 0), dtype=np.float32)
+    basis = np.empty((1, 0), dtype=np.float32)
     print('computing basis')
     count = 0
     if not use_all:
@@ -1849,34 +1899,23 @@ def nmf_apply(input_id: str):
 
             if x_non_zero.size == 0:
                 continue
-            
-            lbp = local_binary_pattern(input_slice, 8, 1, method="default")
-            lbp_non_zero = lbp[markers_img == i]
 
-            x_non_zero = x_non_zero.reshape(1, x_non_zero.size)
-            lbp_non_zero = lbp_non_zero.reshape(1, lbp_non_zero.size)
-            
-            x_combined = np.vstack([lbp_non_zero, x_non_zero])
-
-            c = KMeans(n_clusters=anchor_points, n_init="auto").fit(x_combined.T).cluster_centers_.T
+            c = KMeans(n_clusters=anchor_points, n_init="auto").fit(x_non_zero.T).cluster_centers_.T
             print("basis: ", c)
-            basis = np.hstack([basis, c])
+            basis = c
             count = count+1
         
     else:
-        #x = input_slice.reshape(1, input_slice.size)
-        lbp = local_binary_pattern(input_slice,8,1,method="default")
-        x = np.vstack([lbp.ravel(),input_slice.ravel()])
+        x = input_slice.reshape(1, input_slice.size)
         print("shape: ",x.shape)
         basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T
         print("basis shape: ", basis.shape)
 
-    #x = input_slice.reshape(1, input_slice.size)
+    x = input_slice.reshape(1, input_slice.size)
 
     print("basis shape: ", np.array(basis).shape)
 
     print("x shape", x.shape)
-    x = np.vstack([lbp.ravel(),input_slice.ravel()]).astype(np.float32)
 
     #creating anchor
     fgc_instance = fgc.general_fgc(
