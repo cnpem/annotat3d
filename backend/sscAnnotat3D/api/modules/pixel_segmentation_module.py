@@ -229,35 +229,6 @@ def _debugger_print(msg: str, payload: any):
     print("-------------------------------------------------------------\n")
 
 
-def features_to_spin_features(feature):
-    if feature.lower() == "fft_gauss":
-        return spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_GAUSS
-    elif feature.lower() == "fft_gabor":
-        return spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_GABOR
-    elif feature.lower() == "none":
-        return spin_feat_extraction.SPINFilters.NONE
-    elif feature.lower() == "fft_dog":
-        return spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_DIFF_OF_GAUSS
-    elif feature.lower() == "sobel":
-        return spin_feat_extraction.SPINFilters.SOBEL
-    elif feature.lower() == "membrane_projections":
-        return spin_feat_extraction.SPINFilters.MEMBRANE_PROJECTIONS
-    elif feature.lower() == "minimum":
-        return spin_feat_extraction.SPINFilters.ADJ_MIN
-    elif feature.lower() == "maximum":
-        return spin_feat_extraction.SPINFilters.ADJ_MAX
-    elif feature.lower() == "average":
-        return spin_feat_extraction.SPINFilters.ADJ_AVERAGE
-    elif feature.lower() == "variance":
-        return spin_feat_extraction.SPINFilters.ADJ_VARIANCE
-    elif feature.lower() == "median":
-        return spin_feat_extraction.SPINFilters.ADJ_MEDIAN
-    elif feature.lower() == "lbp":
-        return spin_feat_extraction.SPINFilters.LBP
-    else:
-        raise f"Unknown feature: {feature.lower()}"
-
-
 @app.route("/pixel_segmentation_module/create", methods=["POST", "GET"])
 @cross_origin()
 def create():
@@ -270,12 +241,7 @@ def create():
         return handle_exception(
             "unable to preprocess!. Please, at least create one label and background annotation and try again the preprocess."
         )
-    """ 
-    if len(added_labels) <= 1:
-        return handle_exception(
-            "unable to preprocess!. Please, at least create one label and background annotation and try again the preprocess."
-        )
-    """
+
     try:
         feature_extraction_params = request.json["feature_extraction_params"]
         data_repo.set_feature_extraction_params(key="feature_extraction_params", data=feature_extraction_params.copy())
@@ -294,11 +260,6 @@ def create():
         return handle_exception("error trying to get the request in /pixel_segmentation_module/create")
 
     print(feature_extraction_params["selected_features"])
-    if "selected_features" in feature_extraction_params:
-        feature_extraction_params["selected_features"] = [
-            features_to_spin_features(f) for f in feature_extraction_params["selected_features"]
-        ]
-
     print(__default_feature_extraction_params)
     print(feature_extraction_params)
     print(classifier_params)

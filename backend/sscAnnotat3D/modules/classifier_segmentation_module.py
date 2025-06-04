@@ -341,7 +341,7 @@ class ClassifierSegmentationModule(SegmentationModule):
             start = time.time()
 
             logging.info("Fitting...")
-
+            """ 
             if self._feat_selector is not None and self._feature_extraction_params["feat_selection_enabled"]:
                 logging.debug("-- Learning feature selection")
 
@@ -366,11 +366,11 @@ class ClassifierSegmentationModule(SegmentationModule):
 
                     selected = self._feat_selector.get_support(indices=True)
                     sigmas = np.array(self._feature_extraction_params["sigmas"], dtype="float32")
-                    selected_features = np.array(self._feature_extraction_params["selected_features"], dtype="int32")
+                    selected_features = self._feature_extraction_params["selected_features"]
                     selected_supervoxel_feat_pooling = np.array(
                         self._feature_extraction_params["selected_supervoxel_feat_pooling"], dtype="int32"
                     )
-
+                    
                     logging.debug("---- Selected features:")
                     logging.debuged = []
                     for i in selected:
@@ -381,12 +381,11 @@ class ClassifierSegmentationModule(SegmentationModule):
                         if not name in logging.debuged:
                             selected_features_names.append(name)
                             logging.debuged.append(name)
-                            logging.debug("----- {}".format(spin_feat_extraction.SPINFilters.filter_name(filter_id)))
-
-            else:
-                selected_features_names = [name for feat, name in spin_feat_extraction.SPINFilters.available_filters()]
-                logging.debug("-- Using all features for training: {}".format(selected_features_names))
-                X = self._training_features
+                            logging.debug("----- {}".format(spin_feat_extraction.SPINFilters.filter_name(filter_id)))"""
+            #else:
+            selected_features_names = self._feature_extraction_params["selected_features"]
+            logging.debug("-- Using all features for training: {}".format(selected_features_names))
+            X = self._training_features 
 
             logging.debug("-- Training model")
 
@@ -400,21 +399,28 @@ class ClassifierSegmentationModule(SegmentationModule):
             Y = np.array(self._training_labels, dtype="int32")
             logging.debug("Y: {}".format(Y))
 
-            use_grid_search = self._classifier_params["grid_search"]
+            #use_grid_search = self._classifier_params["grid_search"]
+            use_grid_search = False
 
-            if use_grid_search and grid_params:
+            one_start = time.time()
+            logging.debug("Fitting start....")
+
+            """             if use_grid_search and grid_params:
                 logging.debug("Grid Searching parameters ...")
                 with sentry_sdk.start_span(op="grid search"):
                     with parallel_backend("threading"):
                         grid_search = self._create_grid_search(grid_params, self._model)
                         grid_search.fit(X, Y)
                     self._model = grid_search.best_estimator_
-
-            with sentry_sdk.start_span(op="model fit"):
-                with parallel_backend("threading"):
-                    self._model.fit(X, Y)
+            """
+            
+            with parallel_backend("threading"):
+                self._model.fit(X, Y)
 
             end = time.time()
+
+            logging.debug("Total time for fitting: {}s".format(end - one_start))
+
             classifier_trained = True
 
             self._flag_classifier_loaded = False
@@ -660,7 +666,8 @@ class ClassifierSegmentationModule(SegmentationModule):
         feat_scaling_time = feat_scaling_end - feat_scaling_start
 
         feat_selection_start = time.time()
-        X = self._select_feats(X_scaled)
+        #X = self._select_feats(X_scaled)
+        X = X_scaled ##ignore selection of features
         feat_selection_end = time.time()
         feat_selection_time = feat_selection_end - feat_selection_start
 
