@@ -208,8 +208,8 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
             # TODO: Estimate superpixels by blocks of slices because previews done across the Z-axis may present a high number
             # of superpixel ids, which will generate a large matrix
             if selected_axis != 0:
-                valid, _ = self._validate_feature_extraction_memory_usage()
-
+                #valid, _ = self._validate_feature_extraction_memory_usage()
+                valid = True
                 if not valid:
                     raise Exception(
                         "Unable to compute preview for axis %s because too much memory may be consumed (beyond the accepted limit of %d GB). Please preview only on XY axis for now."
@@ -395,7 +395,8 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
             with sentry_sdk.start_span(op="Feature extraction"):
                 if self._features is None or force_feature_extraction:
-                    valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(**kwargs)
+                    #valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(**kwargs)
+                    valid = True
                     if valid:
                         logging.debug("\n\n**** Extracting features for the entire image AT ONCE ****")
                         start_feature_extraction_time = time.time()
