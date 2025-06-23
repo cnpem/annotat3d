@@ -150,196 +150,117 @@ const FgcCard: React.FC<LabelPropagCardProps> = ({ isVisible }) => {
         <IonCard style={{ display: isVisible ? 'block' : 'none' }}>
             <IonCardContent>
                 <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
-                <IonGrid>
-                    <IonRow>
-                        <IonCol size="6">
-                            <IonItem>
-                                <IonLabel position="floating">Nearest Neighbors</IonLabel>
-                                <IonInput
-                                    type="number"
-                                    value={nearestNeighbors}
-                                    onIonChange={(e) => setNearestNeighbors(parseInt(e.detail.value!, 10))}
-                                />
-                                <IonButton
-                                    slot="end"
-                                    fill="clear"
-                                    onClick={(e) =>
-                                        openPopover(e, 'Number of nearest neighbors used for affinity graph.')
-                                    }
-                                >
-                                    <IonIcon icon={informationCircleOutline} />
-                                </IonButton>
-                            </IonItem>
-                        </IonCol>
-                        <IonCol size="6">
-                            <IonItem>
-                                <IonLabel position="floating">Anchor Points</IonLabel>
-                                <IonInput
-                                    type="number"
-                                    value={numRepresentativePoints}
-                                    onIonChange={(e) => setNumRepresentativePoints(parseInt(e.detail.value!, 10))}
-                                />
-                                <IonButton
-                                    slot="end"
-                                    fill="clear"
-                                    onClick={(e) =>
-                                        openPopover(e, 'Number of anchor points selected to represent the data.')
-                                    }
-                                >
-                                    <IonIcon icon={informationCircleOutline} />
-                                </IonButton>
-                            </IonItem>
-                        </IonCol>
-                    </IonRow>
 
-                    <IonRow>
-                        <IonCol size="6">
-                            <IonItem>
-                                <IonLabel position="floating">Smooth Regularization</IonLabel>
-                                <IonInput
-                                    type="number"
-                                    value={smoothRegularization}
-                                    onIonChange={(e) => setSmoothRegularization(parseFloat(e.detail.value!))}
-                                />
-                                <IonButton
-                                    slot="end"
-                                    fill="clear"
-                                    onClick={(e) => openPopover(e, 'Controls smoothness between class transitions.')}
-                                >
-                                    <IonIcon icon={informationCircleOutline} />
-                                </IonButton>
-                            </IonItem>
-                        </IonCol>
-                        <IonCol size="6">
-                            <IonItem>
-                                <IonLabel position="floating">Label Regularization</IonLabel>
-                                <IonInput
-                                    type="number"
-                                    value={labelregularization}
-                                    onIonChange={(e) => setLabelRegularization(parseFloat(e.detail.value!))}
-                                />
-                                <IonButton
-                                    slot="end"
-                                    fill="clear"
-                                    onClick={(e) => openPopover(e, 'Controls consistency of labels across the graph.')}
-                                >
-                                    <IonIcon icon={informationCircleOutline} />
-                                </IonButton>
-                            </IonItem>
-                        </IonCol>
-                    </IonRow>
+                <IonItem>
+                    <IonLabel position="floating">Nearest Neighbors</IonLabel>
+                    <IonInput
+                        type="number"
+                        value={nearestNeighbors}
+                        onIonChange={(e) => setNearestNeighbors(parseInt(e.detail.value!, 10))}
+                    />
+                </IonItem>
 
-                    <IonRow>
-                        <IonCol size="6">
-                            <IonItem>
-                                <IonLabel position="floating">Window Size</IonLabel>
-                                <IonInput
-                                    type="number"
-                                    value={windowSize}
-                                    onIonChange={(e) => setWindowSize(parseInt(e.detail.value!, 10))}
-                                />
-                                <IonButton
-                                    slot="end"
-                                    fill="clear"
-                                    onClick={(e) => openPopover(e, 'Spatial influence between pixels/superpixels.')}
-                                >
-                                    <IonIcon icon={informationCircleOutline} />
-                                </IonButton>
-                            </IonItem>
-                        </IonCol>
-                        <IonCol size="6">
-                            <IonItem>
-                                <IonLabel position="floating">Number of Scales</IonLabel>
-                                <IonInput
-                                    type="number"
-                                    value={multiScaleNum}
-                                    onIonChange={(e) => setMultiScaleNum(parseInt(e.detail.value!))}
-                                />
-                            </IonItem>
-                        </IonCol>
-                    </IonRow>
+                <IonItem>
+                    <IonLabel position="floating">Anchor Points</IonLabel>
+                    <IonInput
+                        type="number"
+                        value={numRepresentativePoints}
+                        onIonChange={(e) => setNumRepresentativePoints(parseInt(e.detail.value!, 10))}
+                    />
+                </IonItem>
 
-                    <IonRow>
-                        <IonCol size="6">
-                            <IonItem>
-                                <IonLabel position="floating">Sigma Min</IonLabel>
-                                <IonInput
-                                    type="number"
-                                    value={sigmaMin}
-                                    onIonChange={(e) => setSigmaMin(parseInt(e.detail.value!))}
-                                />
-                            </IonItem>
-                        </IonCol>
-                        <IonCol size="6">
-                            <IonItem>
-                                <IonLabel position="floating">Sigma Max</IonLabel>
-                                <IonInput
-                                    type="number"
-                                    value={sigmaMax}
-                                    onIonChange={(e) => setSigmaMax(parseInt(e.detail.value!))}
-                                />
-                            </IonItem>
-                        </IonCol>
-                    </IonRow>
+                <IonItem>
+                    <IonLabel position="floating">Smooth Regularization</IonLabel>
+                    <IonInput
+                        type="number"
+                        value={smoothRegularization}
+                        onIonChange={(e) => setSmoothRegularization(parseFloat(e.detail.value!))}
+                    />
+                </IonItem>
 
-                    <IonRow>
-                        <IonCol>
-                            <IonItem>
-                                <IonLabel>Features</IonLabel>
-                                <IonSelect
-                                    placeholder="Select features"
-                                    multiple
-                                    value={selectedFeatures}
-                                    onIonChange={(e) => setSelectedFeatures(e.detail.value)}
-                                >
-                                    {featureOptions.map((feature) => (
-                                        <IonSelectOption key={feature} value={feature}>
-                                            {feature}
-                                        </IonSelectOption>
-                                    ))}
-                                </IonSelect>
-                            </IonItem>
-                        </IonCol>
-                    </IonRow>
+                <IonItem>
+                    <IonLabel position="floating">Window Size</IonLabel>
+                    <IonInput
+                        type="number"
+                        value={windowSize}
+                        onIonChange={(e) => setWindowSize(parseInt(e.detail.value!, 10))}
+                    />
+                </IonItem>
 
-                    <IonRow>
-                        <IonCol>
-                            <IonItem>
-                                <IonLabel>Metric</IonLabel>
-                                <IonSelect
-                                    interface="popover"
-                                    placeholder="Select metric"
-                                    value={selectedMetric}
-                                    onIonChange={(e) => setSelectedMetric(e.detail.value)}
-                                >
-                                    {metricsOptions.map((metric) => (
-                                        <IonSelectOption key={metric} value={metric}>
-                                            {metric}
-                                        </IonSelectOption>
-                                    ))}
-                                </IonSelect>
-                            </IonItem>
-                        </IonCol>
-                    </IonRow>
+                <IonItem>
+                    <IonLabel position="floating">Number of Scales</IonLabel>
+                    <IonInput
+                        type="number"
+                        value={multiScaleNum}
+                        onIonChange={(e) => setMultiScaleNum(parseInt(e.detail.value!, 10))}
+                    />
+                </IonItem>
 
-                    <IonRow className="ion-padding-top">
-                        <IonCol size="12" className="ion-text-center">
-                            <IonButton
-                                expand="block"
-                                color="primary"
-                                onClick={handleApply}
-                                disabled={!canContinue || stopProcess}
-                            >
-                                Generate Annotations
-                            </IonButton>
-                            {stopProcess && (
-                                <IonButton expand="block" color="medium" onClick={handleStop}>
-                                    Stop
-                                </IonButton>
-                            )}
-                        </IonCol>
-                    </IonRow>
-                </IonGrid>
+                <IonItem>
+                    <IonLabel position="floating">Sigma Min</IonLabel>
+                    <IonInput
+                        type="number"
+                        value={sigmaMin}
+                        onIonChange={(e) => setSigmaMin(parseInt(e.detail.value!, 10))}
+                    />
+                </IonItem>
+
+                <IonItem>
+                    <IonLabel position="floating">Sigma Max</IonLabel>
+                    <IonInput
+                        type="number"
+                        value={sigmaMax}
+                        onIonChange={(e) => setSigmaMax(parseInt(e.detail.value!, 10))}
+                    />
+                </IonItem>
+
+                <IonItem>
+                    <IonLabel>Features</IonLabel>
+                    <IonSelect
+                        placeholder="Select features"
+                        multiple
+                        value={selectedFeatures}
+                        onIonChange={(e) => setSelectedFeatures(e.detail.value)}
+                    >
+                        {featureOptions.map((feature) => (
+                            <IonSelectOption key={feature} value={feature}>
+                                {feature}
+                            </IonSelectOption>
+                        ))}
+                    </IonSelect>
+                </IonItem>
+
+                <IonItem>
+                    <IonLabel>Metric</IonLabel>
+                    <IonSelect
+                        interface="popover"
+                        placeholder="Select metric"
+                        value={selectedMetric}
+                        onIonChange={(e) => setSelectedMetric(e.detail.value)}
+                    >
+                        {metricsOptions.map((metric) => (
+                            <IonSelectOption key={metric} value={metric}>
+                                {metric}
+                            </IonSelectOption>
+                        ))}
+                    </IonSelect>
+                </IonItem>
+
+                <IonButton
+                    expand="block"
+                    color="primary"
+                    className="ion-margin-top"
+                    onClick={handleApply}
+                    disabled={!canContinue || stopProcess}
+                >
+                    Generate Annotations
+                </IonButton>
+
+                {stopProcess && (
+                    <IonButton expand="block" color="medium" onClick={handleStop}>
+                        Stop
+                    </IonButton>
+                )}
 
                 {/* Info popover */}
                 <IonPopover isOpen={!!popover} event={popover?.event} onDidDismiss={closePopover}>
