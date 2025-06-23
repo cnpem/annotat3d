@@ -419,41 +419,6 @@ const PixelSegmentationModuleCard: React.FC = () => {
                     </IonItem>
                 </ModuleCardItem>
 
-                <ModuleCardItem name="Feature Selection Parameters">
-                    <IonItem>
-                        <IonLabel>Enable?</IonLabel>
-                        <IonCheckbox
-                            checked={featParams.thresholdSelection !== undefined}
-                            onIonChange={(e) => {
-                                const value = e.detail.checked ? 0.01 : undefined;
-                                setFeatParams({
-                                    ...featParams,
-                                    thresholdSelection: value,
-                                });
-                            }}
-                        />
-                    </IonItem>
-                    <IonItem>
-                        <IonLabel position="stacked">Importance Threshold</IonLabel>
-                        <IonInput
-                            placeholder="feat selection disabled"
-                            min={0}
-                            max={0.1}
-                            type="number"
-                            step="0.01"
-                            value={featParams.thresholdSelection}
-                            onIonChange={(e) => {
-                                const value = e.detail.value ? +e.detail.value : undefined;
-
-                                setFeatParams({
-                                    ...featParams,
-                                    thresholdSelection: value,
-                                });
-                            }}
-                        ></IonInput>
-                    </IonItem>
-                </ModuleCardItem>
-
                 <ModuleCardItem name="Classifier Parameters">
                     <IonItem>
                         <IonLabel>Classifier Model</IonLabel>

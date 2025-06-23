@@ -176,8 +176,8 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                 return
 
             if selected_axis != 0:
-                valid, _ = self._validate_feature_extraction_memory_usage(superpixel=False)
-
+                #valid, _ = self._validate_feature_extraction_memory_usage(superpixel=False)
+                valid = True
                 if not valid:
                     raise Exception(
                         "Unable to compute preview for axis %s because too much memory may be consumed (beyond the accepted limit of %d GB). Please preview only on XY axis for now."
@@ -308,7 +308,8 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             feature_extraction_time = 0.0
             with sentry_sdk.start_span(op="Feature extraction"):
                 if self._features is None or force_feature_extraction:
-                    valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(superpixel=False, **kwargs)
+                    #valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(superpixel=False, **kwargs)
+                    valid = True
                     if valid:
                         logging.debug("**** Extracting features for the entire image AT ONCE ****")
                         start_feature_extraction_time = time.time()

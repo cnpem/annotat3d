@@ -30,6 +30,9 @@ import skimage.measure as sk_measure
 import sscPySpin.feature_extraction as spin_feat_extraction
 import sscPySpin.image as spin_img
 import sscPySpin.segmentation as spin_seg
+from sscAnnotat3D.cython.extract_feactures import pixel_feature_extract
+from sscAnnotat3D.cython.superpixel_feature_pooling import pooling_per_superpixel
+
 from matplotlib import pyplot as plt
 from skimage import exposure, filters, img_as_uint
 from skimage.feature import greycomatrix, greycoprops, local_binary_pattern
@@ -345,31 +348,54 @@ def pixel_feature_extraction(img, **kwargs):
         array: a numpy array that contains the features of an image
 
     """
-    ngpus = -1 if "ngpus" not in kwargs else kwargs["ngpus"]
-    image_min = -1 if "image_min" not in kwargs else int(kwargs["image_min"])
-    image_max = -1 if "image_max" not in kwargs else int(kwargs["image_max"])
+    #ngpus = -1 if "ngpus" not in kwargs else kwargs["ngpus"]
+    #image_min = -1 if "image_min" not in kwargs else int(kwargs["image_min"])
+    #image_max = -1 if "image_max" not in kwargs else int(kwargs["image_max"])
 
-    block_size_feats = 64
+    #block_size_feats = 64
 
     start = time.time()
 
-    sigmas = np.array(kwargs["sigmas"], dtype="float32")
-    selected_features = kwargs["selected_features"]
-    pixel_features = spin_feat_extraction.spin_alloc_pixel_featmap(img, selected_features, sigmas)
+    sigmas = list(map(float, kwargs["sigmas"]))
 
-    spin_feat_extraction.spin_feat_extraction_2D(
-        img,
-        None,
-        pixel_features,
-        None,
-        selected_features,
-        sigmas,
-        None,
-        ngpus=ngpus,
-        maxBlockSize=block_size_feats,
-        image_min=image_min,
-        image_max=image_max,
-    )
+    selected_features = kwargs["selected_features"]
+        
+    
+    intensity = 'intensity' in selected_features
+    edges = 'edges' in selected_features
+    texture = 'texture' in selected_features
+
+    
+    img_float = img.astype('float32')
+    
+    if img_float.ndim == 2:
+        img_float = np.expand_dims(img_float, axis = 0)
+    print("................\n")
+    print(img_float.shape)
+    print("intensity, edges, texture\n",intensity, edges, texture)
+
+    pixel_features = pixel_feature_extract(img_float,
+                     sigmas,
+                     use_3d = False,
+                     Intensity = intensity,
+                     Edges = edges,
+                     Texture = texture)
+
+    #pixel_features = spin_feat_extraction.spin_alloc_pixel_featmap(img, selected_features, sigmas)
+
+    #spin_feat_extraction.spin_feat_extraction_2D(
+    #    img,
+    #    None,
+    #    pixel_features,
+    #    None,
+    #    selected_features,
+    #    sigmas,
+    #    None,
+    #    ngpus=ngpus,
+    #    maxBlockSize=block_size_feats,
+    #    image_min=image_min,
+    #    image_max=image_max,
+    #)
 
     end = time.time()
     logger.debug(f"-- Feature extraction run time: {end - start}s")
@@ -406,30 +432,23 @@ def superpixel_feature_extraction(
         array: this function returns a numpy array that represents the superpixel features
 
     """
-    ngpus = -1 if "ngpus" not in kwargs else kwargs["ngpus"]
-    image_min = -1 if "image_min" not in kwargs else int(kwargs["image_min"])
-    image_max = -1 if "image_max" not in kwargs else int(kwargs["image_max"])
 
     num_superpixels = max_label - min_label + 1
 
     start = time.time()
-
-    sigmas = np.array(sigmas, dtype="float32")
-
-    block_size_feats = 64
-
-    if superpixel_type == "waterpixels3d":
-        block_size_feats = 32  # 32 if 'max_block_size' not in kwargs else int(kwargs['max_block_size'])
-
-    superpixel_type_id = spin_seg.SPINSuperpixelType.superpixel_id(superpixel_type)
-
-    superpixel_features = spin_feat_extraction.spin_alloc_superpixel_feature_vectors(
-        num_superpixels, selected_features, sigmas, selected_supervoxel_feat_pooling
-    )
-
-    logger.debug(f"-- Allocated Superpixel features shape: {superpixel_features.shape}")
-
-    pixel_features = None
+    print(sigmas)
+    intensity = 'intensity' in selected_features
+    edges = 'edges' in selected_features
+    texture = 'texture' in selected_features
+    
+    img_float = img.astype('float32')
+    
+    pixel_features = pixel_feature_extract(img_float,
+                    sigmas,
+                    use_3d = False,
+                    Intensity = intensity,
+                    Edges = edges,
+                    Texture = texture)
 
     end = time.time()
 
@@ -437,27 +456,10 @@ def superpixel_feature_extraction(
 
     start = time.time()
 
-    spin_feat_extraction.spin_feat_extraction_2D(
-        img,
-        img_superpixels,
-        pixel_features,
-        superpixel_features,
-        selected_features,
-        sigmas,
-        selected_supervoxel_feat_pooling,
-        min_label=min_label,
-        max_label=max_label,
-        ngpus=ngpus,
-        maxBlockSize=block_size_feats,
-        super_pixels_type=superpixel_type_id,
-        image_min=image_min,
-        image_max=image_max,
-    )
-
+    superpixel_features = pooling_per_superpixel(pixel_features, img_superpixels, num_superpixels, selected_supervoxel_feat_pooling)
+    
     end = time.time()
     logger.debug(f"-- Feature extraction run time: {end - start}s")
-
-    # np.save('pixel_features.npy', pixel_features)
 
     return superpixel_features
 

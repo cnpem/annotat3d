@@ -281,35 +281,6 @@ def pooling_to_spin_pooling(pooling):
         return spin_feat_extraction.SPINSupervoxelPooling.MIN
 
 
-def features_to_spin_features(feature):
-    if feature.lower() == "fft_gauss":
-        return spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_GAUSS
-    elif feature.lower() == "fft_gabor":
-        return spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_GABOR
-    elif feature.lower() == "none":
-        return spin_feat_extraction.SPINFilters.NONE
-    elif feature.lower() == "fft_dog":
-        return spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_DIFF_OF_GAUSS
-    elif feature.lower() == "sobel":
-        return spin_feat_extraction.SPINFilters.SOBEL
-    elif feature.lower() == "membrane_projections":
-        return spin_feat_extraction.SPINFilters.MEMBRANE_PROJECTIONS
-    elif feature.lower() == "minimum":
-        return spin_feat_extraction.SPINFilters.ADJ_MIN
-    elif feature.lower() == "maximum":
-        return spin_feat_extraction.SPINFilters.ADJ_MAX
-    elif feature.lower() == "average":
-        return spin_feat_extraction.SPINFilters.ADJ_AVERAGE
-    elif feature.lower() == "variance":
-        return spin_feat_extraction.SPINFilters.ADJ_VARIANCE
-    elif feature.lower() == "median":
-        return spin_feat_extraction.SPINFilters.ADJ_MEDIAN
-    elif feature.lower() == "lbp":
-        return spin_feat_extraction.SPINFilters.LBP
-    else:
-        raise f"Unknown feature: {feature.lower()}"
-
-
 @app.errorhandler(BadRequest)
 def handle_exception(error_msg: str):
     return jsonify({"error_msg": error_msg}), 400
@@ -339,13 +310,6 @@ def create():
             "unable to apply!. Please, at least create one label and background annotation and try again the preprocess."
         )
 
-    """     
-    if len(added_labels) <= 1:
-        return handle_exception(
-            "unable to preview!. Please, at least create one label and background annotation and try again the preprocess."
-        )
-    """
-
     if _convert_dtype_to_str(img_superpixel.dtype) != "int32":
         img_superpixel = img_superpixel.astype("int32")
 
@@ -366,23 +330,11 @@ def create():
     except:
         return handle_exception("error trying to get the request in /superpixel_segmentation_module/create")
 
-    if "selected_supervoxel_feat_pooling" in feature_extraction_params:
-        feature_extraction_params["selected_supervoxel_feat_pooling"] = [
-            pooling_to_spin_pooling(p) for p in feature_extraction_params["selected_supervoxel_feat_pooling"]
-        ]
-
     logging.debug("feature_extraction_params: {}".format(feature_extraction_params["selected_features"]))
-    if "selected_features" in feature_extraction_params:
-        feature_extraction_params["selected_features"] = [
-            features_to_spin_features(f) for f in feature_extraction_params["selected_features"]
-        ]
 
     logging.debug('__default_feature_extraction_params"{}'.format(__default_feature_extraction_params))
     logging.debug("feature_extraction_params: {}".format(feature_extraction_params))
     logging.debug("classifier_params: {}".format(classifier_params))
-    available = spin_feat_extraction.SPINFilters.available_filters()
-
-    logging.debug("available: {}".format(available))
     logging.debug("feature_extraction_params: {}".format(feature_extraction_params))
     logging.debug("classifier_params: {}".format(classifier_params))
 
@@ -452,10 +404,10 @@ def preview():
     if not segm_module.has_preview():
         return "This module does not have a preview", 400
 
-    try:
-        label, selected_features_names = segm_module.preview(annotation_slice_dict, annotation_image, [slice_num], axis_dim)
-    except Exception as e:
-        return handle_exception("unable to preview! {}".format(str(e)))
+    #try:
+    label, selected_features_names = segm_module.preview(annotation_slice_dict, annotation_image, [slice_num], axis_dim)
+    #except Exception as e:
+    #    return handle_exception("unable to preview! {}".format(str(e)))
 
     data_repo.set_image("label", label)
 

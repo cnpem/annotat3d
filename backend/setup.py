@@ -7,7 +7,7 @@ from Cython.Distutils import build_ext
 from setuptools import setup
 from setuptools.command.install import install
 from sscAnnotat3D.__version__ import __version__
-
+import numpy as np
 # import Cython.Compiler.Options
 # Cython.Compiler.Options.annotate = True
 
@@ -115,7 +115,7 @@ setup(
             *extension_modules("sscAnnotat3D.api.modules"),
             *extension_modules("sscAnnotat3D.utils"),
             *extension_modules("sscAnnotat3D.modules"),
-            *extension_modules("sscAnnotat3D.cython", language="c++"),
+            *extension_modules("sscAnnotat3D.cython", language="c++", include_dirs=[np.get_include()]),
         ],
         language_level="3",
         nthreads=32,
