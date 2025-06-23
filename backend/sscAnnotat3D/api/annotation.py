@@ -763,7 +763,7 @@ def apply_active_contour_checkboard(input_id: str):
 @app.route("/niblack_preview/<input_id>", methods=["POST"])
 @cross_origin()
 def niblack_preview(input_id: str):
-    from harpia.threshold import threshold as threshold_H
+    from harpia.threshold.thresholdChunked import niblackThreshold
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -809,7 +809,8 @@ def niblack_preview(input_id: str):
         new_click = False
 
     #label_mask = img_slice >= 34000
-    threshold_H.niblack(input_img_3d,output_img,W,x,y,z,N,N,1)
+    #threshold_H.niblack(input_img_3d,output_img,W,x,y,z,N,N,1)
+    output_img = niblackThreshold(input_img_3d,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
     label_mask = output_img>0
 
@@ -821,7 +822,7 @@ def niblack_preview(input_id: str):
 @app.route("/niblack_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def niblack_apply(input_id: str):
-    from harpia.threshold import threshold as threshold_H
+    from harpia.threshold.thresholdChunked import niblackThreshold
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -873,27 +874,30 @@ def niblack_apply(input_id: str):
         # Apply threshold based on axis direction
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
-            threshold_H.niblack(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, x, y, 1, N, N, 1)
+            #threshold_H.niblack(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, x, y, 1, N, N, 1)
+            output_img[slice_num] = niblackThreshold(img.reshape(1, x, y),windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            z, x, y = out.shape
-            threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
-            output_img[:, slice_num, :] = out
+            #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            #z, x, y = out.shape
+            #threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
+            output_img[:, slice_num, :] = niblackThreshold(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            z, x, y = out.shape
-            threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
-            output_img[:, :, slice_num] = out
+            #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            #z, x, y = out.shape
+            #threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
+            output_img[:, :, slice_num] = niblackThreshold(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
 
     elif convType == "3d":
         # Apply convolution in all x, y, z directions
-        threshold_H.niblack(input_img, output_img, W, x, y, z, N, N, N)
+        #threshold_H.niblack(input_img, output_img, W, x, y, z, N, N, N)
+        output_img= niblackThreshold(input_img,windowSize=N,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
 
@@ -908,7 +912,7 @@ def niblack_apply(input_id: str):
 @app.route("/sauvola_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def sauvola_apply(input_id: str):
-    from harpia.threshold import threshold as threshold_H
+    from harpia.threshold.thresholdChunked import sauvolaThreshold
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -961,28 +965,30 @@ def sauvola_apply(input_id: str):
         # Apply threshold based on axis direction
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
-            threshold_H.sauvola(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, R, x, y, 1, N, N, 1)
+            #threshold_H.sauvola(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, R, x, y, 1, N, N, 1)
+            output_img[slice_num] = sauvolaThreshold(img.reshape(1, x, y),windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            z, x, y = out.shape
-            threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
-            output_img[:, slice_num, :] = out
+            #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            #z, x, y = out.shape
+            #threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
+            output_img[:, slice_num, :] = sauvolaThreshold(input,windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            z, x, y = out.shape
-            threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
-            output_img[:, :, slice_num] = out
+            #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            #z, x, y = out.shape
+            #threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
+            output_img[:, :, slice_num] = sauvolaThreshold(input,windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
 
 
     elif convType == "3d":
         # Apply convolution in all x, y, z directions
-        threshold_H.sauvola(input_img, output_img, W, R, x, y, z, N, N, N)
+        #threshold_H.sauvola(input_img, output_img, W, R, x, y, z, N, N, N)
+        output_img = sauvolaThreshold(input_img,windowSize=N,range = R,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
 
@@ -996,7 +1002,7 @@ def sauvola_apply(input_id: str):
 @app.route("/local_mean_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def local_mean_apply(input_id: str):
-    from harpia.threshold import threshold as threshold_H
+    from harpia.threshold.thresholdChunked import meanThreshold
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -1048,27 +1054,31 @@ def local_mean_apply(input_id: str):
         # Apply threshold based on axis direction
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
-            threshold_H.local_mean(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, x, y, 1, N, N, 1)
+            #threshold_H.local_mean(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, x, y, 1, N, N, 1)
+            output_img[slice_num] = meanThreshold(img.reshape(1, x, y),windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+
+
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            z, x, y = out.shape
-            threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
-            output_img[:, slice_num, :] = out
+            #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            #z, x, y = out.shape
+            #threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
+            output_img[:, slice_num, :] = meanThreshold(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            z, x, y = out.shape
-            threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
-            output_img[:, :, slice_num] = out
+            #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            #z, x, y = out.shape
+            #threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
+            output_img[:, :, slice_num] = meanThreshold(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
 
     elif convType == "3d":
         # Apply convolution in all x, y, z directions
-        threshold_H.local_mean(input_img, output_img, W, x, y, z, N, N, N)
+        #threshold_H.local_mean(input_img, output_img, W, x, y, z, N, N, N)
+        output_img= meanThreshold(input_img,windowSize=N,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
 
@@ -1083,7 +1093,7 @@ def local_mean_apply(input_id: str):
 @app.route("/local_gaussian_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def local_gaussian_apply(input_id: str):
-    from harpia.threshold import threshold as threshold_H
+    from harpia.threshold.thresholdChunked import gaussianThreshold
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -1135,28 +1145,30 @@ def local_gaussian_apply(input_id: str):
         # Apply threshold based on axis direction
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
-            threshold_H.local_gaussian(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), x, y, 1, S,W,0)
+            #threshold_H.local_gaussian(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), x, y, 1, S,W,0)
+            output_img[slice_num] = gaussianThreshold(img.reshape(1, x, y),sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            z, x, y = out.shape
-            threshold_H.local_gaussian(input, out, x, y, z, S,W,0)
-            output_img[:, slice_num, :] = out
+            #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            #z, x, y = out.shape
+            #threshold_H.local_gaussian(input, out, x, y, z, S,W,0)
+            output_img[:, slice_num, :] = gaussianThreshold(input,sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            z, x, y = out.shape
-            threshold_H.local_gaussian(input, out, x, y, z, S, W,0)
-            output_img[:, :, slice_num] = out
+            #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            #z, x, y = out.shape
+            #threshold_H.local_gaussian(input, out, x, y, z, S, W,0)
+            output_img[:, :, slice_num] = gaussianThreshold(input,sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         #annot_module.annotation_image[slice_range] = output_img[slice_range]
-        annot_module.labelmask_update(output_img, label, mk_id, new_click)
+        annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
 
     elif convType == "3d":
         # Apply convolution in all x, y, z directions
-        threshold_H.local_gaussian(input_img, output_img, x, y, z, S,W,1)
+        #threshold_H.local_gaussian(input_img, output_img, x, y, z, S,W,1)
+        output_img= gaussianThreshold(input_img,sigma=S,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
 
@@ -1166,14 +1178,12 @@ def local_gaussian_apply(input_id: str):
     #label_mask = output_img > 0
     #annot_module.labelmask_update(label_mask, label, mk_id, new_click)
 
-    print(request.json)
-
     return jsonify(annot_module.current_mk_id)
 
 @app.route("/watershed_apply_2d/<input_id>", methods=["POST"])
 @cross_origin()
 def watershed_apply(input_id: str):
-    from harpia.filters import (canny, sobel, prewitt)
+    from harpia.filters.filtersChunked import (sobelFilter, prewittFilter)
     from harpia.watershed import watershed
     from harpia.quantification import quantification
     print(dir(quantification))
@@ -1227,57 +1237,59 @@ def watershed_apply(input_id: str):
         axisIndex = axisIndexDict[axis]
         typeImg2d = input_img[0].dtype
         # Apply threshold based on axis direction
+        print("getting relief")
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
 
             if input_filter == 'sobel':
-                sobel(img.reshape(1, x, y), relief_img[slice_num].reshape(1, x, y), x, y, 1, 0)
+                relief_img[slice_num] = sobelFilter(img.reshape(1, x, y), type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
 
             elif input_filter == 'prewitt':
-                prewitt(img.reshape(1, x, y), relief_img[slice_num].reshape(1, x, y), x, y, 1, 0)
+                relief_img[slice_num] = prewittFilter(img.reshape(1, x, y), type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            out = np.ascontiguousarray(relief_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            z, x, y = out.shape
+            #out = np.ascontiguousarray(relief_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
+            #z, x, y = out.shape
 
             if input_filter == 'sobel':
-                sobel(input, out, x, y, z,0)
+                out = sobelFilter(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
 
             elif input_filter == 'prewitt':
-                prewitt(input, out, x, y, z,0)
+                out = prewittFilter(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
 
             relief_img[:, slice_num, :] = out
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            out = np.ascontiguousarray(relief_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            z, x, y = out.shape
+            #out = np.ascontiguousarray(relief_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
+            #z, x, y = out.shape
                     
             if input_filter == 'sobel':
-                sobel(input, out, x, y, z,0)
+                out = sobelFilter(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
 
             elif input_filter == 'prewitt':
-                prewitt(input, out, x, y, z,0)
+                out = prewittFilter(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
                         
             relief_img[:, :, slice_num] = out
 
         #now we get the markers using the labels
+        print("getting markers")
         markers = annot_module.annotation_image[slice_range].astype(np.int32)
 
         watershed_relief = relief_img[slice_range].astype(np.int32)
         x,y = markers.shape
-        
+        print("apply watershed")
         watershed.watershed_meyers_2d(watershed_relief, markers, -1, x, y)
 
         annot_module.multilabel_updated(markers, mk_id)
 
     else:
         if input_filter == 'sobel':
-            sobel(input_img, relief_img, x, y, z, 1)
+            relief_img = sobelFilter(input_img, type3d=1, verbose =1, gpuMemory=0.1, ngpus=1)
 
         elif input_filter == 'prewitt':
-            prewitt(input_img, relief_img, x, y, z, 1)
+            relief_img = prewittFilter(input_img, type3d=1, verbose =1, gpuMemory=0.1, ngpus=1)
 
         markers = data_repo.get_image('label').astype(np.int32)
         watershed_relief = relief_img.astype(np.int32)
@@ -1770,6 +1782,8 @@ def fgc_apply(input_id: str):
         )
     
         F = fgc_instance.z @ U
+        #softmax = np.exp(F) / np.sum(np.exp(F), axis=1, keepdims=True)
+        #labels = (softmax > 0.75).astype(int).argmax(axis=1).reshape(rows, cols)
         labels = F.argmax(axis=1).reshape(rows, cols)
 
         print("Final labels shape:", labels.shape)

@@ -1,7 +1,7 @@
 import numpy as np
 from flask import Blueprint, request
 from flask_cors import cross_origin
-from harpia.filters import (
+from harpia.filters.filters import (
     anisotropic_diffusion2D,
     anisotropic_diffusion3D,
     gaussian,
@@ -10,6 +10,15 @@ from harpia.filters import (
     unsharp_mask,
     non_local_means,
 )
+
+from harpia.filters.filtersChunked import(
+    gaussianFilter,
+    sobelFilter,
+    prewittFilter,
+    unsharpMaskFilter,
+    meanFilter
+)
+
 from skimage.filters import gaussian as skimage_gaussian
 from sscAnnotat3D import utils
 from werkzeug.exceptions import BadRequest
@@ -80,13 +89,11 @@ def gaussian_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)),dtype=np.float32)
 
-    output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
-
-    z,x,y = output_img.shape
+    #z,x,y = output_img.shape
 
     #output_img = skimage_gaussian(input_img_3d, sigma, preserve_range=True).astype(input_img_3d.dtype)
 
-    gaussian(input_img_3d,output_img,x,y,z,sigma,0)
+    output_img = gaussianFilter(input_img_3d, sigma=sigma, type3d = 0, verbose = 1)
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -120,30 +127,31 @@ def gaussian_apply(input_id: str, output_id: str):
                 #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
                 img = input_img[i]
                 
-                gaussian(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,sigma,0)
+                #gaussian(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,sigma,0)
+                output_img[i] = gaussianFilter(img.reshape(1,x,y),sigma=sigma,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 1:
                 # stack following the y axis
                 #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                z,x,y = out.shape
-                gaussian(input,out,x,y,z,sigma,0)
-                output_img[:,i,:] = out
+                #out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
+                #z,x,y = out.shape
+                output_img[:,i,:] = gaussianFilter(input,sigma=sigma,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 2:
                 # stack following the x axis
                 #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                z,x,y = out.shape
-                gaussian(input,out,x,y,z,sigma,0)
-                output_img[:,:,i] = out
+                #out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
+                #z,x,y = out.shape
+                #gaussian(input,out,x,y,z,sigma,0)
+                output_img[:,:,i] = gaussianFilter(input,sigma=sigma,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
 
     elif convType == "3d":
         # convolution in x, y, z
-        gaussian(input_img,output_img,x,y,z,sigma,1)
+        #gaussian(input_img,output_img,x,y,z,sigma,1)
+        output_img = gaussianFilter(input_img,sigma=sigma,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -171,8 +179,8 @@ def nlm_preview(input_id: str, output_id: str):
     x,y = input_img_slice.shape
     input_img_2d = np.ascontiguousarray(input_img_slice,dtype=np.float32)
 
-    output_img = np.zeros_like(input_img_2d,dtype=np.float64)
-    non_local_means(input_img_2d,output_img, x,y,smallWindow,bigWindow,h,sigma)
+    #output_img = np.zeros_like(input_img_2d,dtype=np.float64)
+    output_img = non_local_means(input_img_2d, small_window= smallWindow,big_window = bigWindow,h=h,sigma=sigma)
 
     data_repo.set_image(output_id, data=output_img.reshape((1,x,y)))
 
@@ -208,25 +216,26 @@ def nlm_apply(input_id: str, output_id: str):
             #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
             img = input_img[i]
                 
-            non_local_means(img.reshape(x,y),output_img[i].reshape(x,y),x,y,smallWindow,bigWindow,h,sigma)
+            #non_local_means(img.reshape(x,y),output_img[i].reshape(x,y),x,y,smallWindow,bigWindow,h,sigma)
+            output_img[i]= non_local_means(img.reshape(x,y), small_window= smallWindow,big_window = bigWindow,h=h,sigma=sigma)
 
         elif axisIndex == 1:
             # stack following the y axis
             #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
             input = np.ascontiguousarray(input_img[:,i,:].reshape((input_img[:,i,:].shape)),dtype=np.float32)
-            out = np.ascontiguousarray(output_img[:,i,:].reshape((input_img[:,i,:].shape)),dtype=np.float64)
-            x,y = out.shape
-            non_local_means(input,out,x,y,smallWindow,bigWindow,h,sigma)
-            output_img[:,i,:] = out
+            #out = np.ascontiguousarray(output_img[:,i,:].reshape((input_img[:,i,:].shape)),dtype=np.float64)
+            #x,y = out.shape
+            #non_local_means(input,out,x,y,smallWindow,bigWindow,h,sigma)
+            output_img[:,i,:] = non_local_means(input,small_window= smallWindow,big_window = bigWindow,h=h,sigma=sigma)
 
         elif axisIndex == 2:
             # stack following the x axis
             #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
             input = np.ascontiguousarray(input_img[:,:,i].reshape((input_img[:,:,i].shape)),dtype=np.float32)
-            out = np.ascontiguousarray(output_img[:,:,i].reshape((input_img[:,:,i].shape)),dtype=np.float64)
-            x,y = out.shape
-            non_local_means(input,out,x,y,smallWindow,bigWindow,h,sigma)
-            output_img[:,:,i] = out
+            #out = np.ascontiguousarray(output_img[:,:,i].reshape((input_img[:,:,i].shape)),dtype=np.float64)
+            #x,y = out.shape
+            #non_local_means(input,out,x,y,smallWindow,bigWindow,h,sigma)
+            output_img[:,:,i] = non_local_means(input,small_window= smallWindow,big_window = bigWindow,h=h,sigma=sigma)
 
     data_repo.set_image(output_id, data=output_img.astype(input_img.dtype))
 
@@ -330,13 +339,15 @@ def mean_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)),dtype=np.float32)
 
-    output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
+    #output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
 
-    z,x,y = output_img.shape
+    #z,x,y = output_img.shape
 
     #output_img = skimage_gaussian(input_img_3d, sigma, preserve_range=True).astype(input_img_3d.dtype)
 
-    mean(input_img_3d,output_img,x,y,z,N,N,1)
+    #mean(input_img_3d,output_img,x,y,z,N,N,1)
+
+    output_img = meanFilter(input_img_3d,windowSize=N,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -369,30 +380,32 @@ def mean_apply(input_id: str, output_id: str):
                 # stack following the z axis
                 #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
                 img = input_img[i]
-                mean(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,N,N,1)
+                #mean(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,N,N,1)
+                output_img[i] = meanFilter(img.reshape(1,x,y),windowSize=N,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 1:
                 # stack following the y axis
                 #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                z,x,y = out.shape
-                mean(input,out,x,y,z,N,N,1)
-                output_img[:,i,:] = out
+                #out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
+                #z,x,y = out.shape
+                #mean(input,out,x,y,z,N,N,1)
+                output_img[:,i,:] = meanFilter(input,windowSize=N,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 2:
                 # stack following the x axis
                 #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                z,x,y = out.shape
-                mean(input,out,x,y,z,N,N,1)
-                output_img[:,:,i] = out
+                #out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
+                #z,x,y = out.shape
+                #mean(input,out,x,y,z,N,N,1)
+                output_img[:,:,i] = meanFilter(input,windowSize=N,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
 
     elif convType == "3d":
         # convolution in x, y, z
-        mean(input_img,output_img,x,y,z,N,N,N)
+        #mean(input_img,output_img,x,y,z,N,N,N)
+        output_img = meanFilter(input_img,windowSize=N,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -419,13 +432,14 @@ def unsharp_mask_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)),dtype=np.float32)
 
-    output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
+    #output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
 
-    z,x,y = output_img.shape
+    #z,x,y = output_img.shape
 
     #output_img = skimage_gaussian(input_img_3d, sigma, preserve_range=True).astype(input_img_3d.dtype)
 
-    unsharp_mask(input_img_3d,output_img,x,y,z,sigma,ammount,threshold,0)
+    #unsharp_mask(input_img_3d,output_img,x,y,z,sigma,ammount,threshold,0)
+    output_img = unsharpMaskFilter(input_img_3d,sigma=sigma,ammount=ammount,threshold=threshold,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -460,30 +474,32 @@ def unsharp_mask_apply(input_id: str, output_id: str):
                 # stack following the z axis
                 #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
                 img = input_img[i]
-                unsharp_mask(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,sigma,ammount,threshold,0)
+                #unsharp_mask(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,sigma,ammount,threshold,0)
+                output_img[i] = unsharpMaskFilter(img.reshape(1,x,y),sigma=sigma,ammount=ammount,threshold=threshold,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 1:
                 # stack following the y axis
                 #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                z,x,y = out.shape
-                unsharp_mask(input,out,x,y,z,sigma,ammount,threshold,0)
-                output_img[:,i,:] = out
+                #out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
+                #z,x,y = out.shape
+                #unsharp_mask(input,out,x,y,z,sigma,ammount,threshold,0)
+                output_img[:,i,:] = unsharpMaskFilter(input,sigma=sigma,ammount=ammount,threshold=threshold,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 2:
                 # stack following the x axis
                 #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                z,x,y = out.shape
-                unsharp_mask(input,out,x,y,z,sigma,ammount,threshold,0)
-                output_img[:,:,i] = out
+                #out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
+                #z,x,y = out.shape
+                #unsharp_mask(input,out,x,y,z,sigma,ammount,threshold,0)
+                output_img[:,:,i] = unsharpMaskFilter(input,sigma=sigma,ammount=ammount,threshold=threshold,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
 
     elif convType == "3d":
         # convolution in x, y, z
-        unsharp_mask(input_img,output_img,x,y,z,sigma,ammount,threshold,1)
+        #unsharp_mask(input_img,output_img,x,y,z,sigma,ammount,threshold,1)
+        output_img = unsharpMaskFilter(input_img,sigma=sigma,ammount=ammount,threshold=threshold,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -508,13 +524,14 @@ def median_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)),dtype=np.float32)
 
-    output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
+    #output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
 
-    z,x,y = output_img.shape
+    #z,x,y = output_img.shape
 
     #output_img = skimage_gaussian(input_img_3d, sigma, preserve_range=True).astype(input_img_3d.dtype)
 
-    mean(input_img_3d,output_img,x,y,z,N,N,1)
+    #mean(input_img_3d,output_img,x,y,z,N,N,1)
+    output_img = median(input_img_3d,nx=N,ny=N,nz=1)
 
     data_repo.set_image(output_id, data=output_img)
 
@@ -547,30 +564,32 @@ def median_apply(input_id: str, output_id: str):
                 # stack following the z axis
                 #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
                 img = input_img[i]
-                median(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,N,N,1)
+                #median(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,N,N,1)
+                output_img[i] = median(img.reshape(1,x,y),nx=N,ny=N,nz=1)
 
             elif axisIndex == 1:
                 # stack following the y axis
                 #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                z,x,y = out.shape
-                median(input,out,x,y,z,N,N,1)
-                output_img[:,i,:] = out
+                #out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
+                #z,x,y = out.shape
+                #median(input,out,x,y,z,N,N,1)
+                output_img[:,i,:] = median(input,nx=N,ny=N,nz=1)
 
             elif axisIndex == 2:
                 # stack following the x axis
                 #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                z,x,y = out.shape
-                median(input,out,x,y,z,N,N,1)
-                output_img[:,:,i] = out
+                #out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
+                #z,x,y = out.shape
+                #median(input,out,x,y,z,N,N,1)
+                output_img[:,:,i] = median(input,nx=N,ny=N,nz=1)
 
 
     elif convType == "3d":
         # convolution in x, y, z
-        median(input_img,output_img,x,y,z,N,N,N)
+        #median(input_img,output_img,x,y,z,N,N,N)
+        output_img = median(input_img,nx=N,ny=N,nz=N)
 
     data_repo.set_image(output_id, data=output_img)
 
