@@ -2,7 +2,7 @@
 import numpy as np
 cimport numpy as np
 from scipy.ndimage import gaussian_filter
-from harpia.filters import prewitt
+from harpia.filters.filtersChunked import prewittFilter
 from skimage.feature import local_binary_pattern
 cimport cython
 
@@ -44,7 +44,7 @@ def pixel_feature_extract(np.ndarray[np.float32_t, ndim=3] img,
                 feature_index += 1
 
             if Edges:
-                prewitt(blurred_3d, results[feature_index], xsize, ysize, zsize, True)
+                results[feature_index] = prewittFilter(blurred_3d, type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
                 feature_index += 1
 
             if Texture:
@@ -65,7 +65,7 @@ def pixel_feature_extract(np.ndarray[np.float32_t, ndim=3] img,
 
                 if Edges:
                     tmp_edge = np.zeros((1, ysize, xsize), dtype=np.float32)
-                    prewitt(np.expand_dims(blurred_2d, axis=0), tmp_edge, 1, ysize, xsize, False)
+                    tmp_edge = prewittFilter(np.expand_dims(blurred_2d, axis=0),type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
                     results[feature_index, z] = tmp_edge[0]
                     feature_index += 1
 
