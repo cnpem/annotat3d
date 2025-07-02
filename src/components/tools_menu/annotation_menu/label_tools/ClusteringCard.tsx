@@ -3,6 +3,7 @@ import { IonList, IonItem, IonLabel, IonSelect, IonSelectOption } from '@ionic/r
 
 import FgcCard from './FgcCard';
 import NMFCard from './NMFCard';
+import LabelPropagCard from './LabelPropagCard';
 import { dispatch } from '../../../../utils/eventbus';
 
 interface ClusteringCardVisible {
@@ -14,7 +15,8 @@ const ClusteringCard: React.FC<ClusteringCardVisible> = ({ isVisible }) => {
 
     const clusteringOptions = [
         { value: 1, label: 'Fast Graph Clustering' },
-        { value: 2, label: 'Graph Regularized NMF' },
+        { value: 2, label: 'Anchor-Based Label Propagation' },
+        { value: 3, label: 'Graph Regularized NMF' },
     ];
 
     const renderComponent = () => {
@@ -22,9 +24,11 @@ const ClusteringCard: React.FC<ClusteringCardVisible> = ({ isVisible }) => {
             case 1:
                 return <FgcCard isVisible={true} />;
             case 2:
+                return <LabelPropagCard isVisible={true} />;
+            case 3:
                 return <NMFCard isVisible={true} />;
             default:
-                return null;
+                return <LabelPropagCard isVisible={true} />;
         }
     };
 

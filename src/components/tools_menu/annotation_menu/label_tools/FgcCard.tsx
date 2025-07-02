@@ -29,7 +29,7 @@ import LoadingComponent from '../../utils/LoadingComponent';
 interface FGCCardProps {
     isVisible: boolean;
 }
-const featureOptions = ['Original', 'LBP', 'Sobel', 'Superpixel'];
+const featureOptions = ['Original', 'LBP', 'Sobel', 'shape_index', 'Superpixel'];
 const metricsOptions = [
     'euclidean',
     'cityblock',
@@ -54,6 +54,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
     const [numRepresentativePoints, setNumRepresentativePoints] = useState<number>(5);
     const [numIterations, setNumIterations] = useState<number>(10);
     const [regularization, setRegularization] = useState<number>(1);
+    const [labelregularization, setLabelRegularization] = useState<number>(0);
     const [smoothRegularization, setSmoothRegularization] = useState<number>(0.5);
     const [windowSize, setWindowSize] = useState<number>(3);
     const [tolerance, setTolerance] = useState<number>(0.01);
@@ -89,6 +90,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
             numIterations,
             regularization,
             smoothRegularization,
+            labelregularization,
             windowSize,
             tolerance,
             useWholeImage,
@@ -216,6 +218,24 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                             fill="clear"
                             onClick={(e) =>
                                 openPopover(e, 'Regularization: Prevents degenerate embeddings and improves stability.')
+                            }
+                        >
+                            <IonIcon icon={informationCircleOutline} />
+                        </IonButton>
+                    </IonItem>
+
+                    <IonItem>
+                        <IonLabel position="floating">Label Regularization</IonLabel>
+                        <IonInput
+                            type="number"
+                            value={labelregularization}
+                            onIonChange={(e) => setLabelRegularization(parseFloat(e.detail.value!))}
+                        />
+                        <IonButton
+                            slot="end"
+                            fill="clear"
+                            onClick={(e) =>
+                                openPopover(e, 'Label regularization: Promotes subspace guidance for clustering.')
                             }
                         >
                             <IonIcon icon={informationCircleOutline} />
