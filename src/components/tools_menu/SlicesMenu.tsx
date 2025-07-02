@@ -149,6 +149,9 @@ const SlicesMenu: React.FC<SlicesMenuProps> = (props: SlicesMenuProps) => {
                 .then((data: BackendData) => {
                     console.log('Fetched slice data:', data);
                     setAnnotHistory(data);
+                    if (data[sliceName].length > 0) {
+                        setSliceValue(data[sliceName].values[0]);
+                    }
                 })
                 .catch((error: ErrorInterface) => {
                     msgReturned = error.error_msg;
