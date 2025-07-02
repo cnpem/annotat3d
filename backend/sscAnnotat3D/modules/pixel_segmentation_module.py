@@ -66,10 +66,15 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         #list for accumulating the results
         training_feats_raw = []
         training_labels_raw = []
+        print("Slice annotations", annotation_slice_dict)
         for axis, slice_nums in annotation_slice_dict.items():
             # Extract the appropriate slice along the given axis
+            if not slice_nums:
+                continue  # skip axes with no slices
             annot_slices = np.take(annotation_image, list(slice_nums), axis=axis)
+
             image_slices = np.take(image, list(slice_nums), axis=axis)
+            print("image", image_slices.shape, slice_nums, axis)
             #output number of slices is at the axis dimension
             image_slices = np.moveaxis(image_slices, axis, 0) #move number of slices to first dimension
             annot_slices = np.moveaxis(annot_slices, axis, 0)#move number of slices to first dimension
@@ -191,7 +196,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             mainbar.inc()
             total_time_start = time.time()
 
-            image = self._image.astype("int32") if self._image.dtype != "int32" else self._image
+            image = self._image.astype("float32") if self._image.dtype != "float32" else self._image
 
             mainbar.inc()
             start = time.time()
@@ -205,9 +210,9 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             # Computing superpixel features only for the portion of the image that is necessary, if superpixel features have not
             # been previously computed
             if self._features is None:
-
                 with sentry_sdk.start_span(op="Feature extraction for preview"):
-                    preview_image = image[selected_slices_idx]
+                    preview_image = image[selected_slices_idx] #TODO:Change this if the feat extraction is not done slice by slice
+                    logging.debug("Extracting features for preview image with shape %s" % str(preview_image.shape))
                     preview_features = self._extract_features_pixel(preview_image, **kwargs)
 
                 logging.debug("Training classifier for preview")

@@ -30,7 +30,7 @@ import skimage.measure as sk_measure
 import sscPySpin.feature_extraction as spin_feat_extraction
 import sscPySpin.image as spin_img
 import sscPySpin.segmentation as spin_seg
-from sscAnnotat3D.cython.extract_feactures import pixel_feature_extract
+from harpia.featureExtraction.pixelfeatureExtraction import pixel_feature_extract
 from sscAnnotat3D.cython.superpixel_feature_pooling import pooling_per_superpixel
 
 from matplotlib import pyplot as plt
@@ -359,43 +359,31 @@ def pixel_feature_extraction(img, **kwargs):
     sigmas = list(map(float, kwargs["sigmas"]))
 
     selected_features = kwargs["selected_features"]
-        
-    
-    intensity = 'intensity' in selected_features
-    edges = 'edges' in selected_features
-    texture = 'texture' in selected_features
 
-    
+    features_args = {
+        'Intensity': 'intensity' in selected_features,
+        'Edges': 'edges' in selected_features,
+        'Hessian': 'texture' in selected_features,
+        'ShapeIndex': 'shapeindex' in selected_features,
+        'LocalBinaryPattern': 'localbinarypattern' in selected_features
+    }
+
+
+    print("................\n")
+    print("Multi Scale Window Sigmas:", sigmas)
+    print("Selected features:", [k for k, v in features_args.items() if v])
     img_float = img.astype('float32')
-    
     if img_float.ndim == 2:
         img_float = np.expand_dims(img_float, axis = 0)
-    print("................\n")
+    elif img_float.shape[0]==0:
+        import traceback
+        raise ValueError(
+            f"Input image has zero size along the first dimension. "
+        )
     print(img_float.shape)
-    print("intensity, edges, texture\n",intensity, edges, texture)
-
-    pixel_features = pixel_feature_extract(img_float,
-                     sigmas,
-                     use_3d = False,
-                     Intensity = intensity,
-                     Edges = edges,
-                     Texture = texture)
-
-    #pixel_features = spin_feat_extraction.spin_alloc_pixel_featmap(img, selected_features, sigmas)
-
-    #spin_feat_extraction.spin_feat_extraction_2D(
-    #    img,
-    #    None,
-    #    pixel_features,
-    #    None,
-    #    selected_features,
-    #    sigmas,
-    #    None,
-    #    ngpus=ngpus,
-    #    maxBlockSize=block_size_feats,
-    #    image_min=image_min,
-    #    image_max=image_max,
-    #)
+    print("................\n")
+    pixel_features = pixel_feature_extract(img_float, sigmas, False, features_args)
+    print("................\n")
 
     end = time.time()
     logger.debug(f"-- Feature extraction run time: {end - start}s")
@@ -442,13 +430,18 @@ def superpixel_feature_extraction(
     texture = 'texture' in selected_features
     
     img_float = img.astype('float32')
-    
-    pixel_features = pixel_feature_extract(img_float,
-                    sigmas,
-                    use_3d = False,
-                    Intensity = intensity,
-                    Edges = edges,
-                    Texture = texture)
+
+    features_args = {
+        'Intensity': 'intensity' in selected_features,
+        'Edges': 'edges' in selected_features,
+        'Hessian': 'texture' in selected_features,
+        'ShapeIndex': 'shapeindex' in selected_features,
+        'LocalBinaryPattern': 'localbinarypattern' in selected_features
+    }
+    print("................\n")
+    pixel_features = pixel_feature_extract(img_float, sigmas, False, features_args)
+    print("................\n")
+
 
     end = time.time()
 
