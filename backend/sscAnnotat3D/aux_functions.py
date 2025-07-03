@@ -363,7 +363,7 @@ def pixel_feature_extraction(img, **kwargs):
     features_args = {
         'Intensity': 'intensity' in selected_features,
         'Edges': 'edges' in selected_features,
-        'Hessian': 'texture' in selected_features,
+        'Texture': 'texture' in selected_features,
         'ShapeIndex': 'shapeindex' in selected_features,
         'LocalBinaryPattern': 'localbinarypattern' in selected_features
     }
