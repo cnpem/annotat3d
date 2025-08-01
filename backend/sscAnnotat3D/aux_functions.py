@@ -30,7 +30,9 @@ import skimage.measure as sk_measure
 import sscPySpin.feature_extraction as spin_feat_extraction
 import sscPySpin.image as spin_img
 import sscPySpin.segmentation as spin_seg
-from harpia.featureExtraction.pixelfeatureExtraction import pixel_feature_extract
+from harpia import pixel_feature_extract
+from harpia import superpixel_pooling_feature
+
 from sscAnnotat3D.cython.superpixel_feature_pooling import pooling_per_superpixel
 
 from matplotlib import pyplot as plt
@@ -382,7 +384,8 @@ def pixel_feature_extraction(img, **kwargs):
         )
     print(img_float.shape)
     print("................\n")
-    pixel_features = pixel_feature_extract(img_float, sigmas, False, features_args)
+    sigmas = np.array(sigmas, "float32")
+    pixel_features = pixel_feature_extract(img_float, sigmas, features_args, verbose=0, gpuMemory=0.4)
     print("................\n")
 
     end = time.time()
@@ -421,14 +424,6 @@ def superpixel_feature_extraction(
 
     """
 
-    num_superpixels = max_label - min_label + 1
-
-    start = time.time()
-    print(sigmas)
-    intensity = 'intensity' in selected_features
-    edges = 'edges' in selected_features
-    texture = 'texture' in selected_features
-    
     img_float = img.astype('float32')
 
     features_args = {
@@ -436,21 +431,23 @@ def superpixel_feature_extraction(
         'Edges': 'edges' in selected_features,
         'Hessian': 'texture' in selected_features,
         'ShapeIndex': 'shapeindex' in selected_features,
-        'LocalBinaryPattern': 'localbinarypattern' in selected_features
+        'LocalBinaryPattern': 'localbinarypattern' in selected_features,
+        'pooling' : {
+        "output_mean": "mean" in selected_supervoxel_feat_pooling,
+        "output_min": "min" in selected_supervoxel_feat_pooling,
+        "output_max": "max" in selected_supervoxel_feat_pooling,
     }
+    }
+    print(features_args)
     print("................\n")
-    pixel_features = pixel_feature_extract(img_float, sigmas, False, features_args)
+    sigmas = np.array(sigmas, "float32")
+    superpixel_img_at0 = (img_superpixels - min_label).astype('int32')
     print("................\n")
 
-
-    end = time.time()
-
-    logger.debug(f"-- Feature extraction memory allocation run time: {end - start}s")
-
+    superpixel_features = superpixel_pooling_feature(img_float, superpixel_img_at0, sigmas, features = features_args, verbose=0, gpuMemory=0.4)
+    print("Shape ", superpixel_features.shape)
     start = time.time()
 
-    superpixel_features = pooling_per_superpixel(pixel_features, img_superpixels, num_superpixels, selected_supervoxel_feat_pooling)
-    
     end = time.time()
     logger.debug(f"-- Feature extraction run time: {end - start}s")
 
