@@ -33,8 +33,6 @@ import sscPySpin.segmentation as spin_seg
 from harpia import pixel_feature_extract
 from harpia import superpixel_pooling_feature
 
-from sscAnnotat3D.cython.superpixel_feature_pooling import pooling_per_superpixel
-
 from matplotlib import pyplot as plt
 from skimage import exposure, filters, img_as_uint
 from skimage.feature import greycomatrix, greycoprops, local_binary_pattern
