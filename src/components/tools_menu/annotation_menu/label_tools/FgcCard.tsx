@@ -29,7 +29,7 @@ import LoadingComponent from '../../utils/LoadingComponent';
 interface FGCCardProps {
     isVisible: boolean;
 }
-const featureOptions = ['Original', 'LBP', 'Sobel', 'shape_index', 'Superpixel'];
+const featureOptions = ['Intensity', 'Texture', 'Edges', 'Superpixel'];
 const metricsOptions = [
     'euclidean',
     'cityblock',
