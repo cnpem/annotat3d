@@ -52,7 +52,6 @@ from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import GridSearchCV, train_test_split
-from sscIO import io, io_info
 
 from . import binary, utils
 
@@ -518,8 +517,6 @@ def GLCM(img_internal):
     Returns:
         list: Return a list with all the extracted features
 
-    See Also:
-        `sscIO.io.read_volume()`
 
     """
     levels = 8

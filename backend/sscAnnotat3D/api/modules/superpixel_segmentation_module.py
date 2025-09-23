@@ -18,7 +18,6 @@ from sscPySpin.segmentation import (
 )
 from werkzeug.exceptions import BadRequest
 
-# TODO : We need to template sscIO for other superpixel types
 # TODO : In this actual stage, we're forcing superpixel to be 32 int type
 
 app = Blueprint("superpixel_segmentation_module", __name__)
