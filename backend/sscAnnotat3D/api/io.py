@@ -4,7 +4,6 @@ import time
 import logging
 
 import numpy as np
-import sscIO.io
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
 from sscAnnotat3D import utils
@@ -176,12 +175,12 @@ def open_image(image_id: str):
     try:
         use_image_raw_parse = request.json["use_image_raw_parse"]
         if extension in tif_extensions or use_image_raw_parse:
-            image, info = sscIO.io.read_volume(image_path, "numpy")
+            image, info = utils.read_volume(image_path, "numpy")
             error_msg = "No such file or directory {}".format(image_path)
 
         else:
             image_raw_shape = request.json["image_raw_shape"]
-            image, info = sscIO.io.read_volume(
+            image, info = utils.read_volume(
                 image_path,
                 "numpy",
                 shape=(image_raw_shape[2], image_raw_shape[1], image_raw_shape[0]),
@@ -307,7 +306,7 @@ def save_image(image_id: str):
         return handle_exception("Unable to retrieve the image !")
     image_dtype = image.dtype.name
     
-    save_status = sscIO.io.save_volume(image_path, image_dtype, image)
+    save_status = utils.save_volume(image_path, image_dtype, image)
 
     if save_status["error_msg"] != "":
         return handle_exception(save_status["error_msg"])
