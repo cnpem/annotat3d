@@ -1,3 +1,8 @@
+import os
+default_n_threads = 32
+os.environ['OPENBLAS_NUM_THREADS'] = f"{default_n_threads}"
+os.environ['MKL_NUM_THREADS'] = f"{default_n_threads}"
+os.environ['OMP_NUM_THREADS'] = f"{default_n_threads}"
 import io
 import pickle
 import zlib
@@ -1602,12 +1607,6 @@ def object_separation_apply(input_id: str):
 @app.route("/fgc_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def fgc_apply(input_id: str):
-    import os
-    default_n_threads = 8
-    os.environ['OPENBLAS_NUM_THREADS'] = f"{default_n_threads}"
-    os.environ['MKL_NUM_THREADS'] = f"{default_n_threads}"
-    os.environ['OMP_NUM_THREADS'] = f"{default_n_threads}"
-
     from harpia.fastGraphClustering import fgc
     from harpia.sparseUnmixing import nmf
     from skimage import filters

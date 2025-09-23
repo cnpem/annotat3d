@@ -11,7 +11,7 @@ interface ClusteringCardVisible {
 }
 
 const ClusteringCard: React.FC<ClusteringCardVisible> = ({ isVisible }) => {
-    const [selectedOption, setSelectedOption] = useState<number | null>(null);
+    const [selectedOption, setSelectedOption] = useState<number>(2); // default Anchor-Based Label Propagation
 
     const clusteringOptions = [
         { value: 1, label: 'Fast Graph Clustering' },

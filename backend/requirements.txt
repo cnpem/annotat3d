@@ -10,7 +10,7 @@ protobuf==3.20
 psutil==5.9.8
 python-dotenv==1.0.1
 scikit-image==0.18.3
-sscIO>=0.2.1
+tifffile>=2023.7.10  
 sscPySpin>=0.6.0
 werkzeug>=3.0.0 #there seems to be some bug on the newer versions that randomly causes 405 responses
 harpia==2.4.1 #need to fix the version (with anoter three dots), otherwise it will another module from pip global
