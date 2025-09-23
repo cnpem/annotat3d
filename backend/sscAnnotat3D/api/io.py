@@ -10,7 +10,6 @@ from flask_cors import cross_origin
 from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo, module_repo
 from werkzeug.exceptions import BadRequest
-from harpia.threshold import threshold as threshold_H
 
 app = Blueprint("io", __name__)
 
@@ -45,6 +44,7 @@ def _debugger_print(msg: str, payload: any):
 @app.route("/get_image_histogram/<image_id>", methods=["POST"])
 @cross_origin()
 def get_image_histogram(image_id):
+    from harpia.threshold.thresholdOperations import otsu
     """
     Function used to calculate and return current image histogram
 
@@ -120,7 +120,7 @@ def get_image_histogram(image_id):
 
     n_bins = len(histogram_info["bins"])
     #computes otsu
-    value = threshold_H.otsu(histogram.astype(np.int32), int(n_bins) )
+    value = otsu(histogram.astype(np.int32), int(n_bins) )
     otsu_value = value * (bin_centers.max()- bin_centers.min())/n_bins + bin_centers.min()
 
     histogram_info['otsu'] = round(otsu_value,3)
