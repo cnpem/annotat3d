@@ -2,7 +2,6 @@ import io
 import zlib
 
 import numpy as np
-import sscIO.io
 from flask import Blueprint, jsonify, request, send_file
 from flask_cors import cross_origin
 from sscAnnotat3D import label, utils
@@ -235,7 +234,7 @@ def crop_merge():
     # ---
 
     try:
-        output_img, info = sscIO.io.read_volume(
+        output_img, info = utils.read_volume(
             image_info["imageFullPath"],
             "numpy",
             shape=(imageFullShape["z"], imageFullShape["y"], imageFullShape["x"]),

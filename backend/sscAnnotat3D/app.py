@@ -139,13 +139,11 @@ def get_env(type_of_env: str):
 @app.route("/versions", methods=["POST", "GET"])
 @cross_origin()
 def versions():
-    import sscIO
-    import sscPySpin
+    import harpia
 
     return jsonify(
         [
-            dict(name="sscPySpin", version=sscPySpin.__version__),
-            dict(name="sscIO", version=sscIO.__version__),
+            dict(name="harpia", version=harpia.__version__),
             dict(name="sscAnnotat3D", version=__version__),
         ]
     )

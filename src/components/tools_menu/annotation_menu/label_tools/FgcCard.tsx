@@ -20,6 +20,9 @@ import {
     IonCheckbox,
     IonSelect,
     IonSelectOption,
+    IonAccordion,
+    IonAccordionGroup,
+    IonItemDivider,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
 import { sfetch } from '../../../../utils/simplerequest';
@@ -63,7 +66,11 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
     const [canContinue, setCanContinue] = useState<boolean>(true);
     const [useWholeImage, setUseWholeImage] = useState<boolean>(true);
 
-    const [selectedFeatures, setSelectedFeatures] = useState<string[]>(['Original', 'LBP']);
+    const [multiScaleNum, setMultiScaleNum] = useState<number>(3);
+    const [sigmaMin, setSigmaMin] = useState<number>(1);
+    const [sigmaMax, setSigmaMax] = useState<number>(3);
+
+    const [selectedFeatures, setSelectedFeatures] = useState<string[]>(['Intensity']);
     const [selectedMetric, setSelectedMetric] = useState<'euclidean'>('euclidean');
     const [popover, setPopover] = useState<any>(null);
     const [stopProcess, setStopProcess] = useState<boolean>(false);
@@ -96,6 +103,9 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
             useWholeImage,
             selectedFeatures,
             selectedMetric,
+            multiScaleNum,
+            sigmaMax,
+            sigmaMin,
             dimension: selectedDimension.toLowerCase(),
             current_thresh_marker: markerID,
             current_slice: sliceValue,
@@ -140,9 +150,8 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
     return (
         <IonCard style={{ display: isVisible ? 'block' : 'none' }}>
             <IonCardContent>
+                <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
                 <IonList>
-                    <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
-
                     <IonItem>
                         <IonLabel position="floating">Number of Phases</IonLabel>
                         <IonInput
@@ -154,10 +163,7 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                             slot="end"
                             fill="clear"
                             onClick={(e) =>
-                                openPopover(
-                                    e,
-                                    'Number of Phases: Specifies the number of resulting phases (Due to its nature, the algorithm will not maintain the original annotations in the current slice).'
-                                )
+                                openPopover(e, 'Number of Phases: Specifies the number of resulting phases...')
                             }
                         >
                             <IonIcon icon={informationCircleOutline} />
@@ -175,169 +181,185 @@ const FgcCard: React.FC<FGCCardProps> = ({ isVisible }) => {
                             slot="end"
                             fill="clear"
                             onClick={(e) =>
-                                openPopover(
-                                    e,
-                                    'Number of Representative Points: Defines how many anchor points are selected from the dataset to represent the underlying data distribution.'
-                                )
-                            }
-                        >
-                            <IonIcon icon={informationCircleOutline} />
-                        </IonButton>
-                    </IonItem>
-
-                    <IonItem>
-                        <IonLabel position="floating">Number of Iterations</IonLabel>
-                        <IonInput
-                            type="number"
-                            value={numIterations}
-                            onIonChange={(e) => setNumIterations(parseInt(e.detail.value!, 10))}
-                        />
-                        <IonButton
-                            slot="end"
-                            fill="clear"
-                            onClick={(e) =>
-                                openPopover(
-                                    e,
-                                    'Number of Iterations: Sets the maximum number of iterations during the optimization.'
-                                )
-                            }
-                        >
-                            <IonIcon icon={informationCircleOutline} />
-                        </IonButton>
-                    </IonItem>
-
-                    <IonItem>
-                        <IonLabel position="floating">Regularization</IonLabel>
-                        <IonInput
-                            type="number"
-                            value={regularization}
-                            onIonChange={(e) => setRegularization(parseFloat(e.detail.value!))}
-                        />
-                        <IonButton
-                            slot="end"
-                            fill="clear"
-                            onClick={(e) =>
-                                openPopover(e, 'Regularization: Prevents degenerate embeddings and improves stability.')
-                            }
-                        >
-                            <IonIcon icon={informationCircleOutline} />
-                        </IonButton>
-                    </IonItem>
-
-                    <IonItem>
-                        <IonLabel position="floating">Label Regularization</IonLabel>
-                        <IonInput
-                            type="number"
-                            value={labelregularization}
-                            onIonChange={(e) => setLabelRegularization(parseFloat(e.detail.value!))}
-                        />
-                        <IonButton
-                            slot="end"
-                            fill="clear"
-                            onClick={(e) =>
-                                openPopover(e, 'Label regularization: Promotes subspace guidance for clustering.')
-                            }
-                        >
-                            <IonIcon icon={informationCircleOutline} />
-                        </IonButton>
-                    </IonItem>
-
-                    <IonItem>
-                        <IonLabel position="floating">Smooth Regularization</IonLabel>
-                        <IonInput
-                            type="number"
-                            value={smoothRegularization}
-                            onIonChange={(e) => setSmoothRegularization(parseFloat(e.detail.value!))}
-                        />
-                        <IonButton
-                            slot="end"
-                            fill="clear"
-                            onClick={(e) =>
-                                openPopover(e, 'Smooth Regularization: Improves smooth transitions between classes.')
-                            }
-                        >
-                            <IonIcon icon={informationCircleOutline} />
-                        </IonButton>
-                    </IonItem>
-
-                    {/* Window Size */}
-                    <IonItem>
-                        <IonLabel position="floating">Window Size</IonLabel>
-                        <IonInput
-                            type="number"
-                            value={windowSize}
-                            onIonChange={(e) => setWindowSize(parseInt(e.detail.value!, 10))}
-                        />
-                        <IonButton
-                            slot="end"
-                            fill="clear"
-                            onClick={(e) =>
-                                openPopover(e, 'Window Size: Controls spatial influence between pixels or superpixels.')
-                            }
-                        >
-                            <IonIcon icon={informationCircleOutline} />
-                        </IonButton>
-                    </IonItem>
-
-                    <IonItem>
-                        <IonLabel position="floating">Tolerance for Convergence</IonLabel>
-                        <IonInput
-                            type="number"
-                            value={tolerance}
-                            onIonChange={(e) => setTolerance(parseFloat(e.detail.value!))}
-                        />
-                        <IonButton
-                            slot="end"
-                            fill="clear"
-                            onClick={(e) =>
-                                openPopover(
-                                    e,
-                                    'Tolerance for Convergence: Defines the threshold for convergence. The algorithm stops when the change between iterations is less than this value.'
-                                )
+                                openPopover(e, 'Number of Representative Points: Defines how many anchor points...')
                             }
                         >
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </IonItem>
                 </IonList>
-                <IonList>
-                    <IonItem>
-                        <IonLabel>Features</IonLabel>
-                        <IonSelect
-                            placeholder="Select features"
-                            multiple
-                            value={selectedFeatures}
-                            onIonChange={(e) => setSelectedFeatures(e.detail.value)}
-                        >
-                            {featureOptions.map((feature) => (
-                                <IonSelectOption key={feature} value={feature}>
-                                    {feature}
-                                </IonSelectOption>
-                            ))}
-                        </IonSelect>
-                    </IonItem>
-                </IonList>
 
-                <IonList>
-                    <IonItem>
-                        <IonLabel>Metric</IonLabel>
-                        <IonSelect
-                            interface="popover"
-                            placeholder="Select metric"
-                            value={selectedMetric}
-                            onIonChange={(e) => setSelectedMetric(e.detail.value)}
-                        >
-                            {metricsOptions.map((metric) => (
-                                <IonSelectOption key={metric} value={metric}>
-                                    <IonItem>
-                                        <IonRadio slot="start" value={metric} />
-                                        <IonLabel>{metric}</IonLabel>
-                                    </IonItem>
-                                </IonSelectOption>
-                            ))}
-                        </IonSelect>
-                    </IonItem>
-                </IonList>
+                {/* Features stay outside */}
+                <IonItem>
+                    <IonLabel>Features</IonLabel>
+                </IonItem>
+                <IonGrid>
+                    <IonRow>
+                        {featureOptions.map((feature) => {
+                            const isSelected = selectedFeatures.includes(feature);
+                            return (
+                                <IonCol size="6" key={feature}>
+                                    <IonButton
+                                        expand="block"
+                                        fill={isSelected ? 'solid' : 'outline'}
+                                        color={isSelected ? 'success' : 'medium'}
+                                        onClick={() => handleFeatureChange(feature)}
+                                        style={{ borderRadius: '20px', textTransform: 'none' }}
+                                    >
+                                        {feature}
+                                    </IonButton>
+                                </IonCol>
+                            );
+                        })}
+                    </IonRow>
+                </IonGrid>
+
+                {/* Advanced Options Accordion */}
+                <IonAccordionGroup>
+                    <IonAccordion value="advanced">
+                        <IonItem slot="header">
+                            <IonLabel>Advanced Options</IonLabel>
+                        </IonItem>
+                        <IonList slot="content">
+                            <IonItem>
+                                <IonLabel position="floating">Number of Scales</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={multiScaleNum}
+                                    onIonChange={(e) => setMultiScaleNum(parseInt(e.detail.value!, 10))}
+                                />
+                            </IonItem>
+
+                            <IonItem>
+                                <IonLabel position="floating">Sigma Min</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={sigmaMin}
+                                    onIonChange={(e) => setSigmaMin(parseInt(e.detail.value!, 10))}
+                                />
+                            </IonItem>
+
+                            <IonItem>
+                                <IonLabel position="floating">Sigma Max</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={sigmaMax}
+                                    onIonChange={(e) => setSigmaMax(parseInt(e.detail.value!, 10))}
+                                />
+                            </IonItem>
+                            {/* Number of Iterations */}
+                            <IonItem>
+                                <IonLabel position="floating">Number of Iterations</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={numIterations}
+                                    onIonChange={(e) => setNumIterations(parseInt(e.detail.value!, 10))}
+                                />
+                                <IonButton
+                                    slot="end"
+                                    fill="clear"
+                                    onClick={(e) =>
+                                        openPopover(e, 'Number of Iterations: Sets the maximum number of iterations...')
+                                    }
+                                >
+                                    <IonIcon icon={informationCircleOutline} />
+                                </IonButton>
+                            </IonItem>
+
+                            {/* Regularization */}
+                            <IonItem>
+                                <IonLabel position="floating">Regularization</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={regularization}
+                                    onIonChange={(e) => setRegularization(parseFloat(e.detail.value!))}
+                                />
+                                <IonButton
+                                    slot="end"
+                                    fill="clear"
+                                    onClick={(e) => openPopover(e, 'Regularization: Prevents degenerate embeddings...')}
+                                >
+                                    <IonIcon icon={informationCircleOutline} />
+                                </IonButton>
+                            </IonItem>
+
+                            {/* Smooth Regularization */}
+                            <IonItem>
+                                <IonLabel position="floating">Smooth Regularization</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={smoothRegularization}
+                                    onIonChange={(e) => setSmoothRegularization(parseFloat(e.detail.value!))}
+                                />
+                                <IonButton
+                                    slot="end"
+                                    fill="clear"
+                                    onClick={(e) =>
+                                        openPopover(e, 'Smooth Regularization: Improves smooth transitions...')
+                                    }
+                                >
+                                    <IonIcon icon={informationCircleOutline} />
+                                </IonButton>
+                            </IonItem>
+
+                            {/* Window Size */}
+                            <IonItem>
+                                <IonLabel position="floating">Window Size</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={windowSize}
+                                    onIonChange={(e) => setWindowSize(parseInt(e.detail.value!, 10))}
+                                />
+                                <IonButton
+                                    slot="end"
+                                    fill="clear"
+                                    onClick={(e) => openPopover(e, 'Window Size: Controls spatial influence...')}
+                                >
+                                    <IonIcon icon={informationCircleOutline} />
+                                </IonButton>
+                            </IonItem>
+
+                            {/* Tolerance */}
+                            <IonItem>
+                                <IonLabel position="floating">Tolerance for Convergence</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={tolerance}
+                                    onIonChange={(e) => setTolerance(parseFloat(e.detail.value!))}
+                                />
+                                <IonButton
+                                    slot="end"
+                                    fill="clear"
+                                    onClick={(e) =>
+                                        openPopover(
+                                            e,
+                                            'Tolerance for Convergence: Defines the threshold for convergence...'
+                                        )
+                                    }
+                                >
+                                    <IonIcon icon={informationCircleOutline} />
+                                </IonButton>
+                            </IonItem>
+
+                            {/* Metric (moved inside Advanced Options) */}
+                            <IonItem>
+                                <IonLabel>Metric</IonLabel>
+                                <IonSelect
+                                    interface="popover"
+                                    placeholder="Select metric"
+                                    value={selectedMetric}
+                                    onIonChange={(e) => setSelectedMetric(e.detail.value)}
+                                >
+                                    {metricsOptions.map((metric) => (
+                                        <IonSelectOption key={metric} value={metric}>
+                                            {metric}
+                                        </IonSelectOption>
+                                    ))}
+                                </IonSelect>
+                            </IonItem>
+                        </IonList>
+                    </IonAccordion>
+                </IonAccordionGroup>
 
                 <IonButton expand="block" onClick={handleApply}>
                     Generate Annotations

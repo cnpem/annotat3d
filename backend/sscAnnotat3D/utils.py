@@ -5,6 +5,11 @@ import os
 import numpy
 from sklearn.preprocessing import LabelEncoder
 
+import os
+import re
+import numpy as np
+import tifffile
+
 # Had to comment this, on singularity this 'steals' the GPU form the SPIN/HARPIA module makeing it malfunction
 # However the same effect does not happen on old singularity recipe and on new docker recipe (weird, don't you agree?)
 # try:
@@ -282,3 +287,132 @@ def map_lookup_table(array, lut):
     sort_idx = numpy.argsort(from_values)
     idx = numpy.searchsorted(from_values, array, sorter=sort_idx)
     return to_values[sort_idx][idx]
+
+
+def _parse_raw_info_from_filename(filename: str):
+    """
+    Parse raw volume shape and dtype from filename using regex patterns.
+
+    Supports:
+      - pattern like: something_190x207x100_16b.raw
+      - numpy-like pattern: something_190x207x100_uint16.raw
+
+    Returns:
+        (shape, dtype) or (None, None)
+    """
+    # e.g. "image_190x207x100_16b.raw"
+    pattern_bits = re.compile(
+        r"([a-zA-Z0-9_\.\-\/]+)[a-zA-Z0-9_\.\-\/]*[_\-]([0-9]+)x([0-9]+)x([0-9]+)[a-zA-Z0-9_\.\-\/]*[_\-]([0-9]+)(?:b|bits?|bit)?\.(?:b|raw)$"
+    )
+
+    # e.g. "image_190x207x100_uint16.raw"
+    pattern_numpy = re.compile(
+        r"([a-zA-Z0-9_\.\-\/]+)[a-zA-Z0-9_\.\-\/]*[_\-]([0-9]+)x([0-9]+)x([0-9]+)[a-zA-Z0-9_\.\-\/]*[_\-](int8|uint8|int16|uint16|int32|uint32|float32|complex64)\.(?:b|raw)$"
+    )
+
+    shape, dtype = None, None
+
+    m = pattern_bits.match(filename)
+    if m:
+        xsize, ysize, zsize = int(m.group(2)), int(m.group(3)), int(m.group(4))
+        bits = int(m.group(5))
+        if bits == 8:
+            dtype = "uint8"
+        elif bits == 16:
+            dtype = "uint16"
+        elif bits == 32:
+            dtype = "float32"
+        elif bits == 64:
+            dtype = "complex64"
+        shape = (zsize, ysize, xsize)
+        return shape, dtype
+
+    m = pattern_numpy.match(filename)
+    if m:
+        xsize, ysize, zsize = int(m.group(2)), int(m.group(3)), int(m.group(4))
+        dtype = m.group(5)
+        shape = (zsize, ysize, xsize)
+        return shape, dtype
+
+    return None, None
+
+
+def read_volume(path, backend="numpy", shape=None, dtype=None):
+    """
+    Read a volume from raw, tiff/tif, or npy files.
+
+    Args:
+        path (str): path to file
+        backend (str): only "numpy" supported for now
+        shape (tuple): (z, y, x) for raw data
+        dtype (str or np.dtype): dtype for raw data
+
+    Returns:
+        (np.ndarray, dict):
+            - image: ndarray with the loaded data
+            - info: dict with file_name, extension, error_msg
+    """
+    ext = os.path.splitext(path)[1].lower()
+    info = {"file_name": os.path.basename(path), "extension": ext, "error_msg": ""}
+
+    try:
+        if ext in [".tif", ".tiff"]:
+            image = tifffile.imread(path)
+
+        elif ext == ".npy":
+            image = np.load(path)
+
+        elif ext in [".raw", ".b"]:
+            # try filename parsing if shape/dtype not passed
+            if shape is None or dtype is None:
+                parsed_shape, parsed_dtype = _parse_raw_info_from_filename(path)
+                if parsed_shape and parsed_dtype:
+                    shape, dtype = parsed_shape, parsed_dtype
+            if shape is None or dtype is None:
+                raise ValueError("Raw file requires shape=(z,y,x) and dtype (unless encoded in filename)")
+            image = np.fromfile(path, dtype=np.dtype(dtype)).reshape(shape)
+
+        else:
+            raise ValueError(f"Unsupported extension: {ext}")
+
+    except Exception as e:
+        info["error_msg"] = str(e)
+        return None, info
+
+    return image, info
+
+
+def save_volume(path, dtype, image):
+    """
+    Save a volume to raw, tiff/tif, or npy.
+
+    Args:
+        path (str): output path
+        dtype (str): data type name (e.g., "float32")
+        image (np.ndarray): array to save
+
+    Returns:
+        dict with file_name, extension, error_msg
+    """
+    ext = os.path.splitext(path)[1].lower()
+    info = {"file_name": os.path.basename(path), "extension": ext, "error_msg": ""}
+
+    try:
+        if ext in [".tif", ".tiff"]:
+            tifffile.imwrite(path, image.astype(dtype))
+
+        elif ext == ".npy":
+            np.save(path, image.astype(dtype))
+
+        elif ext in [".raw", ".b"]:
+            image.astype(dtype).tofile(path)
+
+        else:
+            raise ValueError(f"Unsupported extension for saving: {ext}")
+
+    except Exception as e:
+        info["error_msg"] = str(e)
+
+    return info
+
+

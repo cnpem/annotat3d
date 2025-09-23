@@ -20,6 +20,8 @@ import {
     IonCheckbox,
     IonSelect,
     IonSelectOption,
+    IonAccordionGroup,
+    IonAccordion,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
 import { sfetch } from '../../../../utils/simplerequest';
@@ -170,81 +172,117 @@ const FgcCard: React.FC<LabelPropagCardProps> = ({ isVisible }) => {
                 </IonItem>
 
                 <IonItem>
-                    <IonLabel position="floating">Smooth Regularization</IonLabel>
-                    <IonInput
-                        type="number"
-                        value={smoothRegularization}
-                        onIonChange={(e) => setSmoothRegularization(parseFloat(e.detail.value!))}
-                    />
-                </IonItem>
-
-                <IonItem>
-                    <IonLabel position="floating">Window Size</IonLabel>
-                    <IonInput
-                        type="number"
-                        value={windowSize}
-                        onIonChange={(e) => setWindowSize(parseInt(e.detail.value!, 10))}
-                    />
-                </IonItem>
-
-                <IonItem>
-                    <IonLabel position="floating">Number of Scales</IonLabel>
-                    <IonInput
-                        type="number"
-                        value={multiScaleNum}
-                        onIonChange={(e) => setMultiScaleNum(parseInt(e.detail.value!, 10))}
-                    />
-                </IonItem>
-
-                <IonItem>
-                    <IonLabel position="floating">Sigma Min</IonLabel>
-                    <IonInput
-                        type="number"
-                        value={sigmaMin}
-                        onIonChange={(e) => setSigmaMin(parseInt(e.detail.value!, 10))}
-                    />
-                </IonItem>
-
-                <IonItem>
-                    <IonLabel position="floating">Sigma Max</IonLabel>
-                    <IonInput
-                        type="number"
-                        value={sigmaMax}
-                        onIonChange={(e) => setSigmaMax(parseInt(e.detail.value!, 10))}
-                    />
-                </IonItem>
-
-                <IonItem>
                     <IonLabel>Features</IonLabel>
-                    <IonSelect
-                        placeholder="Select features"
-                        multiple
-                        value={selectedFeatures}
-                        onIonChange={(e) => setSelectedFeatures(e.detail.value)}
-                    >
-                        {featureOptions.map((feature) => (
-                            <IonSelectOption key={feature} value={feature}>
-                                {feature}
-                            </IonSelectOption>
-                        ))}
-                    </IonSelect>
                 </IonItem>
+                <IonGrid>
+                    <IonRow>
+                        {featureOptions.map((feature) => {
+                            const isSelected = selectedFeatures.includes(feature);
+                            return (
+                                <IonCol size="6" key={feature}>
+                                    <IonButton
+                                        expand="block"
+                                        fill={isSelected ? 'solid' : 'outline'}
+                                        color={isSelected ? 'success' : 'medium'}
+                                        onClick={() => handleFeatureChange(feature)}
+                                        style={{ borderRadius: '20px', textTransform: 'none' }}
+                                    >
+                                        {feature}
+                                    </IonButton>
+                                </IonCol>
+                            );
+                        })}
+                    </IonRow>
+                </IonGrid>
 
-                <IonItem>
-                    <IonLabel>Metric</IonLabel>
-                    <IonSelect
-                        interface="popover"
-                        placeholder="Select metric"
-                        value={selectedMetric}
-                        onIonChange={(e) => setSelectedMetric(e.detail.value)}
-                    >
-                        {metricsOptions.map((metric) => (
-                            <IonSelectOption key={metric} value={metric}>
-                                {metric}
-                            </IonSelectOption>
-                        ))}
-                    </IonSelect>
-                </IonItem>
+                <IonAccordionGroup>
+                    <IonAccordion value="advanced">
+                        <IonItem slot="header">
+                            <IonLabel>Advanced Options</IonLabel>
+                        </IonItem>
+                        <IonList slot="content">
+                            <IonItem>
+                                <IonLabel position="floating">Number of Scales</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={multiScaleNum}
+                                    onIonChange={(e) => setMultiScaleNum(parseInt(e.detail.value!, 10))}
+                                />
+                            </IonItem>
+
+                            <IonItem>
+                                <IonLabel position="floating">Sigma Min</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={sigmaMin}
+                                    onIonChange={(e) => setSigmaMin(parseInt(e.detail.value!, 10))}
+                                />
+                            </IonItem>
+
+                            <IonItem>
+                                <IonLabel position="floating">Sigma Max</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={sigmaMax}
+                                    onIonChange={(e) => setSigmaMax(parseInt(e.detail.value!, 10))}
+                                />
+                            </IonItem>
+
+                            {/* Smooth Regularization */}
+                            <IonItem>
+                                <IonLabel position="floating">Smooth Regularization</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={smoothRegularization}
+                                    onIonChange={(e) => setSmoothRegularization(parseFloat(e.detail.value!))}
+                                />
+                                <IonButton
+                                    slot="end"
+                                    fill="clear"
+                                    onClick={(e) =>
+                                        openPopover(e, 'Smooth Regularization: Improves smooth transitions...')
+                                    }
+                                >
+                                    <IonIcon icon={informationCircleOutline} />
+                                </IonButton>
+                            </IonItem>
+
+                            {/* Window Size */}
+                            <IonItem>
+                                <IonLabel position="floating">Window Size</IonLabel>
+                                <IonInput
+                                    type="number"
+                                    value={windowSize}
+                                    onIonChange={(e) => setWindowSize(parseInt(e.detail.value!, 10))}
+                                />
+                                <IonButton
+                                    slot="end"
+                                    fill="clear"
+                                    onClick={(e) => openPopover(e, 'Window Size: Controls spatial influence...')}
+                                >
+                                    <IonIcon icon={informationCircleOutline} />
+                                </IonButton>
+                            </IonItem>
+
+                            {/* Metric (moved inside Advanced Options) */}
+                            <IonItem>
+                                <IonLabel>Metric</IonLabel>
+                                <IonSelect
+                                    interface="popover"
+                                    placeholder="Select metric"
+                                    value={selectedMetric}
+                                    onIonChange={(e) => setSelectedMetric(e.detail.value)}
+                                >
+                                    {metricsOptions.map((metric) => (
+                                        <IonSelectOption key={metric} value={metric}>
+                                            {metric}
+                                        </IonSelectOption>
+                                    ))}
+                                </IonSelect>
+                            </IonItem>
+                        </IonList>
+                    </IonAccordion>
+                </IonAccordionGroup>
 
                 <IonButton
                     expand="block"
