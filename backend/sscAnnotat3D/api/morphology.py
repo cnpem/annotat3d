@@ -117,10 +117,10 @@ def morphology_apply_3D():
         print('image size: ', binary_mask_3d_int8.size)
         if(binary_mask_3d_int8.size < MAX_SIZE):
             print('normal fill holes')
-            output_mask_3d_int8 = operations[operation](binary_mask_3d_int8)
+            output_mask_3d_int8 = operations[operation](binary_mask_3d)
         else:
             print('chunked fill holes')
-            output_mask_3d_int8 = apply_chunked_fillholes(operations[operation], binary_mask_3d_int8)
+            output_mask_3d_int8 = apply_chunked_fillholes(operations[operation], binary_mask_3d)
         output_mask_3d = output_mask_3d_int8.astype(original_dtype)
     else:     
         # Create kernel
