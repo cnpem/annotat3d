@@ -812,15 +812,11 @@ def niblack_preview(input_id: str):
     mk_id = annot_module.current_mk_id
 
     print('Current markers\n',mk_id,curret_thresh_marker)
-    #New annotation
     if mk_id != curret_thresh_marker:
         new_click = True
-    #its not a new annotation (overwrite current annotation)
     else:
         new_click = False
 
-    #label_mask = img_slice >= 34000
-    #threshold_H.niblack(input_img_3d,output_img,W,x,y,z,N,N,1)
     output_img = threshold_niblack(input_img_3d,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
     label_mask = output_img>0
@@ -869,53 +865,36 @@ def niblack_apply(input_id: str):
     mk_id = annot_module.current_mk_id
 
     print('Current markers\n', mk_id, curret_thresh_marker)
-    # New annotation
     if mk_id != curret_thresh_marker:
         new_click = True
-    # It's not a new annotation (overwrite current annotation)
     else:
         new_click = False
 
     if convType == "2d":
-        # convolution in x, y applied for all slices in the z direction
-        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
         axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
         axisIndex = axisIndexDict[axis]
         typeImg2d = input_img[0].dtype
-        # Apply threshold based on axis direction
+
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
-            #threshold_H.niblack(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, x, y, 1, N, N, 1)
             output_img[slice_num] = threshold_niblack(img.reshape(1, x, y),windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
-
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            #z, x, y = out.shape
-            #threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
             output_img[:, slice_num, :] = threshold_niblack(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            #z, x, y = out.shape
-            #threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
             output_img[:, :, slice_num] = threshold_niblack(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
 
     elif convType == "3d":
-        # Apply convolution in all x, y, z directions
-        #threshold_H.niblack(input_img, output_img, W, x, y, z, N, N, N)
         output_img= threshold_niblack(input_img,windowSize=N,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
 
         data_repo.set_image("label",img_label)
-
-    #label_mask = output_img > 0
-    #annot_module.labelmask_update(label_mask, label, mk_id, new_click)
 
     return jsonify(annot_module.current_mk_id)
 
@@ -960,45 +939,31 @@ def sauvola_apply(input_id: str):
     mk_id = annot_module.current_mk_id
 
     print('Current markers\n', mk_id, curret_thresh_marker)
-    # New annotation
     if mk_id != curret_thresh_marker:
         new_click = True
-    # It's not a new annotation (overwrite current annotation)
     else:
         new_click = False
 
     if convType == "2d":
-        # convolution in x, y applied for all slices in the z direction
-        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
         axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
         axisIndex = axisIndexDict[axis]
         typeImg2d = input_img[0].dtype
-        # Apply threshold based on axis direction
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
-            #threshold_H.sauvola(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, R, x, y, 1, N, N, 1)
             output_img[slice_num] = threshold_sauvola(img.reshape(1, x, y),windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            #z, x, y = out.shape
-            #threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
             output_img[:, slice_num, :] = threshold_sauvola(input,windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            #z, x, y = out.shape
-            #threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
             output_img[:, :, slice_num] = threshold_sauvola(input,windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
 
 
     elif convType == "3d":
-        # Apply convolution in all x, y, z directions
-        #threshold_H.sauvola(input_img, output_img, W, R, x, y, z, N, N, N)
         output_img = threshold_sauvola(input_img,windowSize=N,range = R,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
@@ -1049,54 +1014,35 @@ def local_mean_apply(input_id: str):
     mk_id = annot_module.current_mk_id
 
     print('Current markers\n', mk_id, curret_thresh_marker)
-    # New annotation
     if mk_id != curret_thresh_marker:
         new_click = True
-    # It's not a new annotation (overwrite current annotation)
     else:
         new_click = False
 
     if convType == "2d":
-        # convolution in x, y applied for all slices in the z direction
-        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
         axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
         axisIndex = axisIndexDict[axis]
         typeImg2d = input_img[0].dtype
-        # Apply threshold based on axis direction
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
-            #threshold_H.local_mean(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, x, y, 1, N, N, 1)
             output_img[slice_num] = threshold_mean(img.reshape(1, x, y),windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
-
-
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            #z, x, y = out.shape
-            #threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
             output_img[:, slice_num, :] = threshold_mean(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            #z, x, y = out.shape
-            #threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
             output_img[:, :, slice_num] = threshold_mean(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
 
     elif convType == "3d":
-        # Apply convolution in all x, y, z directions
-        #threshold_H.local_mean(input_img, output_img, W, x, y, z, N, N, N)
         output_img= threshold_mean(input_img,windowSize=N,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
 
         data_repo.set_image("label",img_label)
-
-    #label_mask = output_img > 0
-    #annot_module.labelmask_update(label_mask, label, mk_id, new_click)
 
     return jsonify(annot_module.current_mk_id)
 
@@ -1140,54 +1086,36 @@ def local_gaussian_apply(input_id: str):
     mk_id = annot_module.current_mk_id
 
     print('Current markers\n', mk_id, curret_thresh_marker)
-    # New annotation
     if mk_id != curret_thresh_marker:
         new_click = True
-    # It's not a new annotation (overwrite current annotation)
     else:
         new_click = False
 
     if convType == "2d":
-        # convolution in x, y applied for all slices in the z direction
-        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
         axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
         axisIndex = axisIndexDict[axis]
         typeImg2d = input_img[0].dtype
-        # Apply threshold based on axis direction
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
-            #threshold_H.local_gaussian(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), x, y, 1, S,W,0)
             output_img[slice_num] = threshold_gaussian(img.reshape(1, x, y),sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            #z, x, y = out.shape
-            #threshold_H.local_gaussian(input, out, x, y, z, S,W,0)
             output_img[:, slice_num, :] = threshold_gaussian(input,sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            #z, x, y = out.shape
-            #threshold_H.local_gaussian(input, out, x, y, z, S, W,0)
             output_img[:, :, slice_num] = threshold_gaussian(input,sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         #annot_module.annotation_image[slice_range] = output_img[slice_range]
         annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
 
     elif convType == "3d":
-        # Apply convolution in all x, y, z directions
-        #threshold_H.local_gaussian(input_img, output_img, x, y, z, S,W,1)
         output_img= threshold_gaussian(input_img,sigma=S,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
 
         data_repo.set_image("label",img_label)
-
-
-    #label_mask = output_img > 0
-    #annot_module.labelmask_update(label_mask, label, mk_id, new_click)
 
     return jsonify(annot_module.current_mk_id)
 
@@ -1242,12 +1170,9 @@ def watershed_apply(input_id: str):
     else:
         new_click = False
     if dimension == '2d':
-        # convolution in x, y applied for all slices in the z direction
-        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
         axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
         axisIndex = axisIndexDict[axis]
         typeImg2d = input_img[0].dtype
-        # Apply threshold based on axis direction
         print("getting relief")
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
@@ -1260,9 +1185,6 @@ def watershed_apply(input_id: str):
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            #out = np.ascontiguousarray(relief_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
-            #z, x, y = out.shape
-
             if input_filter == 'sobel':
                 out = sobel(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
 
@@ -1273,8 +1195,6 @@ def watershed_apply(input_id: str):
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            #out = np.ascontiguousarray(relief_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
-            #z, x, y = out.shape
                     
             if input_filter == 'sobel':
                 out = sobel(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
@@ -1284,7 +1204,6 @@ def watershed_apply(input_id: str):
                         
             relief_img[:, :, slice_num] = out
 
-        #now we get the markers using the labels
         print("getting markers")
         markers = annot_module.annotation_image[slice_range].astype(np.int32)
 
@@ -1308,7 +1227,6 @@ def watershed_apply(input_id: str):
         print('relief shape:',watershed_relief.shape)
         print('markers shape:',markers.shape)
 
-        #watershed.watershed_meyers_3d(watershed_relief,markers,-1,x,y,z)
         z,x,y = watershed_relief.shape
 
         for i in range(z):
@@ -1376,12 +1294,7 @@ def remove_islands_apply(input_id: str):
         #now we get the markers using the labels
         annot_slice = annot_module.annotation_image[slice_range]
         input_mask = annot_slice == label
-
-        #x,y = label_mask.shape
-        #quantification.removeIslands(input_mask,output_mask,min_size,x,y,1)
-        #there is a bug in cuda i dont understand yet, therefore i will use skimage for now... sorry for this
         output_mask = morphology.remove_small_objects(input_mask,min_size=min_size,connectivity=2)
-        #get what was removed
         island_image = (~output_mask) * input_mask
 
         annot_module.labelmask_update(island_image, -1, mk_id, True)
@@ -1397,7 +1310,6 @@ def remove_islands_apply(input_id: str):
         input_mask  = label_image==label
         output_mask = morphology.remove_small_objects(input_mask,min_size=min_size,connectivity=2)
 
-        #get what was removed
         island_image = (~output_mask) * input_mask
 
         label_image[island_image]=-1 

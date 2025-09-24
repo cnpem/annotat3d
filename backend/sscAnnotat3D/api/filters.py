@@ -86,10 +86,6 @@ def gaussian_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)),dtype=np.float32)
 
-    #z,x,y = output_img.shape
-
-    #output_img = skimage_gaussian(input_img_3d, sigma, preserve_range=True).astype(input_img_3d.dtype)
-
     output_img = gaussian(input_img_3d, sigma=sigma, type3d = 0, verbose = 1)
 
     data_repo.set_image(output_id, data=output_img)
@@ -112,42 +108,24 @@ def gaussian_apply(input_id: str, output_id: str):
     z,x,y = input_img.shape
 
     if convType == "2d":
-        # convolution in x, y applied for all slices in the the z direction
-        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
         axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
         axisIndex = axisIndexDict[request.json["axis"]]
         typeImg2d = input_img[0].dtype
         for i in range(input_img.shape[axisIndex]):
-            # on the annotat3D legacy, this was implemented forcing the stack through the z axis
             if axisIndex == 0:
-                # stack following the z axis
-                #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
                 img = input_img[i]
-                
-                #gaussian(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,sigma,0)
                 output_img[i] = gaussian(img.reshape(1,x,y),sigma=sigma,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 1:
-                # stack following the y axis
-                #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                #out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                #z,x,y = out.shape
                 output_img[:,i,:] = gaussian(input,sigma=sigma,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 2:
-                # stack following the x axis
-                #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                #out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                #z,x,y = out.shape
-                #gaussian(input,out,x,y,z,sigma,0)
                 output_img[:,:,i] = gaussian(input,sigma=sigma,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
 
     elif convType == "3d":
-        # convolution in x, y, z
-        #gaussian(input_img,output_img,x,y,z,sigma,1)
         output_img = gaussian(input_img,sigma=sigma,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
     data_repo.set_image(output_id, data=output_img)
@@ -200,38 +178,20 @@ def nlm_apply(input_id: str, output_id: str):
 
     z,x,y = input_img.shape
 
-
-    # convolution in x, y applied for all slices in the the z direction
-    # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
     axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
     axisIndex = axisIndexDict[request.json["axis"]]
     typeImg2d = input_img[0].dtype
     for i in range(input_img.shape[axisIndex]):
-        # on the annotat3D legacy, this was implemented forcing the stack through the z axis
         if axisIndex == 0:
-            # stack following the z axis
-            #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
             img = input_img[i]
-                
-            #non_local_means(img.reshape(x,y),output_img[i].reshape(x,y),x,y,smallWindow,bigWindow,h,sigma)
             output_img[i]= non_local_means(img.reshape(x,y), small_window= smallWindow,big_window = bigWindow,h=h,sigma=sigma)
 
         elif axisIndex == 1:
-            # stack following the y axis
-            #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
             input = np.ascontiguousarray(input_img[:,i,:].reshape((input_img[:,i,:].shape)),dtype=np.float32)
-            #out = np.ascontiguousarray(output_img[:,i,:].reshape((input_img[:,i,:].shape)),dtype=np.float64)
-            #x,y = out.shape
-            #non_local_means(input,out,x,y,smallWindow,bigWindow,h,sigma)
             output_img[:,i,:] = non_local_means(input,small_window= smallWindow,big_window = bigWindow,h=h,sigma=sigma)
 
         elif axisIndex == 2:
-            # stack following the x axis
-            #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
             input = np.ascontiguousarray(input_img[:,:,i].reshape((input_img[:,:,i].shape)),dtype=np.float32)
-            #out = np.ascontiguousarray(output_img[:,:,i].reshape((input_img[:,:,i].shape)),dtype=np.float64)
-            #x,y = out.shape
-            #non_local_means(input,out,x,y,smallWindow,bigWindow,h,sigma)
             output_img[:,:,i] = non_local_means(input,small_window= smallWindow,big_window = bigWindow,h=h,sigma=sigma)
 
     data_repo.set_image(output_id, data=output_img.astype(input_img.dtype))
@@ -303,7 +263,6 @@ def anisodiff_apply(input_id: str, output_id: str):
             print("Error" + str(e))
             return "Error " + str(e), 400
     else:
-        # apply 2D aniso diffusion in xy slices
         output_img = []
         for image_slice in input_img:
             slice_output = anisotropic_diffusion2D(image_slice.astype("float32"), total_iterations, delta_t, kappa, diffusion_option)
@@ -311,7 +270,6 @@ def anisodiff_apply(input_id: str, output_id: str):
 
         output_img = np.asarray(output_img)
 
-    #convert back to image type
     output_img = output_img.astype(img_dtype)
 
     data_repo.set_image(output_id, data=output_img)
@@ -336,14 +294,6 @@ def mean_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)),dtype=np.float32)
 
-    #output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
-
-    #z,x,y = output_img.shape
-
-    #output_img = skimage_gaussian(input_img_3d, sigma, preserve_range=True).astype(input_img_3d.dtype)
-
-    #mean(input_img_3d,output_img,x,y,z,N,N,1)
-
     output_img = mean(input_img_3d,windowSize=N,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
     data_repo.set_image(output_id, data=output_img)
@@ -366,42 +316,24 @@ def mean_apply(input_id: str, output_id: str):
     z,x,y = input_img.shape
 
     if convType == "2d":
-        # convolution in x, y applied for all slices in the the z direction
-        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
         axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
         axisIndex = axisIndexDict[request.json["axis"]]
         typeImg2d = input_img[0].dtype
         for i in range(input_img.shape[axisIndex]):
-            # on the annotat3D legacy, this was implemented forcing the stack through the z axis
             if axisIndex == 0:
-                # stack following the z axis
-                #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
                 img = input_img[i]
-                #mean(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,N,N,1)
                 output_img[i] = mean(img.reshape(1,x,y),windowSize=N,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 1:
-                # stack following the y axis
-                #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                #out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                #z,x,y = out.shape
-                #mean(input,out,x,y,z,N,N,1)
                 output_img[:,i,:] = mean(input,windowSize=N,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 2:
-                # stack following the x axis
-                #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                #out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                #z,x,y = out.shape
-                #mean(input,out,x,y,z,N,N,1)
                 output_img[:,:,i] = mean(input,windowSize=N,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
 
     elif convType == "3d":
-        # convolution in x, y, z
-        #mean(input_img,output_img,x,y,z,N,N,N)
         output_img = mean(input_img,windowSize=N,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
     data_repo.set_image(output_id, data=output_img)
@@ -429,13 +361,6 @@ def unsharp_mask_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)),dtype=np.float32)
 
-    #output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
-
-    #z,x,y = output_img.shape
-
-    #output_img = skimage_gaussian(input_img_3d, sigma, preserve_range=True).astype(input_img_3d.dtype)
-
-    #unsharp_mask(input_img_3d,output_img,x,y,z,sigma,ammount,threshold,0)
     output_img = unsharp_mask(input_img_3d,radius=sigma,ammount=ammount,threshold=threshold,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
     data_repo.set_image(output_id, data=output_img)
@@ -460,42 +385,24 @@ def unsharp_mask_apply(input_id: str, output_id: str):
     z,x,y = input_img.shape
 
     if convType == "2d":
-        # convolution in x, y applied for all slices in the the z direction
-        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
         axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
         axisIndex = axisIndexDict[request.json["axis"]]
         typeImg2d = input_img[0].dtype
         for i in range(input_img.shape[axisIndex]):
-            # on the annotat3D legacy, this was implemented forcing the stack through the z axis
             if axisIndex == 0:
-                # stack following the z axis
-                #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
                 img = input_img[i]
-                #unsharp_mask(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,sigma,ammount,threshold,0)
                 output_img[i] = unsharp_mask(img.reshape(1,x,y),radius=sigma,ammount=ammount,threshold=threshold,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 1:
-                # stack following the y axis
-                #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                #out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                #z,x,y = out.shape
-                #unsharp_mask(input,out,x,y,z,sigma,ammount,threshold,0)
                 output_img[:,i,:] = unsharp_mask(input,radius=sigma,ammount=ammount,threshold=threshold,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
             elif axisIndex == 2:
-                # stack following the x axis
-                #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                #out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                #z,x,y = out.shape
-                #unsharp_mask(input,out,x,y,z,sigma,ammount,threshold,0)
                 output_img[:,:,i] = unsharp_mask(input,radius=sigma,ammount=ammount,threshold=threshold,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
 
     elif convType == "3d":
-        # convolution in x, y, z
-        #unsharp_mask(input_img,output_img,x,y,z,sigma,ammount,threshold,1)
         output_img = unsharp_mask(input_img,radius=sigma,ammount=ammount,threshold=threshold,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
     data_repo.set_image(output_id, data=output_img)
@@ -521,13 +428,6 @@ def median_preview(input_id: str, output_id: str):
     input_img_slice = input_img[slice_range]
     input_img_3d = np.ascontiguousarray(input_img_slice.reshape((1, *input_img_slice.shape)),dtype=np.float32)
 
-    #output_img = np.ascontiguousarray(np.zeros_like(input_img_3d,dtype=np.float32))
-
-    #z,x,y = output_img.shape
-
-    #output_img = skimage_gaussian(input_img_3d, sigma, preserve_range=True).astype(input_img_3d.dtype)
-
-    #mean(input_img_3d,output_img,x,y,z,N,N,1)
     output_img = median(input_img_3d,nx=N,ny=N,nz=1)
 
     data_repo.set_image(output_id, data=output_img)
@@ -550,42 +450,24 @@ def median_apply(input_id: str, output_id: str):
     z,x,y = input_img.shape
 
     if convType == "2d":
-        # convolution in x, y applied for all slices in the the z direction
-        # select range direction by plane info in ```axis = request.json["axis"]``` which contains the values "XY", "XZ" or "YZ"
         axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
         axisIndex = axisIndexDict[request.json["axis"]]
         typeImg2d = input_img[0].dtype
         for i in range(input_img.shape[axisIndex]):
-            # on the annotat3D legacy, this was implemented forcing the stack through the z axis
             if axisIndex == 0:
-                # stack following the z axis
-                #output_img[i] = skimage_gaussian(input_img[i], sigma, preserve_range=True).astype(typeImg2d)
                 img = input_img[i]
-                #median(img.reshape(1,x,y),output_img[i].reshape(1,x,y),x,y,1,N,N,1)
                 output_img[i] = median(img.reshape(1,x,y),nx=N,ny=N,nz=1)
 
             elif axisIndex == 1:
-                # stack following the y axis
-                #output_img[:, i, :] = skimage_gaussian(input_img[:, i, :], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                #out = np.ascontiguousarray(output_img[:,i,:].reshape((1, *input_img[:,i,:].shape)),dtype=np.float32)
-                #z,x,y = out.shape
-                #median(input,out,x,y,z,N,N,1)
                 output_img[:,i,:] = median(input,nx=N,ny=N,nz=1)
 
             elif axisIndex == 2:
-                # stack following the x axis
-                #output_img[:, :, i] = skimage_gaussian(input_img[:, :, i], sigma, preserve_range=True).astype(typeImg2d)
                 input = np.ascontiguousarray(input_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                #out = np.ascontiguousarray(output_img[:,:,i].reshape((1, *input_img[:,:,i].shape)),dtype=np.float32)
-                #z,x,y = out.shape
-                #median(input,out,x,y,z,N,N,1)
                 output_img[:,:,i] = median(input,nx=N,ny=N,nz=1)
 
 
     elif convType == "3d":
-        # convolution in x, y, z
-        #median(input_img,output_img,x,y,z,N,N,N)
         output_img = median(input_img,nx=N,ny=N,nz=N)
 
     data_repo.set_image(output_id, data=output_img)
