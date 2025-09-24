@@ -663,17 +663,17 @@ def apply_active_contour(input_id: str, mode_id: str):
     # Step 3: Execution Logic
     if params["method"] == "chan-vese":
         level_set = morphological_chan_vese(
-            host_image, init_ls, params["iterations"], lambda1=params["weight"], lambda2=1.0, smoothing=params["smoothing"]
+            host_image, init_level_set = init_ls, num_iter = params["iterations"], lambda1=params["weight"], lambda2=1.0, smoothing=params["smoothing"]
         )
     elif params["method"] == "geodesic":
         threshold = data_repo.get_image("GeodesicTresh")
         level_set = morphological_geodesic_active_contour(
             host_image,
-            init_ls,
-            iterations=params["iterations"],
-            balloonForce=params["balloon_force"],
+            init_level_set=init_ls,
+            num_iter=params["iterations"],
+            balloon=params["balloon_force"],
             threshold=threshold,
-            smoothing=params["smoothing"],
+            smoothing=params["smoothing"]
         )
     else:
         print(params["method"])
@@ -746,9 +746,14 @@ def apply_active_contour_checkboard(input_id: str):
     init_ls = level_set
 
     level_set = morphological_chan_vese(
-        img_slice, init_ls, params["iterations"],
-        lambda1=params["weight"], lambda2=1.0, smoothing=params["smoothing"]
+        img_slice.astype(np.float32),
+        params["iterations"],
+        init_ls,
+        smoothing=params["smoothing"],
+        lambda1=params["weight"],
+        lambda2=1.0
     )
+
 
     # Step 5: Adjust Level Set for Intensity
     if (params["background"]==True):
