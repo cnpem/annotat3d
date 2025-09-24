@@ -1,19 +1,13 @@
 import numpy as np
 from flask import Blueprint, request
 from flask_cors import cross_origin
-from harpia.filters.filtersOperations import (
-    anisotropic_diffusion2D,
-    anisotropic_diffusion3D,
-    median,
-    non_local_means,
+
+from harpia.filters import (
+    gaussian,sobel,prewitt,unsharp_mask, mean, median
 )
 
-from harpia.filters.filtersChunked import(
-    gaussian,
-    sobel,
-    prewitt,
-    unsharp_mask,
-    mean
+from harpia.restoration import (
+    non_local_means, anisotropic_diffusion2D, anisotropic_diffusion3D,
 )
 
 from skimage.filters import gaussian as skimage_gaussian

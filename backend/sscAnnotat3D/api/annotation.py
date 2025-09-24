@@ -774,7 +774,7 @@ def apply_active_contour_checkboard(input_id: str):
 @app.route("/niblack_preview/<input_id>", methods=["POST"])
 @cross_origin()
 def niblack_preview(input_id: str):
-    from harpia.threshold.thresholdChunked import threshold_niblack
+    from harpia.threshold import threshold_niblack
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -829,7 +829,7 @@ def niblack_preview(input_id: str):
 @app.route("/niblack_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def niblack_apply(input_id: str):
-    from harpia.threshold.thresholdChunked import threshold_niblack
+    from harpia.threshold import threshold_niblack
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -902,7 +902,7 @@ def niblack_apply(input_id: str):
 @app.route("/sauvola_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def sauvola_apply(input_id: str):
-    from harpia.threshold.thresholdChunked import threshold_sauvola
+    from harpia.threshold import threshold_sauvola
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -978,7 +978,7 @@ def sauvola_apply(input_id: str):
 @app.route("/local_mean_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def local_mean_apply(input_id: str):
-    from harpia.threshold.thresholdChunked import threshold_mean
+    from harpia.threshold import threshold_mean
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -1050,7 +1050,7 @@ def local_mean_apply(input_id: str):
 @app.route("/local_gaussian_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def local_gaussian_apply(input_id: str):
-    from harpia.threshold.thresholdChunked import threshold_gaussian
+    from harpia.threshold import threshold_gaussian
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -1122,12 +1122,9 @@ def local_gaussian_apply(input_id: str):
 @app.route("/watershed_apply_2d/<input_id>", methods=["POST"])
 @cross_origin()
 def watershed_apply(input_id: str):
-    from harpia.filters.filtersChunked import (sobel, prewitt)
-    from harpia.watershed import watershed
-    from harpia.quantification import quantification
-    print(dir(quantification))
+    from harpia.filters import (sobel, prewitt)
+    from harpia.segmentation import watershed_meyers_2d
 
-    print(request.json)
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -1210,7 +1207,7 @@ def watershed_apply(input_id: str):
         watershed_relief = relief_img[slice_range].astype(np.int32)
         x,y = markers.shape
         print("apply watershed")
-        watershed.watershed_meyers_2d(watershed_relief, markers, -1)
+        markers = watershed_meyers_2d(watershed_relief, markers, -1)
 
         annot_module.multilabel_updated(markers, mk_id)
 
@@ -1230,7 +1227,7 @@ def watershed_apply(input_id: str):
         z,x,y = watershed_relief.shape
 
         for i in range(z):
-            watershed.watershed_meyers_2d(watershed_relief[i], markers[i], -1)
+            markers[i] = watershed_meyers_2d(watershed_relief[i], markers[i], -1)
 
         img_label = data_repo.get_image('label')
 
@@ -1249,7 +1246,7 @@ def watershed_apply(input_id: str):
 @app.route("/remove_islands_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def remove_islands_apply(input_id: str):
-    from harpia.quantification import quantification
+    import harpia.quantification as quantification
     from skimage import morphology #for testing, because my remove islands has another logic and it may results in some bugs
 
     print(request.json)
@@ -1323,7 +1320,7 @@ def remove_islands_apply(input_id: str):
 @app.route("/quantification_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def quantification_apply(input_id: str):
-    from harpia.quantification import quantification
+    import harpia.quantification as quantification
     import numpy as np
     import time
 
@@ -1448,9 +1445,9 @@ def quantification_apply(input_id: str):
 @app.route("/object_separation_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def object_separation_apply(input_id: str):
-    from harpia.watershed import watershed
+    from harpia.segmentation import watershed_meyers_2d
     from harpia.filters import (sobel, prewitt)
-    from harpia.distanceTransform import distance_transform_log_sum_kernel
+    from harpia.distance_transform_log_sum_kernel import distance_transform_edt
     from skimage.feature import peak_local_max
     from scipy import ndimage as ndi
     
@@ -1493,7 +1490,7 @@ def object_separation_apply(input_id: str):
             return None
     
     z,x,y = img_label.shape
-    edt = distance_transform_log_sum_kernel.distance_transform_edt(img_label,sigma,1,z,x,y)
+    edt = distance_transform_edt(img_label,sigma,1,z,x,y)
 
     # Check for NaN or inf values in edt and raise an error if found
     if np.isnan(edt).any() or np.isinf(edt).any():
@@ -1514,7 +1511,7 @@ def object_separation_apply(input_id: str):
 
     print('watershed start')
     for i in range(z):
-            watershed.watershed_meyers_2d(relief[i], markers[i], 0)
+        watershed_meyers_2d(relief[i], markers[i], 0)
 
     markers = markers*(img_label>0)
     data_repo.set_image('label',markers.astype(np.int32))

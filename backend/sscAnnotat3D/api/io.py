@@ -43,7 +43,7 @@ def _debugger_print(msg: str, payload: any):
 @app.route("/get_image_histogram/<image_id>", methods=["POST"])
 @cross_origin()
 def get_image_histogram(image_id):
-    from harpia.threshold.thresholdOperations import otsu
+    from harpia.threshold import otsu
     """
     Function used to calculate and return current image histogram
 
