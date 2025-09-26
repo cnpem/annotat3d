@@ -369,6 +369,8 @@ def pixel_feature_extraction(img, **kwargs):
 
 
     print("................\n")
+
+    print("................\n")
     print("Multi Scale Window Sigmas:", sigmas)
     print("Selected features:", [k for k, v in features_args.items() if v])
     img_float = img.astype('float32')
@@ -383,6 +385,11 @@ def pixel_feature_extraction(img, **kwargs):
     print("................\n")
     sigmas = np.array(sigmas, "float32")
     pixel_features = pixel_feature_extract(img_float, sigmas, features_args, verbose=0, gpuMemory=0.4)
+    print("[DEBUG] Pixel Features:",
+    "min:", pixel_features.min(),
+    "max:", pixel_features.max(),
+    "mean:", pixel_features.mean(),
+    "std:", pixel_features.std())
     print("................\n")
 
     end = time.time()
@@ -449,6 +456,62 @@ def superpixel_feature_extraction(
     logger.debug(f"-- Feature extraction run time: {end - start}s")
 
     return superpixel_features
+
+def build_feature_args(
+    selected_features: list[str],
+    selected_supervoxel_feat_pooling: list[str],
+    sigmas: list[float],
+) -> tuple[dict, int]:
+    """
+    Build feature flags dictionary and compute total number of features.
+
+    Parameters
+    ----------
+    selected_features : list[str]
+        List of selected feature names (e.g. ["intensity", "edges", "texture"]).
+    selected_supervoxel_feat_pooling : list[str]
+        List of pooling modes (e.g. ["mean", "max"]).
+    sigmas : list[float]
+        List of sigma values.
+
+    Returns
+    -------
+    features_args : dict
+        Dictionary with feature and pooling flags.
+    total_features : int
+        Total feature count.
+    """
+    # Build dictionary of feature flags
+    features_args = {
+        "Intensity": "intensity" in selected_features,
+        "Edges": "edges" in selected_features,
+        "Hessian": "texture" in selected_features,
+        "ShapeIndex": "shapeindex" in selected_features,
+        "LocalBinaryPattern": "localbinarypattern" in selected_features,
+        "pooling": {
+            "output_mean": "mean" in selected_supervoxel_feat_pooling,
+            "output_min": "min" in selected_supervoxel_feat_pooling,
+            "output_max": "max" in selected_supervoxel_feat_pooling,
+        },
+    }
+
+    # Count features per sigma
+    intensity = int(features_args["Intensity"])
+    edges = int(features_args["Edges"])
+    texture = 2 * int(features_args["Hessian"])
+    shape_index = int(features_args["ShapeIndex"])
+    lbp = int(features_args["LocalBinaryPattern"])
+
+    output_mean = int(features_args["pooling"]["output_mean"])
+    output_max = int(features_args["pooling"]["output_max"])
+    output_min = int(features_args["pooling"]["output_min"])
+
+    feats_per_sigma = intensity + edges + texture + shape_index + lbp 
+    feats_per_sigma = feats_per_sigma * (output_max + output_mean + output_min)
+    nsigmas = len(sigmas)
+    total_features = nsigmas * feats_per_sigma * nsigmas
+
+    return features_args, np.asarray(sigmas, 'float32'), total_features
 
 
 def contextual_superpixel_features(superpixels, features, max_level, connectivity=1):

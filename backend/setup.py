@@ -90,7 +90,7 @@ setup(
     license="",
     include_package_data=True,
     author="peixinho",
-    setup_requires=["cython>=0.29", "setuptools>=41.2", "numpy"],
+    #setup_requires=["cython>=0.29", "setuptools>=41.2", "numpy"],
     install_requires=requirements,
     author_email="alan.peixinho@lnls.br",
     description="",

@@ -55,13 +55,16 @@ __adaboost_params__ = {"n_estimators": [10**i for i in range(1, 3)]}
 __max_mem_usage__ = int(512 * 1024**3)
 __max_available_mem_usage_percentage__ = 0.8
 
-
 def create_classifier(classifier, **params):
+    # classifiers that do NOT support warm_start
+    no_warm_start = ["adaboost", "svm", "knn", "cusvm", "curf"]
+
+    if classifier in no_warm_start and "warm_start" in params:
+        params.pop("warm_start", None)
+
     if classifier == "svm":
-        # return cusvm.SVC(**params)
         return svm.LinearSVC(**params)
     elif classifier == "rf":
-        # return cuensemble.RandomForestClassifier(**params)
         return ensemble.RandomForestClassifier(**params, n_jobs=-1)
     elif classifier == "mlp":
         return neural_network.MLPClassifier(**params)
@@ -71,7 +74,6 @@ def create_classifier(classifier, **params):
         return ensemble.AdaBoostClassifier(**params)
     elif classifier == "curf":
         return cuensemble.RandomForestClassifier(**params)
-        # return cuensemble.RandomForestClassifier()
     elif classifier == "cusvm":
         return cusvm.SVC(kernel="linear", **params)
     else:
@@ -145,14 +147,9 @@ class ClassifierSegmentationModule(SegmentationModule):
         self.preview_slice_range = 0
 
         # Default parameter values
-        selected_features = (
-            spin_feat_extraction.SPINFilters.NONE,
-            spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_GAUSS,
-            spin_feat_extraction.SPINFilters.MULTI_SCALE_FFT_DIFF_OF_GAUSS,
-            spin_feat_extraction.SPINFilters.MEMBRANE_PROJECTIONS,
-        )
-        selected_supervoxel_feat_pooling = (spin_feat_extraction.SPINSupervoxelPooling.MEAN,)
-        selected_features_front = ["fft_gauss", "fft_dog", "membrane_projections", "none"]
+        selected_features = ['Intensity']
+        selected_supervoxel_feat_pooling = ['mean']
+        selected_features_front = ["Intensity", "Edges", "Texture"]
         selected_supervoxel_feat_pooling_front = ["mean"]
 
         default_waterpixels_compactness = 10.0 if self._image.dtype == "uint8" else 10000.0
@@ -264,44 +261,22 @@ class ClassifierSegmentationModule(SegmentationModule):
         key = key + "_"
         return dict(((k[len(key) :], val) for k, val in parameters.items() if k.startswith(key)))
 
-    @abstractmethod
-    def _extract_features_for_training(self, annotations, annotation_image, features, **kwargs):
-        pass
-
     # does not implement load label capability
     def load_label(self, label):
         pass
 
-    def _train_classifier(self, annotation_slice_dict, annotation_image, superpixel_features, **kwargs):
+    def _train_classifier(self, finetune=False, **kwargs):
 
         logging.info("Train classifier ...")
 
         start = end = 0
         classifier_trained = False
         selected_features_names = []
-        logging.debug(
-            "loaded_training_superpixel_features: {}".format(np.array(self._loaded_training_superpixel_features).shape)
-        )
 
-        if len(annotation_slice_dict) > 0 or len(self._loaded_training_superpixel_features) > 0:
+        if len(self._training_labels_raw) > 0:
 
-            self._verify_loaded_classifier_update(annotation_slice_dict)
-
-            self.reset_classifier()
-
-            self._extract_features_for_training(annotation_slice_dict, annotation_image, superpixel_features, **kwargs)
-
-            if len(self._loaded_training_superpixel_features) > 0:
-                logging.debug("--- (Training features loaded): Incorporating loaded training features")
-
-                # for f in self._loaded_training_superpixel_features:
-                self._training_features_raw = np.vstack(
-                    (self._training_features_raw, self._loaded_training_superpixel_features)
-                )
-                # for l in self._loaded_training_superpixel_labels:
-                self._training_labels_raw = np.array(
-                    [*self._training_labels_raw, *self._loaded_training_superpixel_labels]
-                )
+            if finetune == False:
+                self.reset_classifier()
 
             logging.debug("training features raw appended: {}".format(self._training_features_raw.shape))
             logging.debug("training features: {}".format(self._training_features.shape))
@@ -333,7 +308,10 @@ class ClassifierSegmentationModule(SegmentationModule):
                     logging.debug("training labels raw: {}".format(self._training_labels_raw))
                     self._training_labels = np.array(self._training_labels_raw)
             send = time.time()
-
+            print("\n\n\n")
+            print(self._training_labels)
+            print(self._training_features)
+            print("\n\n")
             logging.debug("Scaling feature time: {}s".format(send - sstart))
 
             logging.debug("training features after scaling: {}".format(self._training_features.shape))
@@ -341,48 +319,7 @@ class ClassifierSegmentationModule(SegmentationModule):
             start = time.time()
 
             logging.info("Fitting...")
-            """ 
-            if self._feat_selector is not None and self._feature_extraction_params["feat_selection_enabled"]:
-                logging.debug("-- Learning feature selection")
 
-                X = np.array(self._training_features, dtype="float32")
-
-                with sentry_sdk.start_span(op="feature selection"):
-                    with parallel_backend("threading"):
-                        # X = self._feat_selector.fit_transform(X, self._training_labels)
-                        logging.debug("Fit ...")
-                        self._feat_selector.fit(X, self._training_labels)
-                        logging.debug("Transform ...")
-                        X = spin_feat_extraction.spin_transform_selected_features(
-                            X, self._feat_selector.get_support(indices=True)
-                        )
-
-                    old_shape = (
-                        self._training_features.shape
-                        if type(self._training_features) == np.ndarray
-                        else (len(self._training_features), len(self._training_features[0]))
-                    )
-                    new_shape = X.shape if type(X) == np.ndarray else (len(X), len(X[0]))
-
-                    selected = self._feat_selector.get_support(indices=True)
-                    sigmas = np.array(self._feature_extraction_params["sigmas"], dtype="float32")
-                    selected_features = self._feature_extraction_params["selected_features"]
-                    selected_supervoxel_feat_pooling = np.array(
-                        self._feature_extraction_params["selected_supervoxel_feat_pooling"], dtype="int32"
-                    )
-                    
-                    logging.debug("---- Selected features:")
-                    logging.debuged = []
-                    for i in selected:
-                        filter_id = spin_feat_extraction.spin_filter_get_filter_id(
-                            i, 1, selected_supervoxel_feat_pooling, selected_features, sigmas
-                        )
-                        name = spin_feat_extraction.SPINFilters.filter_name(filter_id)
-                        if not name in logging.debuged:
-                            selected_features_names.append(name)
-                            logging.debuged.append(name)
-                            logging.debug("----- {}".format(spin_feat_extraction.SPINFilters.filter_name(filter_id)))"""
-            #else:
             selected_features_names = self._feature_extraction_params["selected_features"]
             logging.debug("-- Using all features for training: {}".format(selected_features_names))
             X = self._training_features 
@@ -404,15 +341,6 @@ class ClassifierSegmentationModule(SegmentationModule):
 
             one_start = time.time()
             logging.debug("Fitting start....")
-
-            """             if use_grid_search and grid_params:
-                logging.debug("Grid Searching parameters ...")
-                with sentry_sdk.start_span(op="grid search"):
-                    with parallel_backend("threading"):
-                        grid_search = self._create_grid_search(grid_params, self._model)
-                        grid_search.fit(X, Y)
-                    self._model = grid_search.best_estimator_
-            """
             
             with parallel_backend("threading"):
                 self._model.fit(X, Y)
@@ -434,6 +362,12 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         if classifier_trained:
             logging.debug("--> Completed")
+
+        print("[DEBUG] Scaled stats:",
+            "min:", X.min(),
+            "max:", X.max(),
+            "mean:", X.mean(),
+            "std:", X.std())
 
         return classifier_trained, training_time, selected_features_names
 
@@ -490,74 +424,48 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         return True, "", model_complete
 
-    def load_classifier(self, path: str = ""):
-
-        try:
-
-            """IMPORTANT NOTE: since version 0.3.7, classifier loading was modified to use pickle instead of joblib because the later does
-            not seem to be well supported by RAPIDS. To prevent allow backwards compatibility, we are keepking joblib for training
-            data loading/saving instead, given that it has been extensively used already (probably much more than classifier saving),
-            besides being far more critical than classifier loading/saving."""
-            with open(path, "rb") as f:
-                model_complete = pickle.load(f)
-
-        except Exception as e:
-            try:
-                f.close()
-            except:
-                pass
-            error_msg = "Invalid classifier file! Unable to load classification model! Error: %s.\n\n" % str(e)
-            error_msg += (
-                "IMPORTANT NOTE: since Annotat3D version 0.3.7, classifiers saved with previous versions "
-                "of the software are no longer fully supported and may fail to load."
-            )
-            return False, error_msg, {}
-
-        logging.debug("After deserializing classifier file")
-
+    def load_classifier(self, model_complete: dict):
+        """
+        Load classifier state into this module from a pre-loaded model_complete dict.
+        """
         try:
             classifier_version = model_complete["version"]
         except Exception as e:
-            return False, "Invalid classifier file! Unable to load classification model! Error: %s" % str(e), {}
-        else:
-            if classifier_version != self._classifier_version:
-                return False, "Invalid classifier file! Classifier version does not match current model!", {}
-        try:
-            self._model = model_complete["classifier"]
-        except Exception as e:
-            return False, "Invalid classifier file! Unable to load classification model! Error: %s" % str(e), {}
+            return False, f"Invalid classifier file! Missing version. Error: {e}", {}
+
+        if classifier_version != self._classifier_version:
+            return False, "Invalid classifier file! Classifier version does not match current model!", {}
 
         try:
+            self._model = model_complete["classifier"]
             self._superpixel_params = model_complete["superpixel_params"]
             self._feature_extraction_params = model_complete["feature_extraction_params"]
             self._classifier_params = model_complete["classifier_params"]
-
         except Exception as e:
-            return False, "Invalid classifier file! Unable to load parameters! (Error: %s)" % str(e), {}
+            return False, f"Invalid classifier file! Unable to load parameters. Error: {e}", {}
 
         try:
             self._feat_selector = model_complete["feat_selector"]
             self._default_feat_selector = self._feat_selector
-        except:
+        except Exception:
             return False, "Invalid classifier file! Unable to load feature selection model!", {}
 
         try:
             self._feat_scaler = model_complete["feat_scaler"]
             self._default_feat_scaler = self._feat_scaler
-        except:
+        except Exception:
             return False, "Invalid classifier file! Unable to load feature scaling method", {}
 
         try:
             labels = model_complete["labels"]
-        except:
+        except Exception:
             return False, "Invalid classifier file! Unable to load labels", {}
 
         classifier = self._classifier_params["classifier_type"]
-
         self._available_classifiers[classifier] = self._model
 
         if classifier not in self._available_classifiers:
-            return False, "Invalid classifier type " + classifier, {}
+            return False, f"Invalid classifier type {classifier}", {}
 
         self._flag_classifier_loaded = True
 
@@ -566,7 +474,7 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         try:
             self._feature_extraction_params_front = model_complete["feature_extraction_params_front"]
-        except:
+        except Exception:
             return False, "Invalid classifier file! Unable to load feature_extraction_params_front", {}
 
         logging.debug("Classifier loaded successfully")
@@ -662,6 +570,13 @@ class ClassifierSegmentationModule(SegmentationModule):
 
         feat_scaling_start = time.time()
         X_scaled = self._scale_feats(features)
+
+        print("[DEBUG] Scaled stats:",
+            "min:", X_scaled.min(),
+            "max:", X_scaled.max(),
+            "mean:", X_scaled.mean(),
+            "std:", X_scaled.std())
+        
         feat_scaling_end = time.time()
         feat_scaling_time = feat_scaling_end - feat_scaling_start
 
@@ -674,8 +589,9 @@ class ClassifierSegmentationModule(SegmentationModule):
         logging.debug("-- Applying trained model")
         predict_start = time.time()
         logging.debug("predict labels")
+        print(X)
         prediction = self._model_classify(X)
-
+        print(prediction)
         predict_end = time.time()
         predict_time = predict_end - predict_start
 
@@ -893,6 +809,11 @@ class ClassifierSegmentationModule(SegmentationModule):
 
             logging.debug("Parameters for %s: %s" % (c, str(params)))
 
+            # Inject warm_start only if supported
+            if c in ["rf", "adaboost", "mlp"]:
+                params["warm_start"] = True
+
+            print(c)
             clf = create_classifier(c, **params)
             # self._available_classifiers[c] = Pipeline([('feature_selection', feat_selection), ('classification', clf)])
             self._available_classifiers[c] = (
@@ -921,25 +842,6 @@ class ClassifierSegmentationModule(SegmentationModule):
             if param in self._classifier_params:
                 logging.debug("Setting {} {}".format(param, value))
                 self._classifier_params[param] = value
-
-    def get_classifier_parameters(self):
-        params = {}
-
-        params.update(self._superpixel_params)
-        params.update(self._classifier_params)
-        params.update(self._feature_extraction_params)
-        params.update(
-            (
-                ("available_features", self.get_available_features()),
-                ("available_supervoxel_feat_pooling", self.get_available_supervoxel_pooling_methods()),
-            )
-        )
-        params["locked_params"] = set(self._locked_params)
-
-        return params
-
-    # def get_classifier_parameters_widget(self, window):
-    # return SuperpixelSegmentationParamWidget(window)
 
     def get_classifier(self):
         return self._classifier_params["classifier_type"]
@@ -975,12 +877,6 @@ class ClassifierSegmentationModule(SegmentationModule):
             return bbox, min_coord, max_coord
         else:
             return bbox
-
-    def get_available_features(self):
-        return spin_feat_extraction.SPINFilters.available_filters()
-
-    def get_available_supervoxel_pooling_methods(self):
-        return spin_feat_extraction.SPINSupervoxelPooling.available_pooling_methods()
 
     def undo(self, checkpoint):
         return True

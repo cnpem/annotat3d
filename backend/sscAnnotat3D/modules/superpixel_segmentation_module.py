@@ -12,8 +12,6 @@ import numpy as np
 import scipy as sp
 from collections import defaultdict
 import sentry_sdk
-import sscPySpin.classification as spin_class
-import sscPySpin.feature_extraction as spin_feat_extraction
 import sscPySpin.image as spin_img
 import sscPySpin.segmentation as spin_seg
 from sklearn import ensemble, model_selection, neighbors, neural_network, svm
@@ -22,6 +20,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import assert_all_finite, parallel_backend
 from sscAnnotat3D import cython
+from harpia.featureExtraction import superpixel_pooling_feature
 
 from .. import aux_functions as functions
 from .. import progressbar, utils
@@ -155,9 +154,6 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         features = self._extract_features_superpixel(image, **kwargs)
         return features
 
-    def _extract_features_for_training(self, annotation_slice_dict, annotation_image, features, **kwargs):
-        self._extract_supervoxel_features_for_training(annotation_slice_dict, annotation_image, features, **kwargs)
-
     def _selected_superpixels(self, selected_slices, selected_axis):
         selected_slices_idx = self._selected_slices_idx(selected_slices, selected_axis)
         superpixels_slice = self._superpixels[selected_slices_idx]
@@ -202,120 +198,92 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
         self._min_superpixel_label = superpixel_limits["min"]
         self._max_superpixel_label = superpixel_limits["max"]
 
-    def preview(self, annotation_slice_dict, annotation_image, selected_slices, selected_axis, **kwargs):
+    def train(self, annotation_slice_dict, annotation_image, finetune: bool = False, **kwargs):
+        """
+        Train the superpixel classifier on the provided annotations.
+        Stores the trained classifier and features in this object.
+
+        Args:
+            annotation_slice_dict (dict): annotation slices
+            annotation_image (ndarray): full annotation image
+            finetune (bool): whether to fine-tune an already trained classifier
+            **kwargs: extra params for feature extraction
+        """
+        with sentry_sdk.start_transaction(name="Superpixel Segmentation Train", op="superpixel classification") as t:
+            if len(annotation_slice_dict) <= 0:
+                return None, []
+
+            _,_ = self._select_training_superpixel_features(annotation_image, annotation_slice_dict, **kwargs)
+            # Extract features for full image if not already done
+            if self._features is None:
+                with sentry_sdk.start_span(op="Feature extraction for training"):
+                    logging.debug(f"Extracting features for full image with shape {self._image.shape}")
+                    self._features = self._extract_features_superpixel(self._image, self._superpixels)
+
+            # Train classifier
+            with sentry_sdk.start_span(op="Training classifier"):
+                classifier_trained, training_time, selected_features_names = self._train_classifier(
+                    finetune=finetune,
+                )
+
+            self._classifier_trained = classifier_trained
+            self._selected_features_names = selected_features_names
+
+            return classifier_trained, selected_features_names
+
+
+    def preview(self, selected_slices, selected_axis, **kwargs):
+        """
+        Generate a preview segmentation for the given slice/axis using the trained classifier.
+
+        Args:
+            selected_slices (list[int]): slice indices chosen by the user
+            selected_axis (int): axis index (0,1,2)
+            **kwargs: extra params for feature extraction
+
+        Returns:
+            pred_output (ndarray): preview segmentation (-1 for pixels outside the slice)
+            selected_features_names (list): names of features used in training
+        """
+        if not getattr(self, "_classifier_trained", False):
+            raise Exception("No trained classifier available. Please call train() first.")
+
         with sentry_sdk.start_transaction(name="Superpixel Segmentation Preview", op="superpixel classification") as t:
             image_params = {"shape": self._image.shape, "dtype": self._image.dtype, "params": self._superpixel_params}
-            # TODO: Estimate superpixels by blocks of slices because previews done across the Z-axis may present a high number
-            # of superpixel ids, which will generate a large matrix
-            if selected_axis != 0:
-                #valid, _ = self._validate_feature_extraction_memory_usage()
-                valid = True
-                if not valid:
-                    raise Exception(
-                        "Unable to compute preview for axis %s because too much memory may be consumed (beyond the accepted limit of %d GB). Please preview only on XY axis for now."
-                        % (
-                            "XZ" if selected_axis == 1 else "YZ",
-                            self._estimate_feature_extraction_memory_usage() / (1024.0**3),
-                        )
-                    )
 
-            mainbar = progressbar.get("main")
-
-            mainbar.set_max(4)
-
-            mainbar.inc()
-            total_time_start = time.time()
-
-            image = self._image
-
-            mainbar.inc()
-            start = time.time()
-            # features = None
-            # features = None
-
-            ndim = self._superpixels.ndim
-            # Initializing the bounding boxes for each marker
+            # Bounding box around selected slice(s)
             with sentry_sdk.start_span(op="Initializing bounding boxes"):
-                min_coord = np.zeros(ndim, dtype="int32")
+                min_coord = np.zeros(self._superpixels.ndim, dtype="int32")
                 max_coord = np.array(self._superpixels.shape, dtype="int32") - 1
 
                 preview_bounding_box = self._preview_bounding_box(selected_slices, selected_axis)
-                print("Selected axis and slices", selected_axis, selected_slices)
-                end = time.time()
-
-                logging.debug("Time to compute superpixel bounding boxes: %fs" % (end - start))
-
-                preview_bounding_box = self._bounding_box_for_feat_extraction(
-                    preview_bounding_box, min_coord, max_coord
-                )
-
-                image_params["preview_bounding_box"] = preview_bounding_box
-                sentry_sdk.set_context("Image Params", image_params)
-
-                logging.debug("Feat extraction bounding box for preview".format(preview_bounding_box))
+                preview_bounding_box = self._bounding_box_for_feat_extraction(preview_bounding_box, min_coord, max_coord)
 
                 z0, y0, x0, z1, y1, x1 = preview_bounding_box
-                preview_image = image[z0 : z1 + 1, y0 : y1 + 1, x0 : x1 + 1]
-                preview_superpixels = self._superpixels[z0 : z1 + 1, y0 : y1 + 1, x0 : x1 + 1]
+                preview_image = self._image[z0:z1 + 1, y0:y1 + 1, x0:x1 + 1]
+                preview_superpixels = self._superpixels[z0:z1 + 1, y0:y1 + 1, x0:x1 + 1]
 
-                training_time = test_time = assignment_time = 0.0
+            logging.debug(f"Estimating superpixel features for preview (cropped shape: {preview_image.shape})")
 
-            mainbar.inc()
+            pred_output = None
+            with sentry_sdk.start_span(op="Classify superpixels for preview"):
+                # Create output maps
+                pred_output = np.zeros(self._image.shape, dtype="int32") - 1
+                pred = np.zeros(self._image.shape, dtype="uint16")
 
-            logging.debug("preview_superpixels: {}".format(preview_superpixels))
-
-            logging.debug(
-                "Estimating superpixel features for preview area only (Cropped image shape: %s)"
-                % (str(preview_image.shape))
-            )
-
-            with sentry_sdk.start_span(op="Training classifier for preview"):
-                classifier_trained, training_time, selected_features_names = self._train_classifier(
-                    annotation_slice_dict, annotation_image, self._features, min_superpixel_id=self._min_superpixel_label
+                # Classify selected superpixels only
+                selected_superpixels = self._selected_superpixels(selected_slices, selected_axis)
+                assignment_time, test_time, predict_times = self._classify_superpixels(
+                    self._features,
+                    pred[z0:z1 + 1, y0:y1 + 1, x0:x1 + 1],
+                    preview_superpixels,
+                    selected_superpixels,
                 )
 
-            pred = None
-
-            mainbar.inc()
-            with sentry_sdk.start_span(op="Classify superpixels for preview"):
-                if classifier_trained:
-                    # A pred that has -1 for pixels that are not in the current slice for frontend visualization
-                    pred_output = np.zeros(self._image.shape,  dtype="int32") - 1
-                    # I need an array that will be the input for the superpixel spin function, can't be int32 array
-                    pred = np.zeros(self._image.shape, dtype="uint16")
-                    preview_superpixel_limits = spin_img.spin_min_max_region_id(preview_superpixels, True)
-                    min_superpixel_label = preview_superpixel_limits["min"]
-                    max_superpixel_label = preview_superpixel_limits["max"]
-                    selected_superpixels = self._selected_superpixels(selected_slices, selected_axis)
-                    assignment_time, test_time, predict_times = self._classify_superpixels(
-                        self._features,
-                        pred[z0 : z1 + 1, y0 : y1 + 1, x0 : x1 + 1],
-                        preview_superpixels,
-                        selected_superpixels,
-                    )
-                    # min_superpixel_id=min_superpixel_label,
-                    # max_superpixel_id=max_superpixel_label)
-
-                    # Here I change the pred_output with the pred predictions
-
-                    # Create a tuple of slices (using slice(None) to select all elements along other axes)
-                    index = [slice(None)] * pred.ndim
-                    index[selected_axis] = selected_slices[0]
-                    # Assign the values
-                    pred_output[tuple(index)] = pred[tuple(index)]
-
-                    total_time = training_time + test_time + assignment_time
-
-                    logging.info(
-                        "Preview: Training time = %f s, Testing time = %f s, Label assignment time = %f s, Total time= %f s "
-                        % (training_time, test_time, assignment_time, total_time)
-                    )
-                    logging.info("Preview: Finished")
-
-            total_time_end = time.time()
-
-            total_user_time = total_time_end - total_time_start
-            logging.debug("Total user time = %f s" % (total_time_end - total_time_start))
+                # Assign predictions into output for frontend
+                index = [slice(None)] * pred.ndim
+                index[selected_axis] = selected_slices[0]
+                pred_output[tuple(index)] = pred[tuple(index)]
 
             try:
                 functions.log_usage(
@@ -330,20 +298,13 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                     preview_bounding_box=str(preview_bounding_box),
                     feature_extraction_params=str(self._feature_extraction_params),
                     classifier_params=str(self._classifier_params),
-                    classifier_trained=classifier_trained,
-                    training_time=training_time,
-                    test_time=test_time,
-                    predict_times=predict_times,
-                    assignment_time=assignment_time,
-                    total_user_time=total_user_time,
+                    classifier_trained=self._classifier_trained,
+                    selected_features=self._selected_features_names,
                 )
-
             except Exception as e:
                 functions.log_error(e)
 
-            mainbar.reset()
-
-            return pred_output, selected_features_names
+            return pred_output, self._selected_features_names
 
     def has_superpixel_features_cached(self):
         cached_features = True
@@ -423,7 +384,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
             mainbar.inc()
             with sentry_sdk.start_span(op="Training classifier"):
                 classifier_trained, training_time, selected_features_names = self._train_classifier(
-                    annotation_slice_dict, annotation_image, features, min_superpixel_id=min_superpixel_label
+                    annotation_slice_dict, annotation_image, features
                 )
 
             pred = None
@@ -608,36 +569,6 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
         return assignment_time, test_time, predict_times
 
-    def _extract_features_superpixel(self, image, superpixels, min_superpixel_label, max_superpixel_label, **kwargs):
-
-        feature_extraction_params = {**self._feature_extraction_params, **kwargs}
-        superpixel_type = self._superpixel_params["superpixel_type"]
-
-        superpixel_features = functions.superpixel_feature_extraction(
-            image,
-            superpixels,
-            min_label=min_superpixel_label,
-            max_label=max_superpixel_label,
-            superpixel_type=superpixel_type,
-            **feature_extraction_params
-        )
-        # assert_all_finite(superpixel_features)
-
-        try:
-            max_level = feature_extraction_params["contextual_superpixel_feature_max_level"]
-        except Exception as e:
-            logging.debug("Error {}".format(e))
-        else:
-            if max_level > 0:
-                logging.debug("Computing contextual superpixel features for %d levels" % (max_level))
-
-                superpixel_features = functions.contextual_superpixel_features(
-                    superpixels, superpixel_features, max_level, connectivity=1
-                )
-        logging.debug("-- Estimated superpixel feature vectors shape {}".format(superpixel_features.shape))
-
-        return superpixel_features
-
     def set_superpixel(self, superpixels):
         self._superpixels = superpixels
 
@@ -670,120 +601,134 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
 
         return majority
 
+    def _select_training_superpixel_features(
+        self,
+        annotation_image: np.ndarray,
+        annotation_slice_dict: dict[int, list[int]],
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Extracts superpixel features in slice blocks and assigns labels via majority voting.
+
+        Returns
+        -------
+        X_all : np.ndarray (nsuperpixels, nfeatures)
+            Feature matrix
+        Y_all : np.ndarray (nsuperpixels,)
+            Labels (-1 if unlabeled)
+        """
+        print(self._feature_extraction_params)
+
+        feature_args, sigmas, total_features = functions.build_feature_args(**self._feature_extraction_params)
+
+        num_superpixels = int(self.superpixels.max()) + 1
+        X_all = np.zeros((num_superpixels, total_features), dtype="float32") ##features
+        Y_all = np.full(num_superpixels, -1, dtype="int16") ##labels
+
+        # --- sort slice indices per axis
+        axis_indices = {axis: sorted(indices) for axis, indices in annotation_slice_dict.items()}
+
+        # --- group consecutive slices into blocks
+        def consecutive_blocks(indices):
+            blocks, block = [], []
+            for i, idx in enumerate(indices):
+                if i == 0 or idx == indices[i - 1] + 1:
+                    block.append(idx)
+                else:
+                    blocks.append(block)
+                    block = [idx]
+            if block:
+                blocks.append(block)
+            return blocks
+
+        axis_blocks = {axis: consecutive_blocks(idxs) for axis, idxs in axis_indices.items()}
+
+        # --- iterate in round-robin, but with blocks instead of single slices
+        interleaved_blocks = [
+            (axis, block)
+            for blocks in zip(*map(lambda a: axis_blocks[a], sorted(axis_blocks)))
+            for axis, block in enumerate(blocks)
+        ]
+
+        for axis, block in interleaved_blocks:
+            # stack slices along axis to build a block
+            if axis == 0:
+                superpixel_block = self.superpixels[block, :, :].copy()
+                image_block = self.image[block, :, :].copy()
+                label_block = annotation_image[block, :, :].copy()
+            elif axis == 1:
+                superpixel_block = self.superpixels[:, block, :].copy()
+                image_block = self.image[:, block, :].copy()
+                label_block = annotation_image[:, block, :].copy()
+
+            elif axis == 2:
+                superpixel_block = self.superpixels[:, :, block].copy()
+                image_block = self.image[:, :, block].copy()
+                label_block = annotation_image[:, :, block].copy()
+
+            else:
+                raise ValueError(f"Invalid axis {axis}")
+
+            n_spid_min = superpixel_block.min()
+            #n_superpixels_block = superpixel_block.max() - n_spid_min + 1
+
+            # reshape to 3D (C, Y, X) style for pooling
+            image_block = image_block.reshape(1, *image_block.shape)
+            superpixel_block = superpixel_block.reshape(1, *superpixel_block.shape) - n_spid_min
+
+            # --- feature extraction
+            feat_tmp = superpixel_pooling_feature(image_block, superpixel_block, sigmas, features=feature_args)
+
+            # --- assign to global IDs
+            unique_ids = np.unique(superpixel_block)
+            X_all[unique_ids + n_spid_min] = feat_tmp[unique_ids]
+
+            # --- majority voting labels
+            maj_labels_local = self.superpixel_majority_voting(superpixel_block, label_block)
+            Y_all[unique_ids + n_spid_min] = maj_labels_local[unique_ids]
+
+        # --- final filtering
+        valid_mask = Y_all >= 0
+        X_all = X_all[valid_mask]
+        Y_all = Y_all[valid_mask]
+
+        self._training_features = X_all
+        self._training_features_raw = X_all  # Raw training features before scaling, used for saving features if necessary
+        self._training_labels_raw = Y_all
 
 
-    # get labels for each trainining superpixel, using the majority voting of annotated pixel labels inside it
-    # @timecall(immediate=False)
-    def annotate_training_superpixels(self, annotation_slice_dict, annotation_image):
-        logging.debug("Annotating training superpixels")
-        self._training_features = []
-        self._training_features_raw = []
-
-        if len(annotation_slice_dict) > 0:
-            mstart = time.time()
-            if annotation_image.dtype != np.int32:
-                annotation_image = annotation_image.astype(np.int32)
-            #superpixel_marker_labels = cython.annotation.superpixel_majority_voting(annotation, annotation_image, self._superpixels)
-            superpixel_marker_labels = self.superpixel_majority_voting(annotation_slice_dict, annotation_image, self._superpixels)
-
-            mend = time.time()
-
-            logging.debug("Majority voting ... {}".format(mend - mstart))
-
-            gstart = time.time()
-            n = len(superpixel_marker_labels)
-            self._training_labels = np.empty(n, dtype="int32")
-            self._training_labels_raw = np.empty(n, dtype="int32")
-            sorted_superpixel_marker_labels = sorted(superpixel_marker_labels)
-            self._training_labels_raw[...] = self._training_labels[...] = list(
-                itemgetter(*sorted_superpixel_marker_labels)(superpixel_marker_labels)
-            )
-            self._training_superpixel_ids = superpixel_marker_labels
-
-            gend = time.time()
-            logging.debug("gather samples {}s".format(gend - gstart))
-
-    # @timecall(immediate=False)
-    def _select_training_superpixel_features(self, superpixel_features, min_superpixel_id=1):
-        nsamples = len(self._training_superpixel_ids)
-        if isinstance(superpixel_features, dict):
-            nfeats = len(
-                next(iter(superpixel_features.values()))
-            )  # look how many chainned functions, this feel lispy as hell
-        else:
-            nfeats = superpixel_features.shape[1]
-
-        self._training_features = np.empty((nsamples, nfeats), dtype="float32")
-        self._training_features_raw = np.empty((nsamples, nfeats), dtype="float32")
-
-        for i, superpixel_id in enumerate(sorted(self._training_superpixel_ids)):
-            superpixel_id -= min_superpixel_id
-
-            if isinstance(superpixel_features, dict):
-                if superpixel_id not in superpixel_features:
-                    raise Exception(
-                        "Superpixel features not computed for superpixel %d (number of samples %d)"
-                        % (superpixel_id + min_superpixel_id, len(superpixel_features))
-                    )
-            elif isinstance(superpixel_features, list) or isinstance(superpixel_features, np.ndarray):
-                if not (0 <= superpixel_id < len(superpixel_features)):
-                    raise Exception(
-                        "Superpixel features not computed for superpixel %d (number of samples %d)"
-                        % (superpixel_id + min_superpixel_id, len(superpixel_features))
-                    )
-
-            self._training_features_raw[i, ...] = superpixel_features[superpixel_id]
-            # Saving training superpixel features *BEFORE SCALING* for posterior saving if necessary
-            # self._training_features_raw[i, ...] = self._training_features[i, ...]
-
-        #
-        # if len(self._loaded_training_superpixel_features) > 0:
-        #     logging.debug('--- (Training features loaded): Incorporating loaded training features')
-        #     for f in self._loaded_training_superpixel_features:
-        #         self._training_features_raw.append(f)
+        return X_all, Y_all
 
     def _extract_supervoxel_features_for_training(self, annotation_slice_dict, annotation_image, superpixel_features, **kwargs):
-        min_superpixel_id = kwargs["min_superpixel_id"]
+        #min_superpixel_id = kwargs["min_superpixel_id"]
         logging.debug("__extract_supervoxel_features_for_training -> kwargs {}".format(kwargs))
 
-        logging.debug("Features pre-extracted for the entire image. Annotating superpixels and selecting features")
+        #logging.debug("Features pre-extracted for the entire image. Annotating superpixels and selecting features")
+        #start = time.time()
+        #self.annotate_training_superpixels(annotation_slice_dict, annotation_image)
+        #end = time.time()
+        #logging.debug("Superpixel annotation time: {}s".format(end - start))
         start = time.time()
-        self.annotate_training_superpixels(annotation_slice_dict, annotation_image)
-        end = time.time()
-        logging.debug("Superpixel annotation time: {}s".format(end - start))
-        start = time.time()
-        self._select_training_superpixel_features(superpixel_features, min_superpixel_id=min_superpixel_id)
+
+        self._select_training_superpixel_features(annotation_slice_dict, superpixel_features)
         end = time.time()
         logging.debug("Training superpixel selection run time: {}s".format(end - start))
 
-    def load_classifier(self, path: str = ""):
-        """
-        Function that load the classifier as .model extension
+    def save_classifier(
+        self,
+        path: str = "",
+        superpixel_state: dict = None,
+        feature_extraction_params: dict = None,
+    ):
+        # 1. Call parent
+        resp, msg, model_complete = super().save_classifier(
+            path, superpixel_state, feature_extraction_params
+        )
 
-        Args:
-            path (str): string to load the classifier
-
-        Returns:
-            (bool, str, dict): returns a tuple that contains in this order : a boolean with the response, a str with the error msg if the boolean is False and a dict that contains the information to update the front-end component
-
-        """
-        resp, msg, model_complete = ClassifierSegmentationModule.load_classifier(self, path)
         return resp, msg, model_complete
 
-    def save_classifier(self, path: str = "", superpixel_state: dict = None, feature_extraction_params: dict = None):
-        """
-        Function that save the classifier as .model extension
+    
+    def load_classifier(self, path=""):
+        # runs the parent method on THIS instance (self)
+        resp, msg, model_complete = super().load_classifier(path)
 
-        Args:
-            path (str): string to save the classifier
-            superpixel_state (dict): dict that contains information about the superpixel
-            feature_extraction_params (dict): dict that contains the feature_extraction_params chosen by the user
-
-        Returns:
-            (bool, str, dict): returns a tuple that contains in this order : a boolean with the response, a str with the error msg if the boolean is False and a dict that contains the information to update the front-end component
-
-        """
-        resp, msg, model_complete = ClassifierSegmentationModule.save_classifier(
-            self, path, superpixel_state, feature_extraction_params
-        )
         return resp, msg, model_complete

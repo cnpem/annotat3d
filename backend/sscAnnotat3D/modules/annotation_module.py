@@ -363,6 +363,7 @@ class AnnotationModule:
         ###end###
 
     def erase_all(self):
+        self.annotation_slice_dict = {0: set(), 1: set(), 2: set()}
         self.order_markers = set()
         self.added_labels = []
         self.__annotation_image = (-1) * np.ones((self.zsize, self.ysize, self.xsize), dtype="int16")

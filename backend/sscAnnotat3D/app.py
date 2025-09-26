@@ -11,7 +11,7 @@ from flask import *
 from flask_cors import CORS, cross_origin
 from sscAnnotat3D import superpixels, utils
 from sscAnnotat3D.__version__ import __version__
-from sscAnnotat3D.api import annotation, filters, morphology
+from sscAnnotat3D.api import annotation, filters, morphology, classifier
 from sscAnnotat3D.api import image as apiimage
 from sscAnnotat3D.api import io as apiio
 from sscAnnotat3D.api import superpixel
@@ -54,6 +54,8 @@ app.register_blueprint(apisuperpixel_segmentation_module.app)
 app.register_blueprint(apipixel_segmentation_module.app)
 app.register_blueprint(filters.app)
 app.register_blueprint(morphology.app)
+app.register_blueprint(classifier.app)
+
 
 image = None
 image_path = None

@@ -151,45 +151,34 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
      * Function that Saves the classifier model .model file and send to the backend
      */
     const dispatchSaveClassifier = async () => {
-        const backendPayload: { classificationPath: string } = {
+        const backendPayload: { classificationPath: string; mode: string } = {
             classificationPath:
                 pathSaveFiles.workspacePath !== ''
                     ? pathSaveFiles.workspacePath + pathSaveFiles.classificationPath
                     : pathSaveFiles.classificationPath,
+            mode: useSuperpixelModule ? 'superpixel' : 'pixel',
         };
 
         let msgReturned = '';
         let isError = false;
 
-        if (useSuperpixelModule) {
-            await sfetch('POST', '/save_classifier', JSON.stringify(backendPayload), 'json')
-                .then((success: string) => {
-                    msgReturned = `${pathSaveFiles.classificationPath} saved as .model`;
-                    console.log(success);
-                })
-                .catch((error: ErrorInterface) => {
-                    msgReturned = error.error_msg;
-                    isError = true;
-                    console.log('Error message while trying to save the classifier model', error.error_msg);
-                    setHeaderErrorMsg(`error while saving the classifier model`);
-                    setErrorMsg(error.error_msg);
-                    setShowErrorWindow(true);
-                });
-        } else {
-            await sfetch('POST', '/save_classifier_pixel', JSON.stringify(backendPayload), 'json')
-                .then((success: string) => {
-                    msgReturned = `${pathSaveFiles.classificationPath} saved as .model`;
-                    console.log(success);
-                })
-                .catch((error: ErrorInterface) => {
-                    msgReturned = error.error_msg;
-                    isError = true;
-                    console.log('Error message while trying to save the classifier model', error.error_msg);
-                    setHeaderErrorMsg(`error while saving the classifier model`);
-                    setErrorMsg(error.error_msg);
-                    setShowErrorWindow(true);
-                });
-        }
+        await sfetch('POST', '/save_classifier', JSON.stringify(backendPayload), 'json')
+            .then((success: string) => {
+                if (useSuperpixelModule) {
+                    msgReturned = `Superpixel model saved as ${pathSaveFiles.classificationPath}. To save a pixel model, please switch to pixel segmentation mode.`;
+                } else {
+                    msgReturned = `Pixel model saved as ${pathSaveFiles.classificationPath}. To save a superpixel model, please switch to superpixel segmentation mode.`;
+                }
+                console.log(success);
+            })
+            .catch((error: ErrorInterface) => {
+                msgReturned = error.error_msg;
+                isError = true;
+                console.log('Error message while trying to save the classifier model', error.error_msg);
+                setHeaderErrorMsg(`error while saving the classifier model`);
+                setErrorMsg(error.error_msg);
+                setShowErrorWindow(true);
+            });
 
         const returnedObj: QueueToast = { message: msgReturned, isError };
         return returnedObj;

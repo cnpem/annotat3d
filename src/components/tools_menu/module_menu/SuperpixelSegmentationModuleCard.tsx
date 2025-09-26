@@ -13,7 +13,13 @@ import {
     IonCard,
     IonCardHeader,
     IonCardContent,
+    IonToggle,
+    IonNote,
+    IonToggle,
+    IonNote,
     useIonToast,
+    IonSegmentButton,
+    IonSegment,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
 import isEqual from 'lodash.isequal';
@@ -37,6 +43,16 @@ import {
 } from './SuperpixelSegInterface';
 import ErrorInterface from '../../main_menu/file/utils/ErrorInterface';
 import ErrorWindowComp from '../../main_menu/file/utils/ErrorWindowComp';
+
+interface ModelStatus {
+    loaded: boolean;
+    mode?: string;
+}
+
+interface ModelStatus {
+    loaded: boolean;
+    mode?: string;
+}
 
 const SuperpixelSegmentationModuleCard: React.FC = () => {
     const [defaultModelClassifierParams, setDefaultModelClassifierParams] = useStorageState(
@@ -77,6 +93,26 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     const [showLoadingCompSpS, setShowLoadingCompSpS] = useState<boolean>(false);
     const [disabled, setDisabled] = useState<boolean>(true);
 
+    // Training mode state
+    const [trainingMode, setTrainingMode] = useStorageState<'train' | 'finetune'>(
+        sessionStorage,
+        'superpixelTrainingMode',
+        'train'
+    );
+    const [modelStatus, setModelStatus] = useState<ModelStatus>({ loaded: false });
+    const [isFineTuneAvailable, setIsFineTuneAvailable] = useState<boolean>(false);
+    const [fineTuneMessage, setFineTuneMessage] = useState<string>('');
+
+    // Training mode state
+    const [trainingMode, setTrainingMode] = useStorageState<'train' | 'finetune'>(
+        sessionStorage,
+        'superpixelTrainingMode',
+        'train'
+    );
+    const [modelStatus, setModelStatus] = useState<ModelStatus>({ loaded: false });
+    const [isFineTuneAvailable, setIsFineTuneAvailable] = useState<boolean>(false);
+    const [fineTuneMessage, setFineTuneMessage] = useState<string>('');
+
     const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [headerErrorMsg, setHeaderErrorMsg] = useState<string>('');
@@ -84,15 +120,21 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     const [showToast] = useIonToast();
     const timeToast = 2000;
     const toastMessages = {
-        onPreprocess: 'Preprocess done!',
-        onPreview: 'Preview done!',
-        onApply: 'Apply done!',
+        onTrain: trainingMode === 'train' ? 'Training done!' : 'Fine-tuning done!',
+        onSlicePreview: 'Slice Preview done!',
+        onVolPreview: 'Vol Preview done!',
+        onTrain: trainingMode === 'train' ? 'Training done!' : 'Fine-tuning done!',
+        onSlicePreview: 'Slice Preview done!',
+        onVolApply: 'Volume Apply done!',
     };
 
     const loadingMessages = {
-        onPreprocess: 'Preprocessing',
-        onPreview: 'Preparing preview',
-        onApply: 'Applying',
+        onTrain: trainingMode === 'train' ? 'Training' : 'Fine-tuning',
+        onSlicePreview: 'Preparing slice preview',
+        onVolPreview: 'Applying volume preview',
+        onTrain: trainingMode === 'train' ? 'Training' : 'Fine-tuning',
+        onSlicePreview: 'Preparing slice preview',
+        onVolApply: 'Applying volume preview',
     };
 
     const handleErrorMsg = (msg: string) => {
@@ -103,23 +145,46 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         setShowErrorWindow(flag);
     };
 
+    // Check model status for fine-tune availability
     useEffect(() => {
-        void sfetch('POST', 'is_available_image/superpixel', '', 'json').then((response) => {
-            setDisabled(!response.available);
-        });
-    });
+        if (trainingMode === 'finetune') {
+            void sfetch('GET', '/models/current?module=superpixel', '', 'json')
+                .then((response: any) => {
+                    if (!response.loaded) {
+                        setIsFineTuneAvailable(false);
+                        setFineTuneMessage('Fine-tune requires a loaded model.');
+                    } else if (response.mode !== 'superpixel') {
+                        setIsFineTuneAvailable(false);
+                        setFineTuneMessage(
+                            `Fine-tune only works with Superpixel models. Loaded: ${
+                                String(response.mode) || 'Unknown'
+                            }.`
+                        );
+                    } else {
+                        setIsFineTuneAvailable(true);
+                        setFineTuneMessage('Parameters locked, inherited from loaded model.');
 
-    // useEffect to force the user to use preprocess if he changes the featParams
-    useEffect(() => {
-        const hasChanged = !isEqual(prevFeatParams, featParams);
-        setHasPreprocessed(!hasChanged);
-    }, [featParams, prevFeatParams, setHasPreprocessed]);
+                        // overwrite UI state with backend values
+                        setClassParams(response.classifier_parameters);
+                        setFeatParams(response.feature_extraction_params);
+                        setPrevClassParams(response.classifier_parameters);
+                        setPrevFeatParams(response.feature_extraction_params);
+                    }
+                })
+                .catch(() => {
+                    setIsFineTuneAvailable(false);
+                    setFineTuneMessage('Unable to check model status.');
+                });
+        }
+    }, [trainingMode]);
 
-    // useEffect to force the user to use preprocess if he changes the classParams
+    // useEffect to force the user to use training if he changes the classParams
     useEffect(() => {
-        const hasChanged = !isEqual(prevClassParams, classParams);
-        setHasPreprocessed(!hasChanged);
-    }, [classParams, prevClassParams, setHasPreprocessed]);
+        if (trainingMode === 'train') {
+            const hasChanged = !isEqual(prevClassParams, classParams);
+            setHasPreprocessed(!hasChanged);
+        }
+    }, [classParams, prevClassParams, setHasPreprocessed, trainingMode]);
 
     useEventBus('superpixelChanged', () => {
         setDisabled(false);
@@ -231,31 +296,40 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         return params;
     }
 
-    function onApply() {
+    function onVolApply() {
         setDisabled(true);
         setShowLoadingCompSpS(true);
-        setLoadingMsg(loadingMessages.onApply);
-        sfetch('POST', 'superpixel_segmentation_module/execute', '')
+        setLoadingMsg(loadingMessages.onVolApply);
+
+        const payload = {
+            mode: 'superpixel' as const,
+            training_mode: trainingMode,
+        };
+
+        sfetch('POST', '/api/superpixel/infer/volume', JSON.stringify(payload), 'json')
             .then(() => {
                 dispatch('labelChanged', '');
                 setShowLoadingCompSpS(false);
                 setDisabled(false);
-                void showToast(toastMessages.onApply, timeToast);
+                void showToast(toastMessages.onVolApply, timeToast);
                 dispatch('useSuperpixelModule', true);
             })
             .catch((error: ErrorInterface) => {
                 setDisabled(false);
-                console.log('error in superpixel_segmentation_module apply');
+                console.log('error in superpixel_segmentation_module vol apply');
                 console.log(error.error_msg);
                 setShowErrorWindow(true);
-                setHeaderErrorMsg(`error on apply in superpixel segmentation menu`);
+                setHeaderErrorMsg(`error on vol apply in superpixel segmentation menu`);
                 setErrorMsg(error.error_msg);
                 setHasPreprocessed(false);
                 setShowLoadingCompSpS(false);
             });
     }
 
-    function onPreview() {
+    // Slice Preview (formerly Preview)
+    function onSlicePreview() {
+    // Slice Preview (formerly Preview)
+    function onSlicePreview() {
         const curSlice = currentEventValue('sliceChanged') as {
             slice: number;
             axis: string;
@@ -263,53 +337,108 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
 
         setDisabled(true);
         setShowLoadingCompSpS(true);
-        setLoadingMsg(loadingMessages.onPreview);
-        sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice), 'json')
+        setLoadingMsg(loadingMessages.onSlicePreview);
+
+        const payload = {
+            slice_index: curSlice.slice,
+            axis: curSlice.axis,
+            mode: 'superpixel' as const,
+            training_mode: trainingMode,
+        };
+
+        sfetch('POST', '/api/superpixel/infer/slice', JSON.stringify(payload), 'json')
+        setLoadingMsg(loadingMessages.onSlicePreview);
+
+        const payload = {
+            slice_index: curSlice.slice,
+            axis: curSlice.axis,
+            mode: 'superpixel' as const,
+            training_mode: trainingMode,
+        };
+
+        sfetch('POST', '/api/superpixel/infer/slice', JSON.stringify(payload), 'json')
             .then((response: { selected_features_names: string[] }) => {
                 dispatch('selectedFeaturesNames', response.selected_features_names);
                 dispatch('labelChanged', '');
                 setDisabled(false);
                 setShowLoadingCompSpS(false);
                 setHasPreprocessed(true);
-                void showToast(toastMessages.onPreview, timeToast);
+                void showToast(toastMessages.onSlicePreview, timeToast);
+                void showToast(toastMessages.onSlicePreview, timeToast);
             })
             .catch((error: ErrorInterface) => {
                 setDisabled(false);
-                console.log('error in superpixel_segmentation_module preview');
+                console.log('error in superpixel_segmentation_module slice preview');
+                console.log('error in superpixel_segmentation_module slice preview');
                 console.log(error.error_msg);
                 setShowErrorWindow(true);
-                setHeaderErrorMsg(`error on preview in superpixel segmentation menu`);
+                setHeaderErrorMsg(`error on slice preview in superpixel segmentation menu`);
+                setHeaderErrorMsg(`error on slice preview in superpixel segmentation menu`);
                 setErrorMsg(error.error_msg);
                 setHasPreprocessed(false);
                 setShowLoadingCompSpS(false);
             });
     }
 
-    function onPreprocess() {
+    // Train/Fine-tune (formerly Preprocess)
+    function onTrain() {
+    // Train/Fine-tune (formerly Preprocess)
+    function onTrain() {
         const params = getModuleBackendParams();
 
         setDisabled(true);
         setShowLoadingCompSpS(true);
-        setLoadingMsg(loadingMessages.onPreprocess);
-        sfetch('POST', '/superpixel_segmentation_module/create', JSON.stringify(params))
+        setLoadingMsg(loadingMessages.onTrain);
+
+        // Build query string for backend
+        const moduleType = 'superpixel'; // or "pixel", depending on UI state
+        const finetuneFlag = trainingMode === 'finetune' ? 'true' : 'false';
+        const url = `/segmentation_module/train?module=${moduleType}&finetune=${finetuneFlag}`;
+
+        sfetch('POST', url, JSON.stringify(params), 'json')
             .then(() => {
                 setPrevFeatParams(featParams);
                 setPrevClassParams(classParams);
-                void showToast(toastMessages.onPreprocess, timeToast);
+                void showToast(toastMessages.onTrain, timeToast);
+                void showToast(toastMessages.onTrain, timeToast);
                 setHasPreprocessed(true);
                 setDisabled(false);
                 setShowLoadingCompSpS(false);
             })
             .catch((error: ErrorInterface) => {
                 setDisabled(false);
-                console.log('error in superpixel_segmentation_module preprocess');
+                console.log(`error in ${moduleType}_segmentation_module ${trainingMode}`);
                 console.log(error.error_msg);
                 setShowErrorWindow(true);
-                setHeaderErrorMsg(`error on preprocess in superpixel segmentation menu`);
+                setHeaderErrorMsg(`error on ${trainingMode} in ${moduleType} segmentation menu`);
                 setErrorMsg(error.error_msg);
                 setHasPreprocessed(false);
                 setShowLoadingCompSpS(false);
             });
+    }
+
+    function handleTrainingModeChange(isFineTune: boolean) {
+        const newMode = isFineTune ? 'finetune' : 'train';
+        setTrainingMode(newMode);
+
+        if (newMode === 'train') {
+            setHasPreprocessed(false);
+        } else {
+            // In fine-tune mode, consider as preprocessed if model is available
+            setHasPreprocessed(isFineTuneAvailable);
+        }
+    }
+
+    function handleTrainingModeChange(isFineTune: boolean) {
+        const newMode = isFineTune ? 'finetune' : 'train';
+        setTrainingMode(newMode);
+
+        if (newMode === 'train') {
+            setHasPreprocessed(false);
+        } else {
+            // In fine-tune mode, consider as preprocessed if model is available
+            setHasPreprocessed(isFineTuneAvailable);
+        }
     }
 
     function renderSelectOptionClassifier(classifier: Classifier) {
@@ -321,6 +450,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     }
 
     function renderCheckboxFeature(feature: Feature) {
+        const isLocked = trainingMode === 'finetune';
+
+        const isLocked = trainingMode === 'finetune';
+
         return (
             <IonItem key={feature.id}>
                 <IonLabel>
@@ -344,19 +477,37 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                 <IonCheckbox
                     value={feature.id}
                     checked={feature.active}
+                    disabled={isLocked}
+                    disabled={isLocked}
                     onIonChange={(e) => {
-                        console.log(e);
-                        const newfeats = featParams?.feats.map((nf) => {
-                            if (nf.id === feature.id) {
-                                return {
-                                    ...nf,
-                                    active: e.detail.checked,
-                                };
-                            } else {
-                                return nf;
-                            }
-                        });
-                        setFeatParams({ ...featParams, feats: newfeats });
+                        if (!isLocked) {
+                            console.log(e);
+                            const newfeats = featParams?.feats.map((nf) => {
+                                if (nf.id === feature.id) {
+                                    return {
+                                        ...nf,
+                                        active: e.detail.checked,
+                                    };
+                                } else {
+                                    return nf;
+                                }
+                            });
+                            setFeatParams({ ...featParams, feats: newfeats });
+                        }
+                        if (!isLocked) {
+                            console.log(e);
+                            const newfeats = featParams?.feats.map((nf) => {
+                                if (nf.id === feature.id) {
+                                    return {
+                                        ...nf,
+                                        active: e.detail.checked,
+                                    };
+                                } else {
+                                    return nf;
+                                }
+                            });
+                            setFeatParams({ ...featParams, feats: newfeats });
+                        }
                     }}
                 />
             </IonItem>
@@ -364,25 +515,47 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     }
 
     function renderCheckboxPooling(pooling: Pooling) {
+        const isLocked = trainingMode === 'finetune';
+
+        const isLocked = trainingMode === 'finetune';
+
         return (
             <IonItem key={pooling.id}>
                 <IonLabel>{pooling.name}</IonLabel>
                 <IonCheckbox
                     value={pooling.id}
                     checked={pooling.active}
+                    disabled={isLocked}
+                    disabled={isLocked}
                     onIonChange={(e) => {
-                        console.log(e);
-                        const newpooling = featParams?.pooling.map((np) => {
-                            if (np.id === pooling.id) {
-                                return {
-                                    ...np,
-                                    active: e.detail.checked,
-                                };
-                            } else {
-                                return np;
-                            }
-                        });
-                        setFeatParams({ ...featParams, pooling: newpooling });
+                        if (!isLocked) {
+                            console.log(e);
+                            const newpooling = featParams?.pooling.map((np) => {
+                                if (np.id === pooling.id) {
+                                    return {
+                                        ...np,
+                                        active: e.detail.checked,
+                                    };
+                                } else {
+                                    return np;
+                                }
+                            });
+                            setFeatParams({ ...featParams, pooling: newpooling });
+                        }
+                        if (!isLocked) {
+                            console.log(e);
+                            const newpooling = featParams?.pooling.map((np) => {
+                                if (np.id === pooling.id) {
+                                    return {
+                                        ...np,
+                                        active: e.detail.checked,
+                                    };
+                                } else {
+                                    return np;
+                                }
+                            });
+                            setFeatParams({ ...featParams, pooling: newpooling });
+                        }
                     }}
                 />
             </IonItem>
@@ -397,6 +570,10 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     }
 
     function renderModelParameter(modelParam: ModelClassifierParams, onParamChange?: (value: any) => void) {
+        const isLocked = trainingMode === 'finetune';
+
+        const isLocked = trainingMode === 'finetune';
+
         return (
             <IonItem key={modelParam.id}>
                 <IonLabel position="floating"> {modelParam.label} </IonLabel>
@@ -404,13 +581,27 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                     type={modelParam.input}
                     debounce={200}
                     value={modelParam.value}
+                    disabled={isLocked}
+                    readonly={isLocked}
+                    disabled={isLocked}
+                    readonly={isLocked}
                     onIonChange={(e) => {
-                        let value: any = e.detail.value;
-                        if (modelParam.id === 'hidden_layer_sizes') {
-                            value = stringToNumberArray(value);
-                        }
-                        if (onParamChange) {
-                            onParamChange(value);
+                        if (!isLocked) {
+                            let value: any = e.detail.value;
+                            if (modelParam.id === 'hidden_layer_sizes') {
+                                value = stringToNumberArray(value);
+                            }
+                            if (onParamChange) {
+                                onParamChange(value);
+                            }
+                        if (!isLocked) {
+                            let value: any = e.detail.value;
+                            if (modelParam.id === 'hidden_layer_sizes') {
+                                value = stringToNumberArray(value);
+                            }
+                            if (onParamChange) {
+                                onParamChange(value);
+                            }
                         }
                     }}
                 ></IonInput>
@@ -418,21 +609,72 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
         );
     }
 
+    // Determine button states and names
+    const trainButtonName = trainingMode === 'train' ? 'Train' : 'Fine-tune';
+    const trainDisabled = trainingMode === 'train' ? hasPreprocessed : !isFineTuneAvailable;
+
+    // Determine button states and names
+    const trainButtonName = trainingMode === 'train' ? 'Train' : 'Fine-tune';
+    const trainDisabled = trainingMode === 'train' ? hasPreprocessed : !isFineTuneAvailable;
+
     return (
         <ModuleCard
             name="Superpixel Segmentation"
             disabled={disabled}
-            onApply={onApply}
-            onPreview={onPreview}
-            onOther={onPreprocess}
-            disabledApply={!hasPreprocessed}
-            disabledPreview={!hasPreprocessed || isEditLabelActivated}
-            disabledOther={hasPreprocessed}
-            OtherName="Preprocess"
+            onApply={onVolApply}
+            onPreview={onSlicePreview}
+            onOther={onTrain}
+            disabledApply={trainingMode === 'finetune' ? !isFineTuneAvailable : !hasPreprocessed}
+            disabledPreview={
+                (trainingMode === 'finetune' ? !isFineTuneAvailable : !hasPreprocessed) || isEditLabelActivated
+            }
+            disabledOther={trainDisabled}
+            ApplyName="Vol Apply"
+            PreviewName="Slice Preview"
+            OtherName={trainButtonName}
         >
+            {/* Training Mode Toggle */}
+            <ModuleCardItem name="Training Mode">
+                <IonItem lines="none">
+                    <IonLabel position="stacked">Select training mode</IonLabel>
+                    <IonSegment
+                        value={trainingMode}
+                        onIonChange={(e) => handleTrainingModeChange(e.detail.value === 'finetune')}
+                    >
+                        <IonSegmentButton value="train">
+                            <IonLabel>Train from zero</IonLabel>
+                        </IonSegmentButton>
+                        <IonSegmentButton value="finetune">
+                            <IonLabel>Train loaded model</IonLabel>
+                        </IonSegmentButton>
+                    </IonSegment>
+                </IonItem>
+
+                <IonItem>
+                    <IonNote color={trainingMode === 'finetune' && isFineTuneAvailable ? 'success' : 'warning'}>
+                        {fineTuneMessage}
+                    </IonNote>
+                </IonItem>
+            </ModuleCardItem>
+
             <ModuleCardItem name="Superpixel Segmentation Parameters">
                 <ModuleCardItem name="Feature Extraction Parameters">
-                    <IonList>{featParams?.feats.map(renderCheckboxFeature)}</IonList>
+                    <Fragment>
+                        {trainingMode === 'finetune' && !isFineTuneAvailable && (
+                            <IonItem>
+                                <IonNote color="medium">Parameters are locked in fine-tune mode</IonNote>
+                            </IonItem>
+                        )}
+                        <IonList>{featParams?.feats.map(renderCheckboxFeature)}</IonList>
+                    </Fragment>
+                    <Fragment>
+                        {trainingMode === 'finetune' && !isFineTuneAvailable && (
+                            <IonItem>
+                                <IonNote color="medium">Parameters are locked in fine-tune mode</IonNote>
+                            </IonItem>
+                        )}
+                        <IonList>{featParams?.feats.map(renderCheckboxFeature)}</IonList>
+                    </Fragment>
                 </ModuleCardItem>
 
                 <ModuleCardItem name="Superpixel Feature Pooling">
@@ -446,8 +688,13 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                         </IonLabel>
                         <IonInput
                             value={featParams?.multiscale.join(',')}
+                            disabled={trainingMode === 'finetune'}
+                            readonly={trainingMode === 'finetune'}
+                            disabled={trainingMode === 'finetune'}
+                            readonly={trainingMode === 'finetune'}
                             onIonChange={(e) => {
-                                if (e.detail.value) {
+                                if (trainingMode === 'train' && e.detail.value) {
+                                if (trainingMode === 'train' && e.detail.value) {
                                     const value = stringToNumberArray(e.detail.value);
                                     if (!isEqual(featParams.multiscale, value)) {
                                         setFeatParams({
@@ -460,14 +707,24 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                         ></IonInput>
                     </IonItem>
                 </ModuleCardItem>
+
+
                 <ModuleCardItem name="Feature Selection Parameters">
                     <IonItem>
                         <IonLabel>Enable?</IonLabel>
                         <IonCheckbox
                             checked={featParams.thresholdSelection !== undefined}
+                            disabled={trainingMode === 'finetune'}
+                            disabled={trainingMode === 'finetune'}
                             onIonChange={(e) => {
-                                const value = e.detail.checked ? 0.01 : undefined;
-                                setFeatParams({ ...featParams, thresholdSelection: value });
+                                if (trainingMode === 'train') {
+                                    const value = e.detail.checked ? 0.01 : undefined;
+                                    setFeatParams({ ...featParams, thresholdSelection: value });
+                                }
+                                if (trainingMode === 'train') {
+                                    const value = e.detail.checked ? 0.01 : undefined;
+                                    setFeatParams({ ...featParams, thresholdSelection: value });
+                                }
                             }}
                         />
                     </IonItem>
@@ -480,24 +737,42 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                             type="number"
                             step="0.01"
                             value={featParams.thresholdSelection}
+                            disabled={trainingMode === 'finetune'}
+                            readonly={trainingMode === 'finetune'}
+                            disabled={trainingMode === 'finetune'}
+                            readonly={trainingMode === 'finetune'}
                             onIonChange={(e) => {
-                                const value = e.detail.value ? +e.detail.value : undefined;
-                                setFeatParams({
-                                    ...featParams,
-                                    thresholdSelection: value,
-                                });
+                                if (trainingMode === 'train') {
+                                    const value = e.detail.value ? +e.detail.value : undefined;
+                                    setFeatParams({
+                                        ...featParams,
+                                        thresholdSelection: value,
+                                    });
+                                }
+                                if (trainingMode === 'train') {
+                                    const value = e.detail.value ? +e.detail.value : undefined;
+                                    setFeatParams({
+                                        ...featParams,
+                                        thresholdSelection: value,
+                                    });
+                                }
                             }}
                         ></IonInput>
                     </IonItem>
                 </ModuleCardItem>
+
+
                 <ModuleCardItem name="Classifier Parameters">
                     <IonItem>
                         <IonLabel>Classifier Model</IonLabel>
                         <IonSelect
                             interface="popover"
                             value={classParams.classifier}
+                            disabled={trainingMode === 'finetune'}
+                            disabled={trainingMode === 'finetune'}
                             onIonChange={(e) => {
-                                if (e.detail.value) {
+                                if (trainingMode === 'train' && e.detail.value) {
+                                if (trainingMode === 'train' && e.detail.value) {
                                     setClassParams({
                                         classifier: e.detail.value,
                                         params: defaultModelClassifierParams[e.detail.value],
@@ -511,25 +786,43 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                     <Fragment>
                         {classParams.params.map((p) => {
                             return renderModelParameter(p, (value) => {
-                                const newParams = classParams.params.map((np) => {
-                                    if (np.id === p.id) {
-                                        return { ...np, value };
-                                    } else {
-                                        return np;
-                                    }
-                                });
-
-                                if (!isEqual(newParams, classParams.params)) {
-                                    setClassParams({
-                                        ...classParams,
-                                        params: newParams,
+                                if (trainingMode === 'train') {
+                                    const newParams = classParams.params.map((np) => {
+                                        if (np.id === p.id) {
+                                            return { ...np, value };
+                                        } else {
+                                            return np;
+                                        }
                                     });
+                                if (trainingMode === 'train') {
+                                    const newParams = classParams.params.map((np) => {
+                                        if (np.id === p.id) {
+                                            return { ...np, value };
+                                        } else {
+                                            return np;
+                                        }
+                                    });
+
+                                    if (!isEqual(newParams, classParams.params)) {
+                                        setClassParams({
+                                            ...classParams,
+                                            params: newParams,
+                                        });
+                                    }
+                                    if (!isEqual(newParams, classParams.params)) {
+                                        setClassParams({
+                                            ...classParams,
+                                            params: newParams,
+                                        });
+                                    }
                                 }
                             });
                         })}
                     </Fragment>
                 </ModuleCardItem>
             </ModuleCardItem>
+
+
             {/*Error window*/}
             <ErrorWindowComp
                 errorMsg={errorMsg}

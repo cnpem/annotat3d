@@ -24,7 +24,6 @@ from sscAnnotat3D import utils
 from werkzeug.exceptions import BadRequest
 from sscAnnotat3D.repository import data_repo
 from sscPySpin.filters import filter_bm3d as spin_bm3d
-from sscPySpin.filters import non_local_means as spin_nlm
 
 app = Blueprint("filter", __name__)
 
