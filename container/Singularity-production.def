@@ -1,0 +1,65 @@
+BootStrap: localimage
+From: annotat3d-base.sif
+%post
+    . /.singularity.d/env/10-docker*.sh
+
+%environment
+    export CC=gcc
+    export CXX=g++
+%post
+    export CC=gcc
+    export CXX=g++
+
+%environment
+    export CUDA_HOME=/usr/local/cuda
+    export CUDA_TOOLKIT_PATH=$CUDA_HOME
+%post
+    export CUDA_HOME=/usr/local/cuda
+    export CUDA_TOOLKIT_PATH=$CUDA_HOME
+
+%environment
+    export NODE_VERSION=20.12.2
+    export NVM_DIR=/opt/nvm
+%post
+    export NODE_VERSION=20.12.2
+    export NVM_DIR=/opt/nvm
+
+%environment
+    export CPATH=/usr/include/hdf5/serial/:$CUDA_HOME/include:$CPATH
+    export HDF5_DIR=/usr/local/hdf5
+    export LD_LIBRARY_PATH=/usr/local/hdf5/lib:/usr/local/openmpi/lib:$LD_LIBRARY_PATH
+    export NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
+    export PATH=/opt/conda/bin:/usr/local/openmpi/bin:$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+%post
+    export CPATH=/usr/include/hdf5/serial/:$CUDA_HOME/include:$CPATH
+    export HDF5_DIR=/usr/local/hdf5
+    export LD_LIBRARY_PATH=/usr/local/hdf5/lib:/usr/local/openmpi/lib:$LD_LIBRARY_PATH
+    export NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
+    export PATH=/opt/conda/bin:/usr/local/openmpi/bin:$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+
+%environment
+    export PYTHONNOUSERSITE=1
+%post
+    export PYTHONNOUSERSITE=1
+
+%post
+    cd /opt/annotat3d
+    yarn build
+    mkdir -p backend/sscAnnotat3D/static/
+    mkdir -p backend/sscAnnotat3D/templates/
+    cp -rf build/static/* backend/sscAnnotat3D/static/ || true
+    cp -rf build/index.html backend/sscAnnotat3D/templates/ || true
+
+%post
+    cd /opt/annotat3d/backend
+    export MAKEFLAGS='-j64'
+    python3 -m pip install -r requirements.txt
+    python3 setup.py build_ext -j64 bdist_wheel
+
+%post
+    cd /
+    python3 -m pip install /opt/annotat3d/backend/dist/*.whl
+    python3 -m pip install gunicorn
+
+%runscript
+    exec gunicorn --timeout 3600 --threads 32 --workers 1 sscAnnotat3D.app:app "$@"
