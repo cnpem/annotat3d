@@ -1,0 +1,97 @@
+---
+title: Morphology Operations - Understanding Kernel Shape Effects
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import InitialPage from "@/public/assets/Annotat_page.png";
+import OpenPage from "@/public/assets/screenshots/open_annotat_page.png";
+import LoadFiles from "@/public/assets/screenshots/lauch_annotat3d.png";
+import { File, Files } from "fumadocs-ui/components/files";
+import { Callout } from "fumadocs-ui/components/callout";
+import ReloadImage from "@/public/assets/load_raw_types.gif"
+import FilenameTester from '@/FilenameTester';
+
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import gifLoad from "@/public/assets/screencasts/morph_tutorial_1_load.gif";
+import gifSquare from "@/public/assets/screencasts/morph_tutorial_2_square.gif";
+import gifCircle from "@/public/assets/screencasts/morph_tutorial_3_circle.gif";
+import gifVertical from "@/public/assets/screencasts/morph_tutorial_4_vertical_line.gif";
+import gifHorizontal from "@/public/assets/screencasts/morph_tutorial_5_horizontal_line.gif";
+import gifCross from "@/public/assets/screencasts/morph_tutorial_6_cross.gif";
+
+<Steps>
+  ## Introduction
+
+  This tutorial demonstrates how different kernel shapes impact morphological operations, such as 
+  erosion and dilation.
+
+  <Step>
+  ## Step 1: Getting Familiar with Annotat3D
+  Before proceeding, ensure you are comfortable using the Annotat3D tool. You can refer to the 
+  previous guides for essential information:
+  
+  <ul>
+    <li><a href="/docs/first-steps/1_initialize_load_save">Initialize, load and save shortcut</a></li>    
+    <li> <a href="/docs/first-steps/2_webcomponents">WebApp Components</a></li>
+  </ul>
+   
+  </Step>
+
+  <Step>
+  ## Step 2: Load an Image and Annotate a Slice
+
+  <ul>
+    <li>Sign in and ensure your Annotat3D instance is running.</li>    
+    <li>Load an example image. (Example used in this tutorial: /ibira/lnls/labs/gcd/annotat3d_examples/crua_A_190x207x100_16b.raw) </li>
+    <li>Annotate the first slice using a tool of your choice. For this tutorial, we use global thresholding as an example.</li>    
+  </ul>
+
+  <Accordions>
+    <Accordion title="Load image" id="gifLoad">
+    <ImageZoom alt="Load image" src={gifLoad} className="!my-0 rounded-sm" />
+    </Accordion>
+  </Accordions>
+
+  </Step>
+
+  <Step>
+  ## Step 3: Experiment with Kernel Shapes 
+  
+  To understand the impact of different kernel shapes and sizes in morphological operations, try 
+  applying them to your annotations. Below are some key experiments:
+
+  <ul>
+    <li>*Erosion (Shrink):* Observe how different kernels affect object boundaries.</li>    
+    <li>*Dilation (Expand):* Notice how the structure grows based on the selected kernel.</li>
+  </ul>
+  
+  By testing various kernel configurations, you can gain deeper insights into how these operations 
+  transform image structures.
+
+  <Accordions>
+    <Accordion title="Square" id="gifSquare">
+    <ImageZoom alt="Effect of a square kernel on Shrink and Expand morphology operations" 
+               src={gifSquare} className="!my-0 rounded-sm" />
+    </Accordion>
+    <Accordion title="Circle" id="gifCircle">
+    <ImageZoom alt="Effect of a circle kernel on Shrink and Expand morphology operations" 
+               src={gifCircle} className="!my-0 rounded-sm" />
+    </Accordion>
+    <Accordion title="Vertical Line" id="gifVertical">
+    <ImageZoom alt="Effect of a vertical line kernel on Shrink and Expand morphology operations" 
+               src={gifVertical} className="!my-0 rounded-sm" />
+    </Accordion>
+    <Accordion title="Horizontal Line" id="gifHorizontal">
+    <ImageZoom alt="Effect of a horizontal line kernel on Shrink and Expand morphology operations" 
+               src={gifHorizontal} className="!my-0 rounded-sm" />
+    </Accordion>
+    <Accordion title="Cross" id="gifCross">
+    <ImageZoom alt="Effect of a cross kernel on Shrink and Expand morphology operations" 
+               src={gifCross} className="!my-0 rounded-sm" />
+    </Accordion>
+  </Accordions>
+
+  </Step>
+
+</Steps>

@@ -1,0 +1,24 @@
+---
+title: Unsharp Mask
+description: Relevant information about mean filter.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import UM from "@/public/assets/screenshots/UM.png";
+
+### Description
+
+Unsharp Mask is a widely used tool in multiple image processing softwares for sharpening (contraty to its name) amplifying high frequencies in the signal.
+
+<ImageZoom alt="kernel" src={UM} className="!my-0 rounded-sm" />
+_sigma 1, ammount 2, threshold 0, 2D convolution_
+
+### Parameters
+
+ `Sigma`: Determines the amount of smoothing applied by the Gaussian filter. A larger sigma value results in more blurring, as it spreads out the effect over a wider area or volume. Adjusting sigma allows for fine-tuning the level of detail in the filtered image.
+
+ `Ammount`: Controls the intensity of the sharpening effect in the unsharp mask filter. Higher values increase the contrast between edges, making details appear more pronounced. Adjusting this value allows you to enhance or soften the sharpening effect.
+ 
+ `threshold`: determines the minimum contrast level required for sharpening to be applied. Higher threshold values prevent sharpening of low-contrast areas, focusing the effect only on more pronounced edges. This helps in avoiding noise enhancement in smoother areas of the image.
+
+ `Convolution 2D or 3D`: Determines if its applied in 2D or 3D neighborhood.

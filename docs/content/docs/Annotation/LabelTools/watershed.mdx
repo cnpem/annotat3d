@@ -1,0 +1,23 @@
+---
+title: Watershed
+description: Threshold slice and volume.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import watershed from "@/public/assets/screencasts/watershed.gif";
+
+
+<ImageZoom alt="Home page" src={watershed} className="!my-0 rounded-sm" />
+
+### Watershed Segmentation  
+
+The **watershed algorithm** is a region-based segmentation method that treats an image like a topographic surface, where intensity values represent elevation. The algorithm simulates water flooding from **seed points** and assigns each pixel to the nearest seed, forming distinct segmented regions.  
+
+In this implementation, the **seeds** are derived from **annotations or labels** provided in the image. These labeled regions serve as the initial markers for the segmentation process.  
+
+#### **Parameters**  
+- **Prewitt Filter**: Computes the gradient magnitude using the Prewitt operator, highlighting edges and transitions in the image (first order derivative).  
+- **Sobel Filter**: Similar to Prewitt but uses a slightly different kernel, often producing **smoother** gradient transitions (second order derivatives).  
+
+Both filters are used as **input images** to guide the watershed algorithm by detecting edges, ensuring segmentation aligns with meaningful boundaries.  
+

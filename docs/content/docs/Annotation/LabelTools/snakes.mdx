@@ -1,0 +1,89 @@
+---
+title: Morphological Snakes Tool
+description: A quick morphological snakes too for annotation.
+---
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import Chanvese from "@/public/assets/screencasts/chan_vese.gif";
+import CheckBoardChanVese from "@/public/assets/screencasts/checkboardchenvese.gif";
+import GAC from "@/public/assets/screencasts/geodesic_active_contour_threhsold.gif";
+
+
+Active contour models, also known as snakes, are widely used in computer vision applications. 
+This implementation adopts a morphological approach for both the Geodesic Active Contour and Chan-Vese (active contour without edges) models. Leveraging the speed advantages of GPU-accelerated morphological snakes, Annotat3D provides an interactive segmentation tool.
+
+In the interactive mode, users can define initial level sets by clicking and dragging the mouse across the image, 
+dynamically shaping the contour. Once the mouse button is released, the final contour creates the annotation.
+
+  **Reference:**
+ 
+    MARQUEZ-NEILA, Pablo; BAUMELA, Luis; ALVAREZ, Luis. A morphological approach to curvature-based evolution of curves and surfaces. IEEE Transactions on Pattern Analysis and Machine Intelligence, v. 36, n. 1, p. 2-17, 2013.
+
+## Chan-vese
+
+The Chan-Vese model is an energy minimization problem that considers both the interior and exterior of the initial level set, along with the curvature length and area. Because it accounts for both the interior and exterior regions,
+ it is considered a global method. As an active contour model without edges, it does not require the explicit definition of image boundaries.
+
+
+### Parameters
+
+`Iterations`: More iterations allow the contour to evolve further until it reachs a maximum (i.e it converges), usually around 150-300 iterations.
+
+`Smoothing`: Smoothing reduces noise but can blur fine details. 
+
+`Weights`: Determines the algorithm's focus on regions inside or outside the contour: 
+Weight > 1 emphasizes inside pixels, Weight < 1 emphasizes outside pixels, and Weight = 1 gives equal importance to both.
+
+`Use checkboard`: A checkerboard pattern can be used as an alternative to interactive seed placement for image segmentation. This pattern creates adjacent squares of user-defined size, alternating between level set and non-level set regions. 
+This approach allows for automatic segmentation of the entire image.
+
+`Lowest intensity (Background)`: During checkboard segmentation, the image is divided into two regions. This option determines which region will be annotated: either the region with the lower mean intensity or the region with the higher mean intensity.
+
+
+<Accordions>
+<Accordion title="Interactive use" id="new-label">
+
+<ImageZoom alt="Home page" src={Chanvese} className="!my-0 rounded-sm" />
+
+</Accordion>
+
+<Accordion title="Checkboard segmentation" id="brush-size">
+
+Checkboard segmetantion on a filtered image for better quality of segmentation. Filtered with
+anisotropic diffusion filter followed by non local means.
+
+<ImageZoom alt="Home page" src={CheckBoardChanVese} className="!my-0 rounded-sm" />
+
+</Accordion>
+
+</Accordions>
+
+## Geodesic Active Contour
+
+The Geodesic Active Contour is an energy functional that depends on the local curve shape and image content. 
+In practical terms the algorithm implement evolves by following the image gradient and stops at the edges. Therefore,
+a good performance requires a good edge image.
+
+### Parameters
+
+`Iterations`: More iterations allow the contour to evolve further until it reachs a maximum (i.e it converges), usually around 150-300 iterations.
+
+`Smoothing`: Smoothing reduces noise but can blur fine details. 
+
+`Threshold`: Threshold of the gaussian gradient image in percentage. Regions of the image with values below this threshold are treated as borders, halting the contour's evolution in those areas, i.e higher values leads to more halting of the contour. Typical value is around 40%.
+
+`Sigma`: Sigma determines the Gaussian gradient used for edge detection in border identification. Ideally, the Sigma value should match the size of the edges.
+
+`Ballon Force`: Balloon force expands the contour. This is used to prevent the geodesic from halting where there are no local gradients in the image.
+
+<Accordions>
+
+<Accordion title="GAC" id="new-label">
+
+The threshold is one of the most important parameter in morphological geodesic active contour, as it will defined the stop borders of
+the image.
+
+<ImageZoom alt="Home page" src={GAC} className="!my-0 rounded-sm" />
+
+</Accordion>
+</Accordions>

@@ -1,0 +1,38 @@
+---
+title: Train and Inference Toolbox
+description: Introduction to the Annotat3D web interface.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import SuperPixelParameters from "@/public/assets/screenshots/superpixel_parameters.png";
+
+<ImageZoom alt="kernel" src={SuperPixelParameters} className="!my-0 rounded-sm" />
+
+Pixel segmentation and Superpixel Segmentation :
+
+`Feature extraction parameters`: Filters are used to enrich the image information for machine learning-based image segmentation
+
+`Multi-scale Parameters`: Some of these filters are directly related to Multi-scale Filtering Windows (MFW), where every
+number of adjacencies is important
+to the final calculation
+
+`Classifier parameters`: Select the machine-learning model, currently, Random Forest and SVM are implemented to run in GPU, others run in CPU and therefore are slower.
+
+Superpixel segmentation:
+
+`Superpixel feature pooling`: To classify the superpixel, the pixel information is used. Select options to use the information of the features from the image, mean, maximum and/or minimum.
+
+
+### Preprocess
+
+Calculates the pixel/superpixel features for the classifier.
+
+
+### Preview
+
+The preview takes all the annotation available and using the classifier and features predicts the output for the current slice shown in canvas.
+
+### Apply
+
+Inference for the whole volume, using the annotations as tranning.
+

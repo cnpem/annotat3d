@@ -1,0 +1,21 @@
+---
+title: Mean Filter
+description: Relevant information about mean filter.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import MeanFilter from "@/public/assets/screenshots/mean_filter.png";
+
+### Description
+
+It takes the mean of the neighborhood.
+
+<ImageZoom alt="kernel" src={MeanFilter} className="!my-0 rounded-sm" />
+_kernel size of 3_
+
+### Parameters
+
+ `kernel size`: Specifies the size of the kernel, which defines the area/volume around each pixel/voxel that the filter considers when processing the image. A larger kernel means more neighboring elements are included in the calculation.
+
+ `Convolution 2D or 3D`: Determines if its applied in 2D or 3D neighborhood.
+

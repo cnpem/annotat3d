@@ -1,0 +1,18 @@
+---
+title: Magic Wand
+description: Magic Wand tool for quick annotation.
+---
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import MagicWand from "@/public/assets/screencasts/magic_wand.gif";
+
+Magic wand fills the slice image starting from the initial seed, point given when the user clicks the image, and checks if 
+the neighbour pixel is within a threshold range (bigger than the lower limit and lower than the high limit), if it's true
+its filled with the annotation label. It propagates until there is no more pixels to fill.
+
+To use it, you need to click on the tool, and then click on a start position in the slice image. After that, in the
+histogram, the intensity of the clicked pixel will be marked as a red bar in the histogram and the upper and lower limits
+can be adjusted using the sliders or with manual input by typing the value and pressing the enter key.
+
+You can also smooth the output in the smoothing option, which will apply a gaussian blur on the label output of the magic wand.
+
+<ImageZoom alt="Home page" src={MagicWand} className="!my-0 rounded-sm" />

@@ -1,0 +1,84 @@
+---
+title: Threshold
+description: Threshold slice and volume.
+---
+
+## Global Threshold
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import threshold2d from "@/public/assets/screencasts/global_threshold_2d.gif";
+import local_gaussian from "@/public/assets/screencasts/gaussian_thresh.gif";
+import local_mean from "@/public/assets/screencasts/local_mean.gif";
+import local_niblack from "@/public/assets/screencasts/niblack.gif";
+import local_sauvola from "@/public/assets/screencasts/sauvola.gif";
+
+For threshold, there are two possible paths. The first is the global threshold, where you select a value range in the sliders or via manual 
+input. Otsu value is displayed below for reference. After selecting the range, it's necessary to click **Apply** to transform the rendering
+in the canvas to the actual annotation image.
+
+Currently, the 2D threshold saves the threshold as a new annotation while the 3D 
+threshold saves it as an image label, the same image as the inference from the machine learning models.
+
+<ImageZoom alt="Home page" src={threshold2d} className="!my-0 rounded-sm" />
+
+## Adaptive Threshold
+
+Unlike global thresholding, adaptive methods compute a local threshold for each pixel based on its surrounding neighborhood, making them more effective for images with uneven lighting or varying background intensities.
+
+### Niblack  
+Niblack's method computes the threshold as:  
+`T(x, y) = m(x, y) + Weight * s(x, y)`  
+
+where:  
+- `m(x, y)` is the local mean.  
+- `s(x, y)` is the local standard deviation.  
+- `Weight` is a user-defined constant that controls sensitivity (typically between -0.2 and -0.5).  
+
+It works well for high-contrast images but can introduce noise in smooth regions.
+
+<ImageZoom alt="Home page" src={local_niblack} className="!my-0 rounded-sm" />
+
+### Sauvola  
+Sauvola’s method improves upon Niblack’s by reducing noise in uniform areas:  
+`T(x, y) = m(x, y) * (1 + Weight * ((s(x, y) / Range) - 1))`  
+
+where:  
+- `m(x, y)` is the **local mean** intensity.  
+- `s(x, y)` is the **local standard deviation**.  
+- `Range` is a **normalization factor** (typically `128` for 8-bit images).  
+- `Weight` is a **sensitivity factor** (commonly `0.2`).  
+
+This method is particularly **effective for images with uneven lighting**, as it dynamically adjusts the threshold based on local contrast.
+
+<ImageZoom alt="Home page" src={local_sauvola} className="!my-0 rounded-sm" />
+
+### Local Mean  
+
+The **local mean method** computes the threshold using only the average intensity within a neighborhood:  
+
+`T(x, y) = m(x, y) + Threshold`  
+
+where:  
+- `m(x, y)` is the **mean intensity** in the local window.  
+- `Threshold` is a **shift parameter** that adjusts the computed threshold.  
+
+This method is **simple and efficient**, making it useful for well-lit images. However, it may struggle with **strong intensity variations** or **non-uniform lighting**.
+
+
+<ImageZoom alt="Home page" src={local_mean} className="!my-0 rounded-sm" />
+
+### Local Gaussian  
+
+This method is similar to the local mean approach but applies a **Gaussian-weighted window** instead of a uniform one, giving more weight to central pixels in the local region:  
+
+`T(x, y) = G_σ * I(x, y) + Threshold`
+
+where:  
+- `G_σ` is a **Gaussian kernel** with standard deviation `σ`.  
+- `Threshold` is a shift parameter that adjusts the computed threshold.  
+
+The window size is determined by **`2σ + 1`**, with a minimum size of **3**. If `σ` is a float, its **ceiling value** is used to ensure a valid window size.  
+
+This method produces a smoother thresholding effect and is **less sensitive to noise** compared to uniform window approaches.
+
+<ImageZoom alt="Home page" src={local_gaussian} className="!my-0 rounded-sm" />

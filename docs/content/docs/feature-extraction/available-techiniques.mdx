@@ -1,0 +1,61 @@
+---
+title: Available Techiniques
+description: Feature Extraction Techniques in Annotat3D.
+---
+
+### Feature Extraction Techniques in Annotat3D
+
+For pixel classification in **Annotat3D**, several features are available:
+
+#### FFT Gauss (Fast Fourier Transform Gauss)
+
+The **FFT Gauss** is a feature that applies the **Fast Fourier Transform (FFT)** to compute the Fourier coefficients of an image, enabling efficient convolution with Gaussian kernels.  
+- It progressively blurs the image by adjusting the kernel size, resulting in a smoothing effect. As the **radius diameter** of the Gaussian kernel increases, the image becomes more blurred until the pixels appear nearly homogeneous.
+
+#### FFT Gabor
+
+The **FFT Gabor** filter identifies specific frequency content in an image, particularly within localized regions and in specific directions.  
+- It applies a Gaussian kernel modulated by a sinusoidal plane wave, which helps detect textures or edges at particular orientations and frequencies in an image.
+
+#### FFT DoG (Fast Fourier Transform Difference of Gaussians)
+
+The **FFT DoG** filter calculates two Gaussian-blurred versions of an image and subtracts one from the other.  
+- This technique enhances edges and other high-frequency details by focusing on the difference between different levels of blur in the image.
+
+#### Sobel
+
+The **Sobel filter** is a gradient-based method for edge detection.  
+- It approximates the gradient of the image intensity at each pixel, highlighting areas of high contrast which usually correspond to edges in the image.
+
+#### Membrane Projections
+
+The **Membrane Projections** feature enhances membrane-like structures in the image.  
+- It applies **directional filtering** to highlight elongated or membrane-like regions within the image.
+
+#### Minimum, Maximum, Variance, Average, Median
+
+These are basic statistical filters applied to the image within a specified window size.
+- **Minimum**: Sets the target pixel to the minimum value within the window.
+- **Maximum**: Sets the target pixel to the maximum value.
+- **Variance**: Computes the variance within the window.
+- **Average**: Replaces the pixel with the average of surrounding values.
+- **Median**: Replaces the pixel with the median value from the window.
+
+#### LBP (Local Binary Pattern)
+
+The **Local Binary Pattern (LBP)** is a texture operator that captures the local structure of an image.  
+- It assigns a binary label to each pixel based on the intensity values of its neighboring pixels, capturing the texture by comparing the pixel to its surroundings.
+
+#### Multi-scale Filtering Windows (MFW)
+
+The **Multi-scale Filtering Windows** parameter specifies the size of the windows used by the filtering methods.  
+- It defines the radius of square windows around each pixel that is used to compute operations like minimum, maximum, or median. For example, a sequence of "2, 4, 6" results in windows of sizes 5x5, 9x9, and 13x13 pixels, respectively.
+
+#### Feature Selection
+
+The **Feature Selection** parameter evaluates the importance of each feature in the classification process.  
+- It assesses how much the classification accuracy changes when a specific feature is removed. Features that contribute less than the specified threshold are disregarded.
+
+ Parameter:
+
+`Threshold`: This value is expressed as a percentage (e.g., 0.01) and determines the cutoff for feature importance. If the threshold is set too high, an error may occur, indicating it should be lowered.

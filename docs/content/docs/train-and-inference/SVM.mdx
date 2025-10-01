@@ -1,0 +1,31 @@
+---
+title: Support Vector Machine
+description: Introduction to the Annotat3D web interface.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import SVM from "@/public/assets/SVM.png";
+import HighDimensions from "@/public/assets/high_dimensions.png";
+
+
+<ImageZoom alt="kernel" src={SVM} className="!my-0 rounded-sm" />
+
+The grey area in the SVM illustration represents the **margin**—the space between the support vectors, which are the data points closest to the decision boundary from each class. In SVM, the algorithm works to maximize this margin, ensuring that data points from different classes (stars and circles) are separated by the widest possible gap. The points on the edges of the margin, called support vectors, are critical in determining the exact position of the decision boundary.
+
+**Logistic Regression** (represented by Line A in the figure) tends to be more influenced by outliers, such as the anomalous star in the lower-right corner. As shown, the boundary line created by logistic regression shifts to account for this outlier, potentially leading to a decision boundary that isn’t optimal for the majority of the data.
+
+On the other hand, **SVM** (represented by Line B) is less sensitive to such outliers. It focuses on maximizing the margin between the two classes, ensuring that the decision boundary (the blue line) is less affected by anomalies. In this case, the SVM boundary remains unaffected by the outlier star and provides a more robust separation between the stars and circles.
+
+The concept of a **hard margin** refers to a scenario where the algorithm tries to find a decision boundary (or hyperplane) that perfectly separates the data into two distinct classes, without allowing any misclassifications. This approach assumes that the data is linearly separable, meaning a clear boundary can be drawn between the classes without any overlap. While this works well in theory, it is rarely applicable in real-world datasets because data is often noisy, contains outliers, or has overlapping classes. As a result, using a hard margin can lead to overfitting, where the model becomes too rigid, trying to perfectly classify even the outliers or noise, which reduces its ability to generalize to new, unseen data.
+
+To address this limitation, SVM introduces the concept of a **soft margin**, which allows some flexibility by tolerating misclassifications or permitting some points to lie within the margin. The degree of tolerance is controlled by a parameter called **C**, which manages the trade-off between allowing misclassifications and maintaining a wide margin. A smaller value of **C** encourages a larger margin by allowing more misclassified points, which can lead to better generalization on unseen data. On the other hand, a larger value of **C** makes the model stricter, trying to classify all the points correctly and creating a narrower margin, potentially leading to overfitting. This balance between margin size and misclassifications is crucial for making SVM effective in datasets where the data is not perfectly separable.
+
+**C** is typically given in powers of 10, such as 0.001, 0.01, 0.1, 1.0, 10.0, and 100.0. The value of **C** directly influences the flexibility of the model in terms of how strictly it enforces the margin around the hyperplane. Higher values of **C** (e.g., greater than 1.0) make the error margin stricter, meaning the model will work harder to minimize classification errors on the training data. This usually results in fewer training errors, as the model focuses on correctly classifying all the training points. However, a high **C** value can cause the model to overfit the training data, capturing even noise and outliers, making it harder for the classifier to generalize well to new, unseen data. On the other hand, lower values of **C** allow for a larger margin, which means the model is more tolerant of misclassifications in the training data, often resulting in better generalization. When tuning **C**, users should try different values, using a fixed set of evaluation markers (such as cross-validation) to determine the best value for **C**, ensuring that the model performs well not only on the training data but also on new data.
+
+SVM’s real strength lies in its ability to handle high-dimensional data and classify data that isn’t linearly separable in its original space. This is achieved through a technique known as the **Kernel Trick**, which allows SVM to map data from a low-dimensional space to a higher-dimensional space where it becomes linearly separable.
+
+<ImageZoom alt="kernel" src={HighDimensions} className="!my-0 rounded-sm" />
+
+For example, in the figure above, the left image shows data points in a 2-D space that cannot be separated by a straight line; the boundary between the classes is nonlinear, making classification difficult. However, by projecting the data into a 3-D space (as seen on the right), the data can now be split using a linear plane. In this higher-dimensional space, the complex, nonlinear relationships between data points become easier to separate using a simple, linear decision boundary.
+
+In other words, the **Kernel Trick** enables SVM to perform linear classification on data that would otherwise require a nonlinear boundary by transforming it into a higher dimension, where the data becomes easier to classify.
