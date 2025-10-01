@@ -1,35 +1,35 @@
-name: Deploy Documentation
+name: Build and Deploy Docs
 
 on:
   push:
-    branches:
-      - main  # or whichever branch you want to trigger on
+    branches: [main]   # deploy docs only when pushing to main
+  workflow_dispatch:   # allow manual trigger
 
 jobs:
-  build-and-deploy:
+  docs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js & pnpm
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: "pnpm"
+          cache: pnpm
 
-      - name: Install dependencies
-        run: |
-          corepack enable
-          pnpm install
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: true
 
       - name: Build docs
-        run: pnpm build
+        run: pnpm run build
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: build/
+          publish_dir: ./build
