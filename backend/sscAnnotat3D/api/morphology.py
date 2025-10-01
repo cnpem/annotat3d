@@ -1,12 +1,12 @@
 import numpy as np
 from flask import Blueprint, request
 from flask_cors import cross_origin
-from harpia.morphology.operations_binary import (
-     erosion_binary,
-     dilation_binary,
-     closing_binary,
-     opening_binary,
-     smooth_binary,
+from harpia.morphology import (
+     binary_erosion,
+     binary_dilation,
+     binary_closing,
+     binary_opening,
+     binary_smoothing,
      fill_holes,
 )
 from skimage.morphology import disk, ball
@@ -40,11 +40,11 @@ def morphology_apply_2D():
 
     # Dictionary of operations
     operations = {
-        "erosion": erosion_binary,
-        "dilation": dilation_binary,
-        "closing": closing_binary,
-        "opening": opening_binary,
-        "smooth": smooth_binary,
+        "erosion": binary_erosion,
+        "dilation": binary_dilation,
+        "closing": binary_closing,
+        "opening": binary_opening,
+        "smooth": binary_smoothing,
         "fillholes": fill_holes,
     }
     if operation not in operations:
@@ -99,11 +99,11 @@ def morphology_apply_3D():
    
     # Dictionary of operations
     operations = {
-        "erosion": erosion_binary,
-        "dilation": dilation_binary,
-        "closing": closing_binary,
-        "opening": opening_binary,
-        "smooth": smooth_binary,
+        "erosion": binary_erosion,
+        "dilation": binary_dilation,
+        "closing": binary_closing,
+        "opening": binary_opening,
+        "smooth": binary_smoothing,
         "fillholes": fill_holes,
     }
     if operation not in operations:
@@ -117,10 +117,10 @@ def morphology_apply_3D():
         print('image size: ', binary_mask_3d_int8.size)
         if(binary_mask_3d_int8.size < MAX_SIZE):
             print('normal fill holes')
-            output_mask_3d_int8 = operations[operation](binary_mask_3d_int8)
+            output_mask_3d_int8 = operations[operation](binary_mask_3d)
         else:
             print('chunked fill holes')
-            output_mask_3d_int8 = apply_chunked_fillholes(operations[operation], binary_mask_3d_int8)
+            output_mask_3d_int8 = apply_chunked_fillholes(operations[operation], binary_mask_3d)
         output_mask_3d = output_mask_3d_int8.astype(original_dtype)
     else:     
         # Create kernel
