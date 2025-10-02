@@ -5,22 +5,19 @@ From: annotat3d-base.sif
 
 %environment
     export CC=gcc
+    export CUDA_HOME=/usr/local/cuda
     export CXX=g++
 %post
     export CC=gcc
+    export CUDA_HOME=/usr/local/cuda
     export CXX=g++
 
 %environment
-    export CUDA_HOME=/usr/local/cuda
     export CUDA_TOOLKIT_PATH=$CUDA_HOME
-%post
-    export CUDA_HOME=/usr/local/cuda
-    export CUDA_TOOLKIT_PATH=$CUDA_HOME
-
-%environment
     export NODE_VERSION=20.12.2
     export NVM_DIR=/opt/nvm
 %post
+    export CUDA_TOOLKIT_PATH=$CUDA_HOME
     export NODE_VERSION=20.12.2
     export NVM_DIR=/opt/nvm
 
@@ -62,4 +59,4 @@ From: annotat3d-base.sif
     python3 -m pip install gunicorn
 
 %runscript
-    exec gunicorn --timeout 3600 --threads 32 --workers 1 sscAnnotat3D.app:app "$@"
+    exec gunicorn --bind 0.0.0.0:8000 --timeout 3600 --threads 32 --workers 1 sscAnnotat3D.app:app "$@"

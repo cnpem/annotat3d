@@ -9,10 +9,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  description: "DeepSirius UI Documentation",
+  description: "Annotat3D UI Documentation",
   title: {
-    template: "%s | DeepSirius UI",
-    default: "DeepSirius UI",
+    template: "%s",
+    default: "Annotat3D UI",
   },
 };
 

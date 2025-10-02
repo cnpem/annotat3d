@@ -87,25 +87,38 @@ To build and run Annotat3D using Docker:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/annotat3d.git
+   git clone https://github.com/cnpem/annotat3d.git
    cd annotat3d
    ```
 
-2. Generate the `Dockerfile` and build the Docker image:
+2. Build the Docker Image
+
+   You can either generate and build the Docker image locally or use the prebuilt image available on Docker Hub.
+
+   ***Option 1: Build locally***
+
+   Run the build script:
    ```bash
    bash container/build_docker.sh
    ```
-
    This script will:
-   - Generate a `Dockerfile` using an HPCCM recipe (`container/hpccm-cuda-gcc-openmpi-hdf-conda.py`).
-   - Build the Docker image and tag it as `gitregistry.cnpem.br/gcd/data-science/segmentation/annotat3dweb`.
+
+   - Generate a `Dockerfile` using an HPCCM recipe (`container/hpccm-annotat3d.py`).
+   - Build the Docker image and tag it as `annotat3dweb-prod:latest`.
+
+   ***Option 2: Use the prebuilt image***
+
+   Pull the image directly from Docker Hub:
+   ```bash
+   docker pull docker.io/allansp84/annotat3d-prod:latest
+   ```
 
 3. Run the Docker container:
    ```bash
-   docker run -d -p 3000:3000 gitregistry.cnpem.br/gcd/data-science/segmentation/annotat3dweb
+   docker run -d -p 8000:8000 annotat3dweb-prod:latest
    ```
 
-4. Access the web application at `http://localhost:3000`.
+4. Access the web application at `http://localhost:8000`.
 
 ### Building with Singularity
 
@@ -113,31 +126,30 @@ To build and run Annotat3D using Singularity:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/annotat3d.git
+   git clone https://github.com/cnpem/annotat3d.git
    cd annotat3d
    ```
 
 2. Generate the Singularity recipe and build the Singularity image:
    ```bash
-   bash container/build_singularity.sh
+   bash container/build_singularity.sh base
+   bash container/build_singularity.sh production
    ```
 
    This script will:
-   - Generate a Singularity definition file (`container/Singularity.def`) using the HPCCM recipe.
-   - Build the Singularity image (`annotat3dweb.sif`).
+   - Generate Singularity definition files (`container/Singularity-base.def` and `container/Singularity-productions.def`) using the HPCCM recipe.
+   - Build the Singularity images base and production (`annotat3d-base.sif` and ``annotat3d-prod.sif``).
 
 3. Run the Singularity container:
    ```bash
-   singularity exec annotat3dweb.sif ./start-server.sh
+   singularity run --nv annotat3d-prod.sif
    ```
 
-   Replace `./start-server.sh` with the appropriate script or command to start the Annotat3D service.
-
-4. Access the web application at `http://localhost:3000`.
+4. Access the web application at `http://localhost:8000`.
 
 ### Notes
 
-- **HPCCM Recipe**: The `container/hpccm-cuda-gcc-openmpi-hdf-conda.py` script generates recipes for both Docker and Singularity containers, ensuring compatibility with HPC environments.
+- **HPCCM Recipe**: The `container/hpccm-annotat3d.py` script generates recipes for both Docker and Singularity containers, ensuring compatibility with HPC environments.
 - Ensure you execute the build scripts from the project’s root directory to avoid path issues.
 - If additional dependencies are required, update the HPCCM recipe file before building the image.
 
