@@ -4,6 +4,8 @@
 
 **Annotat3D** is a modern web application designed for interactive segmentation of volumetric images, tailored to meet the needs of the imaging beamlines at [Sirius](https://lnls.cnpem.br/sirius-en/).
 
+![alt text](docs/public/assets/screenshots/page-home.png "Annotat3D")
+
 Annotat3D leverages human-in-the-loop strategies to facilitate the annotation of large tomographic datasets, enabling domain experts to inject their knowledge efficiently while collaborating with machine learning models. Here are the main features of Annotat3D:
 
 - **High-Performance Image Segmentation**: Optimized for multi-GPU clusters, enabling efficient processing of large-scale datasets.
