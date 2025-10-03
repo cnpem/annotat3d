@@ -172,6 +172,48 @@ python -m pip install -r requirements.txt
 
 ---
 
+## Documentation
+
+This guide shows how to **run the Annotat3D documentation container** either by pulling the image from Docker Hub or building it locally using Docker Compose.
+
+***Option 1: Pull & Run from Docker Hub***
+
+1. Pull the latest image
+   You can pull the latest published image from Docker Hub:
+   ```bash
+   docker pull allansp84/annotat3d-documentation:latest
+   ```
+
+2. Run the container interactively
+   ```bash
+   docker run --rm -it -p 3000:3000 -e PORT=3000 -e HOST=0.0.0.0 -e CI=true allansp84/annotat3d-documentation:latest
+   ```
+
+3. Access the web application at http://localhost:3000.
+
+
+***Option 2: Build & Run using Docker Compose***
+
+1. Clone the repository
+```bash
+git clone https://github.com/cnpem/annotat3d.git
+cd annotat3d/docs
+```
+
+2. Build and start the container
+```bash
+docker compose up -d --build
+```
+
+3. Access the web application at http://localhost:3000.
+
+4. Stop the container (after closing the documentation)
+```bash
+docker compose down
+```
+
+---
+
 ## Code Development Standards
 
 ### **General Guidelines**

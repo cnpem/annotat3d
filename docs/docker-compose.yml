@@ -1,15 +1,16 @@
 services:
-  nextjs-app:
+  annotat3d-documentation:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nextjs-app
+    container_name: annotat3d-documentation
+    image: annotat3d-documentation
     ports:
-      - "3000:3000"   # Expose Next.js app on port 3000
+      - $PORT:$PORT
     environment:
       - NODE_ENV=production
-      - PORT=3000
-      - HOST=0.0.0.0
+      - PORT=$PORT
+      - HOST=$HOST
     networks:
       - app-network
 
