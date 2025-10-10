@@ -27,9 +27,7 @@ import numpy as np
 import skimage.filters.rank as rank
 import skimage.io
 import skimage.measure as sk_measure
-import sscPySpin.feature_extraction as spin_feat_extraction
 import sscPySpin.image as spin_img
-import sscPySpin.segmentation as spin_seg
 from harpia import pixel_feature_extract
 from harpia import superpixel_pooling_feature
 

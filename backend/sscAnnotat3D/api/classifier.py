@@ -4,7 +4,6 @@ from flask_cors import cross_origin
 import numpy as np
 from sscAnnotat3D.api.annotation import handle_exception
 from sscAnnotat3D.api.superpixel import _debugger_print
-from sscAnnotat3D.modules.classifier_segmentation_module import ClassifierSegmentationModule
 from sscAnnotat3D.modules.pixel_segmentation_module import PixelSegmentationModule
 from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmentationModule
 from sscAnnotat3D.repository import data_repo, module_repo
@@ -173,7 +172,12 @@ def load_classifier():
     _debugger_print("superpixel_state", superpixel_state)
 
     if not superpixel_state["pixel_segmentation"]:
-        segm_module = SuperpixelSegmentationModule(img)
+        from sscAnnotat3D.superpixels import superpixel_extraction
+
+        superpixels, max_superpixel_label = superpixel_extraction(img, superpixel_type= superpixel_state["superpixel_type"],
+                                                                    seed_spacing = superpixel_state["waterpixels_seed_spacing"],
+                                                                    compactness = superpixel_state["waterpixels_compactness"])
+        segm_module = SuperpixelSegmentationModule(img, superpixels)
         module_key = "superpixel_segmentation_module"
 
         if "superpixel_params" not in model_complete:

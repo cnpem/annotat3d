@@ -402,7 +402,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                 sp_id_max = preview_superpixels.max()
 
                 features_args, sigmas, _ = self._get_feature_args()
-
+                start = time.time()
                 local_feat_block = functions.superpixel_feature_extraction(
                 preview_image,
                 preview_superpixels,
@@ -410,6 +410,8 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                 sigmas,
                 sp_id_min
                 )
+                print("Feature Extraction Time Preview:", time.time() - start)
+
 
 
             logging.debug(f"Estimating superpixel features for preview (cropped shape: {preview_image.shape})")
@@ -525,6 +527,8 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
                         end_feature_extraction_time = time.time()
 
                         feature_extraction_time += end_feature_extraction_time - start_feature_extraction_time
+
+                        print("Feature Extraction Time:", feature_extraction_time)
                     else:
                         # Ensuring that superpixel features are disregarded. It might be the case that the user previously computed
                         # features that fit in memory, but now s/he is requesting features that do not fit in memory. Hence,
@@ -760,6 +764,9 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
     
     def load_classifier(self, path=""):
         # runs the parent method on THIS instance (self)
+        self._classifier_trained = True
         resp, msg, model_complete = super().load_classifier(path)
+        model_complete
+        self._selected_features_names = model_complete["feature_extraction_params_front"]
 
         return resp, msg, model_complete
