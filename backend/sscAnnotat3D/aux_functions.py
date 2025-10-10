@@ -401,12 +401,9 @@ def pixel_feature_extraction(img, **kwargs):
 def superpixel_feature_extraction(
     img,
     img_superpixels,
-    selected_features,
+    features_args,
     sigmas,
-    selected_supervoxel_feat_pooling,
     min_label,
-    max_label,
-    superpixel_type,
     **kwargs,
 ):
     """
@@ -419,8 +416,6 @@ def superpixel_feature_extraction(
         sigmas (list[float]): a float list that contains values of sigma
         selected_supervoxel_feat_pooling (array): a numpy array that contains the selected supervoxels with pooling
         min_label (int): represents the minimum quantity of labels in a image
-        max_label (int): represents the maximum quantity of labels in a image
-        superpixel_type (string): it's a string that represents the superpixel type
         **kwargs (int, int, int): three int variable that represents the number of gpus, image min and image max pixel
 
     Returns:
@@ -430,18 +425,6 @@ def superpixel_feature_extraction(
 
     img_float = img.astype('float32')
 
-    features_args = {
-        'Intensity': 'intensity' in selected_features,
-        'Edges': 'edges' in selected_features,
-        'Hessian': 'texture' in selected_features,
-        'ShapeIndex': 'shapeindex' in selected_features,
-        'LocalBinaryPattern': 'localbinarypattern' in selected_features,
-        'pooling' : {
-        "output_mean": "mean" in selected_supervoxel_feat_pooling,
-        "output_min": "min" in selected_supervoxel_feat_pooling,
-        "output_max": "max" in selected_supervoxel_feat_pooling,
-    }
-    }
     print(features_args)
     print("................\n")
     sigmas = np.array(sigmas, "float32")
@@ -509,7 +492,7 @@ def build_feature_args(
     feats_per_sigma = intensity + edges + texture + shape_index + lbp 
     feats_per_sigma = feats_per_sigma * (output_max + output_mean + output_min)
     nsigmas = len(sigmas)
-    total_features = nsigmas * feats_per_sigma * nsigmas
+    total_features = feats_per_sigma * nsigmas
 
     return features_args, np.asarray(sigmas, 'float32'), total_features
 

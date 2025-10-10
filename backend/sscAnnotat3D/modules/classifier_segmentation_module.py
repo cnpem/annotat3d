@@ -308,10 +308,7 @@ class ClassifierSegmentationModule(SegmentationModule):
                     logging.debug("training labels raw: {}".format(self._training_labels_raw))
                     self._training_labels = np.array(self._training_labels_raw)
             send = time.time()
-            print("\n\n\n")
-            print(self._training_labels)
-            print(self._training_features)
-            print("\n\n")
+
             logging.debug("Scaling feature time: {}s".format(send - sstart))
 
             logging.debug("training features after scaling: {}".format(self._training_features.shape))

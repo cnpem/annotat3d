@@ -172,7 +172,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
         setIsEditLabelActivated(flagPayload);
     });
 
-    function getModuleBackendParams() {
+    function getParamsForBackend() {
         return {
             classifier_params: {
                 classifier_type: classParams.classifier,
@@ -213,7 +213,7 @@ const PixelSegmentationModuleCard: React.FC = () => {
 
     // === Train / Fine-tune ===
     function onTrain() {
-        const params = getModuleBackendParams();
+        const params = getParamsForBackend();
         dispatch('useSuperpixelModule', false);
         setShowLoadingCompPS(true);
         setLoadingMsg(loadingMessages.onTrain);
