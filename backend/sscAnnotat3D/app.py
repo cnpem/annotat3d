@@ -15,12 +15,6 @@ from sscAnnotat3D.api import annotation, filters, morphology, classifier
 from sscAnnotat3D.api import image as apiimage
 from sscAnnotat3D.api import io as apiio
 from sscAnnotat3D.api import superpixel
-from sscAnnotat3D.api.modules import (
-    pixel_segmentation_module as apipixel_segmentation_module,
-)
-from sscAnnotat3D.api.modules import (
-    superpixel_segmentation_module as apisuperpixel_segmentation_module,
-)
 from sscAnnotat3D.modules import superpixel_segmentation_module
 from sscAnnotat3D.repository import data_repo
 
@@ -50,8 +44,6 @@ app.register_blueprint(apiio.app)
 app.register_blueprint(annotation.app)
 app.register_blueprint(superpixel.app)
 app.register_blueprint(apiimage.app)
-app.register_blueprint(apisuperpixel_segmentation_module.app)
-app.register_blueprint(apipixel_segmentation_module.app)
 app.register_blueprint(filters.app)
 app.register_blueprint(morphology.app)
 app.register_blueprint(classifier.app)

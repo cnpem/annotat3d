@@ -405,7 +405,7 @@ def preview(segm_type):
     axis_dim = utils.get_axis_num(axis)
 
     if segm_module is None:
-        return "Not a valid segmentation module", 400
+        return f"unable to preview! Please train or load a {segm_type} model first!", 400
 
     try:
         label, selected_features_names = segm_module.preview(selected_slices = [slice_num], 
@@ -434,13 +434,12 @@ def execute(segm_type):
         not (model_status.get("trained") or model_status.get("loaded"))
         and model_status.get("pixel_type") == segm_type
     ):
-        return handle_exception(
-            f"Unable to Apply! Please train or load a model for {segm_type} segmentation."
-        )
+        return f"unable to execute! Please train or load a {segm_type} model first!", 400
+
 
 
     if segm_module is None:
-        return "Not a valid segmentation module", 400
+        return handle_exception(f"unable to preview! Please train or load a {segm_type} model first!")
 
     try:
         label, selected_features_names = segm_module.execute(annotation_slice_dict, annotation_image)

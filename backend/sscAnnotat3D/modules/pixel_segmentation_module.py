@@ -11,11 +11,6 @@ from pathlib import Path
 import numpy as np
 import scipy as sp
 import sentry_sdk
-import sscPySpin.classification as spin_class
-import sscPySpin.feature_extraction as spin_feat_extraction
-import sscPySpin.image as spin_img
-import sscPySpin.segmentation as spin_seg
-from sklearn import ensemble, model_selection, neighbors, neural_network, svm
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
 from sklearn.pipeline import Pipeline
