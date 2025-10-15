@@ -68,7 +68,9 @@ function useFineTuneStatus(trainingMode: 'train' | 'finetune', classifier: strin
                     } else if (response.mode !== 'pixel') {
                         setIsFineTuneAvailable(false);
                         setFineTuneMessage(
-                            `Fine-tune only works with Pixel MLP models. Loaded: ${String(response.mode) || 'Unknown'}.`
+                            `The model loaded was trained as : ${
+                                String(response.mode) || 'Unknown'
+                            }. Therefore it doens't work as pixel model`
                         );
                     } else {
                         setIsFineTuneAvailable(true);

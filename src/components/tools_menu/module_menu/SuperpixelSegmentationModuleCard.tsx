@@ -50,7 +50,7 @@ interface FineTuneStatus {
     featParams: FeatureParams | null;
 }
 
-function useFineTuneStatus(trainingMode: 'train' | 'finetune'): FineTuneStatus {
+function useFineTuneStatus(trainingMode: 'train' | 'finetune', classifier: string): FineTuneStatus {
     const [isFineTuneAvailable, setIsFineTuneAvailable] = useState(false);
     const [fineTuneMessage, setFineTuneMessage] = useState('');
     const [classParams, setClassParams] = useState<ClassifierParams | null>(null);
@@ -58,31 +58,38 @@ function useFineTuneStatus(trainingMode: 'train' | 'finetune'): FineTuneStatus {
 
     useEffect(() => {
         if (trainingMode === 'finetune') {
-            void sfetch('GET', '/models/current?module=superpixel', '', 'json')
+            if (classifier !== 'mlp') {
+                setIsFineTuneAvailable(false);
+                setFineTuneMessage('Fine-tune is only available for MLP classifiers.');
+                return;
+            }
+
+            void sfetch('POST', '/models/current/superpixel', '', 'json')
                 .then((response: any) => {
                     if (!response.loaded) {
                         setIsFineTuneAvailable(false);
-                        setFineTuneMessage('Fine-tune requires a loaded model.');
+                        setFineTuneMessage('Fine-tune requires a loaded MLP model.');
                     } else if (response.mode !== 'superpixel') {
                         setIsFineTuneAvailable(false);
                         setFineTuneMessage(
-                            `Fine-tune only works with Superpixel models. Loaded: ${
+                            `The model loaded was trained as : ${
                                 String(response.mode) || 'Unknown'
-                            }.`
+                            }. Therefore it doens't work as superpixel model`
                         );
                     } else {
                         setIsFineTuneAvailable(true);
-                        setFineTuneMessage('Parameters locked, inherited from loaded model.');
+                        setFineTuneMessage('Parameters locked, inherited from loaded MLP model.');
                         setClassParams(response.classifier_parameters);
                         setFeatParams(response.feature_extraction_params);
                     }
                 })
-                .catch(() => {
+                .catch((error: any) => {
+                    console.error('Error while checking model status:', error);
                     setIsFineTuneAvailable(false);
-                    setFineTuneMessage('Unable to check model status.');
+                    setFineTuneMessage(`Unable to check model status.`);
                 });
         }
-    }, [trainingMode]);
+    }, [trainingMode, classifier]);
 
     return { isFineTuneAvailable, fineTuneMessage, classParams, featParams };
 }
@@ -151,7 +158,7 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
     };
 
     // === Fine-tune status ===
-    const { isFineTuneAvailable, fineTuneMessage } = useFineTuneStatus(trainingMode);
+    const { isFineTuneAvailable, fineTuneMessage } = useFineTuneStatus(trainingMode, classParams.classifier);
 
     // === Track param changes (only in train mode) ===
     useEffect(() => {
