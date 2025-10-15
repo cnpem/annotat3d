@@ -478,7 +478,7 @@ class SuperpixelSegmentationModule(ClassifierSegmentationModule):
             cached_features = False
         return cached_features
 
-    def execute(self, annotation_slice_dict, annotation_image, force_feature_extraction=True, **kwargs):
+    def execute(self,force_feature_extraction=True, **kwargs):
         with sentry_sdk.start_transaction(name="Superpixel Segmentation Apply", op="superpixel classification") as t:
             image_params = {"shape": self._image.shape, "dtype": self._image.dtype, "params": self._superpixel_params}
             sentry_sdk.set_context("Image Params", image_params)

@@ -358,7 +358,7 @@ def train_segmentation():
     if module_type == "superpixel":
         img_superpixel = data_repo.get_image("superpixel")
         if img_superpixel is None:
-            return handle_exception("Needs a valid image and superpixel to create module.")
+            return handle_exception("Please create a superpixel of the image first.")
         if _convert_dtype_to_str(img_superpixel.dtype) != "int32":
             img_superpixel = img_superpixel.astype("int32")
         segm_module = SuperpixelSegmentationModule(img, img_superpixel)
@@ -375,10 +375,10 @@ def train_segmentation():
 
     module_repo.set_module(module_key, segm_module)
 
-    #try:
-    segm_module.train(annotation_slice_dict, annotation_image, finetune=False)
-    #except Exception as e:
-    #    return handle_exception(f"Unable to train new model! {str(e)}")
+    try:
+        segm_module.train(annotation_slice_dict, annotation_image, finetune=False)
+    except Exception as e:
+        return handle_exception(f"Unable to train new model! {str(e)}")
     data_repo.set_info(key="model_status", data={'loaded': False, 'trained': True, 'pixel_type': module_type})
 
     return jsonify({"loaded": False, "trained": True, "mode": module_type, "finetune": False}), 200
@@ -405,7 +405,10 @@ def preview(segm_type):
     axis_dim = utils.get_axis_num(axis)
 
     if segm_module is None:
-        return f"unable to preview! Please train or load a {segm_type} model first!", 400
+        return handle_exception(
+            f"unable to preview! Please train or load a {segm_type} model first!"
+            )
+
 
     try:
         label, selected_features_names = segm_module.preview(selected_slices = [slice_num], 
@@ -434,15 +437,13 @@ def execute(segm_type):
         not (model_status.get("trained") or model_status.get("loaded"))
         and model_status.get("pixel_type") == segm_type
     ):
-        return f"unable to execute! Please train or load a {segm_type} model first!", 400
-
-
+        return handle_exception(f"unable to apply! Please train or load a {segm_type} model first!")
 
     if segm_module is None:
-        return handle_exception(f"unable to preview! Please train or load a {segm_type} model first!")
+        return handle_exception(f"unable to apply! Please train or load a {segm_type} model first!")
 
     try:
-        label, selected_features_names = segm_module.execute(annotation_slice_dict, annotation_image)
+        label, selected_features_names = segm_module.execute()
     except Exception as e:
         return handle_exception(f"unable to execute! {str(e)}")
 

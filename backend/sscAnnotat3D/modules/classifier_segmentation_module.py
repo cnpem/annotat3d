@@ -950,24 +950,43 @@ class ClassifierSegmentationModule(SegmentationModule):
         return selected_slices_idx
 
     def _estimate_feature_extraction_memory_usage(self, superpixel, **kwargs):
-        feature_extraction_params = self._feature_extraction_params.copy()
-        feature_extraction_params.update(kwargs)
+        
+        
+        selected_features = self._feature_extraction_params["selected_features"]
 
-        selected_features = feature_extraction_params["selected_features"]
-        supervoxel_pooling = feature_extraction_params["selected_supervoxel_feat_pooling"]
-        sigmas = feature_extraction_params["sigmas"]
+        # Count features per sigma
+        intensity = int("intensity" in selected_features)
+        edges = int("edges" in selected_features)
+        texture = 2 * int("texture" in selected_features)
+        shape_index = int("shapeindex" in selected_features)
+        lbp = int("localbinarypattern" in selected_features)
+
+
+        selected_supervoxel_feat_pooling = self._feature_extraction_params["selected_supervoxel_feat_pooling"]
+
+        feats_per_sigma = intensity + edges + texture + shape_index + lbp 
+        
+        if superpixel:
+                output_mean = int("mean" in selected_supervoxel_feat_pooling)
+                output_min = int("min" in selected_supervoxel_feat_pooling)
+                output_max = int("max" in selected_supervoxel_feat_pooling)
+                
+                feats_per_sigma = feats_per_sigma * (output_max + output_mean + output_min)
+
+
+        nsigmas = len(self._feature_extraction_params["sigmas"])
+
+        total_features = feats_per_sigma * nsigmas
 
         nsuperpixels = self.max_superpixel_label
 
-        num_features = spin_feat_extraction.spin_filter_get_total_features(
-            selected_features=selected_features, sigmas=sigmas
-        ) * len(supervoxel_pooling)
+      
         sizeof_float = np.dtype("float32").itemsize
         # Multiplying by 2 due to the
         if superpixel:
-            memory = 2 * nsuperpixels * num_features * sizeof_float
+            memory = 2 * nsuperpixels * total_features * sizeof_float
         else:
-            memory = 2 * self._image.size * num_features * sizeof_float
+            memory = 2 * self._image.size * total_features * sizeof_float
 
         return memory
 

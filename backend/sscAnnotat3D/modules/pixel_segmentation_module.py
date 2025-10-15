@@ -31,7 +31,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         auto_save=False,
         workspace=os.path.join(Path.home().absolute().as_posix(), "workspace_Annotat3D"),
         parent=None,
-        **kwargs
     ):
 
         super().__init__(image, auto_save, workspace, parent)
@@ -168,7 +167,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             annotation_slice_dict (dict): annotation slices
             annotation_image (ndarray): full annotation image
             finetune (bool): whether to fine-tune an already trained classifier
-            **kwargs: extra params for feature extraction
         """
         with sentry_sdk.start_transaction(name="Pixel Segmentation Train", op="pixel classification") as t:
             if len(annotation_slice_dict) <= 0:
@@ -189,14 +187,13 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             return classifier_trained, selected_features_names
 
 
-    def preview(self, selected_slices, selected_axis, **kwargs):
+    def preview(self, selected_slices, selected_axis):
         """
         Generate a preview segmentation for the given slice/axis using the trained classifier.
 
         Args:
             selected_slices (list[int]): slice indices chosen by the user
             selected_axis (int): axis index (0,1,2)
-            **kwargs: extra params for feature extraction
 
         Returns:
             pred (ndarray): preview segmentation (int32, -1 = unlabeled)
@@ -244,14 +241,12 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
             return pred, self._selected_features_names
 
-    def execute(self, annotation_slice_dict, annotation_image, force_feature_extraction=False, finetune = False, **kwargs):
+    def execute(self, force_feature_extraction=False):
         """
         This function is responsible to make all operations when the user click in the "execute" option bar
 
         Args:
-            annotations (array): array that contain information about the image annotations
             force_feature_extraction (bool): it's a flag that activate extract all features in the entire image
-            **kwargs (dict): a dict that contains information about the image
 
         Returns:
             array: this function returns the final numpy array
@@ -261,7 +256,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         with sentry_sdk.start_transaction(name="Pixel Segmentation Apply", op="pixel classification") as t:
             image_params = {"shape": self._image.shape, "dtype": self._image.dtype}
             sentry_sdk.set_context("Image Params", image_params)
-            if len(annotation_slice_dict) <= 0:
+            if self._classifier_trained != True:
                 return
 
             mainbar = progressbar.get("main")
@@ -276,13 +271,13 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             feature_extraction_time = 0.0
             with sentry_sdk.start_span(op="Feature extraction"):
                 if self._features is None or force_feature_extraction:
-                    #valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(superpixel=False, **kwargs)
-                    valid = True
+                    valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(superpixel=False, **self._feature_extraction_params)
+                    #valid = True
                     if valid:
                         logging.debug("**** Extracting features for the entire image AT ONCE ****")
                         start_feature_extraction_time = time.time()
 
-                        self._features = self._extract_features(image, **kwargs)
+                        self._features = functions.pixel_feature_extraction(self._image, **self._feature_extraction_params)
 
                         end_feature_extraction_time = time.time()
 
@@ -296,23 +291,13 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             features = self._features
 
             mainbar.inc()
-            if finetune == False:
-                with sentry_sdk.start_span(op="Training classifier"):
-                    classifier_trained, training_time, selected_features_names = self._train_classifier(
-                        annotation_slice_dict, annotation_image, features
-                    )
-            else:
-                classifier_trained = True
-                training_time = 0.0
-                selected_features_names = None
-
+          
             pred = None
             test_time = assignment_time = 0.0
 
             mainbar.inc()
 
             with sentry_sdk.start_span(op="Classify pixels"):
-                if classifier_trained:
 
                     logging.debug("\n\n**** Predicting classification for the entire image ****")
 
@@ -337,7 +322,8 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                             image_block = image[z:z1]
                             start_feature_extraction_time = time.time()
 
-                            features_block = self._extract_features(image_block, **kwargs)
+                            features_block = functions.pixel_feature_extraction(image_block, **self._feature_extraction_params)
+
 
                             end_feature_extraction_time = time.time()
 
@@ -365,11 +351,11 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                         features_shape = features.shape
                         pred[...], assignment_time, test_time, total_predict_times = self._classify_pixels(features)
 
-                    total_time = training_time + test_time + assignment_time
+                    total_time = test_time + assignment_time
 
                     logging.debug(
-                        "Training time = %f s, Testing time = %f s, Label assignment time = %f s, Total time= %f s "
-                        % (training_time, test_time, assignment_time, total_time)
+                        "Testing time = %f s, Label assignment time = %f s, Total time= %f s "
+                        % (test_time, assignment_time, total_time)
                     )
                     logging.debug("Finished")
 
@@ -389,9 +375,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                     superpixel_features_shape=tuple(map(int, features_shape)),
                     feature_extraction_params=str(self._feature_extraction_params),
                     classifier_params=str(self._classifier_params),
-                    classifier_trained=classifier_trained,
                     feature_extraction_time=feature_extraction_time,
-                    training_time=training_time,
                     test_time=test_time,
                     predict_times=total_predict_times,
                     assignment_time=assignment_time,
@@ -401,7 +385,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                 functions.log_error(e)
 
             mainbar.reset()
-            return pred, selected_features_names
+            return pred, self._feature_extraction_params
 
     def has_preview(self):
         """
