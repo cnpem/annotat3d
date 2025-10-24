@@ -659,8 +659,8 @@ class Canvas {
         this.superpixelSlice.tint = this.superpixelColor;
         this.superpixelSlice.alpha = 0.3;
         this.superpixelSlice.blendMode = PIXI.BLEND_MODES.ADD;
-        this.superpixelSlice.scale.x = 0.5;
-        this.superpixelSlice.scale.y = 0.5;
+        this.superpixelSlice.scale.x = 1;
+        this.superpixelSlice.scale.y = 1;
         this.superpixelSlice.visible = true;
 
         this.annotation = new Annotation(colors, alphas);
@@ -1329,6 +1329,7 @@ class Canvas {
         const y = superpixel_slice.shape[0];
         const texture = this.textureFromSlice(uint8data, x, y);
         this.superpixelSlice.texture = texture;
+        console.log('x: ', x);
     }
 
     destroyImage() {

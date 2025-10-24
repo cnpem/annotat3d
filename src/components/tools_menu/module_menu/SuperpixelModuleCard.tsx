@@ -5,16 +5,19 @@ import { dispatch, useEventBus } from '../../../utils/eventbus';
 import { useStorageState } from 'react-storage-hooks';
 import LoadingComponent from '../utils/LoadingComponent';
 import { useState } from 'react';
-import { SuperpixelType, SuperpixelState } from './SuperpixelSegInterface';
+
+interface HierarchicalWatershedState {
+    levels: number;
+    neighborhood: number; // only 6 or 27
+}
 
 const SuperpixelModuleCard: React.FC = () => {
-    const [superpixelParams, setSuperpixelParams] = useStorageState<SuperpixelState>(
+    const [superpixelParams, setSuperpixelParams] = useStorageState<HierarchicalWatershedState>(
         sessionStorage,
         'superpixelParams',
         {
-            compactness: 1000,
-            seedsSpacing: 4,
-            method: 'waterpixels',
+            levels: 6,
+            neighborhood: 27,
         }
     );
 
@@ -34,20 +37,19 @@ const SuperpixelModuleCard: React.FC = () => {
         }
     });
 
-    useEventBus('setSuperpixelParams', (superpixel: SuperpixelState) => {
-        setSuperpixelParams(superpixel);
-        setSuperpixelParams(superpixel);
+    useEventBus('setSuperpixelParams', (params: HierarchicalWatershedState) => {
+        setSuperpixelParams(params);
     });
 
     function onApply(): void {
         setLockMenu(true);
         setShowLoadingComp(true);
+
         const params = {
-            superpixel_type: superpixelParams.method,
-            seed_spacing: superpixelParams.seedsSpacing,
-            compactness: superpixelParams.compactness,
-            use_pixel_segmentation: false,
+            levels: superpixelParams.levels,
+            neighborhood: superpixelParams.neighborhood,
         };
+
         sfetch('POST', '/superpixel', JSON.stringify(params))
             .then(() => {
                 dispatch('superpixelChanged', {});
@@ -56,54 +58,47 @@ const SuperpixelModuleCard: React.FC = () => {
             .finally(() => {
                 setLockMenu(false);
                 setShowLoadingComp(false);
-                void showToast('Superpixel successfully applied !', timeToast);
+                void showToast('Hierarchical watershed successfully applied!', timeToast);
             });
     }
 
     return (
-        <ModuleCard name="Superpixel" onApply={onApply} disabled={lockMenu}>
-            <ModuleCardItem name="Superpixel Parameters">
+        <ModuleCard name="Hierarchical Watershed" onApply={onApply} disabled={lockMenu}>
+            <ModuleCardItem name="Watershed Parameters">
                 <IonItem>
-                    <IonLabel position="floating">method</IonLabel>
-                    <IonSelect
-                        interface="popover"
-                        value={superpixelParams.method}
+                    <IonLabel position="floating">Levels</IonLabel>
+                    <IonInput
+                        min={1}
+                        max={10}
+                        type="number"
+                        value={superpixelParams.levels}
                         onIonChange={(e: CustomEvent) => {
                             setSuperpixelParams({
                                 ...superpixelParams,
-                                method: e.detail.value as SuperpixelType,
+                                levels: +e.detail.value!,
+                            });
+                        }}
+                    ></IonInput>
+                </IonItem>
+
+                <IonItem>
+                    <IonLabel position="floating">Neighborhood</IonLabel>
+                    <IonSelect
+                        interface="popover"
+                        value={superpixelParams.neighborhood}
+                        onIonChange={(e: CustomEvent) => {
+                            setSuperpixelParams({
+                                ...superpixelParams,
+                                neighborhood: +e.detail.value!,
                             });
                         }}
                     >
-                        <IonSelectOption>waterpixels</IonSelectOption>
-                        <IonSelectOption value="waterpixels3d">waterpixels 3D</IonSelectOption>
+                        <IonSelectOption value={6}>6 (2D connectivity)</IonSelectOption>
+                        <IonSelectOption value={27}>27 (3D connectivity)</IonSelectOption>
                     </IonSelect>
                 </IonItem>
-                <IonItem>
-                    <IonLabel position="floating">seeds distance</IonLabel>
-                    <IonInput
-                        min={2}
-                        max={32}
-                        type="number"
-                        value={superpixelParams.seedsSpacing}
-                        onIonChange={(e: CustomEvent) => {
-                            setSuperpixelParams({ ...superpixelParams, seedsSpacing: +e.detail.value! });
-                        }}
-                    ></IonInput>
-                </IonItem>
-                <IonItem>
-                    <IonLabel position="floating">compactness</IonLabel>
-                    <IonInput
-                        min={1}
-                        max={99999}
-                        type="number"
-                        value={superpixelParams.compactness}
-                        onIonChange={(e: CustomEvent) => {
-                            setSuperpixelParams({ ...superpixelParams, compactness: +e.detail.value! });
-                        }}
-                    ></IonInput>
-                </IonItem>
-                <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={'Generating superpixel'} />
+
+                <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={'Running hierarchical watershed'} />
             </ModuleCardItem>
         </ModuleCard>
     );
