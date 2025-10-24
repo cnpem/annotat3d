@@ -5,7 +5,9 @@ from flask import Blueprint, jsonify, request, send_file
 from flask_cors import cross_origin
 from sscAnnotat3D import superpixels, utils
 from sscAnnotat3D.repository import data_repo
-
+from harpia.watershed.watershed import boundaries
+from skimage.segmentation import find_boundaries
+import numpy as np
 app = Blueprint("superpixel", __name__)
 
 
@@ -85,8 +87,18 @@ def get_superpixel_slice():
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
     slice_superpixels = img_superpixels[slice_range]
-    slice_superpixels = superpixels.superpixel_slice_borders(slice_superpixels)
+    slice_superpixels = boundaries(slice_superpixels.astype(np.int32)).astype(np.uint8)#superpixels.superpixel_slice_borders(slice_superpixels)
 
-    compressed_slice_superpixels = zlib.compress(utils.toNpyBytes(slice_superpixels))
+    new_shape = tuple(s*2 - 1 for s in slice_superpixels.shape)
+
+    upsampled = np.zeros(new_shape, dtype=np.uint8)
+
+    upsampled[::2, ::2] = slice_superpixels
+
+    upsampled[1::2, ::2] = slice_superpixels[:-1, :]
+    upsampled[::2, 1::2] = slice_superpixels[:, :-1]
+    upsampled[1::2, 1::2] = slice_superpixels[:-1, :-1]
+
+    compressed_slice_superpixels = zlib.compress(utils.toNpyBytes(upsampled))
 
     return send_file(io.BytesIO(compressed_slice_superpixels), "application/gzip")
