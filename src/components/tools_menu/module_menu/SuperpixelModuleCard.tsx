@@ -5,6 +5,8 @@ import { dispatch, useEventBus } from '../../../utils/eventbus';
 import { useStorageState } from 'react-storage-hooks';
 import LoadingComponent from '../utils/LoadingComponent';
 import { useState } from 'react';
+import { colorFromId, defaultColormap } from '../../../utils/colormap';
+import { LabelInterface } from '../annotation_menu/label_table/LabelInterface';
 
 interface HierarchicalWatershedState {
     levels: number;
@@ -15,10 +17,7 @@ const SuperpixelModuleCard: React.FC = () => {
     const [superpixelParams, setSuperpixelParams] = useStorageState<HierarchicalWatershedState>(
         sessionStorage,
         'superpixelParams',
-        {
-            levels: 6,
-            neighborhood: 27,
-        }
+        { levels: 6, neighborhood: 27 }
     );
 
     const [showToast] = useIonToast();
@@ -26,9 +25,7 @@ const SuperpixelModuleCard: React.FC = () => {
     const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', false);
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
 
-    useEventBus('LockComponents', (changeLockMenu) => {
-        setLockMenu(changeLockMenu);
-    });
+    useEventBus('LockComponents', (changeLockMenu) => setLockMenu(changeLockMenu));
 
     useEventBus('recalcSuperpixel', (recalc: boolean) => {
         if (recalc) {
@@ -42,19 +39,35 @@ const SuperpixelModuleCard: React.FC = () => {
     });
 
     function onApply(): void {
+        if (lockMenu) return;
+
         setLockMenu(true);
         setShowLoadingComp(true);
 
-        const params = {
-            levels: superpixelParams.levels,
-            neighborhood: superpixelParams.neighborhood,
-        };
+        const params = { levels: superpixelParams.levels, neighborhood: superpixelParams.neighborhood };
 
-        sfetch('POST', '/superpixel', JSON.stringify(params))
-            .then(() => {
-                dispatch('superpixelChanged', {});
-                dispatch('superpixelParams', params);
+        sfetch('POST', '/superpixel', JSON.stringify(params), 'json')
+            .then((labelVec: LabelInterface[]) => {
+                if (Array.isArray(labelVec)) {
+                    // Assign colors and create a NEW array reference
+                    const coloredLabels = labelVec.map((label) => ({
+                        ...label,
+                        color: colorFromId(defaultColormap, label.id),
+                    }));
+
+                    // Dispatch immediately so LabelTable updates
+                    dispatch('LabelLoaded', coloredLabels);
+
+                    // Keep other dispatches for UI state
+                    dispatch('superpixelChanged', {});
+                    dispatch('superpixelParams', params);
+
+                    console.log('Label table updated successfully after watershed.');
+                } else {
+                    console.warn('Invalid label data received from /superpixel');
+                }
             })
+            .catch((err) => console.error('Error while running hierarchical watershed:', err))
             .finally(() => {
                 setLockMenu(false);
                 setShowLoadingComp(false);
@@ -72,13 +85,10 @@ const SuperpixelModuleCard: React.FC = () => {
                         max={10}
                         type="number"
                         value={superpixelParams.levels}
-                        onIonChange={(e: CustomEvent) => {
-                            setSuperpixelParams({
-                                ...superpixelParams,
-                                levels: +e.detail.value!,
-                            });
-                        }}
-                    ></IonInput>
+                        onIonChange={(e: CustomEvent) =>
+                            setSuperpixelParams({ ...superpixelParams, levels: +e.detail.value! })
+                        }
+                    />
                 </IonItem>
 
                 <IonItem>
@@ -86,15 +96,12 @@ const SuperpixelModuleCard: React.FC = () => {
                     <IonSelect
                         interface="popover"
                         value={superpixelParams.neighborhood}
-                        onIonChange={(e: CustomEvent) => {
-                            setSuperpixelParams({
-                                ...superpixelParams,
-                                neighborhood: +e.detail.value!,
-                            });
-                        }}
+                        onIonChange={(e: CustomEvent) =>
+                            setSuperpixelParams({ ...superpixelParams, neighborhood: +e.detail.value! })
+                        }
                     >
-                        <IonSelectOption value={6}>6 (2D connectivity)</IonSelectOption>
-                        <IonSelectOption value={27}>27 (3D connectivity)</IonSelectOption>
+                        <IonSelectOption value={6}>6</IonSelectOption>
+                        <IonSelectOption value={27}>27</IonSelectOption>
                     </IonSelect>
                 </IonItem>
 

@@ -1,6 +1,6 @@
 import io
 import zlib
-
+from werkzeug.exceptions import BadRequest
 from flask import Blueprint, jsonify, request, send_file
 from flask_cors import cross_origin
 from sscAnnotat3D import superpixels, utils
@@ -8,6 +8,8 @@ from sscAnnotat3D.repository import data_repo
 from harpia.watershed.watershed import boundaries,hierarchicalWatershedChunked_GPU
 from harpia.filters.filtersChunked import sobel
 from skimage.segmentation import find_boundaries
+from sscAnnotat3D.repository import data_repo, module_repo
+from sscAnnotat3D.modules import annotation_module
 import numpy as np
 app = Blueprint("superpixel", __name__)
 
@@ -32,12 +34,13 @@ def rescale_to_int32(image: np.ndarray) -> np.ndarray:
 @cross_origin()
 def superpixel():
     """
-    Function that creates the superpixel using GPU hierarchical watershed.
-
-    Returns:
-        (str): returns "success" if everything goes well and an error otherwise
+    Function that creates the superpixel using GPU hierarchical watershed
+    and sends the generated labels to the frontend, compatible with LabelTable.tsx.
     """
     img = data_repo.get_image(key="image")
+
+    annot_module = module_repo.get_module("annotation")
+    mk_id = annot_module.current_mk_id
 
     # Parse parameters safely
     req_data = request.get_json(force=True)
@@ -46,8 +49,6 @@ def superpixel():
 
     # Compute gradient on GPU
     grad = sobel(img.astype(np.float32), type3d=1, verbose=1, gpuMemory=0.4)
-
-    # Convert gradient to int32
     grad = rescale_to_int32(grad)
 
     # Run hierarchical watershed (GPU)
@@ -62,12 +63,30 @@ def superpixel():
     # Save result
     data_repo.set_image(key="superpixel", data=img_superpixel)
 
-    # Store state for UI synchronization
-    data_repo.set_superpixel_state("method", "hierarchicalWatershed")
-    data_repo.set_superpixel_state("levels", levels)
-    data_repo.set_superpixel_state("neighborhood", neighborhood)
 
-    return jsonify("success")
+    set_unique_labels = np.unique(img_superpixel)
+    set_unique_labels = set_unique_labels[set_unique_labels >= 0]
+
+    label_names = []
+    label_set = set()
+
+    for label_value in set_unique_labels:
+        label_value = int(label_value)
+        if label_value not in label_set:
+            label_set.add(label_value)
+            label_names.append({
+                "labelName": f"Label {label_value}" if label_value > 0 else "Background",
+                "id": int(label_value),
+                "color": [],
+                "alpha": 1.0
+            })
+
+    # Store + return
+    data_repo.set_image(key="annotation", data=img_superpixel)
+    annot_module.multilabel_updated(img_superpixel, mk_id)
+    module_repo.set_module("annotation", module=annot_module)
+
+    return jsonify(label_names)
 
 
 
