@@ -1,4 +1,4 @@
-import { IonItem, IonLabel, IonInput, IonSelect, IonSelectOption, useIonToast, IonCheckbox } from '@ionic/react';
+import { IonItem, IonLabel, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonToast } from '@ionic/react';
 import { sfetch } from '../../../utils/simplerequest';
 import { ModuleCard, ModuleCardItem } from './ModuleCard';
 import { dispatch, useEventBus } from '../../../utils/eventbus';
@@ -52,25 +52,25 @@ const SuperpixelModuleCard: React.FC = () => {
         };
 
         sfetch('POST', '/superpixel', JSON.stringify(params), 'json')
-            .then((labelVec: LabelInterface[]) => {
-                if (Array.isArray(labelVec)) {
-                    // Assign colors and create a NEW array reference
-                    const coloredLabels = labelVec.map((label) => ({
+            .then((result) => {
+                // Case 1: we received a label vector (normal watershed output)
+                if (Array.isArray(result)) {
+                    const coloredLabels = result.map((label: LabelInterface) => ({
                         ...label,
                         color: colorFromId(defaultColormap, label.id),
                     }));
 
-                    // Dispatch immediately so LabelTable updates
                     dispatch('LabelLoaded', coloredLabels);
-
-                    // Keep other dispatches for UI state
-                    dispatch('superpixelChanged', {});
-                    dispatch('superpixelParams', params);
-
                     console.log('Label table updated successfully after watershed.');
                 } else {
-                    console.warn('Invalid label data received from /superpixel');
+                    // Case 2: no labelVec returned — still need to update frontend state
+                    console.log('Superpixel completed without label output (labels = false).');
+                    dispatch('LabelLoaded', []); // empty or keep last depending on your logic
                 }
+
+                // Always notify other parts of UI
+                dispatch('superpixelChanged', {});
+                dispatch('superpixelParams', params);
             })
             .catch((err) => console.error('Error while running hierarchical watershed:', err))
             .finally(() => {
