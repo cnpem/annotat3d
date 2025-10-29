@@ -46,6 +46,7 @@ def superpixel():
     req_data = request.get_json(force=True)
     levels = int(req_data.get("levels", 6))
     neighborhood = int(req_data.get("neighborhood", 27))
+    use_labels = req_data.get("labels",False)
 
     # Compute gradient on GPU
     grad = sobel(img.astype(np.float32), type3d=1, verbose=1, gpuMemory=0.4)
@@ -60,33 +61,36 @@ def superpixel():
         verbose=1
     )
 
-    # Save result
     data_repo.set_image(key="superpixel", data=img_superpixel)
 
+    if use_labels:
 
-    set_unique_labels = np.unique(img_superpixel)
-    set_unique_labels = set_unique_labels[set_unique_labels >= 0]
+        set_unique_labels = np.unique(img_superpixel)
+        set_unique_labels = set_unique_labels[set_unique_labels >= 0]
 
-    label_names = []
-    label_set = set()
+        label_names = []
+        label_set = set()
 
-    for label_value in set_unique_labels:
-        label_value = int(label_value)
-        if label_value not in label_set:
-            label_set.add(label_value)
-            label_names.append({
-                "labelName": f"Label {label_value}" if label_value > 0 else "Background",
-                "id": int(label_value),
-                "color": [],
-                "alpha": 1.0
-            })
+        for label_value in set_unique_labels:
+            label_value = int(label_value)
+            if label_value not in label_set:
+                label_set.add(label_value)
+                label_names.append({
+                    "labelName": f"Label {label_value}" if label_value > 0 else "Background",
+                    "id": int(label_value),
+                    "color": [],
+                    "alpha": 1.0
+                })
 
-    # Store + return
-    data_repo.set_image(key="annotation", data=img_superpixel)
-    annot_module.multilabel_updated(img_superpixel, mk_id)
-    module_repo.set_module("annotation", module=annot_module)
+        # Store + return
+        data_repo.set_image(key="annotation", data=img_superpixel)
+        annot_module.multilabel_updated(img_superpixel, mk_id)
+        module_repo.set_module("annotation", module=annot_module)
 
-    return jsonify(label_names)
+        return jsonify(label_names)
+    
+
+    return jsonify("success")        
 
 
 
