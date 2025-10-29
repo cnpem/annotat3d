@@ -72,6 +72,7 @@ const SuperpixelModuleCard: React.FC = () => {
                 setLockMenu(false);
                 setShowLoadingComp(false);
                 void showToast('Hierarchical watershed successfully applied!', timeToast);
+                dispatch('annotationChanged', null);
             });
     }
 
