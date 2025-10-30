@@ -1291,7 +1291,7 @@ def watershed_apply(input_id: str):
         watershed_relief = relief_img[slice_range].astype(np.int32)
         x,y = markers.shape
         print("apply watershed")
-        watershed.watershed_meyers_2d(watershed_relief, markers, -1)
+        watershed.watershed_meyers_2d(watershed_relief, markers, -1, x, y)
 
         annot_module.multilabel_updated(markers, mk_id)
 
@@ -1312,7 +1312,7 @@ def watershed_apply(input_id: str):
         z,x,y = watershed_relief.shape
 
         for i in range(z):
-            watershed.watershed_meyers_2d(watershed_relief[i], markers[i], -1)
+            watershed.watershed_meyers_2d(watershed_relief[i], markers[i], -1, x, y)
 
         img_label = data_repo.get_image('label')
 
