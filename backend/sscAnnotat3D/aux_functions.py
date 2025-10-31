@@ -1273,3 +1273,313 @@ def raw_filename(filename, shape, dtype):
     basefilename, ext = os.path.splitext(filename)
     bits = np.dtype(dtype).itemsize * 8
     return f"{basefilename}_{shape[2]}x{shape[1]}x{shape[0]}_{bits}bits{ext}"
+
+# ----------------------- ----------------------------------------------
+# Deep Learning Augmentation
+# ----------------------- ----------------------------------------------
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import math
+
+import torch
+import torchvision.transforms.functional as TF
+import random
+
+
+# --- Polar conversion (Torch only) ---
+def torch_cartesian_to_polar(img: torch.Tensor, center=None, radius=None, n_r=None, n_theta=None):
+    """
+    Convert Cartesian image to Polar coordinates.
+    img: (H, W) torch tensor
+    Returns: polar_img (n_r, n_theta), (center, radius)
+    """
+    H, W = img.shape
+    device = img.device
+
+    if center is None:
+        cx, cy = W / 2, H / 2
+    else:
+        cx, cy = center
+
+    if radius is None:
+        radius = math.sqrt(H**2 + W**2) / 2
+
+    if n_r is None:
+        n_r = int(radius)
+    if n_theta is None:
+        n_theta = W
+
+    # Polar grid
+    r = torch.linspace(0, radius, n_r, device=device)
+    theta = torch.linspace(0, 2 * math.pi, n_theta, device=device)
+    rr, tt = torch.meshgrid(r, theta, indexing="ij")
+
+    # Map to Cartesian coordinates
+    x = cx + rr * torch.cos(tt)
+    y = cy + rr * torch.sin(tt)
+
+    # Normalize to [-1, 1]
+    grid_x = 2 * (x / (W - 1)) - 1
+    grid_y = 2 * (y / (H - 1)) - 1
+    grid = torch.stack((grid_x, grid_y), dim=-1).unsqueeze(0)  # (1, n_r, n_theta, 2)
+
+    # Apply grid_sample
+    img_in = img.unsqueeze(0).unsqueeze(0)  # (1, 1, H, W)
+    polar = F.grid_sample(img_in, grid, mode='bilinear', padding_mode='zeros', align_corners=True)[0, 0]
+
+    return polar, (cx, cy), radius
+
+
+def torch_polar_to_cartesian(polar: torch.Tensor, center, radius, out_size):
+    """
+    Convert Polar image back to Cartesian coordinates.
+    polar: (n_r, n_theta)
+    """
+    H, W = out_size
+    device = polar.device
+    cx, cy = center
+
+    n_r, n_theta = polar.shape
+
+    # Cartesian grid
+    yy, xx = torch.meshgrid(
+        torch.arange(H, device=device),
+        torch.arange(W, device=device),
+        indexing="ij"
+    )
+    x = xx - cx
+    y = yy - cy
+    r = torch.sqrt(x**2 + y**2)
+    theta = torch.atan2(y, x) % (2 * math.pi)
+
+    # Normalize for grid_sample
+    r_norm = (r / radius).clamp(0, 1) * 2 - 1
+    t_norm = (theta / (2 * math.pi)) * 2 - 1
+    inv_grid = torch.stack((t_norm, r_norm), dim=-1).unsqueeze(0)  # (1, H, W, 2)
+
+    polar_in = polar.unsqueeze(0).unsqueeze(0)
+    cart = F.grid_sample(polar_in, inv_grid, mode='bilinear', padding_mode='zeros', align_corners=True)[0, 0]
+    return cart
+
+
+# --- Non-periodic stripe noise ---
+def create_nonperiodic_stripes(I, stripe_width=38, intensity=(-10, 10), variation_sigma=0.5):
+    """
+    Create non-periodic stripe noise with thick Gaussian-varying stripes (horizontal version).
+    I : torch.Tensor (H, W)
+    """
+    H, W = I.shape
+    device = I.device
+
+    max_val = float(I.max())
+    peakval = max(max_val * 1.1, 1e-6)
+
+    stripe_min, stripe_max = intensity
+
+    # Random starting positions (rows instead of columns)
+    nsel = max(1, int(H * 0.4 // stripe_width))
+    rsel = torch.randperm(H - stripe_width, device=device)[:nsel]
+
+    tnoise = torch.zeros((H, W), device=device)
+    y = torch.linspace(-1, 1, stripe_width, device=device)
+    base_gauss = torch.exp(-0.5 * (y / max(variation_sigma, 1e-6)) ** 2)
+    base_gauss /= base_gauss.max()
+
+    for r in rsel:
+        base_amp = (stripe_max - stripe_min) * torch.rand((), device=device) + stripe_min
+        base_amp /= 255.0
+        gauss_profile = base_gauss * base_amp
+        col_variation = 1.0 + 0.1 * torch.randn(1, W, device=device)
+        height = min(stripe_width, H - int(r))
+        tnoise[int(r):int(r)+height, :] = gauss_profile[:height][:, None] * col_variation
+
+    return I + tnoise * peakval
+
+
+# --- Final polar-stripe augmentation ---
+def apply_stripes_in_polar(img_tensor: torch.Tensor):
+    """
+    Apply non-periodic stripe noise in polar domain using Torch-based conversion.
+    img_tensor : torch.Tensor of shape (H, W)
+    """
+    device = img_tensor.device
+    dtype = img_tensor.dtype
+    H, W = img_tensor.shape
+
+    # --- To polar ---
+    polar_img, center, radius = torch_cartesian_to_polar(img_tensor)
+
+    # --- Add stripe noise ---
+    polar_noisy = create_nonperiodic_stripes(
+        polar_img,
+        stripe_width=15,
+        intensity=(-30, 30),
+        variation_sigma=0.5
+    )
+
+    # --- Back to Cartesian ---
+    cart_img = torch_polar_to_cartesian(polar_noisy, center, radius, (H, W))
+
+    return cart_img.to(dtype=dtype, device=device)
+
+def apply_vertical_stripes(img_tensor: torch.Tensor):
+    """
+    Apply non-periodic vertical stripe noise directly in Cartesian coordinates.
+    img_tensor : torch.Tensor of shape (H, W)
+    """
+    device = img_tensor.device
+    dtype = img_tensor.dtype
+    H, W = img_tensor.shape
+
+    max_val = float(img_tensor.max())
+    peakval = max(max_val * 1.1, 1e-6)
+
+    stripe_width = 15
+    stripe_min, stripe_max = -30, 30
+    variation_sigma = 0.5
+
+    # Random starting positions (columns)
+    nsel = max(1, int(W * 0.4 // stripe_width))
+    rsel = torch.randperm(W - stripe_width, device=device)[:nsel]
+
+    tnoise = torch.zeros((H, W), device=device)
+    x = torch.linspace(-1, 1, stripe_width, device=device)
+    base_gauss = torch.exp(-0.5 * (x / max(variation_sigma, 1e-6)) ** 2)
+    base_gauss /= base_gauss.max()
+
+    for c in rsel:
+        base_amp = (stripe_max - stripe_min) * torch.rand((), device=device) + stripe_min
+        base_amp /= 255.0
+        gauss_profile = base_gauss * base_amp
+        row_variation = 1.0 + 0.1 * torch.randn(H, 1, device=device)
+        width = min(stripe_width, W - int(c))
+        tnoise[:, int(c):int(c)+width] = row_variation * gauss_profile[:width][None, :]
+
+    return (img_tensor + tnoise * peakval).to(dtype=dtype, device=device)
+
+def get_stripe_prob(epoch, max_epoch, low_p=0.1, high_p=0.6, switch_ratio=0.5):
+    """
+    Returns augmentation probability for stripe noise.
+    Low early on, jumps high after switch_ratio * max_epoch.
+    """
+    if epoch < switch_ratio * max_epoch:
+        # gentle phase
+        return low_p * (1 + 0.5 * (epoch / (switch_ratio * max_epoch)))  # small ramp up
+    else:
+        # hard phase
+        return high_p
+
+
+def augment_with_stripes(img, epoch, max_epoch):
+    """
+    Apply stripe augmentations with probability depending on epoch.
+    """
+    p_stripe = get_stripe_prob(epoch, max_epoch)
+
+    # --- Non-periodic detector stripe noise (polarTransform) ---
+    if random.random() < p_stripe:
+        img[0] = apply_stripes_in_polar(img[0])
+
+    # --- Non-periodic detector stripe noise (vertical) ---
+    if random.random() < p_stripe:
+        img[0] = apply_vertical_stripes(img[0])
+
+    return img
+
+def random_augment(xb, yb):
+    """Apply random brightness, contrast, anisotropic stretch, and optional stripe noise (safe + memory-efficient)."""
+    B, C, H, W = xb.shape
+
+    xb_out = xb.clone()
+    yb_out = yb.clone()
+
+    for i in range(B):
+        # Work on local copies (avoids accidental shared references)
+        img = xb_out[i].clone()
+        mask = yb_out[i].clone()
+
+        # === non-periodic detector stripe noise (polarTransform) ===
+        if random.random() < 0.25:
+            # convert only channel 0 to numpy safely
+            img[0] = apply_stripes_in_polar(img[0])
+
+        # === non-periodic detector stripe noise (vertical) ===
+        if random.random() < 0.25:
+            # convert only channel 0 to numpy safely
+            img[0] = apply_vertical_stripes(img[0])
+
+        # === random stretch ===
+        if random.random() < 0.25:
+            scale_x = random.uniform(0.5, 2.0)
+            scale_y = random.uniform(0.5, 2.0)
+            new_h = int(round(H * scale_y))
+            new_w = int(round(W * scale_x))
+
+            img_resized = TF.resize(img, [new_h, new_w], interpolation=TF.InterpolationMode.BILINEAR)
+            mask_resized = TF.resize(mask.unsqueeze(0), [new_h, new_w],
+                                     interpolation=TF.InterpolationMode.NEAREST).squeeze(0)
+
+            img_resized = TF.pad(img_resized, (0, 0, max(0, W - new_w), max(0, H - new_h)))
+            mask_resized = TF.pad(mask_resized, (0, 0, max(0, W - new_w), max(0, H - new_h)))
+
+            img = TF.center_crop(img_resized, [H, W])
+            mask = TF.center_crop(mask_resized, [H, W])
+
+        # === random brightness ===
+        if random.random() < 0.25:
+            img = TF.adjust_brightness(img, 1 + 0.3 * (random.random() - 0.5))
+
+        # === random contrast ===
+        if random.random() < 0.25:
+            img = TF.adjust_contrast(img, 1 + 0.3 * (random.random() - 0.5))
+
+       
+        # === random rotation ===
+        if random.random() < 0.25:
+            angle = random.uniform(-15, 15)  # degrees
+            img = TF.rotate(
+                img,
+                angle,
+                interpolation=TF.InterpolationMode.BILINEAR,
+                fill=0,  # black fill for empty corners
+                expand=False
+            )
+        
+        xb_out[i] = img
+        yb_out[i] = mask
+
+        
+        # optional: clear cache for large batches
+        if i % 8 == 0:
+            torch.cuda.empty_cache()
+
+    return xb_out, yb_out
+
+import torch.nn as nn
+
+def convert_batchnorm_to_groupnorm(model, num_groups=8):
+    """
+    Recursively replace every nn.BatchNorm2d with nn.GroupNorm.
+    num_groups can be adjusted depending on GPU / batch size.
+    """
+    for name, module in model.named_children():
+
+        # If module is BatchNorm2d → replace with GroupNorm
+        if isinstance(module, nn.BatchNorm2d):
+
+            num_channels = module.num_features
+            gn = nn.GroupNorm(
+                num_groups=min(num_groups, num_channels),  # ensure divisibility
+                num_channels=num_channels,
+                eps=module.eps,
+                affine=module.affine
+            )
+            setattr(model, name, gn)
+
+        else:
+            # Recursive replacement inside nested blocks
+            convert_batchnorm_to_groupnorm(module, num_groups=num_groups)
+
+    return model

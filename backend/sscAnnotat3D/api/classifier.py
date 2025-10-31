@@ -2,6 +2,7 @@ import pickle
 from flask import Blueprint, Flask, request, jsonify
 from flask_cors import cross_origin
 import numpy as np
+from sscAnnotat3D.modules.pre_trained_deep_learning_module import VolumeSegmentationManager
 from sscAnnotat3D.api.annotation import handle_exception
 from sscAnnotat3D.api.superpixel import _debugger_print
 from sscAnnotat3D.modules.pixel_segmentation_module import PixelSegmentationModule
@@ -450,3 +451,170 @@ def execute(segm_type):
     data_repo.set_image("label", label)
 
     return jsonify({"selected_features_names": selected_features_names}), 200
+
+
+# =====================
+# DEEP LEARNING CLASSIFIER
+# =====================
+@app.route("/pre_trained_deep_learning/train", methods=["POST"])
+@cross_origin()
+def train_deep_segmentation():
+
+    finetune      = request.args.get("finetune", "false").lower() == "true"
+    data_aug      = request.json.get("dataAug", True)
+    learning_rate = request.json.get("lr", 1e-4)
+    num_epochs    = request.json["epochs"]
+
+    annotation_module = module_repo.get_module("annotation")
+    annotation_slice_dict = annotation_module.get_annotation_slice_dict()
+    annotation_image = annotation_module.annotation_image
+
+    if len(annotation_slice_dict) == 0:
+        return handle_exception(
+            "Unable to train! Please, at least create one label and background annotation and try again."
+        )
+
+    deep_module = module_repo.get_module("deep_module")
+
+    # === CASE 1: Finetune ======================================================
+    if finetune:
+        if deep_module is None:
+            return handle_exception("No existing model available to finetune.")
+        print("🔁 Finetuning existing model...")
+    else:
+        # === CASE 2: New Training ==============================================
+        try:
+            encoder       = "resnet50"
+            encoderweights = "imagenet"
+            dropout        = 0.5
+            selectedLabels = request.json["selectedLabels"]
+            n_classes      = len(selectedLabels)
+
+            import segmentation_models_pytorch as smp
+            from aux_functions import convert_batchnorm_to_groupnorm
+
+            model = smp.DeepLabV3Plus(
+                encoder_name=encoder,
+                encoder_weights=encoderweights,
+                in_channels=1,
+                classes=n_classes,
+                decoder_attention_type="scse",
+                aux_params={"classes": n_classes, "dropout": dropout},
+            )
+
+            # Replace BatchNorm → GroupNorm
+            model = convert_batchnorm_to_groupnorm(model, num_groups=8)
+
+            deep_module = VolumeSegmentationManager(
+                model,
+                ignore_index=-1,
+                num_classes=n_classes,
+                selected_labels = selectedLabels, 
+            )
+
+            module_repo.set_module("deep_module", deep_module)
+
+        except Exception as e:
+            return handle_exception(f"Unable to create model! {e}")
+
+    # === TRAIN =================================================================
+    try:
+        img = data_repo.get_image("image")
+
+        deep_module.prepare_training_data(img, annotation_image, annotation_slice_dict)
+
+        deep_module.train(
+            epochs=num_epochs,
+            lr=learning_rate,
+            data_aug=data_aug
+        )
+
+        module_repo.set_module("deep_module", deep_module)
+
+    except Exception as e:
+        return handle_exception(f"Unable to Train! {e}")
+
+    return jsonify({"status": "success"}), 200
+
+
+@app.route("/pre_trained_deep_learning/preview", methods=["POST"])
+@cross_origin()
+def preview_deep_segmentation():
+    """
+    Preview a single slice using the trained deep learning model.
+    Returns the mask for the slice.
+    """
+
+    # -------- INPUT VALIDATION --------
+    deep_module = module_repo.get_module("deep_module")
+
+    if deep_module is None:
+        return handle_exception(
+            "Unable to preview! Please train or load a deep learning model first."
+        )
+
+    slice_num = request.json.get("slice")
+    axis = request.json.get("axis")          # e.g., "xy", "yz", "xz"
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    if slice_num is None:
+        return handle_exception("Slice index was not provided.")
+
+    try:
+        img = data_repo.get_image("image")        # (Z,Y,X)
+    except Exception:
+        return handle_exception("No image loaded to preview on.")
+
+    # -------- EXTRACT SLICE --------
+    slice_np = img[slice_range]
+    pred_vol = np.zeros(img.shape, 'int16') - 1
+    # -------- RUN PREDICTION --------
+    #try:
+    pred_vol[slice_range] = deep_module.predict_slice(slice_np)       # -> returns (H, W)
+    #except Exception as e:
+    #    return handle_exception(f"Unable to preview slice! {e}")
+
+    # Send result to UI (stored as temporary mask layer)
+    data_repo.set_image("label", pred_vol)
+
+    return jsonify({"status": "ok"}), 200
+
+
+@app.route("/pre_trained_deep_learning/execute", methods=["POST"])
+@cross_origin()
+def execute_deep_segmentation():
+    """
+    Executes the trained deep learning model and segments the entire volume.
+    """
+    deep_module = module_repo.get_module("deep_module")
+
+    if deep_module is None:
+        return handle_exception(
+            "Unable to execute! Please train or load a deep-learning model first."
+        )
+
+    # --- Fetch current volume ---
+    try:
+        img = data_repo.get_image("image")
+        if img is None:
+            return handle_exception("No image available to execute segmentation.")
+    except Exception:
+        return handle_exception("No image available to execute segmentation.")
+
+    try:
+        # ========================
+        # 🔥 FULL VOLUME INFERENCE
+        # ========================
+        print("🔁 Executing Deep Learning Segmentation...")
+
+        pred_vol = deep_module.predict_volume(img)  # -> returns (Z, Y, X)
+        pred_vol = pred_vol.astype(np.int16)
+
+        # Write result back to Annotat3D UI
+        data_repo.set_image("label", pred_vol)
+
+    except Exception as e:
+        return handle_exception(f"Execution failed! {e}")
+
+    return jsonify({"status": "ok"}), 200
