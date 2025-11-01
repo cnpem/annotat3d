@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { Component } from 'react';
 import { IonFab, IonFabButton, IonIcon } from '@ionic/react';
-import { expand, brush, browsers, add, remove, eye, eyeOff, colorFill } from 'ionicons/icons';
+import { expand, brush, browsers, add, remove, eye, eyeOff, colorFill, colorWand, eyedrop } from 'ionicons/icons';
 import isEqual from 'lodash.isequal';
 import debounce from 'lodash.debounce';
 import * as PIXI from 'pixi.js';
@@ -19,7 +20,6 @@ import { HistogramInfoPayload } from '../../components/main_menu/file/utils/Hist
 import '../../styles/CanvasContainer.css';
 import MenuFabButton from './MenuFabButton';
 import { dispatch, subscribe, unsubscribe } from '../../utils/eventbus';
-import { defaultColormap } from '../../utils/colormap';
 import { CropAxisInterface, CropShapeInterface } from '../tools_menu/utils/CropInterface';
 import { ImageShapeInterface } from '../tools_menu/utils/ImageShapeInterface';
 import { ImageInfoInterface } from '../main_menu/file/utils/ImageInfoInterface';
@@ -30,8 +30,12 @@ import snakesCursor from '../../public/snakes_cursor.png';
 import eraserIcon from '../../public/eraser_icon.svg';
 import eraserCursor from '../../public/eraser.png';
 import brushCursor from '../../public/ion_brush.png';
+import dropperCursor from '../../public/dropper_cursor.png';
 
-type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush' | 'magic_wand' | 'lasso' | 'snakes';
+import { LabelInterface } from '../tools_menu/annotation_menu/label_table/LabelInterface';
+import { colorFromId, defaultColormap } from '../../utils/colormap';
+
+type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush' | 'magic_wand' | 'lasso' | 'snakes' | 'dropper_brush';
 
 class Brush {
     label: number;
@@ -73,6 +77,17 @@ class Brush {
         console.log('set mode: ', mode);
         this.mode = mode;
         this.update();
+    }
+
+    private updateDropperCursor() {
+        const gr = this.cursor;
+        gr.clear();
+        gr.lineStyle(2, 0x000000, 0.8);
+        gr.moveTo(0, 0);
+        gr.lineTo(this.size, this.size);
+        gr.moveTo(this.size, 0);
+        gr.lineTo(0, this.size);
+        gr.endFill();
     }
 
     private updateBrush() {
@@ -134,6 +149,11 @@ class Brush {
         } else if (this.mode === 'erase_brush') {
             this.color = 0xffffff;
             this.cursor.visible = true;
+        } else if (this.mode === 'dropper_brush') {
+            const color = this.colors[this.label % this.colors.length];
+            this.color = this.rgbToHex(...color);
+            this.cursor.visible = true;
+            this.updateDropperCursor();
         } else {
             this.cursor.visible = false;
         }
@@ -599,6 +619,40 @@ class Canvas {
 
     activeContour: ActiveContour;
 
+    parentLabel: number | null = null;
+
+    labelMap: Record<number, number> = {};
+
+    prevClickedLabel: number | null = null;
+
+    childLabels: Set<number> = new Set();
+
+    lastClickTime = 0;
+
+    lastClickedLabelForDoubleClick: number | null = null;
+
+    singleClickThreshold = 20;
+
+    doubleClickThreshold = 100; // ms (adjust to feel right)
+
+    clickTimer: number | null = null;
+
+    longClickThreshold = 2000; // ms — adjust to feel right
+
+    popupDelay = 800; // wait before showing popup
+
+    loadingTimer: number | null = null;
+
+    loadingPopup: HTMLDivElement | null = null;
+
+    progressBar: HTMLDivElement | null = null;
+
+    longClickTimer: number | null = null;
+
+    isLongClickActive = false;
+
+    longClickTriggered = false;
+
     constructor(
         div: HTMLDivElement,
         colors: [number, number, number][],
@@ -621,6 +675,7 @@ class Canvas {
                 magic_wand: `url(${fillCursor}) 0 0, auto`,
                 lasso: `url(${lassoCursor}) 16 16, auto`,
                 snakes: `url(${snakesCursor}) 16 16, auto`,
+                dropper_brush: `url(${dropperCursor}) 0 32, auto`,
             };
         }
 
@@ -723,6 +778,72 @@ class Canvas {
         return this.labelTableLen;
     }
 
+    showLoadingPopup() {
+        // Clean any previous popup
+        this.hideLoadingPopup();
+
+        const popup = document.createElement('div');
+        popup.style.position = 'fixed';
+        popup.style.top = '50%';
+        popup.style.left = '50%';
+        popup.style.transform = 'translate(-50%, -50%)';
+        popup.style.width = '160px';
+        popup.style.height = '40px';
+        popup.style.background = 'rgba(30,30,30,0.9)';
+        popup.style.border = '1px solid #aaa';
+        popup.style.borderRadius = '8px';
+        popup.style.display = 'flex';
+        popup.style.alignItems = 'center';
+        popup.style.justifyContent = 'center';
+        popup.style.zIndex = '9999';
+
+        const barContainer = document.createElement('div');
+        barContainer.style.width = '120px';
+        barContainer.style.height = '8px';
+        barContainer.style.background = '#444';
+        barContainer.style.borderRadius = '4px';
+        barContainer.style.overflow = 'hidden';
+
+        const bar = document.createElement('div');
+        bar.style.width = '0%';
+        bar.style.height = '100%';
+        bar.style.background = '#4caf50';
+        bar.style.transition = 'none'; // disable until animation starts
+        barContainer.appendChild(bar);
+
+        popup.appendChild(barContainer);
+        document.body.appendChild(popup);
+
+        this.loadingPopup = popup;
+        this.progressBar = bar;
+    }
+
+    hideLoadingPopup() {
+        if (this.loadingPopup) {
+            document.body.removeChild(this.loadingPopup);
+            this.loadingPopup = null;
+            this.progressBar = null;
+        }
+    }
+
+    animateLoadingBar(duration: number) {
+        if (!this.progressBar) return;
+
+        // reset to 0 width instantly
+        this.progressBar.style.transition = 'none';
+        this.progressBar.style.width = '0%';
+
+        // Force a reflow so browser applies the initial width
+        void this.progressBar.offsetWidth;
+
+        // Then animate to 100%
+        requestAnimationFrame(() => {
+            if (!this.progressBar) return;
+            this.progressBar.style.transition = `width ${duration}ms linear`;
+            this.progressBar.style.width = '100%';
+        });
+    }
+
     setImageShape() {
         void sfetch('POST', '/get_image_info/image_info', '', 'json').then((imgInfo: ImageInfoInterface) => {
             const imageShape: ImageShapeInterface = {
@@ -747,6 +868,247 @@ class Canvas {
         this.axis = axis;
     }
 
+    getLabelAtPointer(event: any): number {
+        if (!this.labelData) return -1;
+
+        const pos = this.viewport.toWorld(event.data.global);
+
+        // Clamp to image bounds
+        const x = Math.max(0, Math.min(Math.floor(pos.x), this.labelData.shape[1] - 1));
+        const y = Math.max(0, Math.min(Math.floor(pos.y), this.labelData.shape[0] - 1));
+
+        const labelValue = this.labelData.data[y * this.labelData.shape[1] + x];
+
+        console.log('Pointer world:', pos.x, pos.y);
+        console.log('Mapped to label array:', x, y);
+        console.log('Label at pointer:', this.labelData.data[y * this.labelData.shape[1] + x]);
+        return labelValue >= 0 ? labelValue : -1;
+    }
+
+    restoreOriginalLabels() {
+        if (!this.labelData) return;
+
+        const width = this.labelData.shape[1];
+        const height = this.labelData.shape[0];
+        const len = this.labelData.data.length;
+        const rgbaData = new Uint8Array(len * 4);
+
+        for (let i = 0; i < len; ++i) {
+            const idx = i * 4;
+            const pixelLabel = this.labelData.data[i];
+            if (pixelLabel < 0) continue;
+
+            const baseColor = this.colors[pixelLabel] || [128, 128, 128];
+            const alpha = this.alphas[pixelLabel] || 1.0;
+
+            rgbaData[idx] = baseColor[0];
+            rgbaData[idx + 1] = baseColor[1];
+            rgbaData[idx + 2] = baseColor[2];
+            rgbaData[idx + 3] = alpha * 255;
+        }
+
+        const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
+        this.labelSlice.texture = texture;
+    }
+
+    handleSingleClick(event: any) {
+        const clickedLabel = this.getLabelAtPointer(event);
+        if (clickedLabel < 0) return;
+
+        console.log('Single click on label:', clickedLabel);
+
+        // --- Parent/Child logic ---
+        if (this.parentLabel === null) {
+            // No parent yet → this becomes the parent
+            this.parentLabel = clickedLabel;
+            this.labelMap = {};
+            this.highlightMergedLabels();
+        } else if (clickedLabel !== this.parentLabel) {
+            // If clicked on a new label, add as child
+            this.labelMap[clickedLabel] = this.parentLabel;
+            this.highlightMergedLabels();
+        }
+    }
+
+    handleDoubleClick(event: any) {
+        const clickedLabel = this.getLabelAtPointer(event);
+        if (clickedLabel < 0) return;
+
+        console.log('Double click on label:', clickedLabel);
+
+        if (clickedLabel === this.parentLabel) {
+            // Double-click parent → clear everything
+            this.parentLabel = null;
+            this.labelMap = {};
+            this.restoreOriginalLabels();
+            console.log('Cleared all merge highlights');
+        } else if (this.labelMap[clickedLabel]) {
+            // Double-click child → remove just that child
+            delete this.labelMap[clickedLabel];
+            this.highlightMergedLabels();
+            console.log('Removed child label:', clickedLabel);
+        }
+    }
+
+    handleLongClick(label: number) {
+        if (!this.parentLabel) return;
+
+        //loading bar
+        this.showLoadingPopup();
+        this.animateLoadingBar(3000);
+
+        //message during merge operation
+        const loadingMsg = document.createElement('div');
+        loadingMsg.innerText = 'Merging superpixels...';
+        loadingMsg.style.position = 'fixed';
+        loadingMsg.style.top = '50%';
+        loadingMsg.style.left = '50%';
+        loadingMsg.style.transform = 'translate(-50%, -50%)';
+        loadingMsg.style.background = 'rgba(30,30,30,0.9)';
+        loadingMsg.style.color = 'white';
+        loadingMsg.style.padding = '10px 16px';
+        loadingMsg.style.borderRadius = '6px';
+        loadingMsg.style.fontSize = '14px';
+        loadingMsg.style.zIndex = '10000';
+        document.body.appendChild(loadingMsg);
+
+        const payload = {
+            parent: this.parentLabel,
+            children: Array.from(this.childLabels),
+        };
+
+        void sfetch('POST', '/merge_superpixels', JSON.stringify(payload), 'json')
+            .then((result) => {
+                if (Array.isArray(result)) {
+                    const coloredLabels = result.map((lbl: LabelInterface) => ({
+                        ...lbl,
+                        color: colorFromId(defaultColormap, lbl.id),
+                    }));
+
+                    dispatch('LabelLoaded', coloredLabels);
+                    dispatch('labelChanged', '');
+                    console.log('Label table updated successfully after merge.');
+                } else {
+                    console.log('Merge completed without label output (labels = false).');
+                    dispatch('LabelLoaded', []);
+                }
+
+                dispatch('labelChanged', '');
+            })
+            .catch((err) => console.error('Error while merging superpixels:', err))
+            .finally(() => {
+                //reset states
+                this.hideLoadingPopup();
+                document.body.removeChild(loadingMsg);
+
+                //reset states for another merge operation
+                this.restoreOriginalLabels();
+                this.parentLabel = null;
+                this.childLabels.clear();
+                this.labelMap = {};
+                this.isLongClickActive = false;
+                this.isPainting = false;
+
+                dispatch('labelChanged', '');
+            });
+    }
+
+    highlightLabelPattern(label: number) {
+        if (!this.labelData) return;
+
+        if (!this.labelData) return;
+        if (label < 0) {
+            this.labelSlice.texture = PIXI.Texture.EMPTY;
+            return;
+        }
+
+        const width = this.labelData.shape[1];
+        const height = this.labelData.shape[0];
+        const len = this.labelData.data.length;
+        const rgbaData = new Uint8Array(len * 4);
+
+        for (let i = 0; i < len; ++i) {
+            const idx = i * 4;
+            const pixelLabel = this.labelData.data[i];
+            if (pixelLabel < 0) continue;
+
+            const baseColor = this.colors[pixelLabel] || [128, 128, 128];
+            const alpha = this.alphas[pixelLabel] || 1.0;
+
+            // Basic pattern logic: e.g., stripes every 4 pixels
+            const y = Math.floor(i / width);
+            const x = i % width;
+
+            let patternAlpha = alpha;
+            if (pixelLabel === label) {
+                // example: simple diagonal stripes
+                if ((x + y) % 6 < 3) {
+                    patternAlpha = 0.8; // visible pattern
+                } else {
+                    patternAlpha = 0.2; // fade rest
+                }
+            }
+
+            rgbaData[idx] = baseColor[0];
+            rgbaData[idx + 1] = baseColor[1];
+            rgbaData[idx + 2] = baseColor[2];
+            rgbaData[idx + 3] = patternAlpha * 255;
+        }
+
+        const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
+        this.labelSlice.texture = texture;
+    }
+
+    highlightMergedLabels() {
+        if (!this.labelData || this.parentLabel === null) return;
+
+        const width = this.labelData.shape[1];
+        const height = this.labelData.shape[0];
+        const len = this.labelData.data.length;
+        const rgbaData = new Uint8Array(len * 4);
+
+        for (let i = 0; i < len; ++i) {
+            const idx = i * 4;
+            const pixelLabel = this.labelData.data[i];
+            if (pixelLabel < 0) continue;
+
+            const baseColor = this.colors[pixelLabel] || [128, 128, 128];
+            const alpha = this.alphas[pixelLabel] || 1.0;
+
+            let patternAlpha = alpha;
+
+            const y = Math.floor(i / width);
+            const x = i % width;
+
+            if (pixelLabel === this.parentLabel) {
+                const cx = 4; // pattern repeat size
+                const dx = x % cx;
+                const dy = y % cx;
+
+                // Creates a star-like shape by combining crosses and diagonals
+                const isStar = dx === 0 || dy === 0 || dx === dy || dx + dy === cx - 1;
+
+                if (isStar) {
+                    patternAlpha = 1.0; // bright "star" pixels
+                } else {
+                    patternAlpha = 0.4; // background fade
+                }
+            } else if (this.childLabels.has(pixelLabel)) {
+                // Children: diagonal stripe pattern
+                if ((x + y) % 6 < 3) patternAlpha = 1;
+                else patternAlpha = 0.4;
+            }
+
+            rgbaData[idx] = baseColor[0];
+            rgbaData[idx + 1] = baseColor[1];
+            rgbaData[idx + 2] = baseColor[2];
+            rgbaData[idx + 3] = patternAlpha * 255;
+        }
+
+        const texture = this.textureFromSlice(rgbaData, width, height, PIXI.FORMATS.RGBA);
+        this.labelSlice.texture = texture;
+    }
+
     onPointerDown(event: any) {
         if (event.data.pointerType === 'mouse') {
             if (event.data.button !== 0) return;
@@ -754,6 +1116,54 @@ class Canvas {
             this.viewport.plugins.pause('drag');
             // canvas.brush.cursor.visible = false;
         }
+        if (this.brush_mode === 'dropper_brush') {
+            const clickedLabel = this.getLabelAtPointer(event);
+            if (clickedLabel < 0) return;
+
+            // --- Reset timers and flags ---
+            if (this.clickTimer) clearTimeout(this.clickTimer);
+            if (this.loadingTimer) clearTimeout(this.loadingTimer);
+            if (this.longClickTimer) clearTimeout(this.longClickTimer);
+
+            this.hideLoadingPopup();
+            this.isLongClickActive = false;
+            this.longClickTriggered = false;
+            this.isPainting = true; // pressing
+
+            const now = performance.now();
+            const timeSinceLastClick = now - this.lastClickTime;
+            const isDoubleClick =
+                this.lastClickedLabelForDoubleClick === clickedLabel && timeSinceLastClick < this.doubleClickThreshold;
+
+            this.lastClickTime = now;
+            this.lastClickedLabelForDoubleClick = clickedLabel;
+
+            // --- Handle double-click ---
+            if (isDoubleClick) {
+                this.handleDoubleClick(event);
+                return;
+            }
+
+            // --- Setup long-click timers ---
+            this.loadingTimer = window.setTimeout(() => {
+                // show progress bar only after delay
+                if (!this.isPainting) return; // released before popup delay
+                this.showLoadingPopup();
+                this.animateLoadingBar(this.longClickThreshold - this.popupDelay);
+            }, this.popupDelay);
+
+            this.longClickTimer = window.setTimeout(() => {
+                // safeguard: only trigger if still pressing
+                if (!this.isPainting) return;
+                this.isLongClickActive = true;
+                this.longClickTriggered = true;
+                this.handleLongClick(clickedLabel);
+                this.hideLoadingPopup();
+            }, this.longClickThreshold);
+
+            return;
+        }
+
         if (this.brush_mode === 'lasso') {
             this.isPainting = true;
             const position = this.viewport.toWorld(event.data.global);
@@ -853,6 +1263,7 @@ class Canvas {
         this.brush.cursor.position.y = currPosition.y - Math.floor(this.brush.size / 2);
 
         if (!this.isPainting || this.brush_mode === 'magic_wand') return;
+        if (!this.isPainting || this.brush_mode === 'dropper_brush') return;
 
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
@@ -861,18 +1272,100 @@ class Canvas {
 
     onPointerUp(event: any) {
         this.viewport.plugins.resume('drag');
-
         if (!this.isPainting) return;
+
+        // --- Cancel all timers ---
+        if (this.loadingTimer) clearTimeout(this.loadingTimer);
+        if (this.longClickTimer) clearTimeout(this.longClickTimer);
+        if (this.clickTimer) clearTimeout(this.clickTimer);
+
+        // --- Handle dropper mode ---
+        if (this.brush_mode === 'dropper_brush') {
+            const wasPainting = this.isPainting;
+            this.isPainting = false; // <— ensures long click can't trigger after release
+            this.hideLoadingPopup();
+
+            const clickedLabel = this.getLabelAtPointer(event);
+            if (clickedLabel < 0) return;
+
+            // If long click was already triggered → nothing else to do
+            if (this.longClickTriggered) {
+                console.log('✅ Long click already triggered → ignoring release.');
+                this.isLongClickActive = false;
+                this.longClickTriggered = false;
+                return;
+            }
+
+            // Ensure long click is cancelled when released early
+            this.isLongClickActive = false;
+            this.longClickTriggered = false;
+
+            const now = performance.now();
+            const timeSinceLastClick = now - this.lastClickTime;
+            const isDoubleClick =
+                this.lastClickedLabelForDoubleClick === clickedLabel && timeSinceLastClick < this.doubleClickThreshold;
+
+            this.lastClickTime = now;
+            this.lastClickedLabelForDoubleClick = clickedLabel;
+
+            // --- Double click ---
+            if (isDoubleClick) {
+                if (this.clickTimer) clearTimeout(this.clickTimer);
+                if (clickedLabel === this.parentLabel) {
+                    console.log('Double-click parent → clearing all merges');
+                    this.parentLabel = null;
+                    this.childLabels.clear();
+                    this.restoreOriginalLabels();
+                } else if (this.childLabels.has(clickedLabel)) {
+                    console.log('Double-click child → removing from merge');
+                    this.childLabels.delete(clickedLabel);
+                    this.highlightMergedLabels();
+                }
+                return;
+            }
+
+            // --- Single click (delayed to avoid false double clicks) ---
+            if (this.clickTimer) clearTimeout(this.clickTimer);
+            this.clickTimer = window.setTimeout(() => {
+                if (this.isLongClickActive || this.longClickTriggered) return;
+
+                if (this.parentLabel === null) {
+                    this.parentLabel = clickedLabel;
+                    this.childLabels.clear();
+                    this.highlightMergedLabels();
+                } else if (clickedLabel !== this.parentLabel) {
+                    if (!this.childLabels.has(clickedLabel)) {
+                        this.childLabels.add(clickedLabel);
+                        this.highlightMergedLabels();
+                    }
+                }
+
+                window.dispatchEvent(
+                    new CustomEvent('labelSelected', {
+                        detail: {
+                            parent: this.parentLabel,
+                            children: Array.from(this.childLabels),
+                        },
+                    })
+                );
+            }, this.singleClickThreshold);
+
+            return;
+        }
+
+        // ===========================================
+        // === OTHER MODES (lasso, snakes, brush) ====
+        // ===========================================
 
         if (this.brush_mode === 'magic_wand') {
             this.viewport.plugins.pause('drag');
             void applyMagicWand(this.viewport, this.sliceNum, this.axis, this.brush.label, event);
-            this.isPainting = false; // Reset painting flag
-            return; // Exit the method early since the magic wand logic is
+            this.isPainting = false;
+            return;
         }
 
         if (this.brush_mode === 'lasso') {
-            this.isPainting = false; // Reset painting flag
+            this.isPainting = false;
             const context = this.annotation.context;
             this.lasso.endLasso(context, this.brush.label, this.sliceNum, this.axis);
             this.lasso.clearTempLine();
@@ -884,16 +1377,15 @@ class Canvas {
         if (this.brush_mode === 'snakes') {
             void this.activeContour.finalize(this.brush.label, this.sliceNum, this.axis);
             this.activeContour.clear();
-            // Clear the initial state after finalizing
             this.isPainting = false;
             this.annotation.resetPreviousData();
             return;
         }
 
+        // --- Normal brush mode finalize ---
         const currPosition = this.viewport.toWorld(event.data.global);
         currPosition.x = Math.floor(currPosition.x);
         currPosition.y = Math.floor(currPosition.y);
-
         this.prevPosition = currPosition;
         this.pointsBuffer = [...this.pointsBuffer, ...this.draw(currPosition)];
 
@@ -913,7 +1405,6 @@ class Canvas {
 
         this.pointsBuffer = [];
 
-        console.log('finish drawing on onPointerUp in Canvas');
         if (this.activateSequentialLabel) {
             dispatch('sequentialLabelUpdate', {
                 id: this.brush.label,
@@ -921,6 +1412,7 @@ class Canvas {
             });
             this.brush.setLabel(this.brush.label + 1);
         }
+
         this.isPainting = false;
     }
 
@@ -1369,7 +1861,7 @@ interface ICanvasState {
     label_contour: boolean;
     future_sight_on: boolean;
 }
-
+//here we do not change the cursor
 const brushList = [
     {
         id: 'draw_brush',
@@ -1378,6 +1870,10 @@ const brushList = [
     {
         id: 'erase_brush',
         logo: eraserIcon,
+    },
+    {
+        id: 'dropper_brush',
+        logo: eyedrop,
     },
 ];
 
@@ -1558,9 +2054,12 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             contour: this.state.label_contour,
         };
 
+        console.log('child labels:', this.canvas?.childLabels);
+        console.log('parent label:', this.canvas?.parentLabel);
         void sfetch('POST', '/get_image_slice/label', JSON.stringify(params), 'gzip/numpyndarray')
             .then((labelSlice) => {
                 this.canvas!.setLabelImage(labelSlice);
+                this.canvas!.highlightMergedLabels();
             })
             .catch((error) => {
                 console.error('Error fetching label slice:', error);

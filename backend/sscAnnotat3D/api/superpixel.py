@@ -33,6 +33,7 @@ def rescale_to_int32(image: np.ndarray) -> np.ndarray:
 @app.route("/superpixel", methods=["POST", "GET"])
 @cross_origin()
 def superpixel():
+    import time
     """
     Function that creates the superpixel using GPU hierarchical watershed
     and sends the generated labels to the frontend, compatible with LabelTable.tsx.
@@ -53,6 +54,7 @@ def superpixel():
     grad = rescale_to_int32(grad)
 
     # Run hierarchical watershed (GPU)
+    t = time.time()
     img_superpixel = hierarchicalWatershedChunked_GPU(
         grad,
         levels=levels,
@@ -60,32 +62,33 @@ def superpixel():
         gpuMemory=0.4,
         verbose=1
     )
+    print("watershed time",time.time()-t)
 
     data_repo.set_image(key="superpixel", data=img_superpixel)
 
     if use_labels:
 
-        set_unique_labels = np.unique(img_superpixel)
-        set_unique_labels = set_unique_labels[set_unique_labels >= 0]
+        t = time.time()
+        counts = np.bincount(img_superpixel.ravel())
+        unique_labels = np.nonzero(counts)[0]
+        print("unique time",time.time()-t)
 
-        label_names = []
-        label_set = set()
-
-        for label_value in set_unique_labels:
-            label_value = int(label_value)
-            if label_value not in label_set:
-                label_set.add(label_value)
-                label_names.append({
-                    "labelName": f"Label {label_value}" if label_value > 0 else "Background",
-                    "id": int(label_value),
-                    "color": [],
-                    "alpha": 1.0
-                })
+        t = time.time()
+        label_names = [
+            {
+                "labelName": "Background" if val == 0 else f"Label {int(val)}",
+                "id": int(val),
+                "color": [],
+                "alpha": 1.0
+            }
+            for val in unique_labels
+        ]
+        print("build list time",time.time()-t)
 
         # Store + return
-        data_repo.set_image(key="annotation", data=img_superpixel)
-        annot_module.multilabel_updated(img_superpixel, mk_id)
-        module_repo.set_module("annotation", module=annot_module)
+        data_repo.set_image(key="label", data=img_superpixel)
+        #annot_module.multilabel_updated(img_superpixel, mk_id)
+        #module_repo.set_module("annotation", module=annot_module)
 
         return jsonify(label_names)
     
@@ -122,3 +125,59 @@ def get_superpixel_slice():
     compressed_slice_superpixels = zlib.compress(utils.toNpyBytes(slice_superpixels))
 
     return send_file(io.BytesIO(compressed_slice_superpixels), "application/gzip")
+
+@app.route("/merge_superpixels", methods=["POST", "GET"])
+@cross_origin()
+def merge_superpixels():
+    import time
+    """
+    Merge selected child labels into a parent label and return
+    the updated label list in the same format used by /superpixel.
+    """
+    print("Merging labels...")
+
+    labels = data_repo.get_image("label").astype(np.int32)
+
+    req_data = request.get_json(force=True)
+    parent = int(req_data.get("parent"))
+    children = req_data.get("children", [])
+
+    if labels is None:
+        return jsonify({"error": "No label image found"}), 400
+
+    if not children:
+        return jsonify({"error": "No child labels provided"}), 400
+
+    # Perform merge
+    print("merge started")
+    
+    t = time.time()
+    mask = np.isin(labels, children)
+    labels[mask] = parent
+    print("merge time: ",time.time()-t)
+
+    # Save updated label image
+    print("saving into data repo")
+    t = time.time()
+    data_repo.set_image(key="label", data=labels)
+    print("saving time",time.time()-t)
+
+    t = time.time()
+    counts = np.bincount(labels.ravel())
+    unique_labels = np.nonzero(counts)[0]
+    print("unique time",time.time()-t)
+
+    t = time.time()
+    label_names = [
+        {
+            "labelName": "Background" if val == 0 else f"Label {int(val)}",
+            "id": int(val),
+            "color": [],
+            "alpha": 1.0
+        }
+        for val in unique_labels
+    ]
+    print("build list time",time.time()-t)
+
+    print("Merge complete. Returning updated labels.")
+    return jsonify(label_names)

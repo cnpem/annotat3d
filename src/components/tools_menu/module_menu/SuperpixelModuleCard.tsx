@@ -61,6 +61,7 @@ const SuperpixelModuleCard: React.FC = () => {
                     }));
 
                     dispatch('LabelLoaded', coloredLabels);
+                    dispatch('labelChanged', '');
                     console.log('Label table updated successfully after watershed.');
                 } else {
                     // Case 2: no labelVec returned — still need to update frontend state
@@ -71,13 +72,14 @@ const SuperpixelModuleCard: React.FC = () => {
                 // Always notify other parts of UI
                 dispatch('superpixelChanged', {});
                 dispatch('superpixelParams', params);
+                dispatch('labelChanged', '');
             })
             .catch((err) => console.error('Error while running hierarchical watershed:', err))
             .finally(() => {
                 setLockMenu(false);
                 setShowLoadingComp(false);
                 void showToast('Hierarchical watershed successfully applied!', timeToast);
-                dispatch('annotationChanged', null);
+                dispatch('labelChanged', '');
             });
     }
 
