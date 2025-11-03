@@ -28,11 +28,16 @@ const SegmentationMenu: React.FC = () => {
 
     useEffect(() => {
         console.log('Segmentation Module changed to:', segModule);
-        if (segModule === 'superpixel' && !showSuperpixel) {
-            dispatch('superpixelVisibilityChanged', true);
-            setShowSuperpixel(true);
+        if (segModule === 'superpixel') {
+            if (!showSuperpixel) {
+                dispatch('superpixelVisibilityChanged', false);
+                setShowSuperpixel(false);
+            } else {
+                dispatch('superpixelVisibilityChanged', true);
+                setShowSuperpixel(true);
+            }
         }
-        if (segModule === 'pixel' && showSuperpixel) {
+        if (segModule === 'pixel') {
             dispatch('superpixelVisibilityChanged', false);
             setShowSuperpixel(false);
         }
