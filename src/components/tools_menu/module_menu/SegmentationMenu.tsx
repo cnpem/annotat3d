@@ -14,7 +14,7 @@ import { LabelInterface } from '../annotation_menu/label_table/LabelInterface';
 const segmentationOptions = [
     { id: 'superpixel', label: 'Superpixel Segmentation' },
     { id: 'pixel', label: 'Pixel Segmentation' },
-    { id: 'deep', label: 'Deep Learning Segmentation' }, // <-- ✅ NEW
+    { id: 'deep', label: 'Deep Learning Segmentation' },
 ];
 
 const SegmentationMenu: React.FC = () => {

@@ -2,7 +2,8 @@ import pickle
 from flask import Blueprint, Flask, request, jsonify
 from flask_cors import cross_origin
 import numpy as np
-from sscAnnotat3D.modules.pre_trained_deep_learning_module import VolumeSegmentationManager
+from sscAnnotat3D.aux_functions import launch_tensorboard
+from sscAnnotat3D.modules.pre_trained_deep_learning_module import DeepSegmentationManager
 from sscAnnotat3D.api.annotation import handle_exception
 from sscAnnotat3D.api.superpixel import _debugger_print
 from sscAnnotat3D.modules.pixel_segmentation_module import PixelSegmentationModule
@@ -10,7 +11,8 @@ from sscAnnotat3D.modules.superpixel_segmentation_module import SuperpixelSegmen
 from sscAnnotat3D.repository import data_repo, module_repo
 from sscAnnotat3D import utils
 
-app = Blueprint("classifier", __name__)
+
+app = Blueprint("segmentation_model", __name__)
 
 def _convert_dtype_to_str(img_dtype: np.dtype):
     """
@@ -82,122 +84,67 @@ def _default_classifier_front(classifier_dict: dict = None):
     return [{}]
 
 
-@app.route("/save_classifier", methods=["POST"])
-@cross_origin()
-def save_classifier():
+def load_pixel_or_superpixel_classifier(path, img):
     """
-    Save a classifier (pixel or superpixel) into a .model file.
-
-    Notes:
-        Used in FileSaveDialog.tsx
-
-    Expects JSON:
-        {
-            "classificationPath": "<path>",
-            "mode": "pixel" | "superpixel"
-        }
+    Loads a scikit-based classifier (pixel or superpixel) from disk,
+    restores its segmentation module, registers it in the repository,
+    and builds the frontend payload.
 
     Returns:
-        (str): "successes" if everything goes well, otherwise an error.
+        (resp: bool, msg: str, payload: dict | None)
     """
+    # ------------------------------
+    # Try to load pickle model file
+    # ------------------------------
     try:
-        path = request.json["classificationPath"]
-        mode = request.json.get("mode", "superpixel")  # default = superpixel
+        with open(path, "rb") as f:
+            model_complete = pickle.load(f)
     except Exception as e:
-        return handle_exception(str(e))
+        return False, f"Unable to load classifier file: {e}", None
 
-    # Select the right module
-    if mode == "pixel":
-        module_key = "pixel_segmentation_module"
-    else:
-        module_key = "superpixel_segmentation_module"
-
-    try:
-        segm_module = module_repo.get_module(key=module_key)
-    except Exception as e:
-        # log técnico (aparece no console, mas não para o usuário)
-        print(f"Error while getting module {module_key}: {e}")
-        
-        # mensagem amigável para o frontend
-        return handle_exception(
-            f"Unable to save the classifier! Please, run again the preprocess and apply in {mode.capitalize()} Segmentation menu and try again this operation"
-        )
-
-    if segm_module is None:
-        return handle_exception("Please, load a classifier first!")
-
-    try:
-        superpixel_state = data_repo.get_superpixel_state()
-        if mode == "pixel":
-            superpixel_state["use_pixel_segmentation"] = True
-    except Exception:
-        return handle_exception("Unable to get superpixel_state")
-
-    try:
-        feature_extraction_params = data_repo.get_feature_extraction_params("feature_extraction_params")
-    except Exception as e:
-        return handle_exception(str(e))
-
-    resp, msg, model_complete = segm_module.save_classifier(
-        path, superpixel_state, feature_extraction_params
-    )
-
-    if not resp:
-        return handle_exception(msg)
-
-    #data_repo.set_classification_model("model_complete", model_complete)
-
-    return jsonify("successes")
-
-@app.route("/load_classifier", methods=["POST"])
-@cross_origin()
-def load_classifier():
-    """
-    Function that loads a classifier .model and updates the back-end and front-end components.
-
-    Returns:
-        (dict): Returns a dict that contains information to dispatch and update the front-end classifier
-    """
-    try:
-        path = request.json["classificationPath"]
-    except Exception as e:
-        return handle_exception(str(e))
-
-    img = data_repo.get_image("image")
-
-    with open(path, "rb") as f:
-        model_complete = pickle.load(f)
-
+    # ------------------------------
+    # Validation
+    # ------------------------------
+    if "superpixel_params" not in model_complete:
+        return False, "Invalid classifier file! Missing superpixel_params", None
 
     superpixel_state = model_complete["superpixel_params"]
     _debugger_print("superpixel_state", superpixel_state)
 
+    # ------------------------------
+    # Pixel vs Superpixel segmentation module
+    # ------------------------------
     if not superpixel_state["pixel_segmentation"]:
         from sscAnnotat3D.superpixels import superpixel_extraction
 
-        superpixels, max_superpixel_label = superpixel_extraction(img, superpixel_type= superpixel_state["superpixel_type"],
-                                                                    seed_spacing = superpixel_state["waterpixels_seed_spacing"],
-                                                                    compactness = superpixel_state["waterpixels_compactness"])
+        superpixels, _ = superpixel_extraction(
+            img,
+            superpixel_type=superpixel_state["superpixel_type"],
+            seed_spacing=superpixel_state["waterpixels_seed_spacing"],
+            compactness=superpixel_state["waterpixels_compactness"]
+        )
+
         segm_module = SuperpixelSegmentationModule(img, superpixels)
         module_key = "superpixel_segmentation_module"
-
-        if "superpixel_params" not in model_complete:
-            return handle_exception("Invalid classifier file! Missing superpixel_params")
 
     else:
         segm_module = PixelSegmentationModule(img)
         module_key = "pixel_segmentation_module"
 
-    # === Step 3: load the classifier into the chosen module ===
+    # ------------------------------
+    # Load classifier inside the module
+    # ------------------------------
     resp, msg, model_complete = segm_module.load_classifier(model_complete)
     if not resp:
-        return handle_exception(msg)
+        return False, msg, None
 
-    # === Step 4: register the module ===
+    # Register new segmentation module
     module_repo.set_module(module_key, segm_module)
     data_repo.set_classification_model("model_complete", model_complete)
 
-    # === Step 5: build frontend payload ===
+    # ------------------------------
+    # Build Frontend Payload
+    # ------------------------------
     front_end_superpixel = {
         "method": superpixel_state["superpixel_type"],
         "compactness": superpixel_state["waterpixels_compactness"],
@@ -205,6 +152,7 @@ def load_classifier():
     }
 
     params_front = _default_classifier_front(model_complete["classifier_params"])
+
     front_end_classifier = {
         "classifier": model_complete["classifier_params"]["classifier_type"],
         "params": params_front,
@@ -223,18 +171,138 @@ def load_classifier():
         ),
     }
 
-    front_end_payload = {
+    payload = {
         "superpixel_parameters": front_end_superpixel,
         "use_pixel_segmentation": superpixel_state["pixel_segmentation"],
         "classifier_parameters": front_end_classifier,
         "feature_extraction_params": feature_extraction_params,
     }
 
-    data_repo.set_info(key="model_loaded_paramaters", data=front_end_payload)
+    data_repo.set_info(key="model_loaded_paramaters", data=payload)
     data_repo.set_info(key="model_status", data={'loaded': True, 'trained': False})
 
-    return jsonify(front_end_payload)
+    return True, "Classifier loaded successfully", payload
 
+
+@app.route("/save_segmentation_model", methods=["POST"])
+@cross_origin()
+def save_segmentation_model():
+    """
+    Save a classifier (pixel or superpixel) into a .model file.
+
+    Notes:
+        Used in FileSaveDialog.tsx
+
+    Expects JSON:
+        {
+            "classificationPath": "<path>",
+            "mode": "pixel" | "superpixel" | "deep"
+        }
+
+    Returns:
+        (str): "successes" if everything goes well, otherwise an error.
+    """
+    try:
+        path = request.json["classificationPath"]
+        mode = request.json.get("mode", "superpixel")  # default = superpixel
+    except Exception as e:
+        return handle_exception(str(e))
+    
+    
+    if isinstance(mode, str):
+        mode = mode.strip().replace('"', "")
+
+
+    # Select the right module
+    if mode == "pixel":
+        module_key = "pixel_segmentation_module"
+    elif mode == "deep":
+        module_key = "deep_learning_segmentation_module"
+    else:
+        module_key = "superpixel_segmentation_module"
+
+    print("Module Key", module_key)
+
+    try:
+        segm_module = module_repo.get_module(key=module_key)
+    except Exception as e:
+        # log técnico (aparece no console, mas não para o usuário)
+        print(f"Error while getting module {module_key}: {e}")
+        
+        # mensagem amigável para o frontend
+        return handle_exception(
+            f"Unable to save the segmentation module! Please, run train the the model {mode.capitalize()} in segmentation menu and try again this operation"
+        )
+
+    if segm_module is None:
+        return handle_exception(f"Please, train a {mode.capitalize()} segmentation module first!")
+
+    try:
+        superpixel_state = data_repo.get_superpixel_state()
+        if mode == "pixel":
+            superpixel_state["use_pixel_segmentation"] = True
+    except Exception:
+        return handle_exception("Unable to get superpixel_state")
+
+    if mode != "deep":
+
+        resp, msg  = segm_module.save_model(
+            path
+        )
+        if not resp:
+            return handle_exception(msg)
+
+    return jsonify("successes")
+
+@app.route("/load_segmentation_model", methods=["POST"])
+@cross_origin()
+def load_segmentation_model():
+    """
+    Function that loads a classifier (.model) file.
+    - For pixel/superpixel: loads scikit model (RandomForest, SVM, etc.)
+    - For deep segmentation: calls DeepSegmentationManager.load_model(path)
+
+    Returns:
+        dict sent to frontend to update UI and reload configuration
+    """
+
+    # === Step 1: get parameters from frontend ===
+    try:
+        path = request.json["classificationPath"]
+        mode = request.json.get("mode", "superpixel")  # default = superpixel
+    except Exception as e:
+        return handle_exception(str(e))
+
+    # ----------------------------------------------------------------------
+    #  DEEP LEARNING SEGMENTATION
+    # ----------------------------------------------------------------------
+    if mode == "deep":
+
+        # Try to get existing module
+        segm_module = module_repo.get_module_or_none("deep_learning_segmentation_module")
+
+        # If not exists, instantiate a new module (NO TRAINING REQUIRED)
+        if segm_module is None:
+
+            segm_module = DeepSegmentationManager()  # no model yet
+            module_repo.set_module("deep_learning_segmentation_module", segm_module)
+
+        # Now we can load the model weights
+        resp, msg = segm_module.load_model(path)
+        if not resp:
+            return handle_exception(msg)
+
+        return jsonify(msg)
+    # ----------------------------------------------------------------------
+    #  PIXEL / SUPERPIXEL CLASSIFIERS (existing logic with pickle)
+    # ----------------------------------------------------------------------
+    img = data_repo.get_image("image")
+    if mode != "deep":  # pixel or superpixel
+        resp, msg, payload = load_pixel_or_superpixel_classifier(path, img)
+        if not resp:
+            return handle_exception(msg)
+
+        return jsonify(payload)
 
 # =====================
 # MODEL STATUS CHECK
@@ -430,9 +498,6 @@ def execute(segm_type):
     """
     segm_module = module_repo.get_module(key=f"{segm_type}_segmentation_module")
 
-    annotation_slice_dict = module_repo.get_module("annotation").get_annotation_slice_dict()
-    annotation_image = module_repo.get_module("annotation").annotation_image
-
     model_status = data_repo.get_info(key="model_status") or {}
     if (
         not (model_status.get("trained") or model_status.get("loaded"))
@@ -456,14 +521,60 @@ def execute(segm_type):
 # =====================
 # DEEP LEARNING CLASSIFIER
 # =====================
+@app.route("/pre_trained_deep_learning/init", methods=["POST"])
+@cross_origin()
+def init_deep_training():
+    """
+    Start TensorBoard and return its URL.
+    Only launches a new instance if one is not already running.
+    """
+    body = request.json
+
+    # read logDir from frontend (can be null or a path)
+    log_dir = body.get("logDir", None)
+
+    # if backend should decide path
+    if log_dir is None:
+        from os import getenv
+        base = getenv("REACT_APP_OUTPUT_PATH", "runs/DeepSeg")
+        log_dir = base
+
+
+    # ✅ check if writer already exists
+    writer_info = data_repo.get_info("tensorboard_writer")
+
+    if writer_info is not None:
+        # TensorBoard already initialized → just return existing URL
+        existing_url = writer_info.get("url", None)
+        if existing_url:
+            return jsonify({"tensorboard_url": existing_url})
+
+        # If writer exists but url not stored (should not happen),
+        # we treat as no TB instance and relaunch normally.
+
+    # ✅ Launch TensorBoard only if needed
+    writer, url = launch_tensorboard(log_dir)
+
+    # store both writer + url (not only writer)
+    data_repo.set_info(
+        key="tensorboard_writer",
+        data={"writer": writer, "url": url}
+    )
+
+    return jsonify({"tensorboard_url": url})
+
+
+
 @app.route("/pre_trained_deep_learning/train", methods=["POST"])
 @cross_origin()
 def train_deep_segmentation():
 
-    finetune      = request.args.get("finetune", "false").lower() == "true"
-    data_aug      = request.json.get("dataAug", True)
-    learning_rate = request.json.get("lr", 1e-4)
-    num_epochs    = request.json["epochs"]
+    continue_training = request.json.get("continueTraining", False)
+    data_aug         = request.json.get("dataAug", True)
+    learning_rate    = request.json.get("lr", 1e-4)
+    num_epochs       = request.json["epochs"]
+    selected_labels  = request.json["selectedLabels"]
+    n_classes        = len(selected_labels)
 
     annotation_module = module_repo.get_module("annotation")
     annotation_slice_dict = annotation_module.get_annotation_slice_dict()
@@ -474,21 +585,32 @@ def train_deep_segmentation():
             "Unable to train! Please, at least create one label and background annotation and try again."
         )
 
-    deep_module = module_repo.get_module("deep_module")
+    # Try to retrieve existing deep model
+    deep_module = module_repo.get_module("deep_learning_segmentation_module")
 
-    # === CASE 1: Finetune ======================================================
-    if finetune:
-        if deep_module is None:
-            return handle_exception("No existing model available to finetune.")
-        print("🔁 Finetuning existing model...")
-    else:
-        # === CASE 2: New Training ==============================================
+    # ================================================================
+    # CASE 1: CONTINUE TRAINING (finetune)
+    # ================================================================
+    if continue_training and deep_module is not None:
+        print("🔁 Training continuation requested...")
+
+        # Check if number of classes matches
+        if hasattr(deep_module, "num_classes") and deep_module.num_classes == n_classes:
+            print("✅ Continuing training from existing model (same number of classes)")
+        else:
+            print("⚠️ Existing model has different #classes → starting from zero")
+            deep_module = None  # force recreation
+
+    # ================================================================
+    # CASE 2: TRAIN FROM ZERO (new model)
+    # ================================================================
+    if deep_module is None:
+        print("🚀 Creating NEW model...")
+
         try:
-            encoder       = "resnet50"
+            encoder        = "resnet50"
             encoderweights = "imagenet"
             dropout        = 0.5
-            selectedLabels = request.json["selectedLabels"]
-            n_classes      = len(selectedLabels)
 
             import segmentation_models_pytorch as smp
             from aux_functions import convert_batchnorm_to_groupnorm
@@ -505,31 +627,39 @@ def train_deep_segmentation():
             # Replace BatchNorm → GroupNorm
             model = convert_batchnorm_to_groupnorm(model, num_groups=8)
 
-            deep_module = VolumeSegmentationManager(
+            deep_module = DeepSegmentationManager(
                 model,
                 ignore_index=-1,
                 num_classes=n_classes,
-                selected_labels = selectedLabels, 
+                selected_labels=selected_labels,
             )
 
-            module_repo.set_module("deep_module", deep_module)
+            module_repo.set_module("deep_learning_segmentation_module", deep_module)
 
         except Exception as e:
             return handle_exception(f"Unable to create model! {e}")
 
-    # === TRAIN =================================================================
+    # ================================================================
+    # TRAIN
+    # ================================================================
     try:
         img = data_repo.get_image("image")
 
+        deep_module.selected_labels = selected_labels  # update if changed
+
         deep_module.prepare_training_data(img, annotation_image, annotation_slice_dict)
+
+        writer_dict = data_repo.get_info("tensorboard_writer")
+        writer = writer_dict["writer"] if writer_dict else None
 
         deep_module.train(
             epochs=num_epochs,
             lr=learning_rate,
-            data_aug=data_aug
+            data_aug=data_aug,
+            writer=writer
         )
 
-        module_repo.set_module("deep_module", deep_module)
+        module_repo.set_module("deep_learning_segmentation_module", deep_module)
 
     except Exception as e:
         return handle_exception(f"Unable to Train! {e}")
@@ -546,7 +676,7 @@ def preview_deep_segmentation():
     """
 
     # -------- INPUT VALIDATION --------
-    deep_module = module_repo.get_module("deep_module")
+    deep_module = module_repo.get_module("deep_learning_segmentation_module")
 
     if deep_module is None:
         return handle_exception(
@@ -587,7 +717,7 @@ def execute_deep_segmentation():
     """
     Executes the trained deep learning model and segments the entire volume.
     """
-    deep_module = module_repo.get_module("deep_module")
+    deep_module = module_repo.get_module("deep_learning_segmentation_module")
 
     if deep_module is None:
         return handle_exception(

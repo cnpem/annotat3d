@@ -1,8 +1,5 @@
-// src/components/ModuleCards/DeepSegmentationModuleCard.tsx
-
-import { IonItem, IonLabel, IonInput, IonList, IonSelect, IonSelectOption, IonNote, useIonToast } from '@ionic/react';
-
-import React, { useState } from 'react';
+import { IonItem, IonLabel, IonInput, IonList, IonNote, IonPopover, useIonToast, IonToggle } from '@ionic/react';
+import React, { useRef, useState } from 'react';
 import { sfetch } from '../../../utils/simplerequest';
 import { currentEventValue, dispatch } from '../../../utils/eventbus';
 
@@ -10,28 +7,66 @@ import LoadingComponent from '../utils/LoadingComponent';
 import ErrorWindowComp from '../../main_menu/file/utils/ErrorWindowComp';
 import { ModuleCard, ModuleCardItem } from './ModuleCard';
 import { LabelInterface } from '../annotation_menu/label_table/LabelInterface';
-import './DeepSegmentationModuleCard.css';
+import { useStorageState } from 'react-storage-hooks';
 
 interface DeepSegmentationModuleCardProps {
     availableLabels: LabelInterface[];
 }
 
-const ALL_LABELS_KEY = -1; // Use a special number to represent "ALL"
-
 const DeepSegmentationModuleCard: React.FC<DeepSegmentationModuleCardProps> = ({ availableLabels }) => {
+    // --- training params ---
     const [epochs, setEpochs] = useState(200);
     const [learningRate, setLearningRate] = useState(1e-4);
-    const [selectedLabels, setSelectedLabels] = useState<number[]>([]);
 
+    // --- selection state ---
+    const [selectedLabels, setSelectedLabels] = useStorageState<number[]>(localStorage, 'labelsSelected', []);
+
+    const [continueTraining, setContinueTraining] = useState(true);
+    const [dataAug, setDataAug] = useState(true);
+    // --- popover state for custom selector ---
+    const [labelsPopoverOpen, setLabelsPopoverOpen] = useState(false);
+    const popoverEvent = useRef<MouseEvent | undefined>(undefined);
+
+    // --- ui state ---
     const [showLoading, setShowLoading] = useState(false);
     const [loadingMsg, setLoadingMsg] = useState('');
-
     const [showError, setShowError] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
     const [showToast] = useIonToast();
     const timeToast = 2000;
 
+    const [extraContent, setExtraContent] = useState<React.ReactNode>(null);
+
+    // -------------------------------------------------------------
+    // HELPERS: custom selector (popover)
+    // -------------------------------------------------------------
+    function openLabelsPopover(e: React.MouseEvent | CustomEvent) {
+        popoverEvent.current = (e as any).nativeEvent || undefined;
+        setLabelsPopoverOpen(true);
+    }
+
+    function toggleLabel(id: number) {
+        // if selecting the same label again → deselect it
+        if (selectedLabels.length === 1 && selectedLabels[0] === id) {
+            setSelectedLabels([]);
+            return;
+        }
+
+        // Selecting one label → replace everything with that one
+        setSelectedLabels([id]);
+    }
+
+    function selectAllOrNone() {
+        const allIds = availableLabels.map((l) => l.id);
+
+        // If all already selected → clear selection
+        if (selectedLabels.length === allIds.length) {
+            setSelectedLabels([]);
+        } else {
+            setSelectedLabels(allIds);
+        }
+    }
     // -------------------------------------------------------------
     // TRAIN BUTTON
     // -------------------------------------------------------------
@@ -42,23 +77,53 @@ const DeepSegmentationModuleCard: React.FC<DeepSegmentationModuleCardProps> = ({
             return;
         }
 
-        setLoadingMsg('Training Deep Learning model...');
+        setLoadingMsg('Starting TensorBoard...');
         setShowLoading(true);
 
-        const body = {
-            epochs,
-            lr: learningRate,
-            selectedLabels,
-        };
-        console.log('Selected Labels', selectedLabels);
+        sfetch('POST', '/pre_trained_deep_learning/init', JSON.stringify({ logDir: null }), 'json')
+            .then((resp: any) => {
+                const url = String(resp.tensorboard_url);
 
-        sfetch('POST', '/pre_trained_deep_learning/train', JSON.stringify(body), 'json')
+                console.log('TensorBoard URL:', url);
+
+                setLoadingMsg('Training Deep Learning Model...');
+
+                setExtraContent(
+                    <button
+                        style={{
+                            padding: '6px 14px',
+                            fontSize: '14px',
+                            borderRadius: '6px',
+                            backgroundColor: '#3880ff',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                        }}
+                        onClick={() => window.open(url, '_blank')}
+                    >
+                        Open TensorBoard
+                    </button>
+                );
+
+                return sfetch(
+                    'POST',
+                    '/pre_trained_deep_learning/train',
+                    JSON.stringify({
+                        epochs,
+                        lr: learningRate,
+                        selectedLabels,
+                        continueTraining,
+                        dataAug,
+                    }),
+                    'json'
+                );
+            })
             .then(() => {
-                void showToast('Deep Learning training complete ✅', timeToast);
+                void showToast('Training finished ✅', timeToast);
             })
             .catch((error: any) => {
                 setShowError(true);
-                setErrorMsg(error.error_msg || 'Training failed');
+                setErrorMsg(error?.error_msg || 'Training failed');
             })
             .finally(() => {
                 setShowLoading(false);
@@ -81,7 +146,7 @@ const DeepSegmentationModuleCard: React.FC<DeepSegmentationModuleCardProps> = ({
             })
             .catch((error: any) => {
                 setShowError(true);
-                setErrorMsg(error.error_msg || 'Preview failed');
+                setErrorMsg(error?.error_msg || 'Preview failed');
             })
             .finally(() => {
                 setShowLoading(false);
@@ -102,13 +167,16 @@ const DeepSegmentationModuleCard: React.FC<DeepSegmentationModuleCardProps> = ({
             })
             .catch((error: any) => {
                 setShowError(true);
-                setErrorMsg(error.error_msg || 'Segmentation failed');
+                setErrorMsg(error?.error_msg || 'Segmentation failed');
             })
             .finally(() => {
                 setShowLoading(false);
             });
     }
 
+    // -------------------------------------------------------------
+    // RENDER
+    // -------------------------------------------------------------
     return (
         <ModuleCard
             name="Deep Learning Segmentation"
@@ -119,6 +187,7 @@ const DeepSegmentationModuleCard: React.FC<DeepSegmentationModuleCardProps> = ({
             PreviewName="Preview (slice)"
             ApplyName="Run full volume"
         >
+            {/* --- Training Parameters --- */}
             <ModuleCardItem name="Training Parameters">
                 <IonItem>
                     <IonLabel position="stacked">Epochs</IonLabel>
@@ -137,50 +206,94 @@ const DeepSegmentationModuleCard: React.FC<DeepSegmentationModuleCardProps> = ({
                         onIonChange={(e) => setLearningRate(parseFloat(e.detail.value!))}
                     />
                 </IonItem>
+
+                <IonItem>
+                    <IonLabel>Data augmentation</IonLabel>
+                    <IonToggle checked={dataAug} onIonChange={(e) => setDataAug(e.detail.checked)} />
+                </IonItem>
+
+                <IonNote style={{ marginLeft: '16px' }}>
+                    {dataAug ? 'Random augmentations enabled' : 'No augmentation applied'}
+                </IonNote>
+
+                <IonItem>
+                    <IonLabel>Continue training</IonLabel>
+                    <IonToggle checked={continueTraining} onIonChange={(e) => setContinueTraining(e.detail.checked)} />
+                </IonItem>
+
+                <IonNote style={{ marginLeft: '16px' }}>
+                    {continueTraining ? 'Continue training from previous weights' : 'Train from zero (fresh start)'}
+                </IonNote>
             </ModuleCardItem>
+
+            {/* --- Output Labels --- */}
             <ModuleCardItem name="Output Labels (select annotation classes)">
-                <IonList>
-                    <IonSelect
-                        interface="popover"
-                        interfaceOptions={{ cssClass: 'labels-popover' }}
-                        value={selectedLabels.length === availableLabels.length ? ALL_LABELS_KEY : selectedLabels}
-                        onIonChange={(e) => {
-                            const value = e.detail.value;
-                            const allIds = availableLabels.map((lbl) => lbl.id);
+                {/* Closed “selector” row (click to open popover) */}
+                <IonItem button onClick={openLabelsPopover}>
+                    <IonLabel>
+                        {selectedLabels.length === 0 && 'Select labels'}
+                        {selectedLabels.length === availableLabels.length && 'All labels selected'}
+                        {selectedLabels.length === 1 &&
+                            availableLabels.find((l) => l.id === selectedLabels[0])?.labelName}
+                    </IonLabel>
+                </IonItem>
 
-                            if (value === ALL_LABELS_KEY) {
-                                const selectingAll = selectedLabels.length !== allIds.length;
-                                setSelectedLabels(selectingAll ? allIds : []);
-                                return;
-                            }
+                {/* Custom Popover with colored items */}
+                <IonPopover
+                    isOpen={labelsPopoverOpen}
+                    event={popoverEvent.current}
+                    onDidDismiss={() => setLabelsPopoverOpen(false)}
+                    className="labels-popover" // keep the class if you want to style globally too
+                >
+                    <IonList style={{ minWidth: '260px' }}>
+                        {/* Select All / Unselect All */}
+                        <IonItem button onClick={selectAllOrNone}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div
+                                    style={{
+                                        width: 15,
+                                        height: 15,
+                                        borderRadius: 4,
+                                        background: '#888',
+                                    }}
+                                />
+                                <IonLabel>
+                                    {selectedLabels.length === availableLabels.length ? 'Unselect All' : 'Select All'}
+                                </IonLabel>
+                            </div>
+                        </IonItem>
 
-                            const newLabel = Number(value);
-                            if (!selectedLabels.includes(newLabel)) {
-                                setSelectedLabels([...selectedLabels, newLabel]);
-                            }
-                        }}
-                    >
-                        <IonSelectOption value={ALL_LABELS_KEY}>All labels</IonSelectOption>
-
-                        {availableLabels.map((lbl) => {
-                            const squareColor = `rgb(${lbl.color[0]}, ${lbl.color[1]}, ${lbl.color[2]})`;
+                        {/* Actual labels */}
+                        {availableLabels.map((label) => {
+                            const isSelected = selectedLabels.includes(label.id);
+                            const color = `rgb(${label.color[0]}, ${label.color[1]}, ${label.color[2]})`;
                             return (
-                                <IonSelectOption
-                                    key={lbl.id}
-                                    value={lbl.id}
-                                    className="option-square"
-                                    style={{ ['--square-color' as any]: squareColor }}
-                                >
-                                    {lbl.labelName}
-                                </IonSelectOption>
+                                <IonItem key={label.id} button onClick={() => toggleLabel(label.id)} detail={false}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <div
+                                            className="round-bar"
+                                            style={{
+                                                width: 15,
+                                                height: 15,
+                                                borderRadius: 4,
+                                                background: color,
+                                                opacity: isSelected ? 1 : 0.35,
+                                            }}
+                                        />
+                                        <IonLabel style={{ fontWeight: isSelected ? 600 : 400 }}>
+                                            {label.labelName}
+                                        </IonLabel>
+                                    </div>
+                                </IonItem>
                             );
                         })}
-                    </IonSelect>
-                </IonList>
+                    </IonList>
+                </IonPopover>
 
                 <IonNote>Select a label. Selecting All labels selects every label.</IonNote>
             </ModuleCardItem>
 
+            {/* --- Error & Loading --- */}
             <ErrorWindowComp
                 errorMsg={errorMsg}
                 headerMsg="Deep Segmentation Error"
@@ -189,7 +302,7 @@ const DeepSegmentationModuleCard: React.FC<DeepSegmentationModuleCardProps> = ({
                 onErrorFlag={setShowError}
             />
 
-            <LoadingComponent openLoadingWindow={showLoading} loadingText={loadingMsg} />
+            <LoadingComponent openLoadingWindow={showLoading} loadingText={loadingMsg} extraContent={extraContent} />
         </ModuleCard>
     );
 };

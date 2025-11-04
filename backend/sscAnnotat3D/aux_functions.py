@@ -1583,3 +1583,59 @@ def convert_batchnorm_to_groupnorm(model, num_groups=8):
             convert_batchnorm_to_groupnorm(module, num_groups=num_groups)
 
     return model
+
+from tensorboard import program
+from torch.utils.tensorboard import SummaryWriter
+import threading
+import socket
+import os
+
+def launch_tensorboard(log_dir: str):
+    import logging
+    logging.getLogger("tensorboard").setLevel(logging.ERROR)
+    logging.getLogger("werkzeug").setLevel(logging.ERROR)
+    logging.getLogger("absl").setLevel(logging.ERROR)
+
+    os.makedirs(log_dir, exist_ok=True)
+
+    writer = SummaryWriter(log_dir)
+    tb = program.TensorBoard()
+
+    tb.configure(
+        argv=[
+            None,
+            "--bind_all",
+            "--logdir", log_dir,
+            "--reload_interval", "5.0",
+            "--port", "0",
+        ]
+    )
+
+    server = tb._make_server()
+
+    threading.Thread(
+        target=server.serve_forever,
+        daemon=True,
+        name=f"TensorBoard-{log_dir}"
+    ).start()
+
+    url = server.get_url()  # e.g., http://mary.abtlus.org:46583/
+
+    # === fix hostname ===
+    hostname = socket.getfqdn()
+    url = url.replace("localhost", hostname)
+
+    # ✅ insert .lnls.br BEFORE the colon (before port)
+    protocol, rest = url.split("://", 1)
+
+    if ":" in rest:
+        host, port = rest.split(":", 1)
+    else:
+        host, port = rest, ""
+
+    host = f"{host}.lnls.br"  # <--- EXACT FIX HERE
+
+    url = f"{protocol}://{host}:{port}" if port else f"{protocol}://{host}"
+
+    print(f"🚀 TensorBoard running on: {url}")
+    return writer, url

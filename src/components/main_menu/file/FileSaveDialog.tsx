@@ -156,26 +156,24 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                 pathSaveFiles.workspacePath !== ''
                     ? pathSaveFiles.workspacePath + pathSaveFiles.classificationPath
                     : pathSaveFiles.classificationPath,
-            mode: useSuperpixelModule ? 'superpixel' : 'pixel',
+            mode: (sessionStorage.getItem('curSegModule') as string) || 'superpixel',
         };
 
         let msgReturned = '';
         let isError = false;
+        console.log('Seg mode to save:', backendPayload.mode);
 
-        await sfetch('POST', '/save_classifier', JSON.stringify(backendPayload), 'json')
+        await sfetch('POST', '/save_segmentation_model', JSON.stringify(backendPayload), 'json')
             .then((success: string) => {
-                if (useSuperpixelModule) {
-                    msgReturned = `Superpixel model saved as ${pathSaveFiles.classificationPath}. To save a pixel model, please switch to pixel segmentation mode.`;
-                } else {
-                    msgReturned = `Pixel model saved as ${pathSaveFiles.classificationPath}. To save a superpixel model, please switch to superpixel segmentation mode.`;
-                }
+                msgReturned = `${backendPayload.mode} model saved as ${pathSaveFiles.classificationPath}. To save a another segmentation model, please switch to the desired segmentation mode.`;
+
                 console.log(success);
             })
             .catch((error: ErrorInterface) => {
                 msgReturned = error.error_msg;
                 isError = true;
-                console.log('Error message while trying to save the classifier model', error.error_msg);
-                setHeaderErrorMsg(`error while saving the classifier model`);
+                console.log('Error message while trying to save the segmentation model', error.error_msg);
+                setHeaderErrorMsg(`error while saving the segmentation model`);
                 setErrorMsg(error.error_msg);
                 setShowErrorWindow(true);
             });
@@ -501,15 +499,15 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                 <IonItem slot={'header'}>
                                     <IonIcon slot={'start'} icon={barChart} />
                                     <IonLabel>
-                                        <small>Save Classifier</small>
+                                        <small>Save Segmentation Model</small>
                                     </IonLabel>
                                 </IonItem>
                                 <IonList slot="content">
                                     <IonItem>
-                                        <IonLabel position="stacked">Classifier Path</IonLabel>
+                                        <IonLabel position="stacked">Model Name</IonLabel>
                                         <IonInput
                                             clearInput
-                                            placeholder={'classifier.model'}
+                                            placeholder={'name.model'}
                                             value={pathSaveFiles.classificationPath}
                                             onIonChange={(e: CustomEvent) =>
                                                 setSavePathFiles({

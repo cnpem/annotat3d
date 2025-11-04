@@ -24,9 +24,9 @@ import segmentation_models_pytorch as smp
 # -------------------------------------------------------------------------
 # --- Main Manager --------------------------------------------------------
 # -------------------------------------------------------------------------
-class VolumeSegmentationManager:
+class DeepSegmentationManager:
     """
-    3D segmentation manager with automatic GPU memory-aware patch splitting.
+    2.5D segmentation manager with automatic GPU memory-aware patch splitting.
     """
 
     def __init__(
@@ -45,6 +45,7 @@ class VolumeSegmentationManager:
         self.target_mean = target_mean
         self.ignore_index = ignore_index
         self.selected_labels = selected_labels
+        self.start_epoch = 0
 
         # try to infer num_classes if not provided
         if num_classes is None:
@@ -279,7 +280,7 @@ class VolumeSegmentationManager:
     # ---------------------------------------------------------------------
     # Training loop (binary or multiclass)
     # ---------------------------------------------------------------------
-    def train(self, device="cuda:0", epochs=200, lr=1e-4, data_aug = True):
+    def train(self, device="cuda:0", epochs=200, lr=1e-4, data_aug=True, writer=None):
         """
         Train the model for either binary or multiclass segmentation.
     
@@ -317,7 +318,7 @@ class VolumeSegmentationManager:
         optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
     
         # === Training loop ===
-        for epoch in range(epochs):
+        for epoch in range(self.start_epoch, self.start_epoch + epochs):
             n_samples = 0
             epoch_loss = 0.0
             
@@ -341,9 +342,12 @@ class VolumeSegmentationManager:
     
     
             train_loss = epoch_loss / (n_samples // self.batch_size + 1)
+            if writer:
+                writer.add_scalar("training/loss", train_loss, epoch+1)
             print(f" Epoch {epoch+1} | Loss={train_loss:.4f}")
     
         print(" Training complete.")
+        self.start_epoch = self.start_epoch + epochs
 
 
     # ---------------------------------------------------------------------
@@ -492,4 +496,59 @@ class VolumeSegmentationManager:
             pred_mean = torch.argmax(pred_mean, dim=1).to(torch.uint8)  # (Z, Y, X)
     
         return pred_mean.squeeze().cpu().numpy()
+    
+    # ---------------------------------------------------------------------
+    # Save & Load
+    # ---------------------------------------------------------------------
+    def save_model(self, path: str):
+        try:
+            checkpoint = {
+                "state_dict": self.model.state_dict(),
+                "selected_labels": self.selected_labels,
+                "num_classes": self.num_classes,
+                "ignore_index": self.ignore_index,
+                "mean": self.mean,
+                "std": self.std,
+                "base": self.base,
+                "target_std": self.target_std,
+                "target_mean": self.target_mean,
+                "last_epoch": getattr(self, "last_epoch", 0),   
+            }
 
+            torch.save(checkpoint, path)
+            return True, f"✅ Model saved to: {path}"
+
+        except Exception as e:
+            return False, f"❌ Error while saving model: {e}"
+
+
+    def load_model(self, path: str, device="cuda:0"):
+        try:
+            checkpoint = torch.load(path, map_location=device)
+
+            self.model.load_state_dict(checkpoint["state_dict"])
+            self.model.to(device)
+            self.model.eval()
+
+            self.selected_labels = checkpoint["selected_labels"]
+            self.num_classes = checkpoint["num_classes"]
+            self.ignore_index = checkpoint["ignore_index"]
+            self.mean = checkpoint["mean"]
+            self.std = checkpoint["std"]
+            self.base = checkpoint["base"]
+            self.target_std = checkpoint["target_std"]
+            self.target_mean = checkpoint["target_mean"]
+            self.is_binary = (self.num_classes == 1)
+
+            self.start_epoch = checkpoint.get("last_epoch", 0)   
+
+            msg = (
+                f"✅ Model loaded from: {path}\n"
+                f"   selected_labels = {self.selected_labels}\n"
+                f"   num_classes     = {self.num_classes}"
+            )
+
+            return True, msg
+
+        except Exception as e:
+            return False, f"❌ Error while loading model: {e}"

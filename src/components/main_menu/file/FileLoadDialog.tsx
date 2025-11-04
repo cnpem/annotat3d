@@ -685,15 +685,15 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
                                 <IonItem slot={'header'}>
                                     <IonIcon slot={'start'} icon={barChart} />
                                     <IonLabel>
-                                        <small>Load Classifier</small>
+                                        <small>Load Segmentation Model</small>
                                     </IonLabel>
                                 </IonItem>
                                 <IonList slot="content">
                                     <IonItem>
-                                        <IonLabel position="stacked">Classifier Path</IonLabel>
+                                        <IonLabel position="stacked">Segmentation Model Path</IonLabel>
                                         <IonInput
                                             clearInput
-                                            placeholder={'/path/to/classifier.model'}
+                                            placeholder={'/path/to/load.model'}
                                             value={pathFiles.classificationPath}
                                             onIonChange={(e: CustomEvent) =>
                                                 setPathFiles({
