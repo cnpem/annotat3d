@@ -168,7 +168,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         let isError = false;
         console.table(backendPayload);
         // TODO : need to make just one dispatch later here
-        await sfetch('POST', '/load_classifier', JSON.stringify(backendPayload), 'json')
+        await sfetch('POST', '/load_segmentation_model', JSON.stringify(backendPayload), 'json')
             .then((frontPayload: BackEndLoadClassifier) => {
                 msgReturned = `${pathFiles.classificationPath} loaded as .model`;
                 // informs canvas that the superpixel image was deleted

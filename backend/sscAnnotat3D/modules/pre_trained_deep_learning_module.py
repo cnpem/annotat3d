@@ -503,6 +503,7 @@ class DeepSegmentationManager:
     def save_model(self, path: str):
         try:
             checkpoint = {
+                "model_type": "deep",
                 "state_dict": self.model.state_dict(),
                 "selected_labels": self.selected_labels,
                 "num_classes": self.num_classes,
@@ -513,6 +514,10 @@ class DeepSegmentationManager:
                 "target_std": self.target_std,
                 "target_mean": self.target_mean,
                 "last_epoch": getattr(self, "last_epoch", 0),   
+
+                # NEW — store architecture details
+                "encoder": getattr(self.model, "encoder_name", "resnet50"),
+                "encoder_weights": "imagenet",
             }
 
             torch.save(checkpoint, path)
@@ -526,10 +531,26 @@ class DeepSegmentationManager:
         try:
             checkpoint = torch.load(path, map_location=device)
 
-            self.model.load_state_dict(checkpoint["state_dict"])
-            self.model.to(device)
-            self.model.eval()
+            import segmentation_models_pytorch as smp
+            from sscAnnotat3D.aux_functions import convert_batchnorm_to_groupnorm
 
+            # 🔥 recreate model from metadata
+            model = smp.DeepLabV3Plus(
+                encoder_name=checkpoint.get("encoder", "resnet50"),
+                encoder_weights=None,     # weights come from state_dict
+                in_channels=1,
+                classes=checkpoint["num_classes"],
+                decoder_attention_type="scse",
+                aux_params={"classes": checkpoint["num_classes"]},
+            )
+
+            model = convert_batchnorm_to_groupnorm(model, num_groups=8)
+
+            model.load_state_dict(checkpoint["state_dict"])
+            model.to(device)
+            model.eval()
+
+            self.model = model
             self.selected_labels = checkpoint["selected_labels"]
             self.num_classes = checkpoint["num_classes"]
             self.ignore_index = checkpoint["ignore_index"]
@@ -538,17 +559,11 @@ class DeepSegmentationManager:
             self.base = checkpoint["base"]
             self.target_std = checkpoint["target_std"]
             self.target_mean = checkpoint["target_mean"]
+            self.start_epoch = checkpoint.get("last_epoch", 0)
+
             self.is_binary = (self.num_classes == 1)
 
-            self.start_epoch = checkpoint.get("last_epoch", 0)   
-
-            msg = (
-                f"✅ Model loaded from: {path}\n"
-                f"   selected_labels = {self.selected_labels}\n"
-                f"   num_classes     = {self.num_classes}"
-            )
-
-            return True, msg
+            return True, f"✅ Deep model loaded from: {path}"
 
         except Exception as e:
-            return False, f"❌ Error while loading model: {e}"
+            return False, f"❌ Error while loading deep model: {e}"

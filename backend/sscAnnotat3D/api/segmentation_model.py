@@ -244,11 +244,23 @@ def save_segmentation_model():
     except Exception:
         return handle_exception("Unable to get superpixel_state")
 
-    if mode != "deep":
+    if mode == "deep":
 
         resp, msg  = segm_module.save_model(
             path
         )
+        if not resp:
+            return handle_exception(msg)
+
+    else:
+        try:
+            feature_extraction_params = data_repo.get_feature_extraction_params("feature_extraction_params")
+        except Exception as e:
+            return handle_exception(str(e))
+        resp, msg, model_complete = segm_module.save_classifier(
+            path, superpixel_state, feature_extraction_params
+        )
+
         if not resp:
             return handle_exception(msg)
 
@@ -258,110 +270,115 @@ def save_segmentation_model():
 @cross_origin()
 def load_segmentation_model():
     """
-    Function that loads a classifier (.model) file.
-    - For pixel/superpixel: loads scikit model (RandomForest, SVM, etc.)
-    - For deep segmentation: calls DeepSegmentationManager.load_model(path)
-
-    Returns:
-        dict sent to frontend to update UI and reload configuration
+    Loads a saved segmentation model.
+    Automatically detects whether it is pixel/superpixel (pickle)
+    or a deep model (torch checkpoint).
     """
 
     # === Step 1: get parameters from frontend ===
     try:
         path = request.json["classificationPath"]
-        mode = request.json.get("mode", "superpixel")  # default = superpixel
     except Exception as e:
         return handle_exception(str(e))
 
-    # ----------------------------------------------------------------------
-    #  DEEP LEARNING SEGMENTATION
-    # ----------------------------------------------------------------------
-    if mode == "deep":
-
-        # Try to get existing module
-        segm_module = module_repo.get_module_or_none("deep_learning_segmentation_module")
-
-        # If not exists, instantiate a new module (NO TRAINING REQUIRED)
-        if segm_module is None:
-
-            segm_module = DeepSegmentationManager()  # no model yet
-            module_repo.set_module("deep_learning_segmentation_module", segm_module)
-
-        # Now we can load the model weights
-        resp, msg = segm_module.load_model(path)
-        if not resp:
-            return handle_exception(msg)
-
-        return jsonify(msg)
-    # ----------------------------------------------------------------------
-    #  PIXEL / SUPERPIXEL CLASSIFIERS (existing logic with pickle)
-    # ----------------------------------------------------------------------
     img = data_repo.get_image("image")
-    if mode != "deep":  # pixel or superpixel
-        resp, msg, payload = load_pixel_or_superpixel_classifier(path, img)
-        if not resp:
-            return handle_exception(msg)
 
-        return jsonify(payload)
+    # =========================================================
+    # 1️⃣ Try to parse as PIXEL / SUPERPIXEL classifier first
+    # =========================================================
+    try:
+        resp, msg, payload = load_pixel_or_superpixel_classifier(path, img)
+        if resp:
+            print("✅ Pixel/Superpixel model detected")
+            return jsonify(payload)
+    except Exception as e:
+        print(f"Not a pixel/superpixel model: {e}")
+
+    # =========================================================
+    # 2️⃣ Fallback → assume DEEP model
+    # =========================================================
+    print("➡️ Fallback: trying to load as DEEP checkpoint...")
+
+    #try:
+    import torch
+    checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+    if checkpoint.get("model_type") == "deep":
+        print("➡️ Detected DEEP model")
+        
+        deep_module = DeepSegmentationManager(
+            model=None,  # init will replace model internally
+            selected_labels=checkpoint["selected_labels"],
+            num_classes=checkpoint["num_classes"],
+            ignore_index=checkpoint["ignore_index"],
+        )
+
+        deep_module.load_model(path)
+        module_repo.set_module("deep_learning_segmentation_module", deep_module)
+
+        return jsonify({"mode": "deep", "msg": "Deep model loaded"})
+
+    #except Exception as e:
+    #    return handle_exception(f"Unable to load model: {e}")
+
 
 # =====================
 # MODEL STATUS CHECK
 # =====================
-@app.route("/models/current/<segm_type>", methods=["POST"])
-@cross_origin()
-def get_current_model(segm_type):
-    """
-    Check if there's a loaded model and return its information.
-    Query params:
-      ?module=pixel OR ?module=superpixel
-    """
-    module_type = str(segm_type)
-    model_status = data_repo.get_info(key="model_status") or {}
+# @app.route("/models/current/<segm_type>", methods=["POST"])
+# @cross_origin()
+# def get_current_model(segm_type):
+#     """
+#     Check if there's a loaded model and return its information.
+#     Query params:
+#       ?module=pixel OR ?module=superpixel
+#     """
+#     module_type = str(segm_type)
+#     model_status = data_repo.get_info(key="model_status") or {}
     
-    if module_type not in ["pixel", "superpixel"]:
-        return handle_exception("Missing or invalid module type (?module=pixel|superpixel)")
+#     if module_type not in ["pixel", "superpixel"]:
+#         return handle_exception("Missing or invalid module type (?module=pixel|superpixel)")
     
-    try:
-        # Check if there's a loaded model in data_repo
-        model_complete = data_repo.get_classification_model("model_complete")
+#     try:
+#         # Check if there's a loaded model in data_repo
+#         model_complete = data_repo.get_classification_model("model_complete")
         
-        if model_complete is None:
-            return jsonify({
-                "loaded": False,
-                "mode": None,
-                "classifier_parameters": None,
-                "feature_extraction_params": None
-            }), 200
+#         if model_complete is None:
+#             return jsonify({
+#                 "loaded": False,
+#                 "mode": None,
+#                 "classifier_parameters": None,
+#                 "feature_extraction_params": None
+#             }), 200
         
-        # Check if it's pixel segmentation
-        superpixel_state = model_complete["superpixel_params"]
-        is_pixel_segmentation = superpixel_state.get("pixel_segmentation") == True
+#         # Check if it's pixel segmentation
+#         superpixel_state = model_complete["superpixel_params"]
+#         is_pixel_segmentation = superpixel_state.get("pixel_segmentation") == True
         
-        # Determine the model type
-        current_model_type = "pixel" if is_pixel_segmentation else "superpixel"
+#         # Determine the model type
+#         current_model_type = "pixel" if is_pixel_segmentation else "superpixel"
         
-        # Retrieve the frontend-ready payload we saved earlier
-        frontend_params = data_repo.get_info("model_loaded_paramaters")
-        if not frontend_params:
-            return jsonify({
-                "loaded": False,
-                "mode": None,
-                "classifier_parameters": None,
-                "feature_extraction_params": None,
-            }), 200
+#         # Retrieve the frontend-ready payload we saved earlier
+#         frontend_params = data_repo.get_info("model_loaded_paramaters")
+#         if not frontend_params:
+#             return jsonify({
+#                 "loaded": False,
+#                 "mode": None,
+#                 "classifier_parameters": None,
+#                 "feature_extraction_params": None,
+#             }), 200
 
-        # Determine the model type from the saved payload
-        current_model_type = "pixel" if frontend_params["use_pixel_segmentation"] else "superpixel"
+#         # Determine the model type from the saved payload
+#         current_model_type = "pixel" if frontend_params["use_pixel_segmentation"] else "superpixel"
 
-        return jsonify({
-            "loaded": True,
-            "mode": current_model_type,
-            "classifier_parameters": frontend_params["classifier_parameters"],
-            "feature_extraction_params": frontend_params["feature_extraction_params"],
-        }), 200
+#         return jsonify({
+#             "loaded": True,
+#             "mode": current_model_type,
+#             "classifier_parameters": frontend_params["classifier_parameters"],
+#             "feature_extraction_params": frontend_params["feature_extraction_params"],
+#         }), 200
 
-    except Exception as e:
-        return handle_exception(f"Error checking model status: {str(e)}")
+#     except Exception as e:
+#         return handle_exception(f"Error checking model status: {str(e)}")
 
 # =====================
 # TRAIN
