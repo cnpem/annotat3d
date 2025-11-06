@@ -169,27 +169,28 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
         console.table(backendPayload);
         // TODO : need to make just one dispatch later here
         await sfetch('POST', '/load_segmentation_model', JSON.stringify(backendPayload), 'json')
-            .then((frontPayload: BackEndLoadClassifier) => {
-                msgReturned = `${pathFiles.classificationPath} loaded as .model`;
-                // informs canvas that the superpixel image was deleted
-                dispatch('superpixelChanged', {});
+            .then((frontPayload: any) => {
+                msgReturned = `${pathFiles.classificationPath} loaded`;
 
-                // informs about annotation_menu updates in the backend
-                // deactivates crop preview mode on canvas
+                console.log('Loaded payload:', frontPayload);
+
+                // ======= ✅ NEW LOGIC: deep segmentation =======
+                if (frontPayload.mode === 'deep') {
+                    dispatch('changeCurModule', 'deep'); // switch UI tab
+                    dispatch('annotationChanged', null); // update canvas
+                    return;
+                }
+
+                // ======= pixel or superpixel classifier =======
+                dispatch('superpixelChanged', {});
                 dispatch('annotationChanged', null);
 
-                // TODO : need to update this function to work with pixel segmentation menu
                 if (frontPayload.use_pixel_segmentation) {
-                    // This function just dispatch to update the superpixel parameters if the user save to use the superpixel segmentation instead of pixel segmentation
                     dispatch('setNewClassParamsPixel', frontPayload);
                     dispatch('changeCurModule', 'pixel');
                 } else {
                     dispatch('changeCurModule', 'superpixel');
-
-                    // Sets the classifier parameters
                     dispatch('setNewClassParams', frontPayload);
-
-                    //This function just dispatch to update the superpixel parameters if the user save to use the superpixel segmentation instead of pixel segmentation
                     dispatch('setSuperpixelParams', frontPayload.superpixel_parameters);
                 }
             })
@@ -197,7 +198,7 @@ const FileLoadDialog: React.FC<{ name: string }> = ({ name }) => {
                 msgReturned = error.error_msg;
                 isError = true;
                 console.log('Error message while trying to load the classifier model', error.error_msg);
-                setHeaderErrorMsg(`error while loading the classifier model`);
+                setHeaderErrorMsg('error while loading the classifier model');
                 setErrorMsg(error.error_msg);
                 setShowErrorWindow(true);
             });

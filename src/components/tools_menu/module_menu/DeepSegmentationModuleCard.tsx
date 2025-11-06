@@ -127,6 +127,7 @@ const DeepSegmentationModuleCard: React.FC<DeepSegmentationModuleCardProps> = ({
             })
             .finally(() => {
                 setShowLoading(false);
+                setExtraContent(null);
             });
     }
 

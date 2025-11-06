@@ -263,8 +263,14 @@ class DeepSegmentationManager:
         x = np.asarray(x_patches, np.float32)
         y = np.asarray(y_patches, np.int32)
 
-        if self.is_binary == True:
-            y = np.where(y ==  self.selected_labels[0], 1, -1)
+        if self.is_binary:
+            #get ignore index map
+            ignore_mask = y == self.ignore_index
+            # Convert all labels except IGNORE to {1,0}
+            y = np.where(y == self.selected_labels[0], 1, 0)
+
+            # Restore ignore index
+            y[ignore_mask] = self.ignore_index
 
         self.mean, self.std = x.mean(), x.std()
         # avoid div-by-zero
@@ -303,12 +309,40 @@ class DeepSegmentationManager:
     
         # === Define loss functions ===
         if self.is_binary:
-            bce_loss  = nn.BCEWithLogitsLoss()
-            b_dice_loss = smp.losses.DiceLoss(mode='binary', ignore_index=self.ignore_index)
+            bce_raw = nn.BCEWithLogitsLoss(reduction="none")
+            dice_loss = smp.losses.DiceLoss(mode="binary", ignore_index=self.ignore_index)
+
             def criterion(pred, target):
-                print(target.shape)
-                target = target.unsqueeze(1).float()
-                return 0.5 * b_dice_loss(pred, target) + 0.5 * bce_loss(pred, target) 
+                # pred: [B,1,H,W]
+                # target: [B,H,W] or [B,1,H,W]
+
+                if target.ndim == 3:
+                    target = target.unsqueeze(1)
+
+                # ------------------------------------------------------------------
+                # ✅ DICE LOSS (SMP handles ignore_index automatically)
+                # ------------------------------------------------------------------
+                dice = dice_loss(pred, target)
+
+                # ------------------------------------------------------------------
+                # ✅ BCE LOSS with IGNORE INDEX masking
+                # ------------------------------------------------------------------
+                # Mask of valid pixels (1 = keep, 0 = ignore)
+                mask = (target != self.ignore_index).float()  # shape [B,1,H,W]
+
+                bce_pixelwise = bce_raw(pred, target.float())  # no reduction
+
+                # multiply → invalid pixels become 0 loss
+                bce_masked = bce_pixelwise * mask
+
+                # prevent division by zero
+                denom = mask.sum().clamp(min=1.0)
+
+                bce = bce_masked.sum() / denom
+
+                # ------------------------------------------------------------------
+                return 0.5 * dice + 0.5 * bce
+
         else:
             dice_loss = smp.losses.DiceLoss(mode='multiclass', ignore_index = self.ignore_index)
             ce_loss   = nn.CrossEntropyLoss(ignore_index = self.ignore_index)
@@ -505,19 +539,22 @@ class DeepSegmentationManager:
             checkpoint = {
                 "model_type": "deep",
                 "state_dict": self.model.state_dict(),
-                "selected_labels": self.selected_labels,
-                "num_classes": self.num_classes,
-                "ignore_index": self.ignore_index,
-                "mean": self.mean,
-                "std": self.std,
-                "base": self.base,
-                "target_std": self.target_std,
-                "target_mean": self.target_mean,
-                "last_epoch": getattr(self, "last_epoch", 0),   
 
-                # NEW — store architecture details
-                "encoder": getattr(self.model, "encoder_name", "resnet50"),
+                # training metadata
+                "selected_labels": list(map(int, self.selected_labels)),
+                "num_classes": int(self.num_classes),
+                "ignore_index": int(self.ignore_index),
+                "mean": float(self.mean),
+                "std": float(self.std),
+                "base": int(self.base),
+                "target_std": float(self.target_std),
+                "target_mean": float(self.target_mean),
+                "last_epoch": int(self.start_epoch),
+
+                # model metadata (used to rebuild architecture)
+                "encoder_name": getattr(self.model, "encoder_name", "resnet50"),
                 "encoder_weights": "imagenet",
+                "architecture": "deeplabv3plus", 
             }
 
             torch.save(checkpoint, path)
@@ -526,7 +563,6 @@ class DeepSegmentationManager:
         except Exception as e:
             return False, f"❌ Error while saving model: {e}"
 
-
     def load_model(self, path: str, device="cuda:0"):
         try:
             checkpoint = torch.load(path, map_location=device)
@@ -534,14 +570,18 @@ class DeepSegmentationManager:
             import segmentation_models_pytorch as smp
             from sscAnnotat3D.aux_functions import convert_batchnorm_to_groupnorm
 
-            # 🔥 recreate model from metadata
+            encoder         = checkpoint.get("encoder", "resnet50")
+            encoderweights  = checkpoint.get("encoder_weights", None)
+            n_classes       = checkpoint["num_classes"]
+            dropout         = 0.5
+
             model = smp.DeepLabV3Plus(
-                encoder_name=checkpoint.get("encoder", "resnet50"),
-                encoder_weights=None,     # weights come from state_dict
+                encoder_name=encoder,
+                encoder_weights=encoderweights,
                 in_channels=1,
-                classes=checkpoint["num_classes"],
+                classes=n_classes,
                 decoder_attention_type="scse",
-                aux_params={"classes": checkpoint["num_classes"]},
+                aux_params={"classes": n_classes, "dropout": dropout},
             )
 
             model = convert_batchnorm_to_groupnorm(model, num_groups=8)
@@ -550,18 +590,18 @@ class DeepSegmentationManager:
             model.to(device)
             model.eval()
 
-            self.model = model
+            # Restore metadata
+            self.model           =  model
             self.selected_labels = checkpoint["selected_labels"]
-            self.num_classes = checkpoint["num_classes"]
-            self.ignore_index = checkpoint["ignore_index"]
-            self.mean = checkpoint["mean"]
-            self.std = checkpoint["std"]
-            self.base = checkpoint["base"]
-            self.target_std = checkpoint["target_std"]
-            self.target_mean = checkpoint["target_mean"]
-            self.start_epoch = checkpoint.get("last_epoch", 0)
-
-            self.is_binary = (self.num_classes == 1)
+            self.num_classes     = checkpoint["num_classes"]
+            self.ignore_index    = checkpoint["ignore_index"]
+            self.mean            = checkpoint["mean"]
+            self.std             = checkpoint["std"]
+            self.base            = checkpoint["base"]
+            self.target_std      = checkpoint["target_std"]
+            self.target_mean     = checkpoint["target_mean"]
+            self.start_epoch     = checkpoint.get("last_epoch", 0)
+            self.is_binary       = (self.num_classes == 1)
 
             return True, f"✅ Deep model loaded from: {path}"
 
