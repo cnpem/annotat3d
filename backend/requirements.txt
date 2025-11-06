@@ -16,7 +16,7 @@ werkzeug>=3.0.0 #there seems to be some bug on the newer versions that randomly 
 harpia==2.6.0 #need to fix the version (with anoter three dots), otherwise it will another module from pip global
 
 torch==2.7.1          # or the version matching your CUDA
-torchvision==0.20.1
+torchvision==0.22.1
 torchaudio==2.7.1
 
 segmentation-models-pytorch==0.5.0    # version with SCSE working
