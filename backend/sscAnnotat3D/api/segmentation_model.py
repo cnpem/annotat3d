@@ -568,7 +568,7 @@ def train_deep_segmentation():
     # ================================================================
     # CASE 2: TRAIN FROM ZERO (new model)
     # ================================================================
-    if deep_module is None:
+    if deep_module is None or continue_training == False:
         print("🚀 Creating NEW model...")
 
         try:
