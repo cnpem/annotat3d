@@ -45,7 +45,7 @@ parser.add_argument(
     choices=["ubuntu20", "ubuntu22"],
     help="Linux distribution (default=%(default)s).",
 )
-parser.add_argument("--cuda", type=str, default="11.2.2", help="CUDA version (default=%(default)s).")
+parser.add_argument("--cuda", type=str, default="11.8.0", help="CUDA version (default=%(default)s).")
 parser.add_argument("--gcc", type=str, default="9", help="CUDA version (default=%(default)s).")
 parser.add_argument("--mlnx", type=str, default="5.1-2.5.8.0", help="CUDA version (default=%(default)s).")
 parser.add_argument("--ompi", type=str, default="4.1.0", help="OpenMPI version (default=%(default)s).")
@@ -218,6 +218,12 @@ stage += hpccm.primitives.shell(
 # Update tools to build python packages
 stage += hpccm.primitives.shell(
     commands=["python3 -m pip install --upgrade pip setuptools wheel build pyclean"],
+    chdir=False,
+)
+
+# Install torch
+stage += hpccm.primitives.shell(
+    commands=["python3 -m pip install torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 --index-url https://download.pytorch.org/whl/cu118"],
     chdir=False,
 )
 

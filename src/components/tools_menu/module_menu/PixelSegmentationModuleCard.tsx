@@ -6,19 +6,10 @@ import {
     IonSelect,
     IonSelectOption,
     IonCheckbox,
-    IonButton,
-    IonPopover,
-    IonContent,
-    IonIcon,
-    IonCard,
-    IonCardHeader,
-    IonCardContent,
     IonNote,
     useIonToast,
-    IonSegmentButton,
-    IonSegment,
 } from '@ionic/react';
-import { informationCircleOutline } from 'ionicons/icons';
+
 import isEqual from 'lodash.isequal';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useStorageState } from 'react-storage-hooks';
@@ -29,7 +20,6 @@ import LoadingComponent from '../utils/LoadingComponent';
 import {
     InitDefaultModelClassifierParams,
     initialParamsValues,
-    classifiers,
     Classifier,
     Feature,
     FeatureParams,
@@ -38,57 +28,6 @@ import {
 } from './SuperpixelSegInterface';
 import ErrorInterface from '../../main_menu/file/utils/ErrorInterface';
 import ErrorWindowComp from '../../main_menu/file/utils/ErrorWindowComp';
-
-interface FineTuneStatus {
-    isFineTuneAvailable: boolean;
-    fineTuneMessage: string;
-    classParams: ClassifierParams | null;
-    featParams: FeatureParams | null;
-}
-
-function useFineTuneStatus(trainingMode: 'train' | 'finetune', classifier: string): FineTuneStatus {
-    const [isFineTuneAvailable, setIsFineTuneAvailable] = useState(false);
-    const [fineTuneMessage, setFineTuneMessage] = useState('');
-    const [classParams, setClassParams] = useState<ClassifierParams | null>(null);
-    const [featParams, setFeatParams] = useState<FeatureParams | null>(null);
-
-    useEffect(() => {
-        if (trainingMode === 'finetune') {
-            if (classifier !== 'mlp') {
-                setIsFineTuneAvailable(false);
-                setFineTuneMessage('Fine-tune is only available for MLP classifiers.');
-                return;
-            }
-
-            void sfetch('POST', '/models/current/pixel', '', 'json')
-                .then((response: any) => {
-                    if (!response.loaded) {
-                        setIsFineTuneAvailable(false);
-                        setFineTuneMessage('Fine-tune requires a loaded MLP model.');
-                    } else if (response.mode !== 'pixel') {
-                        setIsFineTuneAvailable(false);
-                        setFineTuneMessage(
-                            `The model loaded was trained as : ${
-                                String(response.mode) || 'Unknown'
-                            }. Therefore it doens't work as pixel model`
-                        );
-                    } else {
-                        setIsFineTuneAvailable(true);
-                        setFineTuneMessage('Parameters locked, inherited from loaded MLP model.');
-                        setClassParams(response.classifier_parameters);
-                        setFeatParams(response.feature_extraction_params);
-                    }
-                })
-                .catch((error: any) => {
-                    console.error('Error while checking model status:', error);
-                    setIsFineTuneAvailable(false);
-                    setFineTuneMessage(`Unable to check model status.`);
-                });
-        }
-    }, [trainingMode, classifier]);
-
-    return { isFineTuneAvailable, fineTuneMessage, classParams, featParams };
-}
 
 const PixelSegmentationModuleCard: React.FC = () => {
     const [defaultModelClassifierParams] = useStorageState(
@@ -116,19 +55,9 @@ const PixelSegmentationModuleCard: React.FC = () => {
         'isEditLabelActivatedPixel',
         false
     );
-    const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(
-        sessionStorage,
-        'pixelSegmPreprocessed',
-        false
-    );
 
-    const [loadingMsg, setLoadingMsg] = useState('');
     const [showLoadingCompPS, setShowLoadingCompPS] = useState(false);
-    const [trainingMode, setTrainingMode] = useStorageState<'train' | 'finetune'>(
-        sessionStorage,
-        'pixelTrainingMode',
-        'train'
-    );
+    const [loadingMsg, setLoadingMsg] = useState('');
 
     const [showToast] = useIonToast();
     const timeToast = 2000;
@@ -137,42 +66,13 @@ const PixelSegmentationModuleCard: React.FC = () => {
     const [errorMsg, setErrorMsg] = useState('');
     const [headerErrorMsg, setHeaderErrorMsg] = useState('');
 
-    const toastMessages = {
-        onTrain: trainingMode === 'train' ? 'Training done!' : 'Fine-tuning done!',
-        onPreview: 'Preview done!',
-        onApply: 'Apply done!',
-    };
-
-    const loadingMessages = {
-        onTrain: trainingMode === 'train' ? 'Training' : 'Fine-tuning',
-        onPreview: 'Preparing preview',
-        onApply: 'Applying',
-    };
-
-    // === Fine-tune hook ===
-    const { isFineTuneAvailable, fineTuneMessage } = useFineTuneStatus(trainingMode, classParams.classifier);
-
-    // === Params change tracking (only in train mode) ===
-    useEffect(() => {
-        if (trainingMode === 'train') {
-            setHasPreprocessed(!isEqual(prevFeatParams, featParams));
-        }
-    }, [featParams, prevFeatParams, trainingMode]);
-
-    useEffect(() => {
-        if (trainingMode === 'train') {
-            setHasPreprocessed(!isEqual(prevClassParams, classParams));
-        }
-    }, [classParams, prevClassParams, trainingMode]);
-
-    // === EventBus hooks ===
-    useEventBus('ImageLoaded', () => {
-        setPrevFeatParams(null);
-        setPrevClassParams(null);
-    });
     useEventBus('isEditLabelDisabled', (flagPayload: boolean) => {
         setIsEditLabelActivated(flagPayload);
     });
+
+    // ==================================================
+    // Helpers
+    // ==================================================
 
     function getParamsForBackend() {
         return {
@@ -193,141 +93,132 @@ const PixelSegmentationModuleCard: React.FC = () => {
         };
     }
 
-    // === Apply ===
+    /**
+     * ✅ FIXED: accepts string | null | undefined
+     */
+    function stringToNumberArray(text: string | null | undefined): number[] {
+        if (!text) return [];
+        return text
+            .split(',')
+            .map((t) => Number(t.trim()))
+            .filter((n) => !Number.isNaN(n));
+    }
+
+    // ==================================================
+    // Train
+    // ==================================================
+    function onTrain() {
+        const params = getParamsForBackend();
+        dispatch('useSuperpixelModule', false);
+
+        setShowLoadingCompPS(true);
+        setLoadingMsg('Training...');
+
+        sfetch('POST', `/segmentation_module/train?module=pixel&finetune=false`, JSON.stringify(params), 'json')
+            .then(() => {
+                void showToast('Training finished ✅', timeToast);
+                setPrevFeatParams(featParams);
+                setPrevClassParams(classParams);
+            })
+            .catch((error: ErrorInterface) => {
+                setShowErrorWindow(true);
+                setHeaderErrorMsg(`Error during training`);
+                setErrorMsg(error.error_msg);
+            })
+            .finally(() => {
+                setShowLoadingCompPS(false);
+            });
+    }
+
+    // ==================================================
+    // Preview (single slice)
+    // ==================================================
+    function onPreview() {
+        const curSlice = currentEventValue('sliceChanged') as { slice: number; axis: string };
+
+        setShowLoadingCompPS(true);
+        setLoadingMsg('Generating preview...');
+
+        sfetch('POST', '/pixel_segmentation_module/preview', JSON.stringify(curSlice))
+            .then(() => {
+                dispatch('labelChanged', '');
+                void showToast('Preview complete ✅', timeToast);
+            })
+            .catch((error: ErrorInterface) => {
+                setShowErrorWindow(true);
+                setHeaderErrorMsg(`error on preview in pixel segmentation menu`);
+                setErrorMsg(error.error_msg);
+            })
+            .finally(() => {
+                setShowLoadingCompPS(false);
+            });
+    }
+
+    // ==================================================
+    // Apply (full volume segmentation)
+    // ==================================================
     function onApply() {
         setShowLoadingCompPS(true);
-        setLoadingMsg(loadingMessages.onApply);
+        setLoadingMsg('Applying segmentation...');
+
         sfetch('POST', '/pixel_segmentation_module/execute', '')
             .then(() => {
                 dispatch('labelChanged', '');
-                setShowLoadingCompPS(false);
-                void showToast(toastMessages.onApply, timeToast);
-                dispatch('useSuperpixelModule', false);
+                void showToast('Segmentation done ✅', timeToast);
             })
             .catch((error: ErrorInterface) => {
                 setShowErrorWindow(true);
                 setHeaderErrorMsg(`error on apply in pixel segmentation menu`);
                 setErrorMsg(error.error_msg);
-                setHasPreprocessed(false);
-                setShowLoadingCompPS(false);
-            });
-    }
-
-    // === Train / Fine-tune ===
-    function onTrain() {
-        const params = getParamsForBackend();
-        dispatch('useSuperpixelModule', false);
-        setShowLoadingCompPS(true);
-        setLoadingMsg(loadingMessages.onTrain);
-
-        const moduleType = 'pixel';
-        const finetuneFlag = trainingMode === 'finetune' ? 'true' : 'false';
-        const url = `/segmentation_module/train?module=${moduleType}&finetune=${finetuneFlag}`;
-
-        sfetch('POST', url, JSON.stringify(params), 'json')
-            .then(() => {
-                setPrevFeatParams(featParams);
-                setPrevClassParams(classParams);
-                void showToast(toastMessages.onTrain, timeToast);
-                setHasPreprocessed(true);
-                setShowLoadingCompPS(false);
             })
-            .catch((error: ErrorInterface) => {
-                setShowErrorWindow(true);
-                setHeaderErrorMsg(`error on ${trainingMode} in ${moduleType} segmentation menu`);
-                setErrorMsg(error.error_msg);
-                setHasPreprocessed(false);
-                setShowLoadingCompPS(false);
-            });
+            .finally(() => setShowLoadingCompPS(false));
     }
-
-    // === Slice Preview ===
-    function onPreview() {
-        const curSlice = currentEventValue('sliceChanged') as { slice: number; axis: string };
-
-        setShowLoadingCompPS(true);
-        setLoadingMsg(loadingMessages.onPreview);
-
-        sfetch('POST', '/pixel_segmentation_module/preview', JSON.stringify(curSlice))
-            .then(() => {
-                dispatch('labelChanged', '');
-                setShowLoadingCompPS(false);
-                setHasPreprocessed(true);
-                void showToast(toastMessages.onPreview, timeToast);
-            })
-            .catch((error: ErrorInterface) => {
-                console.log('error in pixel_segmentation_module preview', error.error_msg);
-                setShowErrorWindow(true);
-                setHeaderErrorMsg(`error on preview in pixel segmentation menu`);
-                setErrorMsg(error.error_msg);
-                setHasPreprocessed(false);
-                setShowLoadingCompPS(false);
-            });
-    }
-
-    // === Button disable logic ===
-    const disableAllWhenFinetuneInvalid = trainingMode === 'finetune' && !isFineTuneAvailable;
-
-    const trainButtonName = trainingMode === 'train' ? 'Train' : 'Fine-tune';
 
     return (
         <ModuleCard
             name="Pixel Segmentation"
-            onApply={onApply}
-            onPreview={onPreview}
             onOther={onTrain}
-            disabledApply={disableAllWhenFinetuneInvalid}
-            disabledPreview={disableAllWhenFinetuneInvalid || isEditLabelActivated}
-            disabledOther={disableAllWhenFinetuneInvalid}
-            OtherName={trainButtonName}
+            onPreview={onPreview}
+            onApply={onApply}
+            OtherName="Train"
+            PreviewName="Preview (slice)"
+            ApplyName="Run full volume"
         >
-            {/* Training Mode Toggle at top */}
-            <IonItem lines="none">
-                <IonLabel position="stacked">Select training mode</IonLabel>
-                <IonSegment
-                    value={trainingMode}
-                    onIonChange={(e) => setTrainingMode(e.detail.value as 'train' | 'finetune')}
-                >
-                    <IonSegmentButton value="train">
-                        <IonLabel>Train from zero</IonLabel>
-                    </IonSegmentButton>
-                    <IonSegmentButton value="finetune">
-                        <IonLabel>Fine-tune</IonLabel>
-                    </IonSegmentButton>
-                </IonSegment>
-            </IonItem>
-
-            <IonItem>
-                <IonNote color={trainingMode === 'finetune' && isFineTuneAvailable ? 'success' : 'warning'}>
-                    {fineTuneMessage}
-                </IonNote>
-            </IonItem>
-
             <ModuleCardItem name="Pixel Segmentation Parameters">
                 {/* Features */}
-                <ModuleCardItem name="Feature Extraction Parameters">
-                    <IonList>{featParams?.feats.map((f) => renderCheckboxFeature(f))}</IonList>
+                <ModuleCardItem name="Feature Extraction">
+                    <IonList>
+                        {featParams?.feats.map((f) => (
+                            <IonItem key={f.id}>
+                                <IonLabel>{f.name}</IonLabel>
+                                <IonCheckbox
+                                    value={f.id}
+                                    checked={f.active}
+                                    onIonChange={(e) => {
+                                        const newfeats = featParams?.feats.map((nf) =>
+                                            nf.id === f.id ? { ...nf, active: e.detail.checked } : nf
+                                        );
+                                        setFeatParams({ ...featParams, feats: newfeats });
+                                    }}
+                                />
+                            </IonItem>
+                        ))}
+                    </IonList>
                 </ModuleCardItem>
 
                 {/* Multi-scale */}
-                <ModuleCardItem name="Multi-scale Parameters">
+                <ModuleCardItem name="Multi-scale parameters">
                     <IonItem>
-                        <IonLabel position="floating">
-                            <small>Multi-scale Filter Windows</small>
-                        </IonLabel>
+                        <IonLabel position="floating">Multi-scale Filter Windows</IonLabel>
                         <IonInput
                             value={featParams.multiscale.join(',')}
-                            disabled={trainingMode === 'finetune'}
-                            readonly={trainingMode === 'finetune'}
                             onIonChange={(e) => {
-                                if (trainingMode === 'train' && e.detail.value) {
-                                    const value = stringToNumberArray(e.detail.value);
-                                    if (!isEqual(featParams.multiscale, value)) {
-                                        setFeatParams({ ...featParams, multiscale: value });
-                                    }
+                                const newValues = stringToNumberArray(e.detail.value);
+                                if (!isEqual(featParams.multiscale, newValues)) {
+                                    setFeatParams({ ...featParams, multiscale: newValues });
                                 }
                             }}
-                        ></IonInput>
+                        />
                     </IonItem>
                 </ModuleCardItem>
 
@@ -338,41 +229,45 @@ const PixelSegmentationModuleCard: React.FC = () => {
                         <IonSelect
                             interface="popover"
                             value={classParams.classifier}
-                            disabled={trainingMode === 'finetune'}
-                            onIonChange={(e) => {
-                                if (trainingMode === 'train' && e.detail.value) {
-                                    setClassParams({
-                                        classifier: e.detail.value,
-                                        params: defaultModelClassifierParams[e.detail.value],
-                                    });
-                                }
-                            }}
+                            onIonChange={(e) =>
+                                setClassParams({
+                                    classifier: e.detail.value,
+                                    params: defaultModelClassifierParams[e.detail.value],
+                                })
+                            }
                         >
-                            {classifiers.map((c) => (
-                                <IonSelectOption key={c.id} value={c.id}>
-                                    {c.name}
-                                </IonSelectOption>
-                            ))}
+                            <IonSelectOption value="rf">Random Forest</IonSelectOption>
+                            <IonSelectOption value="svm">SVM</IonSelectOption>
+                            <IonSelectOption value="mlp">MLP</IonSelectOption>
                         </IonSelect>
                     </IonItem>
+
                     <Fragment>
-                        {classParams.params.map((p) =>
-                            renderModelParameter(p, (value) => {
-                                if (trainingMode === 'train') {
-                                    const newParams = classParams.params.map((np) =>
-                                        np.id === p.id ? { ...np, value } : np
-                                    );
-                                    if (!isEqual(newParams, classParams.params)) {
-                                        setClassParams({ ...classParams, params: newParams });
-                                    }
-                                }
-                            })
-                        )}
+                        {classParams.params.map((p) => (
+                            <IonItem key={p.id}>
+                                <IonLabel position="floating">{p.label}</IonLabel>
+                                <IonInput
+                                    type={p.input}
+                                    debounce={200}
+                                    value={p.value}
+                                    onIonChange={(e) => {
+                                        let value: any = e.detail.value;
+                                        if (p.id === 'hidden_layer_sizes') value = stringToNumberArray(value);
+                                        setClassParams({
+                                            classifier: classParams.classifier,
+                                            params: classParams.params.map((np) =>
+                                                np.id === p.id ? { ...np, value } : np
+                                            ),
+                                        });
+                                    }}
+                                />
+                            </IonItem>
+                        ))}
                     </Fragment>
                 </ModuleCardItem>
             </ModuleCardItem>
 
-            {/*Error & Loading*/}
+            {/* Error & Loading */}
             <ErrorWindowComp
                 errorMsg={errorMsg}
                 headerMsg={headerErrorMsg}
@@ -383,78 +278,6 @@ const PixelSegmentationModuleCard: React.FC = () => {
             <LoadingComponent openLoadingWindow={showLoadingCompPS} loadingText={loadingMsg} />
         </ModuleCard>
     );
-
-    // === Helpers ===
-    function renderCheckboxFeature(feature: Feature) {
-        const isLocked = trainingMode === 'finetune';
-        return (
-            <IonItem key={feature.id}>
-                <IonLabel>
-                    <small>
-                        {feature.name}
-                        <IonButton id={'showPixelSegFeatInfo-button-' + feature.id} size="small" fill="clear">
-                            <IonIcon icon={informationCircleOutline} />
-                        </IonButton>
-                    </small>
-                    <IonPopover trigger={'showPixelSegFeatInfo-button-' + feature.id} reference="event">
-                        <IonContent>
-                            <IonCard>
-                                <IonCardHeader>
-                                    <div style={{ fontWeight: 600, fontSize: 14 }}>{feature.type}</div>
-                                </IonCardHeader>
-                                <IonCardContent>{feature.description}</IonCardContent>
-                            </IonCard>
-                        </IonContent>
-                    </IonPopover>
-                </IonLabel>
-                <IonCheckbox
-                    value={feature.id}
-                    checked={feature.active}
-                    disabled={isLocked}
-                    onIonChange={(e) => {
-                        if (!isLocked) {
-                            const newfeats = featParams?.feats.map((nf) =>
-                                nf.id === feature.id ? { ...nf, active: e.detail.checked } : nf
-                            );
-                            setFeatParams({ ...featParams, feats: newfeats });
-                        }
-                    }}
-                />
-            </IonItem>
-        );
-    }
-
-    function renderModelParameter(modelParam: ModelClassifierParams, onParamChange?: (value: any) => void) {
-        const isLocked = trainingMode === 'finetune';
-        return (
-            <IonItem key={modelParam.id}>
-                <IonLabel position="floating">{modelParam.label}</IonLabel>
-                <IonInput
-                    type={modelParam.input}
-                    debounce={200}
-                    value={modelParam.value}
-                    disabled={isLocked}
-                    readonly={isLocked}
-                    onIonChange={(e) => {
-                        if (!isLocked && onParamChange) {
-                            let value: any = e.detail.value;
-                            if (modelParam.id === 'hidden_layer_sizes') {
-                                value = stringToNumberArray(value);
-                            }
-                            onParamChange(value);
-                        }
-                    }}
-                ></IonInput>
-            </IonItem>
-        );
-    }
-
-    function stringToNumberArray(text: string): number[] {
-        return text
-            .split(',')
-            .map((t) => parseInt(t))
-            .filter((n) => !Number.isNaN(n));
-    }
 };
 
 export default PixelSegmentationModuleCard;
