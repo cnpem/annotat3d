@@ -635,8 +635,11 @@ def apply_active_contour(input_id: str, mode_id: str):
 
     annot_module = module_repo.get_module("annotation")
 
+
+    host_image = data_repo.get_image("ImageForContour")
+
     # Step 2: Preprocessing (Setup for 'start' only)
-    if mode_id == "start":
+    if mode_id == "start" or host_image is None:
         # Set current slice and axis
         axis_dim = utils.get_axis_num(params["axis"])
         annot_module.set_current_axis(axis_dim)
