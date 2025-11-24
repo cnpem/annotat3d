@@ -3,7 +3,7 @@ import zlib
 from werkzeug.exceptions import BadRequest
 from flask import Blueprint, jsonify, request, send_file
 from flask_cors import cross_origin
-from sscAnnotat3D import superpixels, utils
+from sscAnnotat3D import utils
 from sscAnnotat3D.repository import data_repo
 from harpia.watershed.watershed import boundaries,hierarchicalWatershedChunked_GPU
 from harpia.filters.filtersChunked import sobel

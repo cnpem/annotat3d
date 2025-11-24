@@ -611,6 +611,7 @@ def apply_active_contour(input_id: str, mode_id: str):
         JSON or str: Coordinates list for execution or "success" for finalization.
     """
     import time
+    from harpia.watershed.watershed import boundaries
 
     start_time = time.time()
 
@@ -694,7 +695,8 @@ def apply_active_contour(input_id: str, mode_id: str):
         return jsonify(annot_module.current_mk_id)
 
     # Extract boundary coordinates for visualization
-    border = spin_img.spin_find_boundaries(level_set, dtype="uint8") > 0
+
+    border = boundaries(level_set.astype(np.int32)) > 0 #spin_img.spin_find_boundaries(level_set, dtype="uint8") > 0
     yy, xx = np.nonzero(border)
     coords_list = [yy.astype("int").tolist(), xx.astype("int").tolist()]
 
