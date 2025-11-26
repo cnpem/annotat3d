@@ -1619,9 +1619,69 @@ def fgc_apply(input_id: str):
     from skimage.feature import local_binary_pattern, shape_index, multiscale_basic_features
     from skimage.measure import shannon_entropy
     import numpy as np
-    from sklearn.cluster import KMeans
+    from sklearn.cluster import KMeans  # kept for other clustering use
+
+    # ============================================================
+    # === Balanced K-means based Hierarchical K-means (BKHK) ====
+    # ============================================================
+    def balanced_two_means(X, max_iters=20, tol=1e-6, random_state=None):
+        rng = np.random.default_rng(random_state)
+        n, d = X.shape
+        idx = rng.choice(n, size=2, replace=False)
+        C = X[idx].astype(float)
+        K = n // 2
+        for it in range(max_iters):
+            dist = ((X[:, None, :] - C[None, :, :]) ** 2).sum(axis=2)
+            diff = dist[:, 0] - dist[:, 1]
+            k_idx = np.argpartition(diff, K)[:K]
+            mask = np.zeros(n, dtype=bool)
+            mask[k_idx] = True
+            labels = np.where(mask, 0, 1)
+            C_new = np.array([X[labels == 0].mean(axis=0), X[labels == 1].mean(axis=0)])
+            if np.linalg.norm(C_new - C) < tol:
+                break
+            C = C_new
+        dist = ((X[:, None, :] - C[None, :, :]) ** 2).sum(axis=2)
+        diff = dist[:, 0] - dist[:, 1]
+        k_idx = np.argpartition(diff, K)[:K]
+        mask = np.zeros(n, dtype=bool)
+        mask[k_idx] = True
+        labels = np.where(mask, 0, 1)
+        return C, labels
+
+    def bk_hk(X, m, max_iters=20, random_state=None):
+        rng = np.random.default_rng(random_state)
+        nodes = [np.arange(X.shape[0], dtype=int)]
+        leaf_centers = []
+        while len(nodes) < m:
+            sizes = [len(ids) for ids in nodes]
+            largest_idx = int(np.argmax(sizes))
+            ids_to_split = nodes.pop(largest_idx)
+            if len(ids_to_split) <= 1:
+                nodes.append(ids_to_split)
+                break
+            X_sub = X[ids_to_split]
+            centers, labels = balanced_two_means(X_sub, max_iters=max_iters, random_state=rng)
+            left_ids = ids_to_split[labels == 0]
+            right_ids = ids_to_split[labels == 1]
+            if len(left_ids) == 0 or len(right_ids) == 0:
+                nodes.append(ids_to_split)
+                break
+            nodes.append(left_ids)
+            nodes.append(right_ids)
+        for ids in nodes:
+            leaf_centers.append(X[ids].mean(axis=0))
+        leaf_centers = np.vstack(leaf_centers)
+        if leaf_centers.shape[0] > m:
+            chosen = rng.choice(leaf_centers.shape[0], size=m, replace=False)
+            anchors = leaf_centers[chosen]
+        else:
+            anchors = leaf_centers
+        return anchors
+    # ============================================================
 
     print(request.json)
+
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -1631,7 +1691,6 @@ def fgc_apply(input_id: str):
             raise ValueError("Unsupported data type")
 
     try:
-        # parameters
         dimension = request.json.get("dimension")
         slice_num = request.json.get("current_slice")
         axis = request.json.get("current_axis")
@@ -1648,11 +1707,10 @@ def fgc_apply(input_id: str):
         tol = request.json.get('tolerance')
         use_all = request.json.get('useWholeImage')
         superpixel = data_repo.get_image("superpixel")
-        features = request.json.get("selectedFeatures")  # Keep for compatibility if needed
+        features = request.json.get("selectedFeatures")
         metric = request.json.get("selectedMetric")
         nearest_neighbors = request.json.get("nearestNeighbors")
 
-        # Parameters for multiscale_basic_features
         sigma_min = request.json.get('sigma_min', 1)
         sigma_max = request.json.get('sigma_max', 16)
         num_sigma = request.json.get('multiScaleNum', 3)
@@ -1662,42 +1720,35 @@ def fgc_apply(input_id: str):
 
     slice_range = utils.get_3d_slice_range_from(axis, slice_num)
 
-    # Update backend slice number
     annot_module = module_repo.get_module('annotation')
     axis_dim = utils.get_axis_num(axis)
     annot_module.set_current_axis(axis_dim)
     annot_module.set_current_slice(slice_num)
 
     input_img = data_repo.get_image(input_id).astype(np.float32)
-
     print("features: ", features)
     print("Metric: ", metric)
-
     mk_id = annot_module.current_mk_id
-
     print('Current markers\n', mk_id, current_thresh_marker)
-    # New annotation
     new_click = (mk_id != current_thresh_marker)
+
     axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
     axisIndex = axisIndexDict[axis]
 
-    if axisIndex == 0:  # XY plane
+    if axisIndex == 0:
         input_slice = input_img[slice_num]
-
         if superpixel is not None and features[-1] == "Superpixel":
             sp = superpixel[slice_num]
             uniquelabels = np.unique(sp)
 
-    elif axisIndex == 1:  # XZ plane
+    elif axisIndex == 1:
         input_slice = input_img[:, slice_num, :]
-
         if superpixel is not None and features[-1] == "Superpixel":
             sp = superpixel[:, slice_num, :]
             uniquelabels = np.unique(sp)
 
-    elif axisIndex == 2:  # YZ plane
+    elif axisIndex == 2:
         input_slice = input_img[:, :, slice_num]
-
         if superpixel is not None and features[-1] == "Superpixel":
             sp = superpixel[:, :, slice_num]
             uniquelabels = np.unique(sp)
@@ -1709,7 +1760,6 @@ def fgc_apply(input_id: str):
     use_edges = "Edges" in features or "Edge" in features
     use_texture = "Texture" in features
 
-    # Compute multiscale basic features
     x_features = multiscale_basic_features(
         input_slice,
         intensity=use_intensity,
@@ -1721,7 +1771,6 @@ def fgc_apply(input_id: str):
     )
     print("Multiscale basic features shape (rows, cols, features):", x_features.shape)
 
-    # If superpixel pooling is requested, do mean pooling over superpixels for each feature channel
     if superpixel is not None and features[-1] == "Superpixel":
         print("Applying superpixel mean pooling on multiscale features")
         x_pooled = np.zeros_like(x_features, dtype=x_features.dtype)
@@ -1732,11 +1781,12 @@ def fgc_apply(input_id: str):
                 x_pooled[:, :, feat_idx][mask] = mean_val
         x_features = x_pooled
 
-    # Reshape features: flatten spatial dims and transpose to (features, N_pixels)
     x = x_features.reshape((-1, x_features.shape[-1])).T.astype(np.float32)
     print("Feature matrix shape (features, pixels):", x.shape)
 
-    # ---- The rest of your processing ----
+    # ============================================================
+    # ==================== LABELED CASE ==========================
+    # ============================================================
     if gamma > 0:
         print("Label Propagation")
 
@@ -1751,25 +1801,31 @@ def fgc_apply(input_id: str):
             mask = (markers_img == label).ravel()
             if np.count_nonzero(mask) == 0:
                 continue
-
-            feature_subset = x[:, mask].T  # (N_pixels_in_class, N_features)
+            feature_subset = x[:, mask].T
             if feature_subset.shape[0] < anchor_points:
-                continue  # Skip if not enough pixels
+                continue
 
-            kmeans = KMeans(n_clusters=anchor_points, n_init="auto", random_state=0).fit(feature_subset)
-            anchors.extend(kmeans.cluster_centers_)
+            # ==== BKHK substitute for KMeans ====
+            anchors_bkhk = bk_hk(feature_subset, m=anchor_points, random_state=0)
+            anchors.extend(anchors_bkhk)
             anchor_labels.extend([class_index] * anchor_points)
+
+            # ==== Original KMeans version (commented out) ====
+            # kmeans = KMeans(n_clusters=anchor_points, n_init="auto", random_state=0).fit(feature_subset)
+            # anchors.extend(kmeans.cluster_centers_)
+            # anchor_labels.extend([class_index] * anchor_points)
+            # ====================================
 
         if len(anchors) == 0:
             return handle_exception("No valid labeled data to create anchors.")
 
-        anchors = np.array(anchors, dtype=np.float32).T  # shape: (features, anchors)
+        anchors = np.array(anchors, dtype=np.float32).T
         M = anchors.shape[1]
         C = len(unique_labels)
         U = np.zeros((M, C), dtype=np.float32)
         U[np.arange(M), anchor_labels] = 1.0
 
-        print("Anchor shape:", anchors.shape)  # (features, M)
+        print("Anchor shape:", anchors.shape)
         print("Label matrix U shape:", U.shape)
 
         fgc_instance = fgc.general_fgc(
@@ -1785,18 +1841,23 @@ def fgc_apply(input_id: str):
             size=window,
             metric=metric
         )
-    
-        F = fgc_instance.z @ U
-        #softmax = np.exp(F) / np.sum(np.exp(F), axis=1, keepdims=True)
-        #labels = (softmax > 0.75).astype(int).argmax(axis=1).reshape(rows, cols)
-        labels = F.argmax(axis=1).reshape(rows, cols)
 
-        print("Final labels shape:", labels.shape)
+        F = fgc_instance.z @ U
+        labels = F.argmax(axis=1).reshape(rows, cols)
         annot_module.multilabel_updated(labels, mk_id)
 
+    # ============================================================
+    # ==================== UNLABELED CASE ========================
+    # ============================================================
     else:
         print("Without labels regularization")
-        basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T.astype(np.float32)
+
+        # ==== BKHK substitute for KMeans ====
+        basis = bk_hk(x.T, m=anchor_points, random_state=0).T.astype(np.float32)
+
+        # ==== Original KMeans version (commented out) ====
+        # basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T.astype(np.float32)
+        # ====================================
 
         fgc_instance = fgc.general_fgc(
             x,
@@ -1821,11 +1882,8 @@ def fgc_apply(input_id: str):
         print('post processing labels')
         unique_labels = np.unique(labels)
         label_means = {i: (input_slice[labels == i].mean()) for i in unique_labels}
-
         sorted_labels = sorted(label_means, key=label_means.get)
-
         label_remap = {old_label: new_label for new_label, old_label in enumerate(sorted_labels)}
-
         remapped_labels = np.vectorize(label_remap.get)(labels)
 
         print('last step')
