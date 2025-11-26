@@ -21,6 +21,11 @@ from tqdm import tqdm
 from sscAnnotat3D.aux_functions import random_augment
 import segmentation_models_pytorch as smp
 
+from torchmetrics.classification import (
+    MulticlassJaccardIndex,
+    BinaryJaccardIndex,
+)
+
 # -------------------------------------------------------------------------
 # --- Main Manager --------------------------------------------------------
 # -------------------------------------------------------------------------
@@ -67,53 +72,6 @@ class DeepSegmentationManager:
         self.global_patch: Optional[Tuple[int, int]] = None
         self.batch_size: Optional[int] = None
 
-    # ---------------------------------------------------------------------
-    # Auto-calibration using true GPU memory
-    # ---------------------------------------------------------------------
-    def _auto_calibrate_patch_and_batch(
-        self, img_shape: Tuple[int, int, int], device: str = "cuda:0"
-    ) -> Tuple[Tuple[int, int], int]:
-        """
-        Dynamically calibrate patch and batch size using real GPU memory measurement.
-        """
-        # NOTE: expects measure_runtime_memory_safe to be defined in your env
-        z, y, x = img_shape
-        max_dim = max(z, y, x)
-
-        # --- Patch selection rule ---
-        if max_dim > 2064:
-            patch = (1024, 1024)
-        else:
-            patch = (
-                min(2048, math.ceil(max_dim / self.base) * self.base),
-                min(2048, math.ceil(max_dim / self.base) * self.base),
-            )
-
-        # --- Measure runtime usage (batch=2) per your latest code ---
-        print(f" Measuring memory for patch={patch} ...")
-        used_mb, peak_mb = self._measure_runtime_memory_safe(
-            input_size=(2, 1, patch[0], patch[1]), device=device
-        )
-
-        # --- Determine available memory ---
-        free_bytes, total_bytes = torch.cuda.mem_get_info(torch.device(device))
-        free_mb = free_bytes / (1024 ** 2)
-        usable_mb = free_mb * 0.9  # 90 % safety margin
-
-        # --- Compute max batch size ---
-        if peak_mb == float("inf") or peak_mb == 0:
-            max_batch = 2
-        else:
-            max_batch = max(2, 2 * int(usable_mb / peak_mb))
-
-        print(
-            f" Patch={patch}, peak={peak_mb:.1f} MB, usable={usable_mb:.1f} MB → "
-            f"batch≈{max_batch}"
-        )
-
-        self.global_patch = patch
-        self.batch_size = max_batch
-        return patch, max_batch
 
     # ---------------------------------------------------------------------
     # Basic utilities
@@ -186,102 +144,229 @@ class DeepSegmentationManager:
         h, w = full_hw
         nH = math.ceil(h / ph)
         nW = math.ceil(w / pw)
-        img = rearrange(patches[: nH * nW], "(nH nW) ph pw -> (nH ph) (nW pw)", nH=nH)
+        img = rearrange(patches[: nH * nW], "(nH nW) ph pw -> (nH ph) (nW pw)", nH=nH, nW=nW)
         return img[:h, :w]
 
-    # ---------------------------------------------------------------------
-    # Filter unlabeled / sparse patches
-    # ---------------------------------------------------------------------
-    def _filter_low_annotation(self, x_list, y_list, min_frac=0.05):
+    def _extract_prepare_filter_slices(self, img, annot_img, annotation_slice_dict):
+        """
+        Extract slices (XY, XZ, YZ), pad them, filter slices with <5% labeled pixels,
+        and return:
+            - kept_x: list of slice images
+            - kept_y: list of slice annotations
+            - slice_shapes: original padded shapes (for global calibration)
+        """
+    
         kept_x, kept_y = [], []
-        for xi, yi in zip(x_list, y_list):
-            mask = yi != self.ignore_index
-            frac = mask.sum() / mask.size
-            if frac >= min_frac:
-                kept_x.append(xi)
-                kept_y.append(yi)
-        print(f" {len(kept_x)}/{len(x_list)} patches kept after filtering (<5 % ignored).")
-        return kept_x, kept_y
-
-    # ---------------------------------------------------------------------
-    # Data preparation
-    # ---------------------------------------------------------------------
-    def prepare_training_data(
-        self, img: np.ndarray, annot: np.ndarray, annot_slices: Dict[int, list], device="cuda:0"
-    ):
-        """
-        Extract, pad, normalize, patchify, and filter data automatically.
-        """
-        # 1️⃣ Calibrate patch/batch based on GPU memory
-        self._auto_calibrate_patch_and_batch(img.shape, device=device)
-
-        # 2️⃣ Determine global slice dimensions
-        shapes = []
-        for axis, idxs in annot_slices.items():
-            for _ in idxs:
-                if axis == 0:
-                    h, w = img.shape[1:]
-                elif axis == 1:
-                    h, w = img.shape[0], img.shape[2]
-                else:
-                    h, w = img.shape[0], img.shape[1]
-                shapes.append((h, w))
-        max_h = max(s[0] for s in shapes)
-        max_w = max(s[1] for s in shapes)
-        print(f" Global slice shape for padding: ({max_h}, {max_w})")
-
-        x_patches, y_patches = [], []
-
-        # 3️⃣ Extract and pad slices
-        for axis, idxs in annot_slices.items():
+        slice_shapes = []
+    
+        for axis, idxs in annotation_slice_dict.items():
             for idx in sorted(idxs):
+    
+                # --- Extract slice depending on axis ---
                 if axis == 0:
-                    s_img, s_ann = img[idx, :, :], annot[idx, :, :]
+                    s_img, s_ann = img[idx, :, :], annot_img[idx, :, :]
                 elif axis == 1:
-                    s_img, s_ann = img[:, idx, :], annot[:, idx, :]
+                    s_img, s_ann = img[:, idx, :], annot_img[:, idx, :]
                 else:
-                    s_img, s_ann = img[:, :, idx], annot[:, :, idx]
-
-                pad_h, pad_w = max_h - s_img.shape[0], max_w - s_img.shape[1]
-                if pad_h or pad_w:
-                    s_img = np.pad(s_img, ((0, pad_h), (0, pad_w)), mode="edge")
-                    s_ann = np.pad(
-                        s_ann,
-                        ((0, pad_h), (0, pad_w)),
-                        mode="constant",
-                        constant_values=self.ignore_index,
-                    )
-
+                    s_img, s_ann = img[:, :, idx], annot_img[:, :, idx]
+    
+                # --- Pad to multiple of base (IDENTICAL to training pipeline) ---
                 s_img = self._pad_to_multiple(s_img)
                 s_ann = self._pad_to_multiple(s_ann)
+    
+                # --- Record shape for patch-size calibration ---
+                slice_shapes.append(s_img.shape)
+    
+                # --- Low-annotation filter ---
+                mask = (s_ann != self.ignore_index)
+                frac = mask.sum() / mask.size  # percentage of labeled pixels
+    
+                if frac >= 0.05:   # keep slice
+                    kept_x.append(s_img)
+                    kept_y.append(s_ann)
+    
+        print(f" {len(kept_x)}/{sum(len(idxs) for idxs in annotation_slice_dict.values())} "
+              f"slices kept after filtering (<5% annotated removed).")
+    
+        return kept_x, kept_y, slice_shapes
 
-                x_patches.extend(self._patchify(s_img))
-                y_patches.extend(self._patchify(s_ann))
 
-        # 4️⃣ Filter and normalize
-        x_patches, y_patches = self._filter_low_annotation(x_patches, y_patches)
+    def _calibrate_patch_size(self, slice_shapes):
+        """
+        Choose the global patch size based on annotated slice shapes:
+        - Take the *minimum* H and W across all slices (so every slice fits)
+        - Round down to multiple of self.base
+        - Enforce minimum size (128)
+        """
+        heights = [s[0] for s in slice_shapes]
+        widths  = [s[1] for s in slice_shapes]
+    
+        min_h = max(128, min(heights))
+        min_w = max(128, min(widths))
+    
+        patch_h = math.floor(min_h / self.base) * self.base
+        patch_w = math.floor(min_w / self.base) * self.base
+    
+        patch_h = max(self.base, patch_h)
+        patch_w = max(self.base, patch_w)
+    
+        self.global_patch = (patch_h, patch_w)
+        return self.global_patch
+
+    def _calibrate_batch_size(self, patch, device="cuda:0"):
+        """
+        Given a patch size (H,W), estimate GPU memory and compute safe batch size.
+        """
+    
+        print(f" Measuring memory for patch={patch} ...")
+    
+        used_mb, peak_mb = self._measure_runtime_memory_safe(
+            input_size=(2, 1, patch[0], patch[1]), 
+            device=device
+        )
+    
+        # --- Available memory ---
+        free_bytes, _ = torch.cuda.mem_get_info(torch.device(device))
+        free_mb = free_bytes / (1024 ** 2)
+        usable_mb = free_mb * 0.9
+    
+        # --- Compute safe batch size ---
+        if peak_mb == float("inf") or peak_mb == 0:
+            max_batch = 2
+        else:
+            max_batch = max(2, 2 * int(usable_mb / peak_mb))
+    
+        print(
+            f" Patch={patch}, peak={peak_mb:.1f} MB, usable={usable_mb:.1f} MB → "
+            f"batch≈{max_batch}"
+        )
+    
+        self.batch_size = max_batch
+        return max_batch
+
+
+    def prepare_training_data(self, img, annot, annot_slices, device="cuda:0"):
+        """
+        Extract slices, pad, filter, calibrate patch_size, patchify, normalize,
+        convert to numpy training tensors.
+        """
+    
+        # ----------------------------------------------------------
+        # 1️⃣ Extract slices, pad to multiples, filter low annotation
+        # ----------------------------------------------------------
+        x_slices, y_slices, slice_shapes = self._extract_prepare_filter_slices(
+            img, annot, annot_slices
+        )
+    
+        if len(x_slices) == 0:
+            raise RuntimeError("No valid annotated slices remain after filtering.")
+    
+        # ----------------------------------------------------------
+        # 2️⃣ Calibrate patch size from the slice shapes
+        # ----------------------------------------------------------
+        patch = self._calibrate_patch_size(slice_shapes)
+        print(f" Calibrated global patch size: {patch}")
+    
+        # ----------------------------------------------------------
+        # 3️⃣ Calibrate batch size using GPU memory test
+        # ----------------------------------------------------------
+        self._calibrate_batch_size(patch, device=device)
+    
+        # ----------------------------------------------------------
+        # 4️⃣ Patchify slices using global patch size
+        # ----------------------------------------------------------
+        x_patches = []
+        y_patches = []
+    
+        for s_img, s_ann in zip(x_slices, y_slices):
+            x_patches.extend(self._patchify(s_img))
+            y_patches.extend(self._patchify(s_ann))
+    
+        # ----------------------------------------------------------
+        # 5️⃣ Convert to numpy
+        # ----------------------------------------------------------
         x = np.asarray(x_patches, np.float32)
         y = np.asarray(y_patches, np.int32)
-
+    
+        # ----------------------------------------------------------
+        # 6️⃣ Binary label remapping
+        # ----------------------------------------------------------
         if self.is_binary:
-            #get ignore index map
-            ignore_mask = y == self.ignore_index
-            # Convert all labels except IGNORE to {1,0}
+            ignore_mask = (y == self.ignore_index)
             y = np.where(y == self.selected_labels[0], 1, 0)
-
-            # Restore ignore index
             y[ignore_mask] = self.ignore_index
-
+    
+        # ----------------------------------------------------------
+        # 7️⃣ Normalize input
+        # ----------------------------------------------------------
         self.mean, self.std = x.mean(), x.std()
-        # avoid div-by-zero
         std = self.std if self.std > 0 else 1.0
+    
         x = (x - self.mean) / std * self.target_std + self.target_mean
-
-        self._train_numpy, self._train_label_numpy = x, y
-        # Cap batch size by dataset length
+    
+        # ----------------------------------------------------------
+        # 8️⃣ Store final training data
+        # ----------------------------------------------------------
+        self._train_numpy = x
+        self._train_label_numpy = y
+    
+        # Cap batch size to number of patches
         self.batch_size = min(self.batch_size, len(x))
-        print(f" Normalized mean={self.mean:.3f}, std={self.std:.3f}")
-        print(f" Patch size={self.global_patch}, Max batch size={self.batch_size}")
+    
+        print(f" Final training patches: {len(x)}")
+        print(f" Normalized mean={self.mean:.4f}, std={self.std:.4f}")
+        print(f" Batch size set to {self.batch_size}")
+        
+
+    def _compute_iou_from_training_data(self, writer, device="cuda:0", epoch=0):
+
+        if not hasattr(self, "_train_numpy"):
+            print("⚠️ No training data stored, skipping IoU.")
+            return
+
+        device = torch.device(device)
+        self.model.eval()
+
+        # pick one random training patch
+        idx = np.random.randint(0, len(self._train_numpy))
+        img_patch = self._train_numpy[idx]        # (H, W)
+        ann_patch = self._train_label_numpy[idx]  # (H, W)
+
+        inp = torch.from_numpy(img_patch[None, None]).float().to(device)  # (1,1,H,W)
+        target = torch.from_numpy(ann_patch).long().unsqueeze(0).to(device)  # (1,H,W)
+
+        with torch.no_grad():
+            pred = self.model(inp)
+            if isinstance(pred, (tuple, list)):
+                pred = pred[0]
+
+            if self.is_binary:
+                pred = torch.sigmoid(pred)           # (1,1,H,W) float
+                pred = pred.squeeze(1)               # (1,H,W)
+                metric = BinaryJaccardIndex(
+                    ignore_index=self.ignore_index,
+                ).to(device)
+            else:
+                pred = torch.softmax(pred, dim=1)    # (1,C,H,W)
+                pred = torch.argmax(pred, dim=1)      # (1,H,W)
+                metric = MulticlassJaccardIndex(
+                    num_classes=self.num_classes,
+                    average=None,                    # per-class IoU
+                    ignore_index=self.ignore_index,
+                ).to(device)
+
+        # target is already (1,H,W)
+        iou = metric(pred, target)
+        iou = iou.cpu().numpy()
+
+        # log
+        if self.is_binary:
+            writer.add_scalar(f"IoU/class_{self.selected_labels[0]}", float(iou), epoch)
+            print(f"📊 IoU logged: {iou:.4f}")
+        else:
+            for cls_id, value in enumerate(iou):
+                writer.add_scalar(f"IoU/class_{cls_id}", value, epoch)
+            print(f"📊 IoU logged (epoch {epoch}) = {iou}")
 
     # ---------------------------------------------------------------------
     # Training loop (binary or multiclass)
@@ -353,11 +438,12 @@ class DeepSegmentationManager:
     
         # === Training loop ===
         for epoch in range(self.start_epoch, self.start_epoch + epochs):
-            n_samples = 0
-            epoch_loss = 0.0
+            n_batches = 0
+            epoch_loss_sum = 0.0
             
-            for xb, yb in tqdm(loader, desc=f"Epoch {epoch+1}/{epochs}", leave=False):
-                xb, yb = xb.to(device), yb.to(device)
+            for xb, yb in tqdm(loader, desc=f"Epoch {epoch+1}/{self.start_epoch + epochs}", leave=False):
+                xb, yb = xb.clone().to(device), yb.clone().to(device)
+
                 if data_aug:
                     xb, yb = random_augment(xb, yb)
     
@@ -371,14 +457,17 @@ class DeepSegmentationManager:
                 loss.backward()
                 optimizer.step()
     
-                epoch_loss += loss.item()
-                n_samples += 1
+                epoch_loss_sum += loss.item()
+                n_batches += 1
     
-    
-            train_loss = epoch_loss / (n_samples // self.batch_size + 1)
+            epoch_loss_mean = epoch_loss_sum / max(n_batches, 1)
             if writer:
-                writer.add_scalar("training/loss", train_loss, epoch+1)
-            print(f" Epoch {epoch+1} | Loss={train_loss:.4f}")
+                writer.add_scalar("epoch_loss_mean", epoch_loss_mean, epoch+1)
+                if ((epoch + 1) % 50 == 0):
+                    self._compute_iou_from_training_data(writer, device=device, epoch=epoch+1)
+            
+            
+            print(f" Epoch {epoch+1} | Loss={epoch_loss_mean:.4f}")
     
         print(" Training complete.")
         self.start_epoch = self.start_epoch + epochs

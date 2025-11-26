@@ -227,6 +227,12 @@ stage += hpccm.primitives.shell(
     chdir=False,
 )
 
+# Install SAM 1
+stage += hpccm.primitives.shell(
+    commands=["python3 -m pip install git+https://github.com/facebookresearch/segment-anything.git"],
+    chdir=False,
+)
+
 # Install Annotat3DWeb
 stage += hpccm.primitives.shell(
     commands=[

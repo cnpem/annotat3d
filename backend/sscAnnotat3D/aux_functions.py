@@ -27,7 +27,6 @@ import numpy as np
 import skimage.filters.rank as rank
 import skimage.io
 import skimage.measure as sk_measure
-import sscPySpin.image as spin_img
 from harpia import pixel_feature_extract
 from harpia import superpixel_pooling_feature
 
@@ -126,25 +125,6 @@ def log_usage(op_type, **kwargs):
         data_json = json.dumps(data)
         f.write("**** Usage on:" + op_time + "****\n")
         f.write(data_json + "\n\n")
-
-
-def save_3d_image_to_shared_memory(image, xsize, ysize, zsize, dtype):
-    """
-    Function that save a 3D image into the shared memory
-
-    Args:
-        image (array): it's a numpy.array that represents the image
-        xsize (int): the image x size
-        ysize (int): the image y size.
-        zsize (int): the image z size.
-        dtype (string): it's the image dtype string
-
-    Returns:
-        None
-
-    """
-    image = spin_img.spin_save_image_to_shared_memory(image, xsize, ysize, zsize, dtype)
-
 
 # TODO this can be slow in big data
 # but should be removed with float support on sscPySpin
