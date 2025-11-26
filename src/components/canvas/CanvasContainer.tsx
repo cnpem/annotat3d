@@ -1067,9 +1067,11 @@ class Canvas {
         const len = this.labelData.data.length;
         const rgbaData = new Uint8Array(len * 4);
 
+        const labelData = this.labelData.data;
+
         for (let i = 0; i < len; ++i) {
             const idx = i * 4;
-            const pixelLabel = this.labelData.data[i];
+            const pixelLabel = labelData[i];
             if (pixelLabel < 0) continue;
 
             const baseColor = this.colors[pixelLabel] || [128, 128, 128];
@@ -1080,23 +1082,28 @@ class Canvas {
             const y = Math.floor(i / width);
             const x = i % width;
 
+            // --- Detect borders ---
+            let isBorder = false;
+            if (x > 0 && labelData[i - 1] !== pixelLabel) isBorder = true;
+            else if (x < width - 1 && labelData[i + 1] !== pixelLabel) isBorder = true;
+            else if (y > 0 && labelData[i - width] !== pixelLabel) isBorder = true;
+            else if (y < height - 1 && labelData[i + width] !== pixelLabel) isBorder = true;
+
             if (pixelLabel === this.parentLabel) {
-                const cx = 4; // pattern repeat size
+                const cx = 11; // pattern repeat size
                 const dx = x % cx;
                 const dy = y % cx;
 
-                // Creates a star-like shape by combining crosses and diagonals
                 const isStar = dx === 0 || dy === 0 || dx === dy || dx + dy === cx - 1;
-
-                if (isStar) {
-                    patternAlpha = 1.0; // bright "star" pixels
-                } else {
-                    patternAlpha = 0.4; // background fade
-                }
+                patternAlpha = isStar ? 0.8 : 0.1;
             } else if (this.childLabels.has(pixelLabel)) {
-                // Children: diagonal stripe pattern
-                if ((x + y) % 6 < 3) patternAlpha = 1;
-                else patternAlpha = 0.4;
+                // Diagonal stripe pattern
+                patternAlpha = (x + y) % 2 == 0 ? 0.8 : 0.1;
+            }
+
+            // --- Enhance borders ---
+            if (isBorder) {
+                patternAlpha = 1.0;
             }
 
             rgbaData[idx] = baseColor[0];
@@ -1117,6 +1124,7 @@ class Canvas {
             // canvas.brush.cursor.visible = false;
         }
         if (this.brush_mode === 'dropper_brush') {
+            const origEvent = event?.data?.originalEvent || event;
             const clickedLabel = this.getLabelAtPointer(event);
             if (clickedLabel < 0) return;
 
@@ -1147,14 +1155,15 @@ class Canvas {
             // --- Setup long-click timers ---
             this.loadingTimer = window.setTimeout(() => {
                 // show progress bar only after delay
-                if (!this.isPainting) return; // released before popup delay
+                if (!this.isPainting || origEvent.shiftKey) return; // released before popup delay
                 this.showLoadingPopup();
                 this.animateLoadingBar(this.longClickThreshold - this.popupDelay);
             }, this.popupDelay);
 
             this.longClickTimer = window.setTimeout(() => {
                 // safeguard: only trigger if still pressing
-                if (!this.isPainting) return;
+
+                if (!this.isPainting || origEvent.shiftKey) return;
                 this.isLongClickActive = true;
                 this.longClickTriggered = true;
                 this.handleLongClick(clickedLabel);
@@ -1210,6 +1219,37 @@ class Canvas {
 
     onPointerMove(event: any) {
         let currPosition;
+        const origEvent = event?.data?.originalEvent || event;
+        if (
+            this.brush_mode === 'dropper_brush' &&
+            origEvent.shiftKey &&
+            this.isPainting && // only while mouse is held
+            !this.isLongClickActive && // not in long click
+            !this.longClickTriggered && // not after long click
+            this.parentLabel !== null // must have parent selected
+        ) {
+            const hoveredLabel = this.getLabelAtPointer(event);
+
+            if (hoveredLabel > 0 && hoveredLabel !== this.parentLabel) {
+                if (!this.childLabels.has(hoveredLabel)) {
+                    this.childLabels.add(hoveredLabel);
+                    this.highlightMergedLabels();
+
+                    // Notify listeners (optional)
+                    window.dispatchEvent(
+                        new CustomEvent('labelSelected', {
+                            detail: {
+                                parent: this.parentLabel,
+                                children: Array.from(this.childLabels),
+                            },
+                        })
+                    );
+
+                    console.log(`Added hovered label ${hoveredLabel} as child of ${this.parentLabel}`);
+                }
+            }
+            return; // stop here so it doesn’t trigger other behaviors
+        }
 
         if (event.type === 'wheel') {
             this.viewport.plugins.resume('drag');
@@ -2279,6 +2319,16 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
         // If no property has changed, do nothing.
         if (isEqual(prevProps, this.props)) return;
+
+        // If the canvasMode has changed, update only the brush mode.
+        if (this.props.canvasMode !== prevProps.canvasMode) {
+            if (this.props.canvasMode === 'imaging') {
+                this.setBrushMode('no_brush');
+            } else {
+                this.setBrushMode('draw_brush');
+            }
+            // DO NOT call fetchAll here, as we don't want to reload the image and histogram.
+        }
 
         // If the slice or the axis has changed, then reload the image, histogram, etc.
         if (prevProps.slice !== this.props.slice || prevProps.axis !== this.props.axis) {
