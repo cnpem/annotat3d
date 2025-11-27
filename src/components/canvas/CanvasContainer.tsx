@@ -2155,8 +2155,22 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         }
     };
 
-    componentDidMount() {
+    waitForContainer(): Promise<void> {
+        return new Promise((resolve) => {
+            const check = () => {
+                if (this.pixi_container && this.pixi_container.offsetWidth > 0) {
+                    resolve();
+                } else {
+                    requestAnimationFrame(check);
+                }
+            };
+            check();
+        });
+    }
+
+    async componentDidMount() {
         // the element is the DOM object that we will use as container to add pixi stage(canvas)
+        await this.waitForContainer(); // ⬅️ ensures container has real size
         const elem = this.pixi_container;
         if (this && elem) {
             const alphas = defaultColormap.map(() => 1); // Default to full opacity
