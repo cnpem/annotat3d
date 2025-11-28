@@ -1,7 +1,20 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { Component } from 'react';
-import { IonFab, IonFabButton, IonIcon } from '@ionic/react';
-import { expand, brush, browsers, add, remove, eye, eyeOff, colorFill, colorWand, eyedrop } from 'ionicons/icons';
+import { IonFab, IonFabButton, IonIcon, IonPopover } from '@ionic/react';
+import {
+    expand,
+    brush,
+    browsers,
+    add,
+    remove,
+    eye,
+    eyeOff,
+    colorFill,
+    colorWand,
+    eyedrop,
+    trash,
+    checkmarkCircle,
+} from 'ionicons/icons';
 import isEqual from 'lodash.isequal';
 import debounce from 'lodash.debounce';
 import * as PIXI from 'pixi.js';
@@ -34,8 +47,18 @@ import dropperCursor from '../../public/dropper_cursor.png';
 
 import { LabelInterface } from '../tools_menu/annotation_menu/label_table/LabelInterface';
 import { colorFromId, defaultColormap } from '../../utils/colormap';
+import { SamController } from './SamController';
+import LoadingComponent from '../tools_menu/utils/LoadingComponent';
 
-type BrushModeType = 'draw_brush' | 'erase_brush' | 'no_brush' | 'magic_wand' | 'lasso' | 'snakes' | 'dropper_brush';
+type BrushModeType =
+    | 'draw_brush'
+    | 'erase_brush'
+    | 'no_brush'
+    | 'magic_wand'
+    | 'lasso'
+    | 'snakes'
+    | 'dropper_brush'
+    | 'sam';
 
 class Brush {
     label: number;
@@ -653,6 +676,10 @@ class Canvas {
 
     longClickTriggered = false;
 
+    sam: SamController;
+
+    samStartPos: PIXI.Point | null = null;
+
     constructor(
         div: HTMLDivElement,
         colors: [number, number, number][],
@@ -757,6 +784,8 @@ class Canvas {
         this.activateSequentialLabel = false;
 
         this.setLabelVisibility(true);
+
+        this.sam = new SamController(this);
     }
 
     setColor(colors: { id: number; color: [number, number, number]; alpha: number }[]) {
@@ -1208,6 +1237,16 @@ class Canvas {
                 });
         }
 
+        // -----------------------------------------------------
+        // SAM mode: POS / NEG / BOX
+        // -----------------------------------------------------
+        if (this.brush_mode === 'sam' && event.data.button === 0) {
+            const wp = this.viewport.toWorld(event.data.global);
+            this.samStartPos = new PIXI.Point(Math.floor(wp.x), Math.floor(wp.y));
+            this.isPainting = true;
+            return;
+        }
+
         this.isPainting = true;
         this.prevPosition = this.viewport.toWorld(event.data.global);
         /* Floor the coordinates of the returned PIXI.Point. This is relevant for forcing the canvas to show discrete positions for the user
@@ -1299,6 +1338,26 @@ class Canvas {
                 });
             return;
         }
+
+        if (this.brush_mode === 'sam' && this.isPainting) {
+            const pos = this.viewport.toWorld(event.data.global);
+            if (!this.samStartPos) return;
+            const dx = pos.x - this.samStartPos.x;
+            const dy = pos.y - this.samStartPos.y;
+
+            // If dragged enough, enter boxing
+            if (!this.sam.isBoxing && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
+                this.sam.isBoxing = true;
+                this.sam.start = this.samStartPos;
+            }
+
+            if (this.sam.isBoxing) {
+                this.sam.updateBox(event);
+            }
+
+            return;
+        }
+
         this.brush.cursor.position.x = currPosition.x - Math.floor(this.brush.size / 2);
         this.brush.cursor.position.y = currPosition.y - Math.floor(this.brush.size / 2);
 
@@ -1422,6 +1481,23 @@ class Canvas {
             return;
         }
 
+        if (this.brush_mode === 'sam' && this.isPainting) {
+            const isLeft = event.data.button === 0;
+            const isShift = event.data.originalEvent.shiftKey;
+
+            if (isLeft && isShift) {
+                this.sam.negativePoint(event);
+            } else if (this.sam.isBoxing) {
+                this.sam.finishBox(event);
+            } else {
+                this.sam.positivePoint(event);
+            }
+
+            this.sam.isBoxing = false;
+            this.isPainting = false;
+            return;
+        }
+
         // --- Normal brush mode finalize ---
         const currPosition = this.viewport.toWorld(event.data.global);
         currPosition.x = Math.floor(currPosition.x);
@@ -1509,9 +1585,26 @@ class Canvas {
     }
 
     setBrushMode(mode: BrushModeType) {
+        if (this.brush_mode === 'sam' && mode !== 'sam') {
+            this.sam.clearAll();
+        }
+
+        // Switching into SAM → backend init
+        if (mode === 'sam' && this.brush_mode !== 'sam') {
+            dispatch('showLoading', { message: 'Initializing SAM…' });
+
+            void sfetch('POST', '/sam', JSON.stringify({ type: 'init' }), 'json')
+                .catch((err) => {
+                    console.error('SAM init error', err);
+                })
+                .finally(() => {
+                    dispatch('hideLoading', null);
+                });
+        }
+
         this.brush_mode = mode;
         this.brush.setMode(mode);
-        // Set the cursor mode
+
         console.log('setting brush to mode:', mode);
         this.viewport.cursor = mode;
     }
@@ -1695,45 +1788,6 @@ class Canvas {
         this.cropSlice.texture = texture;
     }
 
-    /*     private toUint8Array(img: NdArray<TypedArray>): Uint8Array {
-        const len = img.shape[1] * img.shape[0];
-        console.log('toUint8Array exec');
-        let scaleFunc: (value: number) => number;
-        console.log(img.dtype);
-        // Generalized function to extract bit depth and determine if it's unsigned
-        const getBitDepthAndUnsigned = (dtype: string): [number, boolean] => {
-            const isUnsigned = dtype.startsWith('u');
-            const bitDepth = parseInt(dtype.replace(/\D/g, ''), 10);
-            return [bitDepth, isUnsigned];
-        };
-
-        const [bitDepth, isUnsigned] = getBitDepthAndUnsigned(img.dtype);
-        const maxDataTypeValue = isUnsigned ? Math.pow(2, bitDepth) - 1 : Math.pow(2, bitDepth - 1) - 1;
-        console.log('imgminmax', this.imgMin, this.imgMax);
-        // General scaling function bazsed on whether it's signed or unsigned
-        if (isUnsigned) {
-            // Assuming imgMax and imgMin are for normalized scaling within the unsigned range
-            const max = this.imgMax;
-            const min = this.imgMin;
-            const range = max - min;
-            scaleFunc = (value: number) => 255 * (1.0 - (max - clamp(min, value, max)) / range);
-        } else {
-            // For signed types, adjust min and max if necessary based on expected range adjustments
-            const max = this.imgMax;
-            const min = this.imgMin;
-            const range = max - min;
-            scaleFunc = (value: number) => 255 * (1.0 - Math.abs((max - clamp(min, value, max)) / range));
-        }
-
-        // Apply the scaling function to each pixel
-        const uint8data = new Uint8Array(len);
-        for (let i = 0; i < len; ++i) {
-            uint8data[i] = Math.round(scaleFunc(img.data[i]));
-        }
-
-        return uint8data;
-    } */
-
     private toFloat32ColorArray(img: NdArray<TypedArray>, colorname: ColorOptions): Float32Array {
         const len = img.shape[1] * img.shape[0];
         console.log('toFloat32ColorArray exec');
@@ -1900,7 +1954,11 @@ interface ICanvasState {
     brush_mode: BrushModeType;
     label_contour: boolean;
     future_sight_on: boolean;
+    showLoadingComp: boolean;
+    loadingMsg: string;
+    showSamInstructions: boolean;
 }
+
 //here we do not change the cursor
 const brushList = [
     {
@@ -1915,6 +1973,7 @@ const brushList = [
         id: 'dropper_brush',
         logo: eyedrop,
     },
+    { id: 'sam', logo: colorWand },
 ];
 
 function timeout(ms: number): Promise<void> {
@@ -1970,6 +2029,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
 
     onActivateSL: (sequentialLabelPayload: { isActivated: boolean; id: number }) => void = () => {};
 
+    onSamShowLoading!: (payload: { message: string }) => void;
+
+    onSamHideLoading!: () => void;
+
     constructor(props: ICanvasProps) {
         super(props);
         this.pixi_container = null;
@@ -1978,6 +2041,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             brush_mode: 'draw_brush',
             label_contour: false,
             future_sight_on: false,
+            showLoadingComp: false,
+            loadingMsg: '',
+            showSamInstructions: true,
         };
     }
 
@@ -2129,8 +2195,22 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         }
     };
 
-    componentDidMount() {
+    waitForContainer(): Promise<void> {
+        return new Promise((resolve) => {
+            const check = () => {
+                if (this.pixi_container && this.pixi_container.offsetWidth > 0) {
+                    resolve();
+                } else {
+                    requestAnimationFrame(check);
+                }
+            };
+            check();
+        });
+    }
+
+    async componentDidMount() {
         // the element is the DOM object that we will use as container to add pixi stage(canvas)
+        await this.waitForContainer(); // ⬅️ ensures container has real size
         const elem = this.pixi_container;
         if (this && elem) {
             const alphas = defaultColormap.map(() => 1); // Default to full opacity
@@ -2264,6 +2344,15 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 this.canvas?.brush.setLabel(sequentialLabelPayload.id);
             };
 
+            // SAM Loading callbacks
+            this.onSamShowLoading = ({ message }) => {
+                this.setState({ showLoadingComp: true, loadingMsg: message });
+            };
+
+            this.onSamHideLoading = () => {
+                this.setState({ showLoadingComp: false, loadingMsg: '' });
+            };
+
             subscribe('futureChanged', this.onFutureChanged);
             subscribe('imageChanged', this.onImageChanged);
             subscribe('ColorMapChanged', this.onColorMapChanged);
@@ -2287,6 +2376,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
             subscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
             subscribe('activateSL', this.onActivateSL);
             subscribe('globalThresholdPreview', this.GlobalThreshold); // Subscribe to the event
+
+            subscribe('showLoading', this.onSamShowLoading);
+            subscribe('hideLoading', this.onSamHideLoading);
         }
     }
 
@@ -2314,6 +2406,9 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
         unsubscribe('cropPreviewColorchanged', this.onCropPreviewColorChanged);
         unsubscribe('activateSL', this.onActivateSL);
         unsubscribe('globalThresholdPreview', this.GlobalThreshold); // Subscribe to the event
+
+        unsubscribe('showLoading', this.onSamShowLoading);
+        unsubscribe('hideLoading', this.onSamHideLoading);
     }
 
     componentDidUpdate(prevProps: ICanvasProps, prevState: ICanvasState) {
@@ -2409,6 +2504,10 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
     };
 
     render() {
+        const isDrawBrush = this.state.brush_mode === 'draw_brush';
+        const isEraseBrush = this.state.brush_mode === 'erase_brush';
+        const isSam = this.state.brush_mode === 'sam';
+
         return (
             <div
                 id="root"
@@ -2416,55 +2515,138 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                 style={{ backgroundColor: 'transparent' }}
                 ref={(elem) => (this.pixi_container = elem)}
             >
+                <LoadingComponent openLoadingWindow={this.state.showLoadingComp} loadingText={this.state.loadingMsg} />
+
+                {/* RECENTER BUTTON (bottom-left) */}
                 <IonFab vertical="bottom" horizontal="start">
                     <IonFabButton color="medium" onClick={() => this.canvas?.recenter()}>
                         <IonIcon icon={expand} />
                     </IonFabButton>
                 </IonFab>
 
-                <IonFab hidden={this.props.canvasMode !== 'imaging'} vertical="bottom" horizontal="end">
-                    <IonFabButton
-                        color="dark"
-                        onClick={() => {
-                            const futureSightVisibility = !this.state.future_sight_on;
-                            this.setState({ ...this.state, future_sight_on: futureSightVisibility });
-                            this.canvas?.setPreviewVisibility(futureSightVisibility);
-                        }}
-                    >
-                        <IonIcon icon={this.state.future_sight_on ? eye : eyeOff} />
-                    </IonFabButton>
-                </IonFab>
+                {/* ------------------ SAM MODE BUTTONS (ONLY IN SAM MODE) ------------------ */}
+                {isSam && (
+                    <IonFab vertical="bottom" horizontal="end" style={{ marginBottom: '6rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <IonFabButton
+                                color="success"
+                                onClick={() => this.canvas?.sam.clearLocal()}
+                                style={{ transform: 'scale(1.05)' }}
+                            >
+                                <IonIcon icon={checkmarkCircle} />
+                            </IonFabButton>
 
-                <IonFab hidden={this.props.canvasMode !== 'drawing'} vertical="bottom" horizontal="end">
-                    <MenuFabButton
-                        value={this.state.brush_mode}
-                        openSide="start"
-                        buttonsList={brushList}
-                        onChange={(b) => {
-                            console.log('change icon : ', b.id);
-                            this.setBrushMode(b.id as BrushModeType);
-                        }}
-                    />
-                </IonFab>
-                <IonFab vertical="bottom" horizontal="end" style={{ marginBottom: '4em' }}>
-                    <IonFabButton
-                        size="small"
-                        onMouseDown={this.handleIncreaseMouseDown}
-                        onMouseUp={this.handleMouseUp}
-                        onMouseLeave={this.handleMouseUp}
-                    >
-                        <IonIcon icon={add} />
-                    </IonFabButton>
-                    <IonFabButton
-                        size="small"
-                        title="Decrease brush/eraser size"
-                        onMouseDown={this.handleDecreaseMouseDown}
-                        onMouseUp={this.handleMouseUp}
-                        onMouseLeave={this.handleMouseUp}
-                    >
-                        <IonIcon icon={remove} />
-                    </IonFabButton>
-                </IonFab>
+                            <div
+                                style={{
+                                    color: 'white',
+                                    fontSize: '0.75rem',
+                                    textAlign: 'center',
+                                    marginTop: '6px',
+                                    fontWeight: 600,
+                                    opacity: 0.9,
+                                }}
+                            >
+                                New Annotation
+                            </div>
+                        </div>
+                    </IonFab>
+                )}
+
+                {isSam && this.state.showSamInstructions && (
+                    <IonFab vertical="top" horizontal="end">
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: '3rem',
+                                right: '1rem',
+                                background: 'rgba(80,80,80,0.6)',
+                                padding: '10px 14px',
+                                borderRadius: '8px',
+                                color: 'white',
+                                fontSize: '0.80rem',
+                                lineHeight: 1.35,
+                                pointerEvents: 'none',
+                                width: '420px', // ⬅️ wider box
+                                maxWidth: '420px', // ⬅️ prevents shrinking
+                                whiteSpace: 'normal', // ⬅️ allows wrapping
+                                textAlign: 'left',
+                                zIndex: 999,
+                            }}
+                        >
+                            {/* --- Close button --- */}
+                            <button
+                                onClick={() => this.setState({ showSamInstructions: false })}
+                                style={{
+                                    position: 'absolute',
+                                    top: '6px',
+                                    right: '6px',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    padding: 0,
+                                    margin: 0,
+                                    pointerEvents: 'auto',
+                                }}
+                            >
+                                ✕
+                            </button>
+                            <b>SAM Model</b>
+                            <br />
+                            <br />
+                            <b>Bounding box:</b> Drag to select a region.
+                            <br />
+                            <br />
+                            <b>Positive Points:</b> Left-click to add positive hints.
+                            <br />
+                            <br />
+                            <b>Negative Points:</b> Shift + left-click to mark negatives (correct false positives).
+                            <br />
+                            <br />
+                            <b>New Annotation:</b> Use the green button or press &quot;space&quot;.
+                        </div>
+                    </IonFab>
+                )}
+
+                {/* ------------------ DRAWING MODE BRUSH SELECTION ------------------ */}
+                {this.props.canvasMode === 'drawing' && (
+                    <IonFab vertical="bottom" horizontal="end">
+                        <MenuFabButton
+                            value={this.state.brush_mode}
+                            openSide="start"
+                            buttonsList={brushList}
+                            onChange={(b) => {
+                                this.setBrushMode(b.id as BrushModeType);
+                            }}
+                        />
+                    </IonFab>
+                )}
+
+                {/* ------------------ BRUSH SIZE CONTROLS (+ / -) ------------------ */}
+
+                {(isDrawBrush || isEraseBrush) && (
+                    <IonFab vertical="bottom" horizontal="end" style={{ marginBottom: '4em' }}>
+                        <IonFabButton
+                            size="small"
+                            onMouseDown={this.handleIncreaseMouseDown}
+                            onMouseUp={this.handleMouseUp}
+                            onMouseLeave={this.handleMouseUp}
+                        >
+                            <IonIcon icon={add} />
+                        </IonFabButton>
+
+                        <IonFabButton
+                            size="small"
+                            title="Decrease brush/eraser size"
+                            onMouseDown={this.handleDecreaseMouseDown}
+                            onMouseUp={this.handleMouseUp}
+                            onMouseLeave={this.handleMouseUp}
+                        >
+                            <IonIcon icon={remove} />
+                        </IonFabButton>
+                    </IonFab>
+                )}
             </div>
         );
     }

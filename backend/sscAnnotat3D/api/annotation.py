@@ -2041,3 +2041,179 @@ def nmf_apply(input_id: str):
     annot_module.multilabel_updated(remapped_labels, mk_id)
 
     return jsonify(annot_module.current_mk_id)
+
+@app.route("/sam", methods=["POST"])
+@cross_origin()
+def apply_sam():
+    """
+    Unified SAM1 endpoint:
+      - type: "box" | "pos" | "neg"
+      - runs SAM on the current slice
+      - updates annotation mask
+    """
+    import time
+    from segment_anything import sam_model_registry, SamPredictor
+
+    start = time.time()
+
+    sam_predictor = module_repo.get_module('sam_predictor')
+
+    # ---------------------------------------------------
+    # Clear if operation ended
+    # ---------------------------------------------------
+    try:
+        req = request.json
+        sam_type  = req["type"]
+    except Exception as e:
+        return handle_exception(str(e))
+    
+    if sam_type == "clearall":
+        module_repo.delete_module("sam_predictor")
+        print("[SAM] Predictor cleared from module_repo.")
+        return jsonify({"status": "cleared"})
+    
+    # ---------------------------------------------------
+    # INIT should also return immediately
+    # ---------------------------------------------------
+    if sam_type == "init":
+        sam_predictor = module_repo.get_module("sam_predictor")
+
+        if sam_predictor is None:
+            print("[SAM] Loading SAM1 model (ViT-H)...")
+            sam = sam_model_registry["vit_h"](
+                checkpoint="/ibira/lnls/labs/tepui/apps/gcd/annotat3dweb/models_checkpoint/sam_vit_h_4b8939.pth"
+            ).to("cuda")
+
+            sam_predictor = SamPredictor(sam)
+            module_repo.set_module("sam_predictor", sam_predictor)
+            print("[SAM] Ready!")
+
+        return jsonify({"status": "initialized"})
+
+    # ---------------------------------------------------
+    # Parse JSON
+    # ---------------------------------------------------
+    #try:
+    req = request.json
+    sam_type  = req["type"]
+    label     = int(req["label"])
+    axis      = req["axis"]
+    slice_num = int(req["slice"])
+    new_click = req["new_click"]
+    #except Exception as e:
+    #    return handle_exception(str(e))
+
+    # ---------------------------------------------------
+    # If for some reason SAM was not initialized
+    # ---------------------------------------------------
+    if sam_predictor is None:
+        print("[SAM] Loading SAM1 model (ViT-H)...")
+        sam = sam_model_registry["vit_h"](
+            checkpoint="/ibira/lnls/labs/tepui/apps/gcd/annotat3dweb/models_checkpoint/sam_vit_h_4b8939.pth"
+        ).to("cuda")
+        sam_predictor = SamPredictor(sam)
+        print("[SAM] Ready!")
+
+    predictor = sam_predictor
+
+    # ---------------------------------------------------
+    # Prepare slice
+    # ---------------------------------------------------
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+    img_slice = data_repo.get_image('image')[slice_range]
+
+    # SAM expects uint8 RGB
+    # Compute the 80th percentile (robust upper bound)
+    p_low  = np.percentile(img_slice, 2)
+    p_high = np.percentile(img_slice, 98)
+
+    sl_norm = 255 * (img_slice - p_low) / (p_high - p_low + 1e-8)
+    sl_norm = np.clip(sl_norm, 0, 255).astype(np.uint8)
+
+    # Clip any overflow caused by bright outliers
+    sl_norm = np.clip(sl_norm, 0, 255).astype(np.uint8)
+
+    rgb = np.repeat(sl_norm[..., None], 3, axis=2)
+
+    predictor.set_image(rgb)
+
+    # ---------------------------------------------------
+    # SAM prediction
+    # ---------------------------------------------------
+    box = np.array([req["box"]], dtype=np.float32)
+
+    if sam_type == "box":
+        box = np.array([req["box"]], dtype=np.float32)
+        masks, scores, logits = predictor.predict(
+            box=box,
+            multimask_output=True
+        )
+
+        best_idx = np.argmax(scores)
+
+    elif sam_type in ("pos", "neg"):
+
+        raw_box = req.get("box")
+
+        if raw_box is None:
+            box = None
+        else:
+            box = np.array([raw_box], dtype=np.float32)
+
+
+        coords = []
+        labels = []
+
+        for (x,y) in req["points_pos"]:
+            coords.append([x,y])
+            labels.append(1)
+
+        for (x,y) in req["points_neg"]:
+            coords.append([x,y])
+            labels.append(0)
+
+        previous_logits = data_repo.get_image("logitsforsam")
+
+        if previous_logits is not None:
+            previous_logits = previous_logits[None, :, :]
+        
+        if new_click is True:
+            previous_logits = None
+
+        coords = np.array(coords, dtype=np.float32)
+        labels = np.array(labels, dtype=np.int32)
+
+
+        masks, scores, logits = predictor.predict(
+            point_coords=coords,
+            point_labels=labels,
+            box = box,
+            multimask_output=True,
+            mask_input = previous_logits
+        )
+        best_idx = np.argmax(scores)
+
+    else:
+        return handle_exception("Invalid SAM type")
+
+    # ---------------------------------------------------
+    # Apply mask into annotation
+    # ---------------------------------------------------
+    mk_id = annot_module.current_mk_id
+
+    data_repo.set_image("logitsforsam", logits[best_idx])
+
+    mask = masks[best_idx] > 0
+
+    annot_module.labelmask_update(mask, label, mk_id, new_click = new_click)
+
+    module_repo.set_module('sam_predictor', module=sam_predictor)
+
+    print(f"[SAM] completed in {time.time() - start:.3f}s")
+
+    return jsonify(mk_id)
+
