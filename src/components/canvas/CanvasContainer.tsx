@@ -2524,6 +2524,21 @@ class CanvasContainer extends Component<ICanvasProps, ICanvasState> {
                     </IonFabButton>
                 </IonFab>
 
+                {this.props.canvasMode === 'imaging' && (
+                    <IonFab vertical="bottom" horizontal="end">
+                        <IonFabButton
+                            color="dark"
+                            onClick={() => {
+                                const futureSightVisibility = !this.state.future_sight_on;
+                                this.setState({ ...this.state, future_sight_on: futureSightVisibility });
+                                this.canvas?.setPreviewVisibility(futureSightVisibility);
+                            }}
+                        >
+                            <IonIcon icon={this.state.future_sight_on ? eye : eyeOff} />
+                        </IonFabButton>
+                    </IonFab>
+                )}
+
                 {/* ------------------ SAM MODE BUTTONS (ONLY IN SAM MODE) ------------------ */}
                 {isSam && (
                     <IonFab vertical="bottom" horizontal="end" style={{ marginBottom: '6rem' }}>
