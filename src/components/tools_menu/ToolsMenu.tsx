@@ -116,9 +116,20 @@ const ToolsMenu: React.FC<SideMenuProps> = (props: SideMenuProps) => {
     // useEffect hook for reacting to menuOp changes, change to drawing when not in processing (to show the brushs)
     useEffect(() => {
         if (menuOp !== 'processing') {
+            console.log(
+                'processingAccordion',
+                sessionStorage.getItem('processingAccordion'),
+                sessionStorage.getItem('processingAccordion') === 'smoothing'
+            );
+
             dispatch('canvasModeChanged', 'drawing');
+        } else if (
+            menuOp === 'processing' &&
+            JSON.parse(sessionStorage.getItem('processingAccordion') || 'null') === 'smoothing'
+        ) {
+            dispatch('canvasModeChanged', 'imaging');
         }
-    }, [menuOp]); // This effect depends on menuOp, so it runs whenever menuOp changes.
+    }, [menuOp]);
 
     return (
         <React.Fragment>
