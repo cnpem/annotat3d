@@ -169,20 +169,21 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     });
 
     useEventBus('LabelLoaded', (labelVec: LabelInterface[]) => {
-        console.log('Label color : ', props.colors);
-        for (const label of labelVec) {
-            label.color = colorFromId(props.colors, label.id);
-            console.log('label list into the change : ', labelVec);
-        }
-        setLabelList(labelVec);
-        setNewLabelId(labelVec.length);
-        console.log('label List rn : ', labelVec);
+        if (!Array.isArray(labelVec) || labelVec.length === 0) return;
+
+        const incoming = labelVec.map((label) => ({
+            ...label,
+            color: colorFromId(props.colors, label.id),
+        }));
+
+        setLabelList([...incoming]);
+        setNewLabelId(incoming.length);
     });
 
     useEffect(() => {
-        console.log('doing this dispatch rn');
+        console.log('dispatching labelColorsChanged due to labelList update');
         dispatch('labelColorsChanged', labelList);
-    });
+    }, [labelList]);
 
     useEventBus('LockComponents', (activateAddLabelButton: boolean) => {
         setLockMenu(activateAddLabelButton);
@@ -290,10 +291,20 @@ const LabelTable: React.FC<LabelTableProps> = (props: LabelTableProps) => {
     const NAME_WIDTH = 'col-3';
     const OPTIONS_WIDTH = 'col-1';
 
-    //if selected label is removed, defaults to background
-    if (!labelList.map((l) => l.id).includes(selectedLabel)) {
-        selectLabel(0);
-    }
+    useEffect(() => {
+        // Ensure Background label always exists
+        if (!labelList.some((l) => l.id === 0)) {
+            setLabelList((prev) => [
+                {
+                    labelName: 'Background',
+                    color: props.colors[0],
+                    id: 0,
+                    alpha: 1,
+                },
+                ...prev,
+            ]);
+        }
+    }, [labelList, props.colors]);
 
     return (
         <div>
