@@ -227,20 +227,14 @@ stage += hpccm.primitives.shell(
     chdir=False,
 )
 
-# Install SAM 1
-stage += hpccm.primitives.shell(
-    commands=["python3 -m pip install git+https://github.com/facebookresearch/segment-anything.git"],
-    chdir=False,
-)
-
 # Install Annotat3DWeb
 stage += hpccm.primitives.shell(
     commands=[
         "python3 -m pip install numpy==1.22.3",
-        "python3 -m pip install SharedArray==3.2.0",
     ],
     chdir=False,
 )
+
 stage += hpccm.primitives.copy(src=".", dest="/opt/annotat3dweb")
 stage += hpccm.building_blocks.pip(ospackages=[], requirements="backend/requirements.txt", pip="pip3")
 stage += hpccm.building_blocks.pip(ospackages=[], requirements="backend/requirements-dev.txt", pip="pip3")
