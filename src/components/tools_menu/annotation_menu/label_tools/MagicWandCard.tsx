@@ -239,16 +239,6 @@ const MagicWandCard: React.FC<MagicWandCardProps> = ({ isVisible }) => {
             });
     };
 
-    useEffect(() => {
-        //only execute if the button is pressed
-        if (isVisible) {
-            dispatch('ChangeStateBrush', 'magic_wand');
-            fetchHistogramData();
-        } else {
-            dispatch('ChangeStateBrush', 'draw_brush');
-        }
-    }, [isVisible]);
-
     // Updates the datawand, and use a hooke to update the state
     useEventBus('magicwand', (data) => {
         setdataWand(data);
@@ -268,6 +258,14 @@ const MagicWandCard: React.FC<MagicWandCardProps> = ({ isVisible }) => {
             fetchDataWand(true);
         }
     }, [dataWand]);
+
+    useEffect(() => {
+        //only execute if the button is pressed
+        if (isVisible) {
+            console.log('fetchHistogramData()');
+            fetchHistogramData();
+        }
+    }, [isVisible]);
 
     // This is execute when new configuration changes
     useEffect(() => {

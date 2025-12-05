@@ -9,19 +9,11 @@ import sentry_sdk
 import skimage.io
 from flask import *
 from flask_cors import CORS, cross_origin
-from sscAnnotat3D import superpixels, utils
 from sscAnnotat3D.__version__ import __version__
-from sscAnnotat3D.api import annotation, filters, morphology
+from sscAnnotat3D.api import annotation, filters, morphology, segmentation_model
 from sscAnnotat3D.api import image as apiimage
 from sscAnnotat3D.api import io as apiio
 from sscAnnotat3D.api import superpixel
-from sscAnnotat3D.api.modules import (
-    pixel_segmentation_module as apipixel_segmentation_module,
-)
-from sscAnnotat3D.api.modules import (
-    superpixel_segmentation_module as apisuperpixel_segmentation_module,
-)
-from sscAnnotat3D.modules import superpixel_segmentation_module
 from sscAnnotat3D.repository import data_repo
 
 from sentry_sdk import set_user
@@ -50,10 +42,10 @@ app.register_blueprint(apiio.app)
 app.register_blueprint(annotation.app)
 app.register_blueprint(superpixel.app)
 app.register_blueprint(apiimage.app)
-app.register_blueprint(apisuperpixel_segmentation_module.app)
-app.register_blueprint(apipixel_segmentation_module.app)
 app.register_blueprint(filters.app)
 app.register_blueprint(morphology.app)
+app.register_blueprint(segmentation_model.app)
+
 
 image = None
 image_path = None

@@ -151,45 +151,32 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
      * Function that Saves the classifier model .model file and send to the backend
      */
     const dispatchSaveClassifier = async () => {
-        const backendPayload: { classificationPath: string } = {
+        const backendPayload: { classificationPath: string; mode: string } = {
             classificationPath:
                 pathSaveFiles.workspacePath !== ''
                     ? pathSaveFiles.workspacePath + pathSaveFiles.classificationPath
                     : pathSaveFiles.classificationPath,
+            mode: (sessionStorage.getItem('curSegModule') as string) || 'superpixel',
         };
 
         let msgReturned = '';
         let isError = false;
+        console.log('Seg mode to save:', backendPayload.mode);
 
-        if (useSuperpixelModule) {
-            await sfetch('POST', '/save_classifier', JSON.stringify(backendPayload), 'json')
-                .then((success: string) => {
-                    msgReturned = `${pathSaveFiles.classificationPath} saved as .model`;
-                    console.log(success);
-                })
-                .catch((error: ErrorInterface) => {
-                    msgReturned = error.error_msg;
-                    isError = true;
-                    console.log('Error message while trying to save the classifier model', error.error_msg);
-                    setHeaderErrorMsg(`error while saving the classifier model`);
-                    setErrorMsg(error.error_msg);
-                    setShowErrorWindow(true);
-                });
-        } else {
-            await sfetch('POST', '/save_classifier_pixel', JSON.stringify(backendPayload), 'json')
-                .then((success: string) => {
-                    msgReturned = `${pathSaveFiles.classificationPath} saved as .model`;
-                    console.log(success);
-                })
-                .catch((error: ErrorInterface) => {
-                    msgReturned = error.error_msg;
-                    isError = true;
-                    console.log('Error message while trying to save the classifier model', error.error_msg);
-                    setHeaderErrorMsg(`error while saving the classifier model`);
-                    setErrorMsg(error.error_msg);
-                    setShowErrorWindow(true);
-                });
-        }
+        await sfetch('POST', '/save_segmentation_model', JSON.stringify(backendPayload), 'json')
+            .then((success: string) => {
+                msgReturned = `${backendPayload.mode} model saved as ${pathSaveFiles.classificationPath}. To save a another segmentation model, please switch to the desired segmentation mode.`;
+
+                console.log(success);
+            })
+            .catch((error: ErrorInterface) => {
+                msgReturned = error.error_msg;
+                isError = true;
+                console.log('Error message while trying to save the segmentation model', error.error_msg);
+                setHeaderErrorMsg(`error while saving the segmentation model`);
+                setErrorMsg(error.error_msg);
+                setShowErrorWindow(true);
+            });
 
         const returnedObj: QueueToast = { message: msgReturned, isError };
         return returnedObj;
@@ -512,15 +499,15 @@ const FileSaveDialog: React.FC<{ name: string }> = ({ name }) => {
                                 <IonItem slot={'header'}>
                                     <IonIcon slot={'start'} icon={barChart} />
                                     <IonLabel>
-                                        <small>Save Classifier</small>
+                                        <small>Save Segmentation Model</small>
                                     </IonLabel>
                                 </IonItem>
                                 <IonList slot="content">
                                     <IonItem>
-                                        <IonLabel position="stacked">Classifier Path</IonLabel>
+                                        <IonLabel position="stacked">Model Name</IonLabel>
                                         <IonInput
                                             clearInput
-                                            placeholder={'classifier.model'}
+                                            placeholder={'name.model'}
                                             value={pathSaveFiles.classificationPath}
                                             onIonChange={(e: CustomEvent) =>
                                                 setSavePathFiles({

@@ -1,9 +1,9 @@
 import numpy as np
-from sscPySpin import image as spin_img
+from harpia.watershed.watershed import boundaries
 
 
 def label_slice_contour(slice_label):
-    border = spin_img.spin_find_boundaries(slice_label, dtype="uint8") > 0
+    border = boundaries(slice_label.astype(np.int32)) > 0 #spin_img.spin_find_boundaries(slice_label) > 0
     contour = np.zeros_like(slice_label)
     contour[border] = slice_label[border]
     return contour

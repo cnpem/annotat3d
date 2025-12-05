@@ -17,7 +17,8 @@ from sscAnnotat3D.modules.lasso import fill_lasso
 from sscAnnotat3D.modules import annotation_module
 from sscAnnotat3D.repository import data_repo, module_repo
 from werkzeug.exceptions import BadRequest
-from harpia import morph_2D_chan_vese, morph_2D_geodesic_active_contour
+#from harpia import morph_2D_chan_vese, morph_2D_geodesic_active_contour
+from harpia.segmentation import morphological_chan_vese,morphological_geodesic_active_contour
 from sscPySpin import image as spin_img
 from skimage import img_as_float32
 from skimage.segmentation import (
@@ -610,6 +611,7 @@ def apply_active_contour(input_id: str, mode_id: str):
         JSON or str: Coordinates list for execution or "success" for finalization.
     """
     import time
+    from harpia.watershed.watershed import boundaries
 
     start_time = time.time()
 
@@ -634,8 +636,11 @@ def apply_active_contour(input_id: str, mode_id: str):
 
     annot_module = module_repo.get_module("annotation")
 
+
+    host_image = data_repo.get_image("ImageForContour")
+
     # Step 2: Preprocessing (Setup for 'start' only)
-    if mode_id == "start":
+    if mode_id == "start" or host_image is None:
         # Set current slice and axis
         axis_dim = utils.get_axis_num(params["axis"])
         annot_module.set_current_axis(axis_dim)
@@ -661,18 +666,18 @@ def apply_active_contour(input_id: str, mode_id: str):
 
     # Step 3: Execution Logic
     if params["method"] == "chan-vese":
-        level_set = morph_2D_chan_vese(
-            host_image, init_ls, params["iterations"], lambda1=params["weight"], lambda2=1.0, smoothing=params["smoothing"]
+        level_set = morphological_chan_vese(
+            host_image, init_level_set = init_ls, num_iter = params["iterations"], lambda1=params["weight"], lambda2=1.0, smoothing=params["smoothing"]
         )
     elif params["method"] == "geodesic":
         threshold = data_repo.get_image("GeodesicTresh")
-        level_set = morph_2D_geodesic_active_contour(
+        level_set = morphological_geodesic_active_contour(
             host_image,
-            init_ls,
-            iterations=params["iterations"],
-            balloonForce=params["balloon_force"],
+            init_level_set=init_ls,
+            num_iter=params["iterations"],
+            balloon=params["balloon_force"],
             threshold=threshold,
-            smoothing=params["smoothing"],
+            smoothing=params["smoothing"]
         )
     else:
         print(params["method"])
@@ -690,7 +695,8 @@ def apply_active_contour(input_id: str, mode_id: str):
         return jsonify(annot_module.current_mk_id)
 
     # Extract boundary coordinates for visualization
-    border = spin_img.spin_find_boundaries(level_set, dtype="uint8") > 0
+
+    border = boundaries(level_set.astype(np.int32)) > 0 #spin_img.spin_find_boundaries(level_set, dtype="uint8") > 0
     yy, xx = np.nonzero(border)
     coords_list = [yy.astype("int").tolist(), xx.astype("int").tolist()]
 
@@ -744,10 +750,15 @@ def apply_active_contour_checkboard(input_id: str):
     level_set = checkerboard_level_set(img_slice.shape, params["checkboard_size"]) > 0
     init_ls = level_set
 
-    level_set = morph_2D_chan_vese(
-        img_slice, init_ls, params["iterations"],
-        lambda1=params["weight"], lambda2=1.0, smoothing=params["smoothing"]
+    level_set = morphological_chan_vese(
+        img_slice.astype(np.float32),
+        params["iterations"],
+        init_ls,
+        smoothing=params["smoothing"],
+        lambda1=params["weight"],
+        lambda2=1.0
     )
+
 
     # Step 5: Adjust Level Set for Intensity
     if (params["background"]==True):
@@ -768,7 +779,7 @@ def apply_active_contour_checkboard(input_id: str):
 @app.route("/niblack_preview/<input_id>", methods=["POST"])
 @cross_origin()
 def niblack_preview(input_id: str):
-    from harpia.threshold.thresholdChunked import niblackThreshold
+    from harpia.threshold.thresholdChunked import threshold_niblack
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -815,7 +826,7 @@ def niblack_preview(input_id: str):
 
     #label_mask = img_slice >= 34000
     #threshold_H.niblack(input_img_3d,output_img,W,x,y,z,N,N,1)
-    output_img = niblackThreshold(input_img_3d,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+    output_img = threshold_niblack(input_img_3d,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
     label_mask = output_img>0
 
@@ -827,7 +838,7 @@ def niblack_preview(input_id: str):
 @app.route("/niblack_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def niblack_apply(input_id: str):
-    from harpia.threshold.thresholdChunked import niblackThreshold
+    from harpia.threshold.thresholdChunked import threshold_niblack
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -880,7 +891,7 @@ def niblack_apply(input_id: str):
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
             #threshold_H.niblack(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, x, y, 1, N, N, 1)
-            output_img[slice_num] = niblackThreshold(img.reshape(1, x, y),windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[slice_num] = threshold_niblack(img.reshape(1, x, y),windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
 
         elif axisIndex == 1:  # XZ plane
@@ -888,21 +899,21 @@ def niblack_apply(input_id: str):
             #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
             #z, x, y = out.shape
             #threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
-            output_img[:, slice_num, :] = niblackThreshold(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[:, slice_num, :] = threshold_niblack(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
             #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
             #z, x, y = out.shape
             #threshold_H.niblack(input, out, W, x, y, z, N, N, 1)
-            output_img[:, :, slice_num] = niblackThreshold(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[:, :, slice_num] = threshold_niblack(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
 
     elif convType == "3d":
         # Apply convolution in all x, y, z directions
         #threshold_H.niblack(input_img, output_img, W, x, y, z, N, N, N)
-        output_img= niblackThreshold(input_img,windowSize=N,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
+        output_img= threshold_niblack(input_img,windowSize=N,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
 
@@ -917,7 +928,7 @@ def niblack_apply(input_id: str):
 @app.route("/sauvola_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def sauvola_apply(input_id: str):
-    from harpia.threshold.thresholdChunked import sauvolaThreshold
+    from harpia.threshold.thresholdChunked import threshold_sauvola
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -971,21 +982,21 @@ def sauvola_apply(input_id: str):
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
             #threshold_H.sauvola(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, R, x, y, 1, N, N, 1)
-            output_img[slice_num] = sauvolaThreshold(img.reshape(1, x, y),windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[slice_num] = threshold_sauvola(img.reshape(1, x, y),windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
             #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
             #z, x, y = out.shape
             #threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
-            output_img[:, slice_num, :] = sauvolaThreshold(input,windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[:, slice_num, :] = threshold_sauvola(input,windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
             #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
             #z, x, y = out.shape
             #threshold_H.sauvola(input, out, W, R, x, y, z, N, N, 1)
-            output_img[:, :, slice_num] = sauvolaThreshold(input,windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[:, :, slice_num] = threshold_sauvola(input,windowSize=N,range = R,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
 
@@ -993,7 +1004,7 @@ def sauvola_apply(input_id: str):
     elif convType == "3d":
         # Apply convolution in all x, y, z directions
         #threshold_H.sauvola(input_img, output_img, W, R, x, y, z, N, N, N)
-        output_img = sauvolaThreshold(input_img,windowSize=N,range = R,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
+        output_img = threshold_sauvola(input_img,windowSize=N,range = R,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
 
@@ -1007,7 +1018,7 @@ def sauvola_apply(input_id: str):
 @app.route("/local_mean_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def local_mean_apply(input_id: str):
-    from harpia.threshold.thresholdChunked import meanThreshold
+    from harpia.threshold.thresholdChunked import threshold_mean
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -1060,7 +1071,7 @@ def local_mean_apply(input_id: str):
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
             #threshold_H.local_mean(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), W, x, y, 1, N, N, 1)
-            output_img[slice_num] = meanThreshold(img.reshape(1, x, y),windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[slice_num] = threshold_mean(img.reshape(1, x, y),windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
 
 
@@ -1069,21 +1080,21 @@ def local_mean_apply(input_id: str):
             #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
             #z, x, y = out.shape
             #threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
-            output_img[:, slice_num, :] = meanThreshold(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[:, slice_num, :] = threshold_mean(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
             #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
             #z, x, y = out.shape
             #threshold_H.local_mean(input, out, W, x, y, z, N, N, 1)
-            output_img[:, :, slice_num] = meanThreshold(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[:, :, slice_num] = threshold_mean(input,windowSize=N,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
 
     elif convType == "3d":
         # Apply convolution in all x, y, z directions
         #threshold_H.local_mean(input_img, output_img, W, x, y, z, N, N, N)
-        output_img= meanThreshold(input_img,windowSize=N,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
+        output_img= threshold_mean(input_img,windowSize=N,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
 
@@ -1098,7 +1109,7 @@ def local_mean_apply(input_id: str):
 @app.route("/local_gaussian_apply/<input_id>", methods=["POST"])
 @cross_origin()
 def local_gaussian_apply(input_id: str):
-    from harpia.threshold.thresholdChunked import gaussianThreshold
+    from harpia.threshold.thresholdChunked import threshold_gaussian
     def python_typer(x):
         if isinstance(x, (float, np.floating)):
             return float(x)
@@ -1151,21 +1162,21 @@ def local_gaussian_apply(input_id: str):
         if axisIndex == 0:  # XY plane
             img = input_img[slice_num]
             #threshold_H.local_gaussian(img.reshape(1, x, y), output_img[slice_num].reshape(1, x, y), x, y, 1, S,W,0)
-            output_img[slice_num] = gaussianThreshold(img.reshape(1, x, y),sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[slice_num] = threshold_gaussian(img.reshape(1, x, y),sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
             #out = np.ascontiguousarray(output_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
             #z, x, y = out.shape
             #threshold_H.local_gaussian(input, out, x, y, z, S,W,0)
-            output_img[:, slice_num, :] = gaussianThreshold(input,sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[:, slice_num, :] = threshold_gaussian(input,sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         elif axisIndex == 2:  # YZ plane
             input = np.ascontiguousarray(input_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
             #out = np.ascontiguousarray(output_img[:, :, slice_num].reshape((1, *input_img[:, :, slice_num].shape)), dtype=np.float32)
             #z, x, y = out.shape
             #threshold_H.local_gaussian(input, out, x, y, z, S, W,0)
-            output_img[:, :, slice_num] = gaussianThreshold(input,sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
+            output_img[:, :, slice_num] = threshold_gaussian(input,sigma=S,weight=W,type3d=0,verbose=1,gpuMemory=0.1,ngpus=1)
 
         #annot_module.annotation_image[slice_range] = output_img[slice_range]
         annot_module.annotation_image[slice_range] = np.where(output_img[slice_range] > 0, label, -1)
@@ -1173,7 +1184,7 @@ def local_gaussian_apply(input_id: str):
     elif convType == "3d":
         # Apply convolution in all x, y, z directions
         #threshold_H.local_gaussian(input_img, output_img, x, y, z, S,W,1)
-        output_img= gaussianThreshold(input_img,sigma=S,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
+        output_img= threshold_gaussian(input_img,sigma=S,weight=W,type3d=1,verbose=1,gpuMemory=0.1,ngpus=1)
 
         img_label = np.where(output_img > 0, label, -1)
 
@@ -1188,7 +1199,7 @@ def local_gaussian_apply(input_id: str):
 @app.route("/watershed_apply_2d/<input_id>", methods=["POST"])
 @cross_origin()
 def watershed_apply(input_id: str):
-    from harpia.filters.filtersChunked import (sobelFilter, prewittFilter)
+    from harpia.filters.filtersChunked import (sobel, prewitt)
     from harpia.watershed import watershed
     from harpia.quantification import quantification
     print(dir(quantification))
@@ -1247,10 +1258,10 @@ def watershed_apply(input_id: str):
             img = input_img[slice_num]
 
             if input_filter == 'sobel':
-                relief_img[slice_num] = sobelFilter(img.reshape(1, x, y), type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
+                relief_img[slice_num] = sobel(img.reshape(1, x, y), type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
 
             elif input_filter == 'prewitt':
-                relief_img[slice_num] = prewittFilter(img.reshape(1, x, y), type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
+                relief_img[slice_num] = prewitt(img.reshape(1, x, y), type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
 
         elif axisIndex == 1:  # XZ plane
             input = np.ascontiguousarray(input_img[:, slice_num, :].reshape((1, *input_img[:, slice_num, :].shape)), dtype=np.float32)
@@ -1258,10 +1269,10 @@ def watershed_apply(input_id: str):
             #z, x, y = out.shape
 
             if input_filter == 'sobel':
-                out = sobelFilter(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
+                out = sobel(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
 
             elif input_filter == 'prewitt':
-                out = prewittFilter(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
+                out = prewitt(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
 
             relief_img[:, slice_num, :] = out
 
@@ -1271,10 +1282,10 @@ def watershed_apply(input_id: str):
             #z, x, y = out.shape
                     
             if input_filter == 'sobel':
-                out = sobelFilter(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
+                out = sobel(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
 
             elif input_filter == 'prewitt':
-                out = prewittFilter(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
+                out = prewitt(input, type3d=0, verbose =1, gpuMemory=0.1, ngpus=1)
                         
             relief_img[:, :, slice_num] = out
 
@@ -1291,10 +1302,10 @@ def watershed_apply(input_id: str):
 
     else:
         if input_filter == 'sobel':
-            relief_img = sobelFilter(input_img, type3d=1, verbose =1, gpuMemory=0.1, ngpus=1)
+            relief_img = sobel(input_img, type3d=1, verbose =1, gpuMemory=0.1, ngpus=1)
 
         elif input_filter == 'prewitt':
-            relief_img = prewittFilter(input_img, type3d=1, verbose =1, gpuMemory=0.1, ngpus=1)
+            relief_img = prewitt(input_img, type3d=1, verbose =1, gpuMemory=0.1, ngpus=1)
 
         markers = data_repo.get_image('label').astype(np.int32)
         watershed_relief = relief_img.astype(np.int32)
@@ -1575,7 +1586,7 @@ def object_separation_apply(input_id: str):
             return None
     
     z,x,y = img_label.shape
-    edt = distance_transform_log_sum_kernel.distance_transform(img_label,sigma,1,z,x,y)
+    edt = distance_transform_log_sum_kernel.distance_transform_edt(img_label,sigma,1,z,x,y)
 
     # Check for NaN or inf values in edt and raise an error if found
     if np.isnan(edt).any() or np.isinf(edt).any():
@@ -1596,7 +1607,7 @@ def object_separation_apply(input_id: str):
 
     print('watershed start')
     for i in range(z):
-            watershed.watershed_meyers_2d(relief[i], markers[i], 0, x, y)
+            watershed.watershed_meyers_2d(relief[i], markers[i], 0)
 
     markers = markers*(img_label>0)
     data_repo.set_image('label',markers.astype(np.int32))
@@ -1972,3 +1983,179 @@ def nmf_apply(input_id: str):
     annot_module.multilabel_updated(remapped_labels, mk_id)
 
     return jsonify(annot_module.current_mk_id)
+
+@app.route("/sam", methods=["POST"])
+@cross_origin()
+def apply_sam():
+    """
+    Unified SAM1 endpoint:
+      - type: "box" | "pos" | "neg"
+      - runs SAM on the current slice
+      - updates annotation mask
+    """
+    import time
+    from segment_anything import sam_model_registry, SamPredictor
+
+    start = time.time()
+
+    sam_predictor = module_repo.get_module('sam_predictor')
+
+    # ---------------------------------------------------
+    # Clear if operation ended
+    # ---------------------------------------------------
+    try:
+        req = request.json
+        sam_type  = req["type"]
+    except Exception as e:
+        return handle_exception(str(e))
+    
+    if sam_type == "clearall":
+        module_repo.delete_module("sam_predictor")
+        print("[SAM] Predictor cleared from module_repo.")
+        return jsonify({"status": "cleared"})
+    
+    # ---------------------------------------------------
+    # INIT should also return immediately
+    # ---------------------------------------------------
+    if sam_type == "init":
+        sam_predictor = module_repo.get_module("sam_predictor")
+
+        if sam_predictor is None:
+            print("[SAM] Loading SAM1 model (ViT-H)...")
+            sam = sam_model_registry["vit_h"](
+                checkpoint="/ibira/lnls/labs/tepui/apps/gcd/annotat3dweb/models_checkpoint/sam_vit_h_4b8939.pth"
+            ).to("cuda")
+
+            sam_predictor = SamPredictor(sam)
+            module_repo.set_module("sam_predictor", sam_predictor)
+            print("[SAM] Ready!")
+
+        return jsonify({"status": "initialized"})
+
+    # ---------------------------------------------------
+    # Parse JSON
+    # ---------------------------------------------------
+    #try:
+    req = request.json
+    sam_type  = req["type"]
+    label     = int(req["label"])
+    axis      = req["axis"]
+    slice_num = int(req["slice"])
+    new_click = req["new_click"]
+    #except Exception as e:
+    #    return handle_exception(str(e))
+
+    # ---------------------------------------------------
+    # If for some reason SAM was not initialized
+    # ---------------------------------------------------
+    if sam_predictor is None:
+        print("[SAM] Loading SAM1 model (ViT-H)...")
+        sam = sam_model_registry["vit_h"](
+            checkpoint="/ibira/lnls/labs/tepui/apps/gcd/annotat3dweb/models_checkpoint/sam_vit_h_4b8939.pth"
+        ).to("cuda")
+        sam_predictor = SamPredictor(sam)
+        print("[SAM] Ready!")
+
+    predictor = sam_predictor
+
+    # ---------------------------------------------------
+    # Prepare slice
+    # ---------------------------------------------------
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+    img_slice = data_repo.get_image('image')[slice_range]
+
+    # SAM expects uint8 RGB
+    # Compute the 80th percentile (robust upper bound)
+    p_low  = np.percentile(img_slice, 2)
+    p_high = np.percentile(img_slice, 98)
+
+    sl_norm = 255 * (img_slice - p_low) / (p_high - p_low + 1e-8)
+    sl_norm = np.clip(sl_norm, 0, 255).astype(np.uint8)
+
+    # Clip any overflow caused by bright outliers
+    sl_norm = np.clip(sl_norm, 0, 255).astype(np.uint8)
+
+    rgb = np.repeat(sl_norm[..., None], 3, axis=2)
+
+    predictor.set_image(rgb)
+
+    # ---------------------------------------------------
+    # SAM prediction
+    # ---------------------------------------------------
+    box = np.array([req["box"]], dtype=np.float32)
+
+    if sam_type == "box":
+        box = np.array([req["box"]], dtype=np.float32)
+        masks, scores, logits = predictor.predict(
+            box=box,
+            multimask_output=True
+        )
+
+        best_idx = np.argmax(scores)
+
+    elif sam_type in ("pos", "neg"):
+
+        raw_box = req.get("box")
+
+        if raw_box is None:
+            box = None
+        else:
+            box = np.array([raw_box], dtype=np.float32)
+
+
+        coords = []
+        labels = []
+
+        for (x,y) in req["points_pos"]:
+            coords.append([x,y])
+            labels.append(1)
+
+        for (x,y) in req["points_neg"]:
+            coords.append([x,y])
+            labels.append(0)
+
+        previous_logits = data_repo.get_image("logitsforsam")
+
+        if previous_logits is not None:
+            previous_logits = previous_logits[None, :, :]
+        
+        if new_click is True:
+            previous_logits = None
+
+        coords = np.array(coords, dtype=np.float32)
+        labels = np.array(labels, dtype=np.int32)
+
+
+        masks, scores, logits = predictor.predict(
+            point_coords=coords,
+            point_labels=labels,
+            box = box,
+            multimask_output=True,
+            mask_input = previous_logits
+        )
+        best_idx = np.argmax(scores)
+
+    else:
+        return handle_exception("Invalid SAM type")
+
+    # ---------------------------------------------------
+    # Apply mask into annotation
+    # ---------------------------------------------------
+    mk_id = annot_module.current_mk_id
+
+    data_repo.set_image("logitsforsam", logits[best_idx])
+
+    mask = masks[best_idx] > 0
+
+    annot_module.labelmask_update(mask, label, mk_id, new_click = new_click)
+
+    module_repo.set_module('sam_predictor', module=sam_predictor)
+
+    print(f"[SAM] completed in {time.time() - start:.3f}s")
+
+    return jsonify(mk_id)
+

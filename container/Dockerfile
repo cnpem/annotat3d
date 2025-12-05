@@ -20,10 +20,10 @@
 #     - python3 hpccm-cuda-gcc-openmpi-hdf-conda.py --format singularity --cuda 11.2.2 --opmpi 4.1.0 --python py39 > Singularity.def
 # 
 
-FROM nvcr.io/nvidia/cuda:11.2.2-cudnn8-devel-ubuntu20.04
+FROM nvcr.io/nvidia/cuda:11.8.0-cudnn8-devel-ubuntu20.04
 
 LABEL br.lnls.gcd.mantainer='Data Science and Management Group <gcd.lnls.br>' \
-    br.lnls.gcd.version=11.2.2-cudnn8-ubuntu20.04-py39
+    br.lnls.gcd.version=11.8.0-cudnn8-ubuntu20.04-py39
 
 # GCD package repository ID
 
@@ -188,8 +188,9 @@ RUN python3 -m pip config set global.extra-index-url https://gitlab.cnpem.br/api
 
 RUN python3 -m pip install --upgrade pip setuptools wheel build pyclean
 
-RUN python3 -m pip install numpy==1.22.3 && \
-    python3 -m pip install SharedArray==3.2.0
+RUN python3 -m pip install torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 --index-url https://download.pytorch.org/whl/cu118
+
+RUN python3 -m pip install numpy==1.22.3
 
 COPY . /opt/annotat3dweb
 

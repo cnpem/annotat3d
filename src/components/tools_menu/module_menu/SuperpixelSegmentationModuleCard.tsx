@@ -13,204 +13,93 @@ import {
     IonCard,
     IonCardHeader,
     IonCardContent,
+    IonNote,
     useIonToast,
 } from '@ionic/react';
 import { informationCircleOutline } from 'ionicons/icons';
-import isEqual from 'lodash.isequal';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useStorageState } from 'react-storage-hooks';
+import isEqual from 'lodash.isequal';
 import { currentEventValue, useEventBus, dispatch } from '../../../utils/eventbus';
 import { sfetch } from '../../../utils/simplerequest';
 import { ModuleCard, ModuleCardItem } from './ModuleCard';
 import LoadingComponent from '../utils/LoadingComponent';
+import ErrorWindowComp from '../../main_menu/file/utils/ErrorWindowComp';
 import {
-    BackEndLoadClassifier,
-    Classifier,
-    ClassifierParams,
-    classifiers,
-    Feature,
-    FeatureParams,
     InitDefaultModelClassifierParams,
     initialParamsValues,
-    ModelClassifierParams,
+    classifiers,
+    Classifier,
+    ClassifierParams,
+    Feature,
+    FeatureParams,
     Pooling,
+    ModelClassifierParams,
 } from './SuperpixelSegInterface';
 import ErrorInterface from '../../main_menu/file/utils/ErrorInterface';
-import ErrorWindowComp from '../../main_menu/file/utils/ErrorWindowComp';
 
 const SuperpixelSegmentationModuleCard: React.FC = () => {
-    const [defaultModelClassifierParams, setDefaultModelClassifierParams] = useStorageState(
+    const [defaultModelClassifierParams] = useStorageState(
         sessionStorage,
         'defaultModelClassifierParams',
         InitDefaultModelClassifierParams
     );
-    const [prevFeatParams, setPrevFeatParams] = useStorageState<FeatureParams>(
-        sessionStorage,
-        'superpixelPrevFeatParams'
-    );
+
     const [featParams, setFeatParams] = useStorageState<FeatureParams>(
         sessionStorage,
         'superpixelFeatParams',
         initialParamsValues
     );
 
-    const [prevClassParams, setPrevClassParams] = useStorageState<ClassifierParams>(
-        sessionStorage,
-        'superpixelPrevClassParams'
-    );
     const [classParams, setClassParams] = useStorageState<ClassifierParams>(sessionStorage, 'superpixelClassParams', {
         classifier: 'rf',
         params: defaultModelClassifierParams.rf,
     });
+
+    const [prevFeatParams, setPrevFeatParams] = useStorageState<FeatureParams>(
+        sessionStorage,
+        'superpixelPrevFeatParams'
+    );
+
+    const [prevClassParams, setPrevClassParams] = useStorageState<ClassifierParams>(
+        sessionStorage,
+        'superpixelPrevClassParams'
+    );
 
     const [isEditLabelActivated, setIsEditLabelActivated] = useStorageState<boolean>(
         sessionStorage,
         'isEditLabelActivatedSuperpixel',
         false
     );
-    const [hasPreprocessed, setHasPreprocessed] = useStorageState<boolean>(
-        sessionStorage,
-        'superpixelSegmPreprocessed',
-        false
-    );
-    const [loadingMsg, setLoadingMsg] = useState<string>('');
-    const [showLoadingCompSpS, setShowLoadingCompSpS] = useState<boolean>(false);
-    const [disabled, setDisabled] = useState<boolean>(true);
 
-    const [showErrorWindow, setShowErrorWindow] = useState<boolean>(false);
-    const [errorMsg, setErrorMsg] = useState<string>('');
-    const [headerErrorMsg, setHeaderErrorMsg] = useState<string>('');
+    const [showLoadingCompSpS, setShowLoadingCompSpS] = useState(false);
+    const [loadingMsg, setLoadingMsg] = useState('');
 
     const [showToast] = useIonToast();
+    const [showErrorWindow, setShowErrorWindow] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+    const [headerErrorMsg, setHeaderErrorMsg] = useState('');
+
     const timeToast = 2000;
-    const toastMessages = {
-        onPreprocess: 'Preprocess done!',
-        onPreview: 'Preview done!',
-        onApply: 'Apply done!',
-    };
 
-    const loadingMessages = {
-        onPreprocess: 'Preprocessing',
-        onPreview: 'Preparing preview',
-        onApply: 'Applying',
-    };
+    /** safe converter for TS */
+    function toNumber(v: string | number | null | undefined): number {
+        const n = Number(v);
+        return isNaN(n) ? 0 : n;
+    }
 
-    const handleErrorMsg = (msg: string) => {
-        setErrorMsg(msg);
-    };
-
-    const handleErrorWindow = (flag: boolean) => {
-        setShowErrorWindow(flag);
-    };
-
+    // Track pre-process status
     useEffect(() => {
-        void sfetch('POST', 'is_available_image/superpixel', '', 'json').then((response) => {
-            setDisabled(!response.available);
-        });
-    });
+        const featChanged = !isEqual(prevFeatParams, featParams);
+        const classChanged = !isEqual(prevClassParams, classParams);
+        if (!featChanged && !classChanged) return;
+        setPrevFeatParams(featParams);
+        setPrevClassParams(classParams);
+    }, [featParams, prevFeatParams, classParams, prevClassParams]);
 
-    // useEffect to force the user to use preprocess if he changes the featParams
-    useEffect(() => {
-        const hasChanged = !isEqual(prevFeatParams, featParams);
-        setHasPreprocessed(!hasChanged);
-    }, [featParams, prevFeatParams, setHasPreprocessed]);
-
-    // useEffect to force the user to use preprocess if he changes the classParams
-    useEffect(() => {
-        const hasChanged = !isEqual(prevClassParams, classParams);
-        setHasPreprocessed(!hasChanged);
-    }, [classParams, prevClassParams, setHasPreprocessed]);
-
-    useEventBus('superpixelChanged', () => {
-        setDisabled(false);
-        setHasPreprocessed(false);
-        setPrevFeatParams(null);
-        setPrevClassParams(null);
-    });
-
-    /**
-     * This EventBus forces FeatParams to update. For some reason, this component is having trouble
-     * to update featParams and prevFeatParams.
-     * The value 17 is the maximum checkbox and input the user can place on this menu
-     * TODO : If we have time, we can implement a less criminal way to update this state
-     */
-    useEventBus('updateFeatParams', (payloadParams: { newParams: FeatureParams; index: number }) => {
-        if (payloadParams.index < 17) {
-            setFeatParams(payloadParams.newParams);
-            setPrevFeatParams(null);
-            dispatch('updateFeatParams', {
-                ...payloadParams,
-                index: payloadParams.index + 1,
-            });
-        }
-    });
-
-    useEventBus('setNewClassParams', (newClassifier: BackEndLoadClassifier) => {
-        let newDefaultModelClassifierParams: Record<string, ModelClassifierParams[]>;
-        if (newClassifier.classifier_parameters.classifier === 'rf') {
-            newDefaultModelClassifierParams = {
-                rf: newClassifier.classifier_parameters.params,
-                svm: [{ id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number' }],
-                mlp: [{ id: 'mlp_hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text' }],
-                adaboost: [{ id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number' }],
-                knn: [{ id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number' }],
-            };
-        } else if (newClassifier.classifier_parameters.classifier === 'svm') {
-            newDefaultModelClassifierParams = {
-                rf: [{ id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number' }],
-                svm: newClassifier.classifier_parameters.params,
-                mlp: [{ id: 'mlp_hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text' }],
-                adaboost: [{ id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number' }],
-                knn: [{ id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number' }],
-            };
-        } else if (newClassifier.classifier_parameters.classifier === 'mlp') {
-            newDefaultModelClassifierParams = {
-                rf: [{ id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number' }],
-                svm: [{ id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number' }],
-                mlp: newClassifier.classifier_parameters.params,
-                adaboost: [{ id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number' }],
-                knn: [{ id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number' }],
-            };
-        } else if (newClassifier.classifier_parameters.classifier === 'adaboost') {
-            newDefaultModelClassifierParams = {
-                rf: [{ id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number' }],
-                svm: [{ id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number' }],
-                mlp: [{ id: 'mlp_hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text' }],
-                adaboost: newClassifier.classifier_parameters.params,
-                knn: [{ id: 'knn_n_neighbors', label: 'N. neighbors', value: 3, input: 'number' }],
-            };
-        } else {
-            newDefaultModelClassifierParams = {
-                rf: [{ id: 'rf_n_estimators', label: 'Random Forest N. Trees', value: 100, input: 'number' }],
-                svm: [{ id: 'svm_C', label: 'SVM C', value: 1.0, input: 'number' }],
-                mlp: [{ id: 'mlp_hidden_layer_sizes', label: 'N. hidden Neurons', value: [100, 10], input: 'text' }],
-                adaboost: [{ id: 'adaboost_n_estimators', label: 'N. classifiers', value: 100, input: 'number' }],
-                knn: newClassifier.classifier_parameters.params,
-            };
-        }
-        setDefaultModelClassifierParams(newDefaultModelClassifierParams);
-        setClassParams(newClassifier.classifier_parameters);
-        setPrevClassParams(newClassifier.classifier_parameters);
-
-        console.table(newClassifier.feature_extraction_params);
-
-        dispatch('updateFeatParams', {
-            newParams: newClassifier.feature_extraction_params,
-            index: 0,
-        });
-    });
-
-    useEventBus('ImageLoaded', () => {
-        setPrevFeatParams(null);
-        setPrevClassParams(null);
-    });
-
-    useEventBus('isEditLabelDisabled', (flagPayload: boolean) => {
-        setIsEditLabelActivated(flagPayload);
-    });
-
+    // Backend params for segmentation
     function getModuleBackendParams() {
-        const params = {
+        return {
             classifier_params: {
                 classifier_type: classParams.classifier,
                 grid_search: false,
@@ -221,116 +110,168 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
             },
             feature_extraction_params: {
                 sigmas: featParams.multiscale,
-                selected_features: featParams?.feats.filter((p) => p.active).map((p) => p.id),
-                selected_supervoxel_feat_pooling: featParams?.pooling.filter((p) => p.active).map((p) => p.id),
+                selected_features: featParams.feats.filter((p) => p.active).map((p) => p.id),
+                selected_supervoxel_feat_pooling: featParams.pooling.filter((p) => p.active).map((p) => p.id),
                 feat_selection_enabled: featParams.thresholdSelection !== undefined,
                 feat_selection_method_threshold: featParams.thresholdSelection,
             },
         };
-
-        return params;
     }
 
-    function onApply() {
-        setDisabled(true);
-        setShowLoadingCompSpS(true);
-        setLoadingMsg(loadingMessages.onApply);
-        sfetch('POST', 'superpixel_segmentation_module/execute', '')
-            .then(() => {
-                dispatch('labelChanged', '');
-                setShowLoadingCompSpS(false);
-                setDisabled(false);
-                void showToast(toastMessages.onApply, timeToast);
-                dispatch('useSuperpixelModule', true);
-            })
-            .catch((error: ErrorInterface) => {
-                setDisabled(false);
-                console.log('error in superpixel_segmentation_module apply');
-                console.log(error.error_msg);
-                setShowErrorWindow(true);
-                setHeaderErrorMsg(`error on apply in superpixel segmentation menu`);
-                setErrorMsg(error.error_msg);
-                setHasPreprocessed(false);
-                setShowLoadingCompSpS(false);
-            });
-    }
-
-    function onPreview() {
-        const curSlice = currentEventValue('sliceChanged') as {
-            slice: number;
-            axis: string;
-        };
-
-        setDisabled(true);
-        setShowLoadingCompSpS(true);
-        setLoadingMsg(loadingMessages.onPreview);
-        sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice), 'json')
-            .then((response: { selected_features_names: string[] }) => {
-                dispatch('selectedFeaturesNames', response.selected_features_names);
-                dispatch('labelChanged', '');
-                setDisabled(false);
-                setShowLoadingCompSpS(false);
-                setHasPreprocessed(true);
-                void showToast(toastMessages.onPreview, timeToast);
-            })
-            .catch((error: ErrorInterface) => {
-                setDisabled(false);
-                console.log('error in superpixel_segmentation_module preview');
-                console.log(error.error_msg);
-                setShowErrorWindow(true);
-                setHeaderErrorMsg(`error on preview in superpixel segmentation menu`);
-                setErrorMsg(error.error_msg);
-                setHasPreprocessed(false);
-                setShowLoadingCompSpS(false);
-            });
-    }
-
-    function onPreprocess() {
+    // TRAIN
+    function onTrain() {
         const params = getModuleBackendParams();
-
-        setDisabled(true);
         setShowLoadingCompSpS(true);
-        setLoadingMsg(loadingMessages.onPreprocess);
-        sfetch('POST', '/superpixel_segmentation_module/create', JSON.stringify(params))
+        setLoadingMsg('Training model...');
+
+        sfetch('POST', '/segmentation_module/train?module=superpixel&finetune=false', JSON.stringify(params), 'json')
             .then(() => {
-                setPrevFeatParams(featParams);
-                setPrevClassParams(classParams);
-                void showToast(toastMessages.onPreprocess, timeToast);
-                setHasPreprocessed(true);
-                setDisabled(false);
+                void showToast('Training done ✅', timeToast);
                 setShowLoadingCompSpS(false);
             })
             .catch((error: ErrorInterface) => {
-                setDisabled(false);
-                console.log('error in superpixel_segmentation_module preprocess');
-                console.log(error.error_msg);
+                console.error('error in superpixel train', error.error_msg);
                 setShowErrorWindow(true);
-                setHeaderErrorMsg(`error on preprocess in superpixel segmentation menu`);
+                setHeaderErrorMsg('Error on training');
                 setErrorMsg(error.error_msg);
-                setHasPreprocessed(false);
                 setShowLoadingCompSpS(false);
             });
     }
 
-    function renderSelectOptionClassifier(classifier: Classifier) {
-        return (
-            <IonSelectOption key={classifier.id} value={classifier.id}>
-                {classifier.name}
-            </IonSelectOption>
-        );
+    // PREVIEW
+    function onPreview() {
+        const curSlice = currentEventValue('sliceChanged') as { slice: number; axis: string };
+
+        setShowLoadingCompSpS(true);
+        setLoadingMsg('Generating slice preview...');
+
+        sfetch('POST', '/superpixel_segmentation_module/preview', JSON.stringify(curSlice))
+            .then(() => {
+                dispatch('labelChanged', '');
+                void showToast('Slice preview done ✅', timeToast);
+                setShowLoadingCompSpS(false);
+            })
+            .catch((error: ErrorInterface) => {
+                setShowErrorWindow(true);
+                setHeaderErrorMsg('Error on preview');
+                setErrorMsg(error.error_msg);
+                setShowLoadingCompSpS(false);
+            });
     }
 
+    // APPLY (Volume segmentation)
+    function onApply() {
+        setShowLoadingCompSpS(true);
+        setLoadingMsg('Running full volume segmentation...');
+
+        sfetch('POST', '/superpixel_segmentation_module/execute', '')
+            .then(() => {
+                dispatch('labelChanged', '');
+                void showToast('Volume segmentation done ✅', timeToast);
+                setShowLoadingCompSpS(false);
+            })
+            .catch((error: ErrorInterface) => {
+                setShowErrorWindow(true);
+                setHeaderErrorMsg('Error applying model');
+                setErrorMsg(error.error_msg);
+                setShowLoadingCompSpS(false);
+            });
+    }
+
+    return (
+        <ModuleCard
+            name="Superpixel Segmentation"
+            onApply={onApply}
+            onPreview={onPreview}
+            onOther={onTrain}
+            OtherName="Train"
+            disabledPreview={isEditLabelActivated}
+        >
+            <ModuleCardItem name="Superpixel Segmentation Parameters">
+                {/* FEATURES */}
+                <ModuleCardItem name="Feature Extraction Parameters">
+                    <IonList>{featParams.feats.map(renderCheckboxFeature)}</IonList>
+                </ModuleCardItem>
+
+                {/* POOLING */}
+                <ModuleCardItem name="Supervoxel Feature Pooling">
+                    <IonList>{featParams.pooling.map(renderCheckboxPooling)}</IonList>
+                </ModuleCardItem>
+
+                {/* MULTISCALE */}
+                <ModuleCardItem name="Multiscale Filtering">
+                    <IonItem>
+                        <IonLabel position="floating">Multi-scale sigma list</IonLabel>
+                        <IonInput
+                            value={featParams.multiscale.join(',')}
+                            onIonChange={(e) => {
+                                const v = (e.detail.value as string) || '';
+                                setFeatParams({ ...featParams, multiscale: v.split(',').map((n) => +n) });
+                            }}
+                        />
+                    </IonItem>
+                </ModuleCardItem>
+
+                {/* CLASSIFIER */}
+                <ModuleCardItem name="Classifier">
+                    <IonItem>
+                        <IonLabel>Classifier Model</IonLabel>
+                        <IonSelect
+                            interface="popover"
+                            value={classParams.classifier}
+                            onIonChange={(e) =>
+                                setClassParams({
+                                    classifier: e.detail.value,
+                                    params: defaultModelClassifierParams[e.detail.value],
+                                })
+                            }
+                        >
+                            {classifiers.map((c: Classifier) => (
+                                <IonSelectOption key={c.id} value={c.id}>
+                                    {c.name}
+                                </IonSelectOption>
+                            ))}
+                        </IonSelect>
+                    </IonItem>
+
+                    <Fragment>
+                        {classParams.params.map((p) =>
+                            renderModelParameter(p, (value) => {
+                                const newParams = classParams.params.map((np) =>
+                                    np.id === p.id ? { ...np, value } : np
+                                );
+                                setClassParams({ ...classParams, params: newParams });
+                            })
+                        )}
+                    </Fragment>
+                </ModuleCardItem>
+
+                <LoadingComponent openLoadingWindow={showLoadingCompSpS} loadingText={loadingMsg} />
+            </ModuleCardItem>
+
+            <ErrorWindowComp
+                errorMsg={errorMsg}
+                headerMsg={headerErrorMsg}
+                onErrorMsg={setErrorMsg}
+                errorFlag={showErrorWindow}
+                onErrorFlag={setShowErrorWindow}
+            />
+        </ModuleCard>
+    );
+
+    /** UI helpers */
     function renderCheckboxFeature(feature: Feature) {
         return (
             <IonItem key={feature.id}>
                 <IonLabel>
                     <small>
                         {feature.name}
-                        <IonButton id={'showSuperpixelSegFeatInfo-button-' + feature.id} size="small" fill="clear">
+                        <IonButton id={`featinfo-${feature.id}`} size="small" fill="clear">
                             <IonIcon icon={informationCircleOutline} />
                         </IonButton>
                     </small>
-                    <IonPopover trigger={'showSuperpixelSegFeatInfo-button-' + feature.id} reference="event">
+
+                    <IonPopover trigger={`featinfo-${feature.id}`} reference="event">
                         <IonContent>
                             <IonCard>
                                 <IonCardHeader>
@@ -341,206 +282,53 @@ const SuperpixelSegmentationModuleCard: React.FC = () => {
                         </IonContent>
                     </IonPopover>
                 </IonLabel>
+
                 <IonCheckbox
-                    value={feature.id}
                     checked={feature.active}
                     onIonChange={(e) => {
-                        console.log(e);
-                        const newfeats = featParams?.feats.map((nf) => {
-                            if (nf.id === feature.id) {
-                                return {
-                                    ...nf,
-                                    active: e.detail.checked,
-                                };
-                            } else {
-                                return nf;
-                            }
-                        });
-                        setFeatParams({ ...featParams, feats: newfeats });
+                        const newFeats = featParams.feats.map((f) =>
+                            f.id === feature.id ? { ...f, active: e.detail.checked } : f
+                        );
+                        setFeatParams({ ...featParams, feats: newFeats });
                     }}
                 />
             </IonItem>
         );
     }
 
-    function renderCheckboxPooling(pooling: Pooling) {
+    function renderCheckboxPooling(pool: Pooling) {
         return (
-            <IonItem key={pooling.id}>
-                <IonLabel>{pooling.name}</IonLabel>
+            <IonItem key={pool.id}>
+                <IonLabel>{pool.name}</IonLabel>
                 <IonCheckbox
-                    value={pooling.id}
-                    checked={pooling.active}
+                    checked={pool.active}
                     onIonChange={(e) => {
-                        console.log(e);
-                        const newpooling = featParams?.pooling.map((np) => {
-                            if (np.id === pooling.id) {
-                                return {
-                                    ...np,
-                                    active: e.detail.checked,
-                                };
-                            } else {
-                                return np;
-                            }
-                        });
-                        setFeatParams({ ...featParams, pooling: newpooling });
+                        const newPooling = featParams.pooling.map((p) =>
+                            p.id === pool.id ? { ...p, active: e.detail.checked } : p
+                        );
+                        setFeatParams({ ...featParams, pooling: newPooling });
                     }}
                 />
             </IonItem>
         );
     }
 
-    function stringToNumberArray(text: string): number[] {
-        return text
-            .split(',')
-            .map((t) => parseInt(t))
-            .filter((n) => !Number.isNaN(n));
-    }
-
-    function renderModelParameter(modelParam: ModelClassifierParams, onParamChange?: (value: any) => void) {
+    function renderModelParameter(param: ModelClassifierParams, onChange?: (v: any) => void) {
         return (
-            <IonItem key={modelParam.id}>
-                <IonLabel position="floating"> {modelParam.label} </IonLabel>
+            <IonItem key={param.id}>
+                <IonLabel position="floating">{param.label}</IonLabel>
                 <IonInput
-                    type={modelParam.input}
+                    type={param.input}
                     debounce={200}
-                    value={modelParam.value}
+                    value={param.value}
                     onIonChange={(e) => {
-                        let value: any = e.detail.value;
-                        if (modelParam.id === 'hidden_layer_sizes') {
-                            value = stringToNumberArray(value);
-                        }
-                        if (onParamChange) {
-                            onParamChange(value);
-                        }
+                        const v = e.detail.value;
+                        if (onChange) onChange(v);
                     }}
-                ></IonInput>
+                />
             </IonItem>
         );
     }
-
-    return (
-        <ModuleCard
-            name="Superpixel Segmentation"
-            disabled={disabled}
-            onApply={onApply}
-            onPreview={onPreview}
-            onOther={onPreprocess}
-            disabledApply={!hasPreprocessed}
-            disabledPreview={!hasPreprocessed || isEditLabelActivated}
-            disabledOther={hasPreprocessed}
-            OtherName="Preprocess"
-        >
-            <ModuleCardItem name="Superpixel Segmentation Parameters">
-                <ModuleCardItem name="Feature Extraction Parameters">
-                    <IonList>{featParams?.feats.map(renderCheckboxFeature)}</IonList>
-                </ModuleCardItem>
-
-                <ModuleCardItem name="Superpixel Feature Pooling">
-                    {featParams?.pooling.map(renderCheckboxPooling)}
-                </ModuleCardItem>
-
-                <ModuleCardItem name="Multi-scale Parameters">
-                    <IonItem>
-                        <IonLabel position="floating">
-                            <small>Multi-scale Filter Windows</small>
-                        </IonLabel>
-                        <IonInput
-                            value={featParams?.multiscale.join(',')}
-                            onIonChange={(e) => {
-                                if (e.detail.value) {
-                                    const value = stringToNumberArray(e.detail.value);
-                                    if (!isEqual(featParams.multiscale, value)) {
-                                        setFeatParams({
-                                            ...featParams,
-                                            multiscale: value,
-                                        });
-                                    }
-                                }
-                            }}
-                        ></IonInput>
-                    </IonItem>
-                </ModuleCardItem>
-                <ModuleCardItem name="Feature Selection Parameters">
-                    <IonItem>
-                        <IonLabel>Enable?</IonLabel>
-                        <IonCheckbox
-                            checked={featParams.thresholdSelection !== undefined}
-                            onIonChange={(e) => {
-                                const value = e.detail.checked ? 0.01 : undefined;
-                                setFeatParams({ ...featParams, thresholdSelection: value });
-                            }}
-                        />
-                    </IonItem>
-                    <IonItem>
-                        <IonLabel position="stacked">Importance Threshold</IonLabel>
-                        <IonInput
-                            placeholder="feat selection disabled"
-                            min={0}
-                            max={0.1}
-                            type="number"
-                            step="0.01"
-                            value={featParams.thresholdSelection}
-                            onIonChange={(e) => {
-                                const value = e.detail.value ? +e.detail.value : undefined;
-                                setFeatParams({
-                                    ...featParams,
-                                    thresholdSelection: value,
-                                });
-                            }}
-                        ></IonInput>
-                    </IonItem>
-                </ModuleCardItem>
-                <ModuleCardItem name="Classifier Parameters">
-                    <IonItem>
-                        <IonLabel>Classifier Model</IonLabel>
-                        <IonSelect
-                            interface="popover"
-                            value={classParams.classifier}
-                            onIonChange={(e) => {
-                                if (e.detail.value) {
-                                    setClassParams({
-                                        classifier: e.detail.value,
-                                        params: defaultModelClassifierParams[e.detail.value],
-                                    });
-                                }
-                            }}
-                        >
-                            {classifiers.map(renderSelectOptionClassifier)}
-                        </IonSelect>
-                    </IonItem>
-                    <Fragment>
-                        {classParams.params.map((p) => {
-                            return renderModelParameter(p, (value) => {
-                                const newParams = classParams.params.map((np) => {
-                                    if (np.id === p.id) {
-                                        return { ...np, value };
-                                    } else {
-                                        return np;
-                                    }
-                                });
-
-                                if (!isEqual(newParams, classParams.params)) {
-                                    setClassParams({
-                                        ...classParams,
-                                        params: newParams,
-                                    });
-                                }
-                            });
-                        })}
-                    </Fragment>
-                </ModuleCardItem>
-            </ModuleCardItem>
-            {/*Error window*/}
-            <ErrorWindowComp
-                errorMsg={errorMsg}
-                headerMsg={headerErrorMsg}
-                onErrorMsg={handleErrorMsg}
-                errorFlag={showErrorWindow}
-                onErrorFlag={handleErrorWindow}
-            />
-            <LoadingComponent openLoadingWindow={showLoadingCompSpS} loadingText={loadingMsg} />
-        </ModuleCard>
-    );
 };
 
 export default SuperpixelSegmentationModuleCard;

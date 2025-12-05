@@ -1,21 +1,24 @@
-import { IonItem, IonLabel, IonInput, IonSelect, IonSelectOption, useIonToast } from '@ionic/react';
+import { IonItem, IonLabel, IonInput, IonSelect, IonSelectOption, IonCheckbox, useIonToast } from '@ionic/react';
 import { sfetch } from '../../../utils/simplerequest';
 import { ModuleCard, ModuleCardItem } from './ModuleCard';
 import { dispatch, useEventBus } from '../../../utils/eventbus';
 import { useStorageState } from 'react-storage-hooks';
 import LoadingComponent from '../utils/LoadingComponent';
 import { useState } from 'react';
-import { SuperpixelType, SuperpixelState } from './SuperpixelSegInterface';
+import { colorFromId, defaultColormap } from '../../../utils/colormap';
+import { LabelInterface } from '../annotation_menu/label_table/LabelInterface';
+
+interface HierarchicalWatershedState {
+    levels: number;
+    neighborhood: number; // only 6 or 27
+    labels: boolean;
+}
 
 const SuperpixelModuleCard: React.FC = () => {
-    const [superpixelParams, setSuperpixelParams] = useStorageState<SuperpixelState>(
+    const [superpixelParams, setSuperpixelParams] = useStorageState<HierarchicalWatershedState>(
         sessionStorage,
         'superpixelParams',
-        {
-            compactness: 1000,
-            seedsSpacing: 4,
-            method: 'waterpixels',
-        }
+        { levels: 6, neighborhood: 27, labels: false }
     );
 
     const [showToast] = useIonToast();
@@ -23,9 +26,7 @@ const SuperpixelModuleCard: React.FC = () => {
     const [lockMenu, setLockMenu] = useStorageState<boolean>(sessionStorage, 'LockComponents', false);
     const [showLoadingComp, setShowLoadingComp] = useState<boolean>(false);
 
-    useEventBus('LockComponents', (changeLockMenu) => {
-        setLockMenu(changeLockMenu);
-    });
+    useEventBus('LockComponents', (changeLockMenu) => setLockMenu(changeLockMenu));
 
     useEventBus('recalcSuperpixel', (recalc: boolean) => {
         if (recalc) {
@@ -34,76 +35,93 @@ const SuperpixelModuleCard: React.FC = () => {
         }
     });
 
-    useEventBus('setSuperpixelParams', (superpixel: SuperpixelState) => {
-        setSuperpixelParams(superpixel);
-        setSuperpixelParams(superpixel);
+    useEventBus('setSuperpixelParams', (params: HierarchicalWatershedState) => {
+        setSuperpixelParams(params);
     });
 
     function onApply(): void {
+        if (lockMenu) return;
+
         setLockMenu(true);
         setShowLoadingComp(true);
+
         const params = {
-            superpixel_type: superpixelParams.method,
-            seed_spacing: superpixelParams.seedsSpacing,
-            compactness: superpixelParams.compactness,
-            use_pixel_segmentation: false,
+            levels: superpixelParams.levels,
+            neighborhood: superpixelParams.neighborhood,
+            labels: superpixelParams.labels,
         };
-        sfetch('POST', '/superpixel', JSON.stringify(params))
-            .then(() => {
+
+        sfetch('POST', '/superpixel', JSON.stringify(params), 'json')
+            .then((result) => {
+                // Case 1: we received a label vector (normal watershed output)
+                if (Array.isArray(result)) {
+                    const coloredLabels = result.map((label: LabelInterface) => ({
+                        ...label,
+                        color: colorFromId(defaultColormap, label.id),
+                    }));
+
+                    dispatch('LabelLoaded', coloredLabels);
+                    dispatch('labelChanged', '');
+                    console.log('Label table updated successfully after watershed.');
+                } else {
+                    // Case 2: no labelVec returned — still need to update frontend state
+                    console.log('Superpixel completed without label output (labels = false).');
+                    dispatch('LabelLoaded', []); // empty or keep last depending on your logic
+                }
+
+                // Always notify other parts of UI
                 dispatch('superpixelChanged', {});
                 dispatch('superpixelParams', params);
+                dispatch('labelChanged', '');
             })
+            .catch((err) => console.error('Error while running hierarchical watershed:', err))
             .finally(() => {
                 setLockMenu(false);
                 setShowLoadingComp(false);
-                void showToast('Superpixel successfully applied !', timeToast);
+                void showToast('Hierarchical watershed successfully applied!', timeToast);
+                dispatch('labelChanged', '');
             });
     }
 
     return (
-        <ModuleCard name="Superpixel" onApply={onApply} disabled={lockMenu}>
-            <ModuleCardItem name="Superpixel Parameters">
+        <ModuleCard name="Hierarchical Watershed" onApply={onApply} disabled={lockMenu}>
+            <ModuleCardItem name="Watershed Parameters">
                 <IonItem>
-                    <IonLabel position="floating">method</IonLabel>
-                    <IonSelect
-                        interface="popover"
-                        value={superpixelParams.method}
-                        onIonChange={(e: CustomEvent) => {
-                            setSuperpixelParams({
-                                ...superpixelParams,
-                                method: e.detail.value as SuperpixelType,
-                            });
-                        }}
-                    >
-                        <IonSelectOption>waterpixels</IonSelectOption>
-                        <IonSelectOption value="waterpixels3d">waterpixels 3D</IonSelectOption>
-                    </IonSelect>
-                </IonItem>
-                <IonItem>
-                    <IonLabel position="floating">seeds distance</IonLabel>
-                    <IonInput
-                        min={2}
-                        max={32}
-                        type="number"
-                        value={superpixelParams.seedsSpacing}
-                        onIonChange={(e: CustomEvent) => {
-                            setSuperpixelParams({ ...superpixelParams, seedsSpacing: +e.detail.value! });
-                        }}
-                    ></IonInput>
-                </IonItem>
-                <IonItem>
-                    <IonLabel position="floating">compactness</IonLabel>
+                    <IonLabel position="floating">Levels</IonLabel>
                     <IonInput
                         min={1}
-                        max={99999}
+                        max={10}
                         type="number"
-                        value={superpixelParams.compactness}
-                        onIonChange={(e: CustomEvent) => {
-                            setSuperpixelParams({ ...superpixelParams, compactness: +e.detail.value! });
-                        }}
-                    ></IonInput>
+                        value={superpixelParams.levels}
+                        onIonChange={(e: CustomEvent) =>
+                            setSuperpixelParams({ ...superpixelParams, levels: +e.detail.value! })
+                        }
+                    />
                 </IonItem>
-                <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={'Generating superpixel'} />
+
+                <IonItem>
+                    <IonLabel position="floating">Neighborhood</IonLabel>
+                    <IonSelect
+                        interface="popover"
+                        value={superpixelParams.neighborhood}
+                        onIonChange={(e: CustomEvent) =>
+                            setSuperpixelParams({ ...superpixelParams, neighborhood: +e.detail.value! })
+                        }
+                    >
+                        <IonSelectOption value={6}>6</IonSelectOption>
+                        <IonSelectOption value={27}>27</IonSelectOption>
+                    </IonSelect>
+                </IonItem>
+
+                <IonItem lines="none">
+                    <IonLabel>Use labels from watershed</IonLabel>
+                    <IonCheckbox
+                        checked={superpixelParams.labels}
+                        onIonChange={(e) => setSuperpixelParams({ ...superpixelParams, labels: e.detail.checked })}
+                    />
+                </IonItem>
+
+                <LoadingComponent openLoadingWindow={showLoadingComp} loadingText={'Running hierarchical watershed'} />
             </ModuleCardItem>
         </ModuleCard>
     );

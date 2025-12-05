@@ -11,11 +11,6 @@ from pathlib import Path
 import numpy as np
 import scipy as sp
 import sentry_sdk
-import sscPySpin.classification as spin_class
-import sscPySpin.feature_extraction as spin_feat_extraction
-import sscPySpin.image as spin_img
-import sscPySpin.segmentation as spin_seg
-from sklearn import ensemble, model_selection, neighbors, neural_network, svm
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
 from sklearn.pipeline import Pipeline
@@ -36,7 +31,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         auto_save=False,
         workspace=os.path.join(Path.home().absolute().as_posix(), "workspace_Annotat3D"),
         parent=None,
-        **kwargs
     ):
 
         super().__init__(image, auto_save, workspace, parent)
@@ -53,61 +47,6 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         if not utils.headless_mode():
             utils.add_variable_console({"segmentation": self})
 
-    def _get_annotations_bounding_box(self, annotations):
-        if len(annotations) > 0:
-            coords = np.array(list(annotations))
-            bbox_min = coords.min(axis=0)
-            bbox_max = coords.max(axis=0) + 1
-            return bbox_min, bbox_max
-
-    def _extract_voxel_features_for_training_by_annotations(self, annotation_slice_dict, annotation_image,  **kwargs):
-        image = self._image
-
-        #list for accumulating the results
-        training_feats_raw = []
-        training_labels_raw = []
-        print("Slice annotations", annotation_slice_dict)
-        for axis, slice_nums in annotation_slice_dict.items():
-            # Extract the appropriate slice along the given axis
-            if not slice_nums:
-                continue  # skip axes with no slices
-            annot_slices = np.take(annotation_image, list(slice_nums), axis=axis)
-
-            image_slices = np.take(image, list(slice_nums), axis=axis)
-            print("image", image_slices.shape, slice_nums, axis)
-            #output number of slices is at the axis dimension
-            image_slices = np.moveaxis(image_slices, axis, 0) #move number of slices to first dimension
-            annot_slices = np.moveaxis(annot_slices, axis, 0)#move number of slices to first dimension
-            #output is number of slices, height, width
-            img_feature  = functions.pixel_feature_extraction(image_slices, **kwargs) #its 2D, so no need to worry about sequential slices
-            # img_feature.shape = nfeats, number of slices, height, width
-            annot_bool = annot_slices >= 0
-            training_feats_raw.append(img_feature[:, annot_bool].T.astype('float32')) #transpose because we want nfeats in axis 1
-            #shape is n_annotations, n_features
-            training_labels_raw.append(annot_slices[annot_bool].astype('float32'))
-
-        self._training_features_raw = np.concatenate(training_feats_raw, axis=0) #merge all in axis=0, in n_annotations
-        self._training_labels_raw = np.concatenate(training_labels_raw)
-
-
-    def _extract_features_for_training(self, pixel_feature_extraction, annotation_image, features, **kwargs):
-
-        self._extract_voxel_features_for_training(pixel_feature_extraction, annotation_image, features, **kwargs)
-
-    def _extract_features(self, image, **kwargs):
-        features = self._extract_features_pixel(image, **kwargs)
-        return features
-
-    def _preview_bounding_box(self, annotations, selected_slices, selected_axis):
-        bbox_min, bbox_max = self._get_annotations_bounding_box(annotations)
-        preview_bounding_box = np.array((*bbox_min, *bbox_max))
-        return preview_bounding_box
-
-    def _extract_features_pixel(self, image, **kwargs):
-        pixel_feat_map = functions.pixel_feature_extraction(image, **{**self._feature_extraction_params, **kwargs})
-
-        return pixel_feat_map
-
     def _classify_pixels(self, pixel_map):
         start = time.time()
         nfeats, z, y, x = pixel_map.shape
@@ -122,139 +61,167 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         logging.debug("-- Calling gc")
         return pred_map, assignment_time, test_time, prediction_times
 
-    def _select_training_pixel_features(self, annotation_slice_dict, annotation_image, pixel_features):
-
-        #list for accumulating the results
-        training_feats_raw = []
-        training_labels_raw = []
-        for axis, slice_nums in annotation_slice_dict.items():
-            # Extract the appropriate slice along the given axis
-            annot_slices = np.take(annotation_image, list(slice_nums), axis=axis)
-            # nfeats, z, y, x = pixel_map.shape
-            pixel_map = np.take(pixel_features, list(slice_nums), axis=axis + 1)
-            #axis + 1 because of the new dimension at nfeat
-            pixel_map = np.moveaxis(pixel_map, axis + 1 , 1) #+1 for the n feat axis at 0
-            annot_slices = np.moveaxis(annot_slices, axis, 0)
-
-            annot_bool = annot_slices >= 0
-            training_feats_raw.append(pixel_map[:, annot_bool].T.astype('float32')) #transpose because we want nfeats in axis 1
-            #shape is n_annotations, n_features
-            training_labels_raw.append(annot_slices[annot_bool].astype('float32'))
-
-        self._training_features_raw = np.concatenate(training_feats_raw, axis=0)
-        self._training_labels_raw = np.concatenate(training_labels_raw)
-
-        
-
-    def _extract_voxel_features_for_training(self, annotation_slice_dict, annotation_image, pixel_features, **kwargs):
-        if pixel_features is None:
-            self._extract_voxel_features_for_training_by_annotations(
-                annotation_slice_dict, annotation_image, **{**kwargs, **self._feature_extraction_params}
-            )
-        else:
-            self._select_training_pixel_features(annotation_slice_dict, annotation_image, pixel_features)
-
-        self._training_labels = np.array(self._training_labels_raw)
-        self._training_features = np.array(self._training_features_raw)
-
-    def preview(self, annotation_slice_dict, annotation_image, selected_slices, selected_axis, **kwargs):
+    def extract_pixel_features_in_blocks(
+        self,
+        annotation_slice_dict: dict[int, list[int]],
+        annotation_image: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
-        This function is responsible to make all operations when the user click in the "preview" option bar
+        Extract pixel-level features in consecutive slice blocks across axes.
+
+        Parameters
+        ----------
+        img : np.ndarray
+            Input image (3D).
+        annotation_slice_dict : dict[int, list[int]]
+            Dict mapping axis -> list of annotated slice indices.
+        annotation_image : np.ndarray
+            Label image (same shape as img).
+
+        Returns
+        -------
+        X_all : np.ndarray
+            Feature matrix, shape (N_pixels, num_features).
+        Y_all : np.ndarray
+            Corresponding labels, shape (N_pixels,).
+        """
+
+        # --- helper: split consecutive indices into blocks
+        def consecutive_blocks(indices):
+            blocks, block = [], []
+            for i, idx in enumerate(indices):
+                if i == 0 or idx == indices[i - 1] + 1:
+                    block.append(idx)
+                else:
+                    blocks.append(block)
+                    block = [idx]
+            if block:
+                blocks.append(block)
+            return blocks
+
+
+
+        # --- prepare blocks per axis
+        axis_indices = {axis: sorted(indices) for axis, indices in annotation_slice_dict.items()}
+        axis_blocks = {axis: consecutive_blocks(idxs) for axis, idxs in axis_indices.items()}
+
+        # --- round-robin interleave of blocks
+        from itertools import zip_longest
+        interleaved_blocks = []
+        for group in zip_longest(*[axis_blocks[a] for a in sorted(axis_blocks)], fillvalue=None):
+            for axis, block in enumerate(group):
+                if block is not None:
+                    interleaved_blocks.append((axis, block))
+
+        print(interleaved_blocks)
+        print(annotation_slice_dict)
+        # --- feature + label accumulation
+        X_all, Y_all = [], []
+
+        for axis, block in interleaved_blocks:
+            # build a block (can be >1 slices if consecutive)
+            if axis == 0:
+                image_block = self.image[block, :, :]
+                label = annotation_image[block, :, :]
+            elif axis == 1:
+                image_block = self.image[:, block, :]
+                label = annotation_image[:, block, :]
+            elif axis == 2:
+                image_block = self.image[:, :, block]
+                label = annotation_image[:, :, block]
+            else:
+                raise ValueError(f"Invalid axis {axis}")
+
+            # reshape into (1, Y, X) style
+            if image_block.ndim == 2:
+                image_block = image_block.reshape(1, *image_block.shape)
+
+            # feature extraction
+            features = functions.pixel_feature_extraction(image_block, **self._feature_extraction_params)
+
+            # flatten block features + labels
+            X_all.append(features.reshape(features.shape[0], -1).T)  # (N_pixels_block, num_features)
+            Y_all.append(label.ravel())                              # (N_pixels_block,)
+
+        # --- concatenate everything
+        X_all = np.vstack(X_all)
+        Y_all = np.hstack(Y_all)
+
+        # --- mask unlabeled pixels
+        valid_mask = Y_all >= 0
+        X_all = X_all[valid_mask]
+        Y_all = Y_all[valid_mask]
+
+        self._training_features = X_all
+        self._training_features_raw = X_all
+        self._training_labels_raw = Y_all
+        
+        return X_all, Y_all
+
+    def train(self, annotation_slice_dict, annotation_image, finetune: bool = False):
+        """
+        Train the pixel classifier on the provided annotations.
+        Stores the trained classifier and feature set in this object.
 
         Args:
-            annotations (array): array that contain information about the image annotations
-            selected_slices (array): it's the slice choose by the user
-            selected_axis (int): it's the axis slice choose by the user
-            **kwargs (dict): a dict that contains information about the image
+            annotation_slice_dict (dict): annotation slices
+            annotation_image (ndarray): full annotation image
+            finetune (bool): whether to fine-tune an already trained classifier
+        """
+        with sentry_sdk.start_transaction(name="Pixel Segmentation Train", op="pixel classification") as t:
+            if len(annotation_slice_dict) <= 0:
+                return None, []
+
+            _,_ = self.extract_pixel_features_in_blocks(annotation_slice_dict, annotation_image)
+
+            # train classifier
+            with sentry_sdk.start_span(op="Training classifier"):
+                classifier_trained, training_time, selected_features_names = self._train_classifier(finetune=finetune
+                )
+
+            # === NEW: keep track of full state for saving ===
+            self._classifier_trained = classifier_trained
+            self._selected_features_names = selected_features_names
+            self._training_labels = annotation_image.ravel()   # or better: the labels actually passed to _train_classifiermes
+
+            return classifier_trained, selected_features_names
+
+
+    def preview(self, selected_slices, selected_axis):
+        """
+        Generate a preview segmentation for the given slice/axis using the trained classifier.
+
+        Args:
+            selected_slices (list[int]): slice indices chosen by the user
+            selected_axis (int): axis index (0,1,2)
 
         Returns:
-                array: this function returns a numpy array that's the image preview
-
-        Notes:
-            The variables selected_slices and selected_axis aren't being used in this function
-
+            pred (ndarray): preview segmentation (int32, -1 = unlabeled)
+            selected_features_names (list): names of features used in training
         """
+        if not getattr(self, "_classifier_trained", False):
+            raise Exception("No trained classifier available. Please call train() first.")
 
         with sentry_sdk.start_transaction(name="Pixel Segmentation Preview", op="pixel classification") as t:
-            image_params = {"shape": self._image.shape, "dtype": self._image.dtype}
-            if len(annotation_slice_dict) <= 0:
-                return
-
-            if selected_axis != 0:
-                #valid, _ = self._validate_feature_extraction_memory_usage(superpixel=False)
-                valid = True
-                if not valid:
-                    raise Exception(
-                        "Unable to compute preview for axis %s because too much memory may be consumed (beyond the accepted limit of %d GB). Please preview only on XY axis for now."
-                        % ("XZ" if selected_axis == 1 else "YZ", self._maxself._annotations_mem_usage / (1024.0**3))
-                    )
-
-            mainbar = progressbar.get("main")
-
-            mainbar.set_max(4)
-
-            mainbar.inc()
-            total_time_start = time.time()
-
             image = self._image.astype("float32") if self._image.dtype != "float32" else self._image
-
-            mainbar.inc()
-            start = time.time()
-
-            ndim = self._image.ndim
-            #
             selected_slices_idx = self._selected_slices_idx(selected_slices, selected_axis)
-            training_time = test_time = assignment_time = 0.0
 
-            mainbar.inc()
-            # Computing superpixel features only for the portion of the image that is necessary, if superpixel features have not
-            # been previously computed
+            # extract features just for preview slice if global features not used
             if self._features is None:
                 with sentry_sdk.start_span(op="Feature extraction for preview"):
-                    preview_image = image[selected_slices_idx] #TODO:Change this if the feat extraction is not done slice by slice
-                    logging.debug("Extracting features for preview image with shape %s" % str(preview_image.shape))
-                    preview_features = self._extract_features_pixel(preview_image, **kwargs)
-
-                logging.debug("Training classifier for preview")
-                # IMPORTANT: the computed superpixel features cannot be used for training, since they correspond to the features computed only for
-                # the preview region. Hence, annotations may have been done for other slices so we force the training to recompute only what is
-                # necessary, since it caches superpixel features as well
-                with sentry_sdk.start_span(op="Training classifier for preview"):
-                    classifier_trained, training_time, selected_features_names = self._train_classifier(
-                        annotation_slice_dict, annotation_image, None
-                    )
+                    preview_image = image[selected_slices_idx]
+                    logging.debug(f"Extracting features for preview image with shape {preview_image.shape}")
+                    preview_features =  functions.pixel_feature_extraction(preview_image, **self._feature_extraction_params)
             else:
                 preview_features = self._features[[slice(None), *selected_slices_idx]]
-                logging.debug("Training classifier for preview from features estimated for the entire image")
-                with sentry_sdk.start_span(op="Training classifier for preview"):
-                    classifier_trained, training_time, selected_features_names = self._train_classifier(
-                        annotation_slice_dict, annotation_image, self._features
-                    )
 
-            pred = None
-
-            mainbar.inc()
+            pred = np.zeros(self._image.shape, dtype="int32") - 1
             with sentry_sdk.start_span(op="Classify pixels for preview"):
-                if classifier_trained:
-                    # FOR PREVIEW THE IMAGE IS OF INT32 TO ALLOW NEGATIVE VALUES THAT WONT RENDER IN THE FRONTEND
-                    pred = np.zeros(self._image.shape, dtype="int32") - 1
-                    pred[selected_slices_idx], assignment_time, test_time, predict_times = self._classify_pixels(
-                        preview_features
-                    )
+                pred[selected_slices_idx], assignment_time, test_time, predict_times = self._classify_pixels(
+                    preview_features
+                )
 
-                    total_time = training_time + test_time + assignment_time
-
-                    logging.debug(
-                        "(Preview) Training time = %f s, Testing time = %f s, Label assignment time = %f s, Total time= %f s "
-                        % (training_time, test_time, assignment_time, total_time)
-                    )
-                    logging.debug("(Preview) Finished")
-
-            total_time_end = time.time()
-
-            total_user_time = total_time_end - total_time_start
-            logging.debug("Total user time = %f s" % (total_time_end - total_time_start))
-
+            # optional logging
             try:
                 functions.log_usage(
                     op_type="preview_" + self._module_name,
@@ -266,29 +233,20 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                     superpixel_features_shape=tuple(preview_features.shape),
                     feature_extraction_params=str(self._feature_extraction_params),
                     classifier_params=str(self._classifier_params),
-                    classifier_trained=classifier_trained,
-                    training_time=training_time,
-                    test_time=test_time,
-                    predict_times=predict_times,
-                    assignment_time=assignment_time,
-                    total_user_time=total_user_time,
+                    classifier_trained=self._classifier_trained,
+                    selected_features=self._selected_features_names,
                 )
-
             except Exception as e:
                 functions.log_error(e)
 
-            mainbar.reset()
+            return pred, self._selected_features_names
 
-            return pred, selected_features_names
-
-    def execute(self, annotation_slice_dict, annotation_image, force_feature_extraction=False, **kwargs):
+    def execute(self, force_feature_extraction=False):
         """
         This function is responsible to make all operations when the user click in the "execute" option bar
 
         Args:
-            annotations (array): array that contain information about the image annotations
             force_feature_extraction (bool): it's a flag that activate extract all features in the entire image
-            **kwargs (dict): a dict that contains information about the image
 
         Returns:
             array: this function returns the final numpy array
@@ -298,7 +256,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
         with sentry_sdk.start_transaction(name="Pixel Segmentation Apply", op="pixel classification") as t:
             image_params = {"shape": self._image.shape, "dtype": self._image.dtype}
             sentry_sdk.set_context("Image Params", image_params)
-            if len(annotation_slice_dict) <= 0:
+            if self._classifier_trained != True:
                 return
 
             mainbar = progressbar.get("main")
@@ -313,13 +271,13 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             feature_extraction_time = 0.0
             with sentry_sdk.start_span(op="Feature extraction"):
                 if self._features is None or force_feature_extraction:
-                    #valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(superpixel=False, **kwargs)
-                    valid = True
+                    valid, memory_splitting_factor = self._validate_feature_extraction_memory_usage(superpixel=False, **self._feature_extraction_params)
+                    #valid = True
                     if valid:
                         logging.debug("**** Extracting features for the entire image AT ONCE ****")
                         start_feature_extraction_time = time.time()
 
-                        self._features = self._extract_features(image, **kwargs)
+                        self._features = functions.pixel_feature_extraction(self._image, **self._feature_extraction_params)
 
                         end_feature_extraction_time = time.time()
 
@@ -333,18 +291,13 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
             features = self._features
 
             mainbar.inc()
-            with sentry_sdk.start_span(op="Training classifier"):
-                classifier_trained, training_time, selected_features_names = self._train_classifier(
-                    annotation_slice_dict, annotation_image, features
-                )
-
+          
             pred = None
             test_time = assignment_time = 0.0
 
             mainbar.inc()
 
             with sentry_sdk.start_span(op="Classify pixels"):
-                if classifier_trained:
 
                     logging.debug("\n\n**** Predicting classification for the entire image ****")
 
@@ -369,7 +322,8 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                             image_block = image[z:z1]
                             start_feature_extraction_time = time.time()
 
-                            features_block = self._extract_features(image_block, **kwargs)
+                            features_block = functions.pixel_feature_extraction(image_block, **self._feature_extraction_params)
+
 
                             end_feature_extraction_time = time.time()
 
@@ -397,11 +351,11 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                         features_shape = features.shape
                         pred[...], assignment_time, test_time, total_predict_times = self._classify_pixels(features)
 
-                    total_time = training_time + test_time + assignment_time
+                    total_time = test_time + assignment_time
 
                     logging.debug(
-                        "Training time = %f s, Testing time = %f s, Label assignment time = %f s, Total time= %f s "
-                        % (training_time, test_time, assignment_time, total_time)
+                        "Testing time = %f s, Label assignment time = %f s, Total time= %f s "
+                        % (test_time, assignment_time, total_time)
                     )
                     logging.debug("Finished")
 
@@ -421,9 +375,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                     superpixel_features_shape=tuple(map(int, features_shape)),
                     feature_extraction_params=str(self._feature_extraction_params),
                     classifier_params=str(self._classifier_params),
-                    classifier_trained=classifier_trained,
                     feature_extraction_time=feature_extraction_time,
-                    training_time=training_time,
                     test_time=test_time,
                     predict_times=total_predict_times,
                     assignment_time=assignment_time,
@@ -433,7 +385,7 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
                 functions.log_error(e)
 
             mainbar.reset()
-            return pred, selected_features_names
+            return pred, self._feature_extraction_params
 
     def has_preview(self):
         """
@@ -507,15 +459,24 @@ class PixelSegmentationModule(ClassifierSegmentationModule):
 
         pass
 
-        # TODO : don't forget to document this function
-        def load_classifier(self, path: str = ""):
-            resp, msg, model_complete = ClassifierSegmentationModule.load_classifier(self, path)
-            return resp, msg, model_complete
+    def save_classifier(
+        self,
+        path: str = "",
+        superpixel_state: dict = None,
+        feature_extraction_params: dict = None,
+    ):
+        # 1. Call parent
+        resp, msg, model_complete = super().save_classifier(
+            path, superpixel_state, feature_extraction_params
+        )
 
-        def save_classifier(
-            self, path: str = "", superpixel_state: dict = None, feature_extraction_params: dict = None
-        ):
-            resp, msg, model_complete = ClassifierSegmentationModule.save_classifier(
-                self, path, superpixel_state, feature_extraction_params
-            )
-            return resp, msg, model_complete
+        return resp, msg, model_complete
+
+    def load_classifier(self, path=""):
+        # runs the parent method on THIS instance (self)
+        self._classifier_trained = True
+        resp, msg, model_complete = super().load_classifier(path)
+        model_complete
+        self._selected_features_names = model_complete["feature_extraction_params_front"]
+
+        return resp, msg, model_complete

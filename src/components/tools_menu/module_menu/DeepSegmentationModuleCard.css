@@ -1,0 +1,13 @@
+/* Scoped to the Ionic popover that shows the select options */
+.labels-popover .option-square::before {
+  content: "";
+  display: inline-block;
+
+  width: 12px;     /* square size */
+  height: 12px;
+  margin-right: 8px;
+
+  background: var(--square-color);
+  border-radius: 2px;  /* small rounding */
+  vertical-align: middle;
+}

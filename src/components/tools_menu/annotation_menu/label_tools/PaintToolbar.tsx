@@ -50,8 +50,12 @@ const PaintToolbar: React.FC = () => {
         }
         if (activeCard === 'lasso') {
             dispatch('ChangeStateBrush', 'lasso');
-        } else if (!(activeCard === 'snakes' || activeCard === 'magicWand')) {
-            dispatch('ChangeStateBrush', 'draw_brush');
+        } else if (activeCard === 'snakes') {
+            dispatch('ChangeStateBrush', 'snakes');
+        } else if (activeCard === 'magicWand') {
+            dispatch('ChangeStateBrush', 'magic_wand');
+        } else {
+            dispatch('ChangeStageBrush', 'no_brush');
         }
     }, [activeCard]);
 
