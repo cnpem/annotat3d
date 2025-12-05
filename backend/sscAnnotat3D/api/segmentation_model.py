@@ -605,7 +605,7 @@ def train_deep_segmentation():
             dropout        = 0.5
 
             import segmentation_models_pytorch as smp
-            from aux_functions import convert_batchnorm_to_groupnorm
+            from sscAnnotat3D.aux_functions import convert_batchnorm_to_groupnorm
 
             model = smp.DeepLabV3Plus(
                 encoder_name=encoder,
