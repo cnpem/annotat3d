@@ -20,6 +20,7 @@ const DeepSegmentationModuleCard: React.FC<DeepSegmentationModuleCardProps> = ({
 
     // --- selection state ---
     const [selectedLabels, setSelectedLabels] = useStorageState<number[]>(localStorage, 'labelsSelected', []);
+    const [multiAxis, setMultiAxis] = useState(true);
 
     const [continueTraining, setContinueTraining] = useState(true);
     const [dataAug, setDataAug] = useState(true);
@@ -161,7 +162,9 @@ const DeepSegmentationModuleCard: React.FC<DeepSegmentationModuleCardProps> = ({
         setLoadingMsg('Segmenting entire volume...');
         setShowLoading(true);
 
-        sfetch('POST', '/pre_trained_deep_learning/execute', '')
+        const payload = { multiAxis };
+
+        sfetch('POST', '/pre_trained_deep_learning/execute', JSON.stringify(payload), 'json')
             .then(() => {
                 dispatch('labelChanged', '');
                 void showToast('Volume segmentation done ✅', timeToast);
@@ -225,6 +228,17 @@ const DeepSegmentationModuleCard: React.FC<DeepSegmentationModuleCardProps> = ({
                 <IonNote style={{ marginLeft: '16px' }}>
                     {continueTraining ? 'Continue training from previous weights' : 'Train from zero (fresh start)'}
                 </IonNote>
+            </ModuleCardItem>
+
+            {/* --- Advanced Options --- */}
+            <ModuleCardItem name="Advanced Options">
+                {/* Multi-axis toggle (not locked) */}
+                <IonItem>
+                    <IonLabel>Inference in Multi-Axis</IonLabel>
+                    <IonToggle checked={multiAxis} onIonChange={(e) => setMultiAxis(e.detail.checked)} />
+                </IonItem>
+
+                <IonNote style={{ marginLeft: '16px' }}>Multi-axis inference improves segmentation robustness.</IonNote>
             </ModuleCardItem>
 
             {/* --- Output Labels --- */}

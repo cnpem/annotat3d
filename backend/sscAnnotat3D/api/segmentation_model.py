@@ -497,35 +497,63 @@ def init_deep_training():
     # read logDir from frontend (can be null or a path)
     log_dir = body.get("logDir", None)
 
-    # if backend should decide path
+    # model metadata (frontend or default)
+    model_name = body.get("model", "DeepLabV3+")
+    encoder_name = body.get("encoder", "ResNet50")
+
+    # backend default log dir
     if log_dir is None:
         from os import getenv
         base = getenv("REACT_APP_OUTPUT_PATH", "runs/DeepSeg")
         log_dir = base
 
-
-    # ✅ check if writer already exists
+    # check if writer already exists
     writer_info = data_repo.get_info("tensorboard_writer")
 
     if writer_info is not None:
-        # TensorBoard already initialized → just return existing URL
-        existing_url = writer_info.get("url", None)
-        if existing_url:
-            return jsonify({"tensorboard_url": existing_url})
+        writer = writer_info.get("writer")
+        url = writer_info.get("url")
 
-        # If writer exists but url not stored (should not happen),
-        # we treat as no TB instance and relaunch normally.
+        # inline metadata logging
+        if writer:
+            writer.add_hparams(
+                hparam_dict={"model": model_name, "encoder": encoder_name},
+                metric_dict={"init": 0}
+            )
 
-    # ✅ Launch TensorBoard only if needed
+            text = (
+                f"### Deep Learning Segmentation — Initialization\n"
+                f"- **Model:** {model_name}\n"
+                f"- **Encoder:** {encoder_name}\n"
+            )
+            writer.add_text("Model Metadata", text)
+
+        return jsonify({"tensorboard_url": url})
+
+    # Launch TensorBoard only if needed
     writer, url = launch_tensorboard(log_dir)
 
-    # store both writer + url (not only writer)
+    # inline metadata logging
+    writer.add_hparams(
+        hparam_dict={"model": model_name, "encoder": encoder_name},
+        metric_dict={"init": 0}
+    )
+
+    text = (
+        f"### Deep Learning Segmentation — Initialization\n"
+        f"- **Model:** {model_name}\n"
+        f"- **Encoder:** {encoder_name}\n"
+    )
+    writer.add_text("Model Metadata", text)
+
+    # Store writer + URL
     data_repo.set_info(
         key="tensorboard_writer",
         data={"writer": writer, "url": url}
     )
 
     return jsonify({"tensorboard_url": url})
+
 
 
 
@@ -683,6 +711,11 @@ def execute_deep_segmentation():
     """
     deep_module = module_repo.get_module("deep_learning_segmentation_module")
 
+    multi_axis = request.json.get("multiAxis")
+
+    if multi_axis == None:
+        multi_axis = False
+
     if deep_module is None:
         return handle_exception(
             "Unable to execute! Please train or load a deep-learning model first."
@@ -702,7 +735,7 @@ def execute_deep_segmentation():
         # ========================
         print("🔁 Executing Deep Learning Segmentation...")
 
-        pred_vol = deep_module.predict_volume(img)  # -> returns (Z, Y, X)
+        pred_vol = deep_module.predict_volume(img, multi_axis = multi_axis)  # -> returns (Z, Y, X)
         pred_vol = pred_vol.astype(np.int16)
 
         # Write result back to Annotat3D UI
