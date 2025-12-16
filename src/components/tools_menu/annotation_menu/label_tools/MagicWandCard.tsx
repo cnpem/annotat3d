@@ -259,6 +259,14 @@ const MagicWandCard: React.FC<MagicWandCardProps> = ({ isVisible }) => {
         }
     }, [dataWand]);
 
+    useEffect(() => {
+        //only execute if the button is pressed
+        if (isVisible) {
+            console.log('fetchHistogramData()');
+            fetchHistogramData();
+        }
+    }, [isVisible]);
+
     // This is execute when new configuration changes
     useEffect(() => {
         // ignore contrast change for the first click
