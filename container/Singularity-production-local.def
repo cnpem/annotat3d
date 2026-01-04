@@ -1,5 +1,5 @@
 BootStrap: localimage
-From: annotat3d-base.sif
+From: annotat3d-base-local.sif
 %post
     . /.singularity.d/env/10-docker*.sh
 
@@ -22,13 +22,13 @@ From: annotat3d-base.sif
     export NVM_DIR=/opt/nvm
 
 %environment
-    export CPATH=/usr/include/hdf5/serial/:$CUDA_HOME/include:$CPATH
+    export CPATH=/usr/include/hdf5/serial/:$CUDA_HOME/include
     export HDF5_DIR=/usr/local/hdf5
     export LD_LIBRARY_PATH=/usr/local/hdf5/lib:/usr/local/openmpi/lib:$LD_LIBRARY_PATH
     export NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
     export PATH=/opt/conda/bin:/usr/local/openmpi/bin:$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 %post
-    export CPATH=/usr/include/hdf5/serial/:$CUDA_HOME/include:$CPATH
+    export CPATH=/usr/include/hdf5/serial/:$CUDA_HOME/include
     export HDF5_DIR=/usr/local/hdf5
     export LD_LIBRARY_PATH=/usr/local/hdf5/lib:/usr/local/openmpi/lib:$LD_LIBRARY_PATH
     export NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
