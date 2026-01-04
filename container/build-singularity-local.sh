@@ -13,15 +13,15 @@ fi
 
 if [[ "$STAGE" == "base" ]]; then
     echo "Building base stage..."
-    rm -f container/Singularity-base.def
-    python3 container/hpccm-annotat3d.py --format singularity --stage base > container/Singularity-base.def
-    sudo -E singularity build annotat3d-base.sif container/Singularity-base.def
+    rm -f container/Singularity-base-local.def
+    python3 container/hpccm-annotat3d-local.py --format singularity --stage base > container/Singularity-base-local.def
+    sudo -E singularity build annotat3d-base-local.sif container/Singularity-base-local.def
 
 elif [[ "$STAGE" == "production" ]]; then
     echo "Building production stage..."
-    rm -f container/Singularity-production.def
-    python3 container/hpccm-annotat3d.py --format singularity --stage production --base-image annotat3d-base.sif > container/Singularity-production.def
-    sudo -E singularity build annotat3d-prod.sif container/Singularity-production.def
+    rm -f container/Singularity-production-local.def
+    python3 container/hpccm-annotat3d-local.py --format singularity --stage production --base-image annotat3d-base-local.sif > container/Singularity-production-local.def
+    sudo -E singularity build annotat3d-production-local.sif container/Singularity-production-local.def
 
 else
     echo "Invalid stage: $STAGE"
