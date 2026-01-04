@@ -11,7 +11,7 @@ const ProcessingMenu: React.FC = () => {
     // Initialize state to control which accordion is open (default to "smoothing")
     const [activeAccordion, setActiveAccordion] = useStorageState<string | undefined>(
         sessionStorage,
-        'processingAccordiong',
+        'processingAccordion',
         undefined
     );
 

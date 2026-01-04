@@ -45,14 +45,6 @@ const ActiveContourCard: React.FC<ActiveContourCardProps> = ({ isVisible }) => {
     const [checkboardSize, setCheckboardSize] = useState<number>(3);
     const [backgroundAnnot, setBackgroundAnnot] = useState<boolean>(true);
 
-    useEffect(() => {
-        if (isVisible) {
-            dispatch('ChangeStateBrush', 'snakes');
-        } else {
-            dispatch('ChangeStateBrush', 'draw_brush');
-        }
-    }, [isVisible]);
-
     const handleValueChange = (key: string, value: string | number | boolean) => {
         const parsedValue =
             key === 'weight' || key === 'threshold'

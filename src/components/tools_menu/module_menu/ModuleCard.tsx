@@ -9,10 +9,11 @@ import {
     IonLabel,
     IonGrid,
 } from '@ionic/react';
+import React from 'react';
 
 interface ModuleCardProps {
     name: string;
-    children: JSX.Element | JSX.Element[];
+    children: React.ReactNode;
     disabled?: boolean;
     onPreview?: () => void;
     onApply?: () => void;
@@ -21,43 +22,42 @@ interface ModuleCardProps {
     disabledApply?: boolean;
     disabledOther?: boolean;
     OtherName?: string;
+    PreviewName?: string;
+    ApplyName?: string;
 }
 
 interface ModuleCardItemProps {
     name: string;
-    children: JSX.Element | JSX.Element[];
+    children: React.ReactNode;
 }
 
-const ModuleCardItem: React.FC<ModuleCardItemProps> = (props: ModuleCardItemProps) => {
-    const childrenArray = props.children instanceof Array ? props.children : [props.children];
-
+const ModuleCardItem: React.FC<ModuleCardItemProps> = ({ name, children }) => {
     return (
-        //We create an IonAccordionGroup for each item, instead of a single one,
-        //because otherwise the IonAccordionGroup keyboard navigation keeps stealing input focus
+        // We create an IonAccordionGroup for each item, instead of a single one,
+        // because otherwise the IonAccordionGroup keyboard navigation keeps stealing input focus
         <IonAccordionGroup>
             <IonAccordion>
                 <IonItem button slot="header">
                     <IonLabel color="primary">
-                        {' '}
-                        <small> {props.name} </small>{' '}
+                        <small>{name}</small>
                     </IonLabel>
                 </IonItem>
-                <IonGrid slot="content">{childrenArray}</IonGrid>
+                <IonGrid slot="content">{children}</IonGrid>
             </IonAccordion>
         </IonAccordionGroup>
     );
 };
 
 const ModuleCard: React.FC<ModuleCardProps> = (props: ModuleCardProps) => {
-    const childrenArray = props.children instanceof Array ? props.children : [props.children];
-
     return (
         <IonCard disabled={props.disabled}>
             <IonCardHeader>
                 <div style={{ fontWeight: 600, fontSize: 18 }}>{props.name}</div>
             </IonCardHeader>
             <IonCardContent>
-                {childrenArray}
+                {props.children}
+
+                {/* Train / Fine-tune (Other) */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <IonButton
                         color="primary"
@@ -66,9 +66,11 @@ const ModuleCard: React.FC<ModuleCardProps> = (props: ModuleCardProps) => {
                         hidden={props.onOther === undefined}
                         onClick={props.onOther}
                     >
-                        {props.OtherName}
+                        {props.OtherName || 'Other'}
                     </IonButton>
                 </div>
+
+                {/* Slice Preview / Vol Preview */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <IonButton
                         color="primary"
@@ -77,7 +79,7 @@ const ModuleCard: React.FC<ModuleCardProps> = (props: ModuleCardProps) => {
                         hidden={props.onPreview === undefined}
                         onClick={props.onPreview}
                     >
-                        Preview
+                        {props.PreviewName || 'Preview'}
                     </IonButton>
                     <IonButton
                         color="primary"
@@ -86,11 +88,12 @@ const ModuleCard: React.FC<ModuleCardProps> = (props: ModuleCardProps) => {
                         hidden={props.onApply === undefined}
                         onClick={props.onApply}
                     >
-                        Apply
+                        {props.ApplyName || 'Apply'}
                     </IonButton>
                 </div>
             </IonCardContent>
         </IonCard>
     );
 };
+
 export { ModuleCard, ModuleCardItem };

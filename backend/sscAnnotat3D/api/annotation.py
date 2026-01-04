@@ -611,6 +611,7 @@ def apply_active_contour(input_id: str, mode_id: str):
         JSON or str: Coordinates list for execution or "success" for finalization.
     """
     import time
+    from harpia.watershed.watershed import boundaries
 
     start_time = time.time()
 
@@ -635,8 +636,11 @@ def apply_active_contour(input_id: str, mode_id: str):
 
     annot_module = module_repo.get_module("annotation")
 
+
+    host_image = data_repo.get_image("ImageForContour")
+
     # Step 2: Preprocessing (Setup for 'start' only)
-    if mode_id == "start":
+    if mode_id == "start" or host_image is None:
         # Set current slice and axis
         axis_dim = utils.get_axis_num(params["axis"])
         annot_module.set_current_axis(axis_dim)
@@ -691,7 +695,8 @@ def apply_active_contour(input_id: str, mode_id: str):
         return jsonify(annot_module.current_mk_id)
 
     # Extract boundary coordinates for visualization
-    border = spin_img.spin_find_boundaries(level_set, dtype="uint8") > 0
+
+    border = boundaries(level_set.astype(np.int32)) > 0 #spin_img.spin_find_boundaries(level_set, dtype="uint8") > 0
     yy, xx = np.nonzero(border)
     coords_list = [yy.astype("int").tolist(), xx.astype("int").tolist()]
 
@@ -1207,7 +1212,7 @@ def watershed_apply(input_id: str):
         watershed_relief = relief_img[slice_range].astype(np.int32)
         x,y = markers.shape
         print("apply watershed")
-        markers = watershed_meyers_2d(watershed_relief, markers, -1)
+        watershed.watershed_meyers_2d(watershed_relief, markers, -1, x, y)
 
         annot_module.multilabel_updated(markers, mk_id)
 
@@ -1227,7 +1232,7 @@ def watershed_apply(input_id: str):
         z,x,y = watershed_relief.shape
 
         for i in range(z):
-            markers[i] = watershed_meyers_2d(watershed_relief[i], markers[i], -1)
+            watershed.watershed_meyers_2d(watershed_relief[i], markers[i], -1, x, y)
 
         img_label = data_repo.get_image('label')
 
@@ -1517,3 +1522,607 @@ def object_separation_apply(input_id: str):
     data_repo.set_image('label',markers.astype(np.int32))
 
     return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/fgc_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def fgc_apply(input_id: str):
+    from harpia.fastGraphClustering import fgc
+    from harpia.sparseUnmixing import nmf
+    from skimage import filters
+    from skimage.feature import local_binary_pattern, shape_index, multiscale_basic_features
+    from skimage.measure import shannon_entropy
+    import numpy as np
+    from sklearn.cluster import KMeans  # kept for other clustering use
+
+    # ============================================================
+    # === Balanced K-means based Hierarchical K-means (BKHK) ====
+    # ============================================================
+    def balanced_two_means(X, max_iters=20, tol=1e-6, random_state=None):
+        rng = np.random.default_rng(random_state)
+        n, d = X.shape
+        idx = rng.choice(n, size=2, replace=False)
+        C = X[idx].astype(float)
+        K = n // 2
+        for it in range(max_iters):
+            dist = ((X[:, None, :] - C[None, :, :]) ** 2).sum(axis=2)
+            diff = dist[:, 0] - dist[:, 1]
+            k_idx = np.argpartition(diff, K)[:K]
+            mask = np.zeros(n, dtype=bool)
+            mask[k_idx] = True
+            labels = np.where(mask, 0, 1)
+            C_new = np.array([X[labels == 0].mean(axis=0), X[labels == 1].mean(axis=0)])
+            if np.linalg.norm(C_new - C) < tol:
+                break
+            C = C_new
+        dist = ((X[:, None, :] - C[None, :, :]) ** 2).sum(axis=2)
+        diff = dist[:, 0] - dist[:, 1]
+        k_idx = np.argpartition(diff, K)[:K]
+        mask = np.zeros(n, dtype=bool)
+        mask[k_idx] = True
+        labels = np.where(mask, 0, 1)
+        return C, labels
+
+    def bk_hk(X, m, max_iters=20, random_state=None):
+        rng = np.random.default_rng(random_state)
+        nodes = [np.arange(X.shape[0], dtype=int)]
+        leaf_centers = []
+        while len(nodes) < m:
+            sizes = [len(ids) for ids in nodes]
+            largest_idx = int(np.argmax(sizes))
+            ids_to_split = nodes.pop(largest_idx)
+            if len(ids_to_split) <= 1:
+                nodes.append(ids_to_split)
+                break
+            X_sub = X[ids_to_split]
+            centers, labels = balanced_two_means(X_sub, max_iters=max_iters, random_state=rng)
+            left_ids = ids_to_split[labels == 0]
+            right_ids = ids_to_split[labels == 1]
+            if len(left_ids) == 0 or len(right_ids) == 0:
+                nodes.append(ids_to_split)
+                break
+            nodes.append(left_ids)
+            nodes.append(right_ids)
+        for ids in nodes:
+            leaf_centers.append(X[ids].mean(axis=0))
+        leaf_centers = np.vstack(leaf_centers)
+        if leaf_centers.shape[0] > m:
+            chosen = rng.choice(leaf_centers.shape[0], size=m, replace=False)
+            anchors = leaf_centers[chosen]
+        else:
+            anchors = leaf_centers
+        return anchors
+    # ============================================================
+
+    print(request.json)
+
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+
+    try:
+        dimension = request.json.get("dimension")
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+        anchor = request.json.get('anchorFinder')
+        phases = request.json.get('numPhases')
+        anchor_points = request.json.get('numRepresentativePoints')
+        iterations = request.json.get('numIterations')
+        lmbd = request.json.get('regularization')
+        gamma = request.json.get('labelregularization')
+        beta = request.json.get('smoothRegularization')
+        window = request.json.get('windowSize')
+        tol = request.json.get('tolerance')
+        use_all = request.json.get('useWholeImage')
+        superpixel = data_repo.get_image("superpixel")
+        features = request.json.get("selectedFeatures")
+        metric = request.json.get("selectedMetric")
+        nearest_neighbors = request.json.get("nearestNeighbors")
+
+        sigma_min = request.json.get('sigma_min', 1)
+        sigma_max = request.json.get('sigma_max', 16)
+        num_sigma = request.json.get('multiScaleNum', 3)
+
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = data_repo.get_image(input_id).astype(np.float32)
+    print("features: ", features)
+    print("Metric: ", metric)
+    mk_id = annot_module.current_mk_id
+    print('Current markers\n', mk_id, current_thresh_marker)
+    new_click = (mk_id != current_thresh_marker)
+
+    axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+    axisIndex = axisIndexDict[axis]
+
+    if axisIndex == 0:
+        input_slice = input_img[slice_num]
+        if superpixel is not None and features[-1] == "Superpixel":
+            sp = superpixel[slice_num]
+            uniquelabels = np.unique(sp)
+
+    elif axisIndex == 1:
+        input_slice = input_img[:, slice_num, :]
+        if superpixel is not None and features[-1] == "Superpixel":
+            sp = superpixel[:, slice_num, :]
+            uniquelabels = np.unique(sp)
+
+    elif axisIndex == 2:
+        input_slice = input_img[:, :, slice_num]
+        if superpixel is not None and features[-1] == "Superpixel":
+            sp = superpixel[:, :, slice_num]
+            uniquelabels = np.unique(sp)
+
+    print(input_slice.shape)
+    rows, cols = input_slice.shape
+
+    use_intensity = "Intensity" in features
+    use_edges = "Edges" in features or "Edge" in features
+    use_texture = "Texture" in features
+
+    x_features = multiscale_basic_features(
+        input_slice,
+        intensity=use_intensity,
+        edges=use_edges,
+        texture=use_texture,
+        sigma_min=sigma_min,
+        sigma_max=sigma_max,
+        num_sigma=num_sigma,
+    )
+    print("Multiscale basic features shape (rows, cols, features):", x_features.shape)
+
+    if superpixel is not None and features[-1] == "Superpixel":
+        print("Applying superpixel mean pooling on multiscale features")
+        x_pooled = np.zeros_like(x_features, dtype=x_features.dtype)
+        for m in uniquelabels:
+            mask = (sp == m)
+            for feat_idx in range(x_features.shape[-1]):
+                mean_val = x_features[:, :, feat_idx][mask].mean()
+                x_pooled[:, :, feat_idx][mask] = mean_val
+        x_features = x_pooled
+
+    x = x_features.reshape((-1, x_features.shape[-1])).T.astype(np.float32)
+    print("Feature matrix shape (features, pixels):", x.shape)
+
+    # ============================================================
+    # ==================== LABELED CASE ==========================
+    # ============================================================
+    if gamma > 0:
+        print("Label Propagation")
+
+        markers_img = annot_module.annotation_image[slice_range]
+        unique_labels = np.unique(markers_img)
+        unique_labels = unique_labels[unique_labels >= 0]
+
+        anchors = []
+        anchor_labels = []
+
+        for class_index, label in enumerate(unique_labels):
+            mask = (markers_img == label).ravel()
+            if np.count_nonzero(mask) == 0:
+                continue
+            feature_subset = x[:, mask].T
+            if feature_subset.shape[0] < anchor_points:
+                continue
+
+            # ==== BKHK substitute for KMeans ====
+            anchors_bkhk = bk_hk(feature_subset, m=anchor_points, random_state=0)
+            anchors.extend(anchors_bkhk)
+            anchor_labels.extend([class_index] * anchor_points)
+
+            # ==== Original KMeans version (commented out) ====
+            # kmeans = KMeans(n_clusters=anchor_points, n_init="auto", random_state=0).fit(feature_subset)
+            # anchors.extend(kmeans.cluster_centers_)
+            # anchor_labels.extend([class_index] * anchor_points)
+            # ====================================
+
+        if len(anchors) == 0:
+            return handle_exception("No valid labeled data to create anchors.")
+
+        anchors = np.array(anchors, dtype=np.float32).T
+        M = anchors.shape[1]
+        C = len(unique_labels)
+        U = np.zeros((M, C), dtype=np.float32)
+        U[np.arange(M), anchor_labels] = 1.0
+
+        print("Anchor shape:", anchors.shape)
+        print("Label matrix U shape:", U.shape)
+
+        fgc_instance = fgc.general_fgc(
+            x,
+            rows,
+            cols,
+            basis=anchors,
+            lmbd=0,
+            beta=beta,
+            k=nearest_neighbors,
+            iterations=iterations,
+            tol=tol,
+            size=window,
+            metric=metric
+        )
+
+        F = fgc_instance.z @ U
+        labels = F.argmax(axis=1).reshape(rows, cols)
+        annot_module.multilabel_updated(labels, mk_id)
+
+    # ============================================================
+    # ==================== UNLABELED CASE ========================
+    # ============================================================
+    else:
+        print("Without labels regularization")
+
+        # ==== BKHK substitute for KMeans ====
+        basis = bk_hk(x.T, m=anchor_points, random_state=0).T.astype(np.float32)
+
+        # ==== Original KMeans version (commented out) ====
+        # basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T.astype(np.float32)
+        # ====================================
+
+        fgc_instance = fgc.general_fgc(
+            x,
+            rows,
+            cols,
+            basis=basis,
+            lmbd=lmbd,
+            beta=beta,
+            k=anchor_points,
+            iterations=iterations,
+            tol=tol,
+            size=window,
+            metric=metric
+        )
+
+        fgc_instance.classification()
+
+        print('kmeans')
+        kmeans = KMeans(n_clusters=phases)
+        labels = kmeans.fit_predict(fgc_instance.y).reshape(input_slice.shape)
+
+        print('post processing labels')
+        unique_labels = np.unique(labels)
+        label_means = {i: (input_slice[labels == i].mean()) for i in unique_labels}
+        sorted_labels = sorted(label_means, key=label_means.get)
+        label_remap = {old_label: new_label for new_label, old_label in enumerate(sorted_labels)}
+        remapped_labels = np.vectorize(label_remap.get)(labels)
+
+        print('last step')
+        annot_module.multilabel_updated(remapped_labels, mk_id)
+
+    print("return json")
+    return jsonify(annot_module.current_mk_id)
+
+
+@app.route("/nmf_apply/<input_id>", methods=["POST"])
+@cross_origin()
+def nmf_apply(input_id: str):
+    import sys
+    from harpia.sparseUnmixing import nmf
+    from harpia.fastGraphClustering import fgc
+    from skimage.feature import local_binary_pattern
+    import numpy as np
+    from sklearn.cluster import KMeans
+
+    print(request.json)
+    def python_typer(x):
+        if isinstance(x, (float, np.floating)):
+            return float(x)
+        elif isinstance(x, (int, np.integer)):
+            return int(x)
+        else:
+            raise ValueError("Unsupported data type")
+    
+    try:
+        #parameters
+        
+        dimension = request.json.get("dimension")
+        slice_num = request.json.get("current_slice")
+        axis = request.json.get("current_axis")
+        label = request.json.get("label")
+        current_thresh_marker = request.json.get("current_thresh_marker")
+        anchor = request.json.get('anchorFinder')
+        phases = request.json.get('numPhases')
+        anchor_points = request.json.get('numRepresentativePoints')
+        iterations = request.json.get('numIterations')
+        lmbd = request.json.get('regularization')
+        gamma = request.json.get('graphRegularization')
+        window = request.json.get('windowSize')
+        tol = request.json.get('tolerance')
+        use_all = request.json.get('useWholeImage')
+        
+    except Exception as e:
+        return handle_exception(str(e))
+
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+
+    # Update backend slice number
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+
+    input_img = data_repo.get_image(input_id).astype(np.float32)
+
+    mk_id = annot_module.current_mk_id
+
+    print('Current markers\n', mk_id, current_thresh_marker)
+    # New annotation
+    if mk_id != current_thresh_marker:
+        new_click = True
+    else:
+        new_click = False
+    axisIndexDict = {"XY": 0, "XZ": 1, "YZ": 2}
+    axisIndex = axisIndexDict[axis]
+
+    if axisIndex == 0:  # XY plane
+        input_slice = input_img[slice_num]
+    elif axisIndex == 1:  # XZ plane
+        input_slice = input_img[:, slice_num, :]
+    elif axisIndex == 2:  # YZ plane
+        input_slice = input_img[:, :, slice_num]
+
+    print(input_slice.shape)
+    rows, cols = input_slice.shape
+
+    basis = np.empty((1, 0), dtype=np.float32)
+    print('computing basis')
+    count = 0
+    if not use_all:
+        markers_img = annot_module.annotation_image[slice_range].astype(np.int32)
+        markers = np.arange(0, markers_img.max() + 1, step=1)
+        for i in markers:
+            x = input_slice * (markers_img == i)
+            x_non_zero = x[x != 0]
+
+            if x_non_zero.size == 0:
+                continue
+
+            c = KMeans(n_clusters=anchor_points, n_init="auto").fit(x_non_zero.T).cluster_centers_.T
+            print("basis: ", c)
+            basis = c
+            count = count+1
+        
+    else:
+        x = input_slice.reshape(1, input_slice.size)
+        print("shape: ",x.shape)
+        basis = KMeans(n_clusters=anchor_points, n_init="auto").fit(x.T).cluster_centers_.T
+        print("basis shape: ", basis.shape)
+
+    x = input_slice.reshape(1, input_slice.size)
+
+    print("basis shape: ", np.array(basis).shape)
+
+    print("x shape", x.shape)
+
+    #creating anchor
+    fgc_instance = fgc.general_fgc(
+        x,
+        rows,
+        cols,
+        basis=np.array(basis),
+        lmbd=0,
+        beta=0,
+        k=anchor_points,
+        iterations=0,
+        tol=tol,
+        size=0,
+    )
+
+    
+    y = np.ones((anchor_points, input_slice.size),dtype=np.float32)
+
+    z = fgc_instance.z.astype(np.float32).T
+
+    print('applying nmf')
+    nmf.solver_nmf(x,
+                   z,
+                   basis.astype(np.float32),
+                   y,
+                   beta=lmbd,gamma=gamma,iterations=iterations)
+
+    print(y)
+    kmeans = KMeans(n_clusters=phases)
+    labels = kmeans.fit_predict(y.T).reshape(input_slice.shape)
+
+    unique_labels = np.unique(labels)
+    label_means = {i: (input_slice[labels == i].mean()) for i in unique_labels}
+
+    sorted_labels = sorted(label_means, key=label_means.get)
+
+    label_remap = {old_label: new_label for new_label, old_label in enumerate(sorted_labels)}
+
+    remapped_labels = np.vectorize(label_remap.get)(labels)
+
+    annot_module.multilabel_updated(remapped_labels, mk_id)
+
+    return jsonify(annot_module.current_mk_id)
+
+@app.route("/sam", methods=["POST"])
+@cross_origin()
+def apply_sam():
+    """
+    Unified SAM1 endpoint:
+      - type: "box" | "pos" | "neg"
+      - runs SAM on the current slice
+      - updates annotation mask
+    """
+    import time
+    from segment_anything import sam_model_registry, SamPredictor
+
+    start = time.time()
+
+    sam_predictor = module_repo.get_module('sam_predictor')
+
+    # ---------------------------------------------------
+    # Clear if operation ended
+    # ---------------------------------------------------
+    try:
+        req = request.json
+        sam_type  = req["type"]
+    except Exception as e:
+        return handle_exception(str(e))
+    
+    if sam_type == "clearall":
+        module_repo.delete_module("sam_predictor")
+        print("[SAM] Predictor cleared from module_repo.")
+        return jsonify({"status": "cleared"})
+    
+    # ---------------------------------------------------
+    # INIT should also return immediately
+    # ---------------------------------------------------
+    if sam_type == "init":
+        sam_predictor = module_repo.get_module("sam_predictor")
+
+        if sam_predictor is None:
+            print("[SAM] Loading SAM1 model (ViT-H)...")
+            sam = sam_model_registry["vit_h"](
+                checkpoint="/ibira/lnls/labs/tepui/apps/gcd/annotat3dweb/models_checkpoint/sam_vit_h_4b8939.pth"
+            ).to("cuda")
+
+            sam_predictor = SamPredictor(sam)
+            module_repo.set_module("sam_predictor", sam_predictor)
+            print("[SAM] Ready!")
+
+        return jsonify({"status": "initialized"})
+
+    # ---------------------------------------------------
+    # Parse JSON
+    # ---------------------------------------------------
+    #try:
+    req = request.json
+    sam_type  = req["type"]
+    label     = int(req["label"])
+    axis      = req["axis"]
+    slice_num = int(req["slice"])
+    new_click = req["new_click"]
+    #except Exception as e:
+    #    return handle_exception(str(e))
+
+    # ---------------------------------------------------
+    # If for some reason SAM was not initialized
+    # ---------------------------------------------------
+    if sam_predictor is None:
+        print("[SAM] Loading SAM1 model (ViT-H)...")
+        sam = sam_model_registry["vit_h"](
+            checkpoint="/ibira/lnls/labs/tepui/apps/gcd/annotat3dweb/models_checkpoint/sam_vit_h_4b8939.pth"
+        ).to("cuda")
+        sam_predictor = SamPredictor(sam)
+        print("[SAM] Ready!")
+
+    predictor = sam_predictor
+
+    # ---------------------------------------------------
+    # Prepare slice
+    # ---------------------------------------------------
+    annot_module = module_repo.get_module('annotation')
+    axis_dim = utils.get_axis_num(axis)
+    annot_module.set_current_axis(axis_dim)
+    annot_module.set_current_slice(slice_num)
+    slice_range = utils.get_3d_slice_range_from(axis, slice_num)
+    img_slice = data_repo.get_image('image')[slice_range]
+
+    # SAM expects uint8 RGB
+    # Compute the 80th percentile (robust upper bound)
+    p_low  = np.percentile(img_slice, 2)
+    p_high = np.percentile(img_slice, 98)
+
+    sl_norm = 255 * (img_slice - p_low) / (p_high - p_low + 1e-8)
+    sl_norm = np.clip(sl_norm, 0, 255).astype(np.uint8)
+
+    # Clip any overflow caused by bright outliers
+    sl_norm = np.clip(sl_norm, 0, 255).astype(np.uint8)
+
+    rgb = np.repeat(sl_norm[..., None], 3, axis=2)
+
+    predictor.set_image(rgb)
+
+    # ---------------------------------------------------
+    # SAM prediction
+    # ---------------------------------------------------
+    box = np.array([req["box"]], dtype=np.float32)
+
+    if sam_type == "box":
+        box = np.array([req["box"]], dtype=np.float32)
+        masks, scores, logits = predictor.predict(
+            box=box,
+            multimask_output=True
+        )
+
+        best_idx = np.argmax(scores)
+
+    elif sam_type in ("pos", "neg"):
+
+        raw_box = req.get("box")
+
+        if raw_box is None:
+            box = None
+        else:
+            box = np.array([raw_box], dtype=np.float32)
+
+
+        coords = []
+        labels = []
+
+        for (x,y) in req["points_pos"]:
+            coords.append([x,y])
+            labels.append(1)
+
+        for (x,y) in req["points_neg"]:
+            coords.append([x,y])
+            labels.append(0)
+
+        previous_logits = data_repo.get_image("logitsforsam")
+
+        if previous_logits is not None:
+            previous_logits = previous_logits[None, :, :]
+        
+        if new_click is True:
+            previous_logits = None
+
+        coords = np.array(coords, dtype=np.float32)
+        labels = np.array(labels, dtype=np.int32)
+
+
+        masks, scores, logits = predictor.predict(
+            point_coords=coords,
+            point_labels=labels,
+            box = box,
+            multimask_output=True,
+            mask_input = previous_logits
+        )
+        best_idx = np.argmax(scores)
+
+    else:
+        return handle_exception("Invalid SAM type")
+
+    # ---------------------------------------------------
+    # Apply mask into annotation
+    # ---------------------------------------------------
+    mk_id = annot_module.current_mk_id
+
+    data_repo.set_image("logitsforsam", logits[best_idx])
+
+    mask = masks[best_idx] > 0
+
+    annot_module.labelmask_update(mask, label, mk_id, new_click = new_click)
+
+    module_repo.set_module('sam_predictor', module=sam_predictor)
+
+    print(f"[SAM] completed in {time.time() - start:.3f}s")
+
+    return jsonify(mk_id)
+

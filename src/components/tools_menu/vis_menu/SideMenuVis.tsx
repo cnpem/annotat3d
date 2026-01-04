@@ -287,7 +287,6 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
     useEventBus('ImageHistogramLoaded', (loadedHistogram: HistogramInfoPayload) => {
         // Update histogram data and labels (it is necessary to update a unique variable)
 
-        // Create a constant instance of ColormapData
         const updateColormapData: ColormapData = {
             data: loadedHistogram.data,
             colormapName: selectedColorRef.current,
@@ -298,7 +297,8 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
             contrastRangeMax: loadedHistogram.maxValue,
         };
         console.log('Loaded histogram Color map updated', updateColormapData);
-        // Update formatter configuration instead of the function itself
+
+        // Update formatter configuration
         setFormatterConfig({
             bins: loadedHistogram.bins,
             dataType: loadedHistogram.dataType,
@@ -329,6 +329,18 @@ const SideMenuVis: React.FC<SideMenuVisProps> = (props: SideMenuVisProps) => {
         setContrastRangeRefMaxValue(loadedHistogram.maxValue);
         setContrastRangeRefMinValue(loadedHistogram.minValue);
         setContrast({ upper: loadedHistogram.maxValue, lower: loadedHistogram.minValue });
+
+        // Reset bin range to full histogram when a new slice/histogram is loaded
+        setBin({
+            lower: 0,
+            upper: loadedHistogram.bins.length - 1,
+        });
+
+        console.log('Reset bins to histogram min/max:', {
+            lower: loadedHistogram.minValue,
+            upper: loadedHistogram.maxValue,
+        });
+
         console.log('I, the ImageHistogramLoaded event finished the execution');
     });
 

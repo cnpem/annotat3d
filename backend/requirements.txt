@@ -13,4 +13,15 @@ scikit-image==0.18.3
 tifffile>=2023.7.10  
 sscPySpin>=0.6.0
 werkzeug>=3.0.0 #there seems to be some bug on the newer versions that randomly causes 405 responses
-harpia-sirius==0.1.0
+harpia==2.7.2 #need to fix the version (with anoter three dots), otherwise it will another module from pip global
+
+torch==2.7.1          # or the version matching your CUDA
+torchvision==0.22.1
+torchaudio==2.7.1
+torchmetrics==1.8.2
+
+einops==0.8.1
+segmentation-models-pytorch==0.5.0    # version with SCSE working
+tensorboard==2.20.0
+segment_anything==1.0
+

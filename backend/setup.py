@@ -6,10 +6,21 @@ from Cython.Build import cythonize
 from Cython.Distutils import build_ext
 from setuptools import setup
 from setuptools.command.install import install
-from sscAnnotat3D.__version__ import __version__
+#from sscAnnotat3D.__version__ import __version__
 import numpy as np
 # import Cython.Compiler.Options
 # Cython.Compiler.Options.annotate = True
+
+# Replace with:
+def read_version():
+    version_file = os.path.join(os.path.dirname(__file__), "sscAnnotat3D", "__version__.py")
+    version_ns = {}
+    with open(version_file) as f:
+        exec(f.read(), version_ns)
+    return version_ns["__version__"]
+
+__version__ = read_version()
+
 
 
 def get_cuda_runtime_version():
@@ -90,7 +101,7 @@ setup(
     license="",
     include_package_data=True,
     author="peixinho",
-    setup_requires=["cython>=0.29", "setuptools>=41.2", "numpy"],
+    #setup_requires=["cython>=0.29", "setuptools>=41.2", "numpy"],
     install_requires=requirements,
     author_email="alan.peixinho@lnls.br",
     description="",
