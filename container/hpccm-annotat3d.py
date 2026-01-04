@@ -75,7 +75,7 @@ if args.stage == "base":
     )
     base += hpccm.primitives.environment(
         variables={
-            "CPATH": "/usr/include/hdf5/serial/:$CUDA_HOME/include:$CPATH",
+            "CPATH": "/usr/include/hdf5/serial/:$CUDA_HOME/include",
             "HDF5_DIR": "/usr/local/hdf5",
             "LD_LIBRARY_PATH": "/usr/local/hdf5/lib:/usr/local/openmpi/lib:$LD_LIBRARY_PATH",
             "NODE_PATH": "$NVM_DIR/v$NODE_VERSION/lib/node_modules",
@@ -183,7 +183,7 @@ if args.stage == "base":
     base += hpccm.primitives.shell(
         commands=[
             "python3 -m pip install numpy==1.22.3",
-            "python3 -m pip install SharedArray==3.2.0",
+            "python3 -m pip install SharedArray",
             "python3 -m pip install /opt/annotat3d/backend/external/wheels/*.whl",
         ],
         chdir=False,
@@ -263,7 +263,7 @@ elif args.stage == "production":
     )
     production += hpccm.primitives.environment(
         variables={
-            "CPATH": "/usr/include/hdf5/serial/:$CUDA_HOME/include:$CPATH",
+            "CPATH": "/usr/include/hdf5/serial/:$CUDA_HOME/include",
             "HDF5_DIR": "/usr/local/hdf5",
             "LD_LIBRARY_PATH": "/usr/local/hdf5/lib:/usr/local/openmpi/lib:$LD_LIBRARY_PATH",
             "NODE_PATH": "$NVM_DIR/v$NODE_VERSION/lib/node_modules",
@@ -314,7 +314,7 @@ elif args.stage == "production":
     if 'docker' in args.format:
         gunicorn_command = 'gunicorn --bind 0.0.0.0:8000 --timeout 3600 --threads 32 --workers 1 sscAnnotat3D.app:app "$@"'
     else:
-        gunicorn_command =  "gunicorn --bind 0.0.0.0:8000 --timeout 3600 --threads 32 --workers 1 sscAnnotat3D.app:app"
+        gunicorn_command = "gunicorn --bind 0.0.0.0:8000 --timeout 3600 --threads 32 --workers 1 sscAnnotat3D.app:app"
 
     production += hpccm.primitives.runscript(commands=[gunicorn_command])
 
