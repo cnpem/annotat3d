@@ -1,0 +1,4 @@
+{
+  "title": "Welcome",
+  "pages": ["index",  "first-steps", "pre-processing-filters", "Annotation", "superpixel", "feature-extraction", "train-and-inference", "loading-saving"]
+}

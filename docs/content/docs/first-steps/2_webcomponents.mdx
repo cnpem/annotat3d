@@ -1,0 +1,117 @@
+---
+title: WebApp Components
+description: First steps for loading files and opening Annotat3D.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import { Callout } from "fumadocs-ui/components/callout";
+import { Card, Cards } from "fumadocs-ui/components/card"
+import { File, Files } from "fumadocs-ui/components/files";
+
+import LoadComponents from "@/public/assets/screenshots/load_components.png";
+import Canvas from "@/public/assets/screencasts/canvas.gif";
+import SliceChange from "@/public/assets/screencasts/slice_change.gif";
+import TopCorner from "@/public/assets/screenshots/top_cornor_component.png";
+import ToolsForViz from "@/public/assets/screencasts/toolsforviz.gif";
+import ColorMap from "@/public/assets/screencasts/viz_colormap.gif";
+import Annotation from "@/public/assets/screenshots/Annotation.png";
+import Processing from "@/public/assets/screenshots/Processing tools.png";
+import ProcessingOptions from "@/public/assets/screenshots/processing_options.png";
+import VizAnnotLabel from "@/public/assets/screencasts/eye_image_label.gif";
+import CropMerge from "@/public/assets/screencasts/crop_merge.gif";
+
+<Cards>
+  <Card title="Loading and Saving" href="/docs/first-steps/2_webcomponents#loading-and-saving" />
+  <Card title="Canvas" href="/docs/first-steps/2_webcomponents#canvas" />
+  <Card title="Navigation" href="/docs/first-steps/2_webcomponents#navigation" />
+  <Card title="Vizualization" href="/docs/first-steps/2_webcomponents#vizualzation" />
+  <Card title="Annotation tools" href="/docs/first-steps/2_webcomponents#annotation-tools" />
+  <Card title="Processing tools" href="/docs/first-steps/2_webcomponents#processing-tools" />
+</Cards>
+
+## Loading and Saving
+
+<ImageZoom alt="kernel" src={TopCorner} className="!my-0 rounded-sm" />
+
+On the top left corner, there is an option to load files (after the previous inital screen) and save files.
+
+You can load more components, but its really recommend to load everything at once when creating a new instance.
+See inital steps for more details.
+
+For saving files, just specify the name and the type of the data as indicated in the text for each file component.
+Since the workspace is already defined (output path asked previously), there is no need to write the full path, it will save into proper output path.
+
+<ImageZoom alt="kernel" src={LoadComponents} className="!my-0 rounded-sm" />
+
+
+Here is the type of names that can be used in all the save files options:
+
+<Files>
+  <File name="this_is_image_raw_file_200x200x100_16float.raw" />
+  <File name="this_is_my_super_pixel_file.b" />
+  <File name="this_is_my_label_image.tiff" />
+  <File name="this_is_my_annotation.pkl" />
+  <File name="this_is_my_classifier.model" />
+</Files>
+
+## Canvas
+
+The canvas displays the image of the loaded volume, where you can interact using the mouse. Scroll up to zoom in, and scroll down to zoom out. 
+You can also hold the middle mouse button to pan the image. If you lose track of the image’s position, you can easily reset it.
+
+<ImageZoom alt="kernel" src={Canvas} className="!my-0 rounded-sm" />
+
+In the canvas it also contains the annotation tools, that will interact with the image, renderization of label, superpixel and other components.
+
+## Navigation
+
+Visualization and annotation are available on all three orthogonal views. 
+The component is located at the top right, where you can switch between views by clicking the corresponding tabs. 
+The slider allows you to change slices, with the update applied after releasing the button. For more precise adjustments, 
+you can also directly input the slice number.
+
+<ImageZoom alt="kernel" src={SliceChange} className="!my-0 rounded-sm" />
+
+## Crop and merge
+
+For large images, users can crop the original image to focus on a specific Volume of Interest (VOI). Within this VOI, 
+all inference and annotation processes are performed more efficiently. Once satisfactory results are achieved, 
+pressing the merge button ensures that annotations and labels are preserved while restoring image original size. 
+This approach enables users to work more efficiently within the VOI and later apply the results to 
+a larger scale with minimal waiting time. By focusing on a smaller region first, the number of interactions is reduced, 
+leading to a smoother workflow and improved overall efficiency.
+
+<ImageZoom alt="kernel" src={CropMerge} className="!my-0 rounded-sm" />
+
+
+## Vizualzation
+
+The histogram of the image is calculated in 8-bit format, using 255 bins regardless of the original data type. 
+In the tab, you can adjust the colormap and modify the rendering range, effectively adjusting the contrast view.
+The there is a pin in the sliding knob the shows the rounded value of the range while interactiong with it.
+
+<ImageZoom alt="kernel" src={ColorMap} className="!my-0 rounded-sm" />
+
+For annotations, superpixels, and labels, you can change their opacity and toggle visibility. Additionally, superpixels allow for customizable colors.
+
+<ImageZoom alt="kernel" src={ToolsForViz} className="!my-0 rounded-sm" />
+
+
+In annotation tools, to help in the annotation process it's possible to hide one label (its annotation and label image) by clicking in the eye button, next to
+the name and color of the label.
+<ImageZoom alt="Home page" src={VizAnnotLabel} className="!my-0 rounded-sm" />
+
+## Annotation tools
+
+<ImageZoom alt="kernel" src={Annotation} className="!my-0 rounded-sm" />
+
+Annotation tools contains everything related to annotation. For now the main component is the label table. For more infomration, go to the annotations section.
+
+## Processing tools
+
+<ImageZoom alt="kernel" src={Processing} className="!my-0 rounded-sm" />
+
+Processing tools will contain the preprocessing tools (called smoothing) along with superpixel and pixel segmentation.
+
+<ImageZoom alt="kernel" src={ProcessingOptions} className="!my-0 rounded-sm" />

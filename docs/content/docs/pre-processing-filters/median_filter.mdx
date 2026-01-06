@@ -1,0 +1,24 @@
+---
+title: Median Filter
+description: Relevant information about mean filter.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import MedianFilter from "@/public/assets/screenshots/median_filter.png";
+
+### Description
+
+It takes the median of the neighborhood. It's usefull for removing salt and pepper noise. Salt and pepper noise is an impulse type of noise in images. 
+This noise is generally caused by errors in data transmission, 
+failure in memory cell or analog-to-digital converter errors [[1]](https://www.sciencedirect.com/science/article/pii/S0898122115002710).
+
+
+<ImageZoom alt="kernel" src={MedianFilter} className="!my-0 rounded-sm" />
+_kernel size of 3_
+
+### Parameters
+
+ `kernel size`: Specifies the size of the kernel, which defines the area/volume around each pixel/voxel that the filter considers when processing the image. A larger kernel means more neighboring elements are included in the calculation.
+
+ `Convolution 2D or 3D`: Determines if its applied in 2D or 3D neighborhood.
+

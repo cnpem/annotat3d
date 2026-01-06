@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["app/docs/.next/**", "app/docs/dist/**"]
+    },
+    "lint": {},
+    "type-check": {},
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "db:generate": {
+      "cache": false,
+      "outputs": ["node_modules/@prisma/client"]
+    },
+    "clean": { "cache": false }
+  },
+  "globalPassThroughEnv": ["NODE_ENV", "SKIP_ENV_VALIDATION"]
+}

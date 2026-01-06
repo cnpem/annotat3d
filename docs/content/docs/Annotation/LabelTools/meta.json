@@ -1,0 +1,4 @@
+{
+  "title": "Label Tools",
+  "pages": ["lasso_tools", "magicwand", "snakes", "threshold", "morphology","watershed","fgc"]
+}

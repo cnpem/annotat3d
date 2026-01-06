@@ -1,0 +1,40 @@
+---
+title: What is Feature Extraction
+description: Annotation of slices in the web app.
+---
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import apples from "@/public/assets/apples.png";
+import BananaApple from "@/public/assets/apples_bananas.jpg";
+import BiasTradeOff from "@/public/assets/bias_tradeoff.png";
+import Link from 'next/link';
+
+### Feature Extraction in Machine Learning
+
+**Feature extraction** is a crucial step in machine learning (ML) because it helps identify the variables (or features) 
+that best represent the data. These features enable the ML model to recognize patterns and correctly classify pixels. 
+If the features do not accurately reflect the data, the model may make unreliable predictions, leading to bias or false correlations. See more about bias [here](/docs/train-and-inference/over-underfitting).
+
+In **Annotat3D**, each pixel (or superpixel) in an image is represented by a vector of **N features**. These features describe different characteristics of the pixel, which the ML algorithm uses to classify different parts of the image. But what exactly is a feature in the context of image segmentation?
+
+### Example: Segmenting Fruits by Features
+
+Consider an example of segmenting an image to identify different fruits, such as **apples**, **bananas**, and **grapes**. Initially, **color** (the pixel value at each color channel) might be a useful feature to distinguish between red apples, yellow bananas, and green grapes.
+
+<ImageZoom alt="kernel" src={BananaApple} className="!my-0 rounded-sm" />
+
+However, relying on a single feature like color may not always be enough. For instance, adding red, yellow, and green apples to the image makes it difficult to differentiate between apples and other fruits based on color alone. This is where additional features, like **shape** and **texture**, become necessary.
+
+<ImageZoom alt="kernel" src={apples} className="!my-0 rounded-sm" />
+
+
+For example:
+- Apples tend to have a smooth, uniform texture.
+- Bananas have slight ribbing along their length.
+- Grapes, on the other hand, have a dimpled or waxy texture.
+
+These texture differences can be captured using texture-specific filters such as:
+- **Gabor filters**: Commonly used to detect repetitive textures, like the ribbing on bananas or the dimpling on grapes.
+- **Local Binary Patterns (LBP)**: This method quantifies texture by comparing the intensity of neighboring pixels, helping to distinguish the smoothness of apples from the slightly rougher texture of bananas or grapes.
+
+Each feature extraction technique alters the pixel’s value based on what the filter is designed to highlight—whether it’s edges, textures, or other patterns. These transformed pixel values help the ML model recognize local patterns within the image, improving its ability to accurately segment different regions.
+

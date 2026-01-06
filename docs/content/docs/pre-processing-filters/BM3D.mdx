@@ -1,0 +1,30 @@
+---
+title: BM3D
+description: Relevant information about Gaussian Filter
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import BM3D from "@/public/assets/screenshots/BM3D.png";
+
+### Description
+
+The BM3D (Block-Matching and 3D Filtering) algorithm is a state-of-the-art method for image denoising, 
+designed to remove noise while preserving fine details and textures in the image. BM3D operates by grouping similar 
+image blocks into 3D groups and applying collaborative filtering to enhance denoising performance.
+
+<ImageZoom alt="kernel" src={BM3D} className="!my-0 rounded-sm" />
+_sigma 200, two step_
+
+### Parameters
+
+
+ `Sigma`: Noise standard deviation. This parameter controls the amount of noise reduction applied to the image. 
+ Higher values remove more noise but may also remove finer details. Typical values range from 10 to 40 depending on the noise level in the image.
+
+
+ `Two steps`: Determines if the second step is applied. The second step of the algorithm, which refines 
+ the results of the hard-thresholding using Wiener filtering. It uses the estimate from the first step
+ as a basis for calculating local means and variances to further improve denoising.
+
+
+

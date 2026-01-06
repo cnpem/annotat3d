@@ -1,0 +1,4 @@
+{
+    "title": "Preprocessing filters",
+    "pages": ["why_preprocess", "mean_filter", "median_filter", "gaussian_filter",  "aniso_filter" ,"NLM", "BM3D", "unsharp_mask"]
+  }

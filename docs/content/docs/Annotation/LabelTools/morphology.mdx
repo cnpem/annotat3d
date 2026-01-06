@@ -1,0 +1,243 @@
+---
+title: Morphology
+description: Morphology tools.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+import erodeExample from "@/public/assets/morphology/erode.gif";
+import dilateExample from "@/public/assets/morphology/dilate.gif";
+import kernelExamples from "@/public/assets/morphology/kernels.png";
+import kernelOperation from "@/public/assets/morphology/kernel.gif";
+import smoothing from "@/public/assets/screencasts/smoothing.gif";
+import opening from "@/public/assets/screencasts/opening.gif";
+import closing from "@/public/assets/screencasts/closing.gif";
+import expand from "@/public/assets/screencasts/expand.gif";
+import shrink from "@/public/assets/screencasts/shrink.gif";
+import fillholes from "@/public/assets/screencasts/fillholes.gif";
+import examples from "@/public/assets/screenshots/morphology.png";
+
+
+## Overview
+
+Morphology is a comprehensive set of image processing operations that process images based on 
+shapes [[1]](#ref1). Morphological operations can be applied to binary or grayscale images. In the 
+Annotat3d software, binary morphological operations are applied for annotation and label image 
+manipulation.
+
+**Note:** Annotat3D implements the algorithm described in Gonzalez and Woods' *Digital Image 
+Processing* [[Gonzalez, 2019]](#ref2).
+
+---
+
+### Understanding Kernels - The Principle of Shape in Morphological Operations  
+
+Morphological operations use kernels (structuring elements) to define the neighborhood for image 
+processing. The kernel's shape determines which surrounding pixels contribute to computing each 
+output pixel. The example below illustrates this process, where the kernel selects the relevant 
+neighborhood for each input pixel.
+<Accordions>
+
+<Accordion title="Kernel operation" id="kernelOperation">
+<ImageZoom alt="kernel operation" src={kernelOperation} className="!my-0 rounded-sm" />
+<p className="text-sm text-gray-500">
+      Source: <a href="https://medium.com/@timothy_terati/image-convolution-filtering-a54dce7c786b" target="_blank" rel="noopener noreferrer">Image Convolution Filtering</a>
+</p>
+</Accordion>
+
+</Accordions>
+
+The image below illustrates kernels of size 1 (3×3 matrix), and size 2 (5x5 matrix). Valid pixels 
+for the set operations are highlighted in black, and the surrounding white pixels are ignored.
+
+<ImageZoom alt="Kernels examples" src={kernelExamples} className="!my-0 rounded-sm" />
+_Examples of structuring elements (kernels) available in Annotat3d morphology tools._
+
+If you want to know more about the impact of different kernel shapes in morpological operations 
+visit the <a href="/docs/first-steps/3_tutorial_morphology">morphology tutorial page</a>
+
+---
+
+### User-Defined Kernel Operations  
+
+#### Shrink  
+
+**Shrink** (also known as *erosion*) is an intersection operation that reduces the boundaries of 
+labels in annotation or label images. For each center pixel, the output is determined by performing 
+an **AND operation** on all the pixels covered by the kernel.  
+
+In simpler terms, the output pixel will have a value of `1` only if the center pixel and all its 
+surrounding pixels (as defined by the kernel) also have a value of `1`.  
+
+This operation is useful for:
+- Reduce labeled regions, eliminating the borders according to kernel size  
+- Removing small artifacts from the image
+- Isolating disconnected components
+
+<Accordions>
+
+<Accordion title="Shrink or Erosion" id="erode">
+<ImageZoom alt="Shrink simple example" src={erodeExample} className="!my-0 rounded-sm" />
+<p className="text-sm text-gray-500">
+      Source: <a href="https://penny-xu.github.io/blog/mathematical-morphology" target="_blank" rel="noopener noreferrer">Mathematical Morphology Visualized</a>
+</p>
+</Accordion>
+
+</Accordions>
+
+
+<Accordions>
+
+<Accordion title="Shrink on Annotat3d" id="Shrink">
+<ImageZoom alt="Shrink" src={shrink} className="!my-0 rounded-sm" />
+</Accordion>
+
+</Accordions>
+
+#### Expand  
+
+**Expand** (also known as *dilation*) is a union operation that enlarges the boundaries of labels in 
+annotation or label images. For each center pixel, the output is determined by performing an **OR 
+operation** on all the pixels covered by the kernel.  
+
+In simpler terms, the output pixel will have a value of `1` if **any** pixel in the kernel's 
+neighborhood (including the center pixel) has a value of `1`.  
+
+This operation is useful for:
+- Enlarging labeled regions to include surrounding areas
+- Filling small gaps or holes in the image
+
+<Accordions>
+
+<Accordion title="Expand or Dilation" id="dilate">
+<ImageZoom alt="Expand simple example" src={dilateExample} className="!my-0 rounded-sm" />
+<p className="text-sm text-gray-500">
+      Source: <a href="https://penny-xu.github.io/blog/mathematical-morphology" target="_blank" rel="noopener noreferrer">Mathematical Morphology Visualized</a>
+</p>
+</Accordion>
+
+</Accordions>
+
+<Accordions>
+
+<Accordion title="Expand on Annotat3d" id="Expand">
+<ImageZoom alt="Expand" src={expand} className="!my-0 rounded-sm" />
+</Accordion>
+
+</Accordions>
+
+---
+
+#### Opening  
+
+**Opening** is a sequential operation that first applies **erosion** followed by **dilation**. This 
+combination removes small objects or artifacts while preserving the overall shape and size of larger 
+features.  
+
+The erosion step removes small noise or isolated pixels, and the dilation step restores the shape of 
+the remaining larger features.  
+
+This operation is useful for:  
+- Removing small objects or noise from the image 
+- Smoothing boundaries of larger features
+- Separating close objects
+
+<Accordions>
+
+<Accordion title="Opening" id="Opening">
+<ImageZoom alt="Opening" src={opening} className="!my-0 rounded-sm" />
+</Accordion>
+
+</Accordions>
+
+
+---
+
+#### Closing  
+
+**Closing** is the reverse of opening, applying **dilation** first, followed by **erosion**. This 
+operation fills small gaps or holes in the image and smooths the boundaries of features  while 
+preserving the overall shape and size of larger features.  
+
+The dilation step connects nearby objects or fills gaps, and the erosion step refines the shape to 
+prevent excessive expansion.  
+
+This operation is useful for:  
+- Filling small holes or gaps in labeled regions
+- Smoothing the boundaries of features
+- Connecting nearby objects
+
+<Accordions>
+
+<Accordion title="Closing" id="Closing">
+<ImageZoom alt="Closing" src={closing} className="!my-0 rounded-sm" />
+</Accordion>
+
+</Accordions>
+
+
+---
+
+<div style={{ display: "flex", justifyContent: "center", textAlign: "center" }}>
+    <ImageZoom alt="examples" src={examples} width={400} height={400} className="!my-0 rounded-sm"/>
+</div>
+
+From the figure above, red represents the label being processed, with a white background and other 
+label in black. Operations are done with kernel size of 1 in Annota3D. Shrinking removes small 
+objects and weak connections consisting of only a few pixels. Expanding connects objects and fills 
+holes when enlarging labels. Closing preserves the effect of closing holes and connections while 
+maintaining the overall size of objects. Opening ensures that small objects remain removed and 
+eliminates extrusions while preserving the overall shape of the label.
+
+---
+
+#### Smooth  
+
+**Smooth** combines **opening** followed by **closing** to refine the structure of an image. This 
+operation first removes small artifacts (using opening) and then fills small gaps (using closing).  
+
+This operation is useful for:  
+- Removing small objects 
+- Smoothing object boundaries  
+- Improving the overall appearance of image regions
+
+<Accordions>
+
+<Accordion title="Smoothing" id="Smoothing">
+<ImageZoom alt="Smoothing" src={smoothing} className="!my-0 rounded-sm" />
+</Accordion>
+
+</Accordions>
+
+
+---
+
+### Fixed-Kernel Operations  
+
+#### Fill Holes  
+
+This operation fills all holes present in an image. A hole is defined as an background pixel 
+surrounded by foreground pixels. Filling holes in an image is a specialized operation achieved 
+using opening by reconstruction. 
+
+This operation is useful for:
+- preserving the structure and connectivity of objects while removing unwanted gaps or holes
+
+<Accordions>
+
+<Accordion title="Fill holes" id="fillholes">
+<ImageZoom alt="fillholes" src={fillholes} className="!my-0 rounded-sm" />
+</Accordion>
+
+</Accordions>
+
+---
+
+## References  
+
+<a id="ref1"></a>[1] Soille, P. *Morphological Image Analysis: Principles and Applications.* (1999). 
+<a id="ref2"></a>[Gonzalez, R.C., & Woods, R.E. (2019). *Digital Image Processing* (4th ed.). 
+        Pearson.](https://www.amazon.com/Digital-Image-Processing-Rafael-Gonzalez/dp/9353062985)
+ 
+

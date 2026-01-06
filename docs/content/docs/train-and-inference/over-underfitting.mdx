@@ -1,0 +1,26 @@
+---
+title: Over and Underfitting
+description: Annotation of slices in the web app.
+---
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import apples from "@/public/assets/apples.png";
+import BananaApple from "@/public/assets/apples_bananas.jpg";
+import BiasTradeOff from "@/public/assets/bias_tradeoff.png";
+
+
+### Bias and Variance in machine learning
+
+**Bias** refers to the error introduced when a model oversimplifies a complex real-world problem. A model with high bias tends to make strong assumptions about the data, such as assuming a linear relationship between input features and output. High bias leads to **underfitting**, where the model is too simplistic to capture the underlying structure of the data. For instance, applying a linear regression model to data with a highly non-linear pattern would result in high bias, causing the model to miss important patterns.
+
+On the other hand, **variance** refers to the model's sensitivity to small changes in the training data. A model with high variance captures all fluctuations, including noise, leading to **overfitting**. High variance makes the model overly complex, fitting even the random noise in the training data. As a result, the model performs well on the training data but poorly on unseen data because it fails to generalize. This variability causes the model to change significantly with small alterations in the training set.
+
+The image below illustrates the concepts of bias, variance, and model complexity in the context of **polynomial regression**:
+
+<ImageZoom alt="kernel" src={BiasTradeOff} className="!my-0 rounded-sm" />
+_Model 1 at left, Model 2 at center, Model 3 at right_
+
+- **Overfitting (Low Bias, High Variance)**: A model with a lot of parameters captures fits every data perfectly at the cost of generalizaton.
+- **Underfitting (High Bias, High Variance)**: When the model is too simple (low degree of polynomial, D.O.P = 1), it fails to capture the true pattern in the data.
+- **Just Right (Low Bias, Low Variance)**: A model with the correct complexity captures the data's structure without overfitting.
+
+In this context, **Model 2** (underfitting) shows both low training and testing accuracy, while **Model 1** (overfitting) performs well on training data but poorly on test data, demonstrating high variance.

@@ -1,0 +1,43 @@
+---
+title: Anisotropic Diffusion
+description: Relevant information about anisotropic diffusion.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import AnisoFilter from "@/public/assets/screenshots/aniso_filter.png";
+
+### Description
+
+Performs anisotropic diffusion on a 2D or 3D image.
+
+This function applies the anisotropic diffusion algorithm to enhance images by reducing noise while preserving edges. 
+The function supports three different diffusion options that control the smoothing behavior.
+
+
+<ImageZoom alt="kernel" src={AnisoFilter} className="!my-0 rounded-sm" />
+_kappa 280, Time setep size 0.1, Number of Iterations 60, Hyperbolic tangent decay, 3D neighbourhood_
+
+
+### Parameters
+
+ `Total iterations`: Number of iterations to perform. For the default option, hyperbolic tangent decay, usually, 20-60 iterations is enough to converge. Others might take more than 100 iterations. With more iterations more time is required.
+
+ `deltaT`: Time step size. Default is 0.1. Higher values might cause unwanted effects and lower values will require more iterations.
+ 
+ `kappa`: Gradient modulus threshold that influences the conduction. Values for noticible changes hyperbolic tangent decay varies between 200-300, and for other options between 50-200.
+  
+ `2D or 3D`: The diffusion can occur within the slice (2D neighborhood) or within the volume (3D neighborhood). 3D tends to converge faster and preserve more details.
+
+ `diffusionOption`: Choice of diffusion function:
+  1. Exponential decay,
+  
+  2. Inverse quadratic decay,
+  
+  3. Hyperbolic tangent decay.
+
+  **Note:** Option 3 is a faster implementation based on the following paper:
+  
+  **Reference:**
+ 
+  Mbarki, Zouhair, et al. "A new rapid auto-adapting diffusion function for adaptive anisotropic image de-noising and sharply conserved edges." Computers & Mathematics with Applications 74.8 (2017): 1751-1768.
+

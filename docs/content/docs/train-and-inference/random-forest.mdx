@@ -1,0 +1,67 @@
+---
+title: Random Forest
+description: Introduction to the Annotat3D web interface.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import DecisionTree from "@/public/assets/decision_tree.png";
+
+### Decision Tree Algorithm
+
+<ImageZoom alt="kernel" src={DecisionTree} className="!my-0 rounded-sm" />
+
+A decision tree algorithm works by breaking down a dataset into smaller and smaller subsets, using the features (characteristics) of the data, until it reaches a final decision. In the figure above, the goal is to classify whether a person is at **low risk** or **high risk** of having a heart attack, based on specific features like age, weight, and smoking habits.
+
+The **features** are the key pieces of information that the tree uses to make decisions. In the image, the first feature is **age**, which is represented by the root node—the topmost point in the tree. This node splits the data into different branches based on whether a person’s age is under 18, between 18 and 30, or over 30.
+
+For those under 18, the next feature considered is **weight**, and this decision point is another node called a **decision node**. It splits the data further based on whether a person weighs less than or more than 60 kg, eventually leading to **leaf nodes** that classify the person as either low risk or high risk of a heart attack.
+
+For those over 30, the tree looks at the feature of **smoking habits**—another decision node. Depending on whether the person is a smoker or not, the final decision is made, leading to either a low or high-risk classification.
+
+---
+
+### Introduction to Bagging
+
+To understand **Random Forest Trees**, it's first important to explain **bagging**.
+
+Let’s start with a basic idea: if you have multiple observations, each with some variability (**variance**), you can reduce the overall variance by averaging those observations. For example, if each observation has a variance of σ², the average of **n** observations will have a variance of **σ²/n**. This means that averaging multiple predictions will smooth out the fluctuations, leading to more stable and reliable predictions.
+
+Now, imagine we could gather multiple different training datasets, train a model on each one, and then average the predictions from all those models. The result would be a model with lower variance and more accurate predictions. But in practice, we usually only have **one dataset**, so we can’t just take multiple training sets from the population.
+
+This is where **bootstrapping** comes in. Instead of needing multiple datasets, we create multiple "bootstrapped" datasets by randomly sampling, **with replacement**, from our original data. This means we create new training sets that are like the original but have slight variations. We then train a model on each bootstrapped dataset to get a set of predictions. Finally, we average the predictions from all the models to get a more accurate result. This process is called **bagging** (short for **bootstrap aggregating**).
+
+Bagging works especially well with **decision trees**, which can sometimes be very sensitive to the specific data they’re trained on (leading to high variance). By building many decision trees on different bootstrapped datasets and averaging their predictions, we reduce that variance and get a more accurate overall model. These trees are typically grown deep (without pruning), which means each individual tree might be overfitted to its own bootstrapped data. But by averaging their predictions, the high variance is reduced, and the model becomes more robust.
+
+---
+
+### Random Forests
+
+**Random forests** are a clever extension of bagging that make decision trees even more effective by adding an extra layer of randomness. Just like in bagging, we build multiple decision trees on bootstrapped (randomly sampled) training data. However, random forests introduce a small but powerful tweak when building the trees: at each decision point (or "split"), the algorithm considers only a **random subset of features** instead of all of them.
+
+Normally, decision trees look at **all available features** (predictors) to decide the best split. In a random forest, each time the tree splits, only a random subset of features is considered. This subset is typically quite small—often the **square root of the total number of features** (for example, if there are 16 features, the tree might consider just 4 at each split).
+
+---
+
+### Why This Randomness Helps
+
+Imagine you have one strong feature that dominates the decision-making process. If all trees in the forest always use this feature at the top of their trees, they will end up looking very similar to each other. As a result, the predictions of these trees would be highly correlated, meaning they’re all making similar decisions. When we average these correlated trees, we don’t get as much improvement as we would from averaging trees that are more diverse.
+
+---
+
+### Decorrelating the Trees
+
+By forcing each tree to consider only a random subset of features at each split, random forests ensure that different trees make different decisions, even when they start from the same data. This **decorrelates the trees**, making their predictions more varied and less dependent on any one strong feature. When we average the predictions of these decorrelated trees, the result is a more reliable model with **lower variance**—meaning it’s less likely to overfit the data.
+
+---
+
+### The Effect of m (Subset Size)
+
+The key difference between bagging and random forests lies in the size of the subset of features, often called **m**. If we set m equal to the total number of features (**p**), the model is just like bagging. But when we use a smaller subset of features (for instance, **m ≈ √p**), random forests start to show their strength. This helps especially in situations where there are many features, some of which are correlated.
+
+---
+
+### Example: Predicting Cancer
+
+Imagine trying to predict whether a patient has a specific type of cancer based on the activity of **500 genes**. Each gene's activity level is a feature (or predictor) in the model. If we used bagging, many trees would likely use the same strong genes at the top of their trees, resulting in similar predictions. But in random forests, by limiting the features each split can consider, other genes have a chance to contribute, leading to a more balanced and accurate model.
+
+In other words, **Random Forest** is an **ensemble method** that combines a significant number of decision trees, each acting as a **weak learner** (with a guess slightly better than random). However, by averaging the predictions of these uncorrelated trees, Random Forest produces a model that is much better than random guessing and often highly accurate.

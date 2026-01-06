@@ -1,0 +1,18 @@
+services:
+  annotat3d-documentation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: annotat3d-documentation
+    image: annotat3d-documentation
+    ports:
+      - $PORT:$PORT
+    environment:
+      - NODE_ENV=production
+      - PORT=$PORT
+      - HOST=$HOST
+    networks:
+      - app-network
+
+networks:
+  app-network:

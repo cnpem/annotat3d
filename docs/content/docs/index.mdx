@@ -1,0 +1,72 @@
+---
+title: Annotat3D
+description: Introduction to the Annotat3D web interface.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import PageHome from "@/public/assets/screenshots/page-home.png";
+
+## Welcome!
+This is the documentation for Annotat3D, a web application developed for the Sirius synchrotron light source at the Brazilian Synchrotron Light Laboratory (LNLS) in Campinas, Brazil. The web app is available at [https://annotat3d.lnls.br](https://annotat3d.lnls.br) for users that have a CNPEM account.
+
+
+<ImageZoom alt="Home page" src={PageHome} className="!my-0 rounded-sm" />
+_Home page of Annotat3D, available at [https://annotat3d.lnls.br](https://annotat3d.lnls.br)._
+
+
+<Callout>
+  To use Annotat3D, users must have a CNPEM account and access the tool using any computer connected to the CNPEM internal network or the CNPEM VPN. Users also need to schedule the use of TEPUI in advance to obtain permission to launch Slurm jobs in the appropriate queue.
+</Callout>
+# Overview
+
+**Annotat3D** is a semi-manual segmentation tool designed to leverage the high-performance computing (HPC) resources available at Sirius, the facility TEPUI. It aims to automate the segmentation process by using raw input data (referred to as a *sample*) provided by the user. Following a **human-in-the-loop** approach, Annotat3D requires users to interact with its web interface by annotating classes of interest in the raw data. During this interaction, the user provides manual annotations, such as painted labels. The tool employs classical machine learning algorithms to extract patterns (e.g., texture) from the user-provided sample and infer these patterns across the rest of the volume.
+
+---
+
+## Current Tools and Workflow
+
+The current tools and recommended workflow for Annotat3D are divided into the following steps:
+
+### 1. **Pre-processing Filters**
+   The input image may contain noise, artifacts, or poorly defined edges. To address this, Annotat3D provides:
+   - **Denoising filters**: Reduce noise in the image.
+   - **Edge-sharpening filters**: Enhance edges for better segmentation.
+
+### 2. **Annotation**
+   This step involves the user manually annotating labels using a brush or other auxiliary annotation tools. It is the manual part of the process that requires user expertise and effort.
+
+---
+
+#### Label Tools
+
+To streamline the annotation process and help refine the label output, Annotat3D provides the following tools:
+
+-> **Magic Wand** : From an initial selected point, grow a seed within a threshold range 
+
+-> **Threshold** : Define a range to isolate specific areas based on intensity.
+
+-> **Snakes (Morphological)** : Use dynamic contours to fit and adjust selections around objects.
+
+-> **Morphology Tools** : Apply advanced morphological operations to refine annotations or labels.
+
+-> **Watershed** : Watershed with markers.
+
+-> **Lasso Tool** : Manually draw freeform selections around objects.
+
+-> **Trim Island** : Remove small, isolated regions or artifacts from your selection.
+
+---
+
+### 3. **Feature Extraction**
+   A single pixel value (intensity) is often insufficient for accurate classification. Therefore, Annotat3D extracts features (e.g., texture) using the pixel's neighborhood, providing the machine with patterns to recognize the pixel's class.
+
+### 4. **Superpixel**
+   Classifying individual pixels can be computationally expensive. Using the **inverse forest transform**, Annotat3D generates compact watershed-based superpixels, significantly reducing computation time by decreasing the number of elements needed for classification.
+
+### 5. **Training and Inference**
+   Based on the annotated samples and extracted features, the algorithm searches for the best fit to explain the pattern of the sample. Once the pattern is fitted, it infers the most likely class for each pixel/superpixel in the rest of the image.
+
+
+
+Annotat3D is designed to make segmentation more efficient and accurate, combining user expertise with powerful machine learning algorithms.

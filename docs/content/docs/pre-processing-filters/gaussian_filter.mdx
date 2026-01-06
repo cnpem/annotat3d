@@ -1,0 +1,25 @@
+---
+title: Gaussian Filter
+description: Relevant information about Gaussian Filter
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import GaussFilter from "@/public/assets/screenshots/gaussian_filter.png";
+
+
+### Description
+
+Gaussian filter is linear filter where the kernel weights are a gaussian curve. The main effect is blurring the image, since in a way, its doing a weighted avarage.
+The algorithm is applied in its possible to apply 1D kernel in all dimensions and have equivalent results to 2D and 3D kenrel with faster time.
+
+<ImageZoom alt="kernel" src={GaussFilter} className="!my-0 rounded-sm" />
+_sigma 1, 2D convolution_
+
+### Parameters
+
+ `Sigma`: It determines localized in the center, higher values are broder gaussian and therefore will blur the image more.
+
+ `Convolution 2D or 3D`: Determines if its applied in 2D or 3D neighborhood.
+
+
+

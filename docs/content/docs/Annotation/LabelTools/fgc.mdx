@@ -1,0 +1,91 @@
+---
+title: Fast Graph Clustering
+description: Threshold slice and volume.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import fgc_no_sp from "@/public/assets/screencasts/fgc_no_sp.gif";
+import fgc_sp from "@/public/assets/screencasts/fgc_sp.gif";
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+
+### Fast Graph Clustering (FGC) Using Spectral Clustering with Anchor-Based Approximation
+
+The **Fast Graph Clustering (FGC)** algorithm leverages spectral clustering with an anchor-based approximation for efficient and scalable clustering. This method focuses on a subset of representative points, called **anchors**, rather than using all pixels, obtained through a automatic selection (k-means) from the whole image, significantly improving computational efficiency, this can be seem as a surrogate for both SVD decomposition and similarity matrix computations, since both are impratical for large datasets.
+
+### Key Parameters for Fast Graph Clustering
+
+#### Phases
+After computing the spectral embedding, **K-means** is applied to obtain the final clusters. The number of clusters is a required input, typically determined by prior knowledge or domain expertise.
+
+#### Number of Representative Points (Obtained from Annotations or automatically)
+The algorithm improves efficiency by selecting a subset of representative points (anchors) instead of processing all pixels. The number of anchors is a key parameter—using more anchors can enhance accuracy but also increases computation time. Anchors can be chosen based on annotations or selected automatically using K-means.Note that, if you use more than one annotation label, it will generate the number of those used labels times the number of representative points, this should be avoided for better scalability.
+
+#### Number of Iterations
+This parameter defines the number of **iterations** during the optimization. More iterations generally lead to better convergence, but a reasonable limit should be set to avoid unnecessary computations.
+
+#### Tolerance
+This threshold defines when to stop the iterative optimization once the improvement becomes negligible. It helps ensure efficiency by preventing further iterations when the algorithm has already converged.
+
+#### Regularization in Spectral Embedding  
+- **Prevents degenerate embeddings** – Without regularization, the optimization could lead to collapsed embeddings, where points lose meaningful structure.  
+- **Balances flexibility and stability** – A small regularization allows more variation but may introduce instability, while a larger one smooths the embedding.  
+- **Encourages well-formed spectral representations** – Regularization maintains a structured embedding space, ensuring that relationships between points remain meaningful without excessive distortion.  
+
+#### Smooth Regularization and Window Size 
+The **weight matrix** is constructed using both spectral similarity and **spatial proximity** between pixels. Two key parameters influence how neighboring pixels affect each other:  
+
+1. **Smooth Regularization**: A small positive value (e.g., **0.01–0.9**) controls the **weight influence** of neighboring pixels. It helps stabilize relationships between data points and anchors, preventing extreme values and ensuring smoother transitions.  
+2. **Window Size**: Determines the spatial extent of pixel influence. Larger windows incorporate more spatial information, reducing noise but potentially smoothing fine details. Smaller windows preserve finer structures but may introduce noise.  
+ 
+#### Features
+
+To analyze and compare images, we extract specific features that capture different aspects of their structure and texture. The features considered in this study are:
+
+- **Original**: The raw pixel values of the image are used as features without any transformation. This preserves the full information contained in the image.
+- **LBP (Local Binary Patterns)**: A texture descriptor that encodes local patterns in an image by thresholding neighborhood pixels. It is particularly useful for texture classification and pattern recognition.
+- **Sobel**: A gradient-based edge detection method that highlights areas of high spatial variation, commonly used for detecting edges and contours in images.
+- **Superpixel**: Instead of using individual pixel values, the mean value of each superpixel is used as a feature. This reduces dimensionality while preserving local structural information, making it useful for tasks like image simplification and object recognition.
+
+#### Metrics
+
+To compare images based on extracted features, we use various distance metrics that quantify differences between feature representations. The metrics considered are:
+
+- **Euclidean**: Measures the straight-line distance between two feature vectors.
+- **Cityblock (Manhattan)**: Computes the sum of absolute differences between feature vector components.
+- **Cosine**: Evaluates the cosine of the angle between two vectors, focusing on orientation rather than magnitude.
+- **Canberra**: A weighted version of the cityblock distance that gives more emphasis to smaller values.
+- **Correlation**: Measures the similarity based on the linear relationship between feature vectors.
+- **Chebyshev**: Computes the maximum absolute difference between corresponding elements in two feature vectors.
+- **Jensen-Shannon**: A divergence metric based on the Kullback-Leibler divergence, often used for probability distributions.
+- **Bray-Curtis**: Measures dissimilarity between two feature vectors by summing the absolute differences normalized by the total sum of values.
+
+
+### How to Set These Parameters?
+
+- **Number of phases**: Determined based on prior knowledge, this represents the final set of labels or annotations. However, it does not preserve the original annotations due to the nature of the algorithm.  
+- **Number of representative points**: Given by user annotations or obtained through K-means (using the whole image). This parameter can be seen as controlling granularity: more granular points capture finer details but may also introduce more noise.  
+- **Iterations & Tolerance**: Start with approximately 100 iterations and adjust based on convergence speed.
+- **Regularization**: Choose a value typically greater than zero to maintain stability. 
+- **Smooth Regularization**: Choose a small positive value (e.g., **0.01 - 0.9**) for stability.  
+- **Window Size**: Adjust according to spatial resolution—smaller for fine details, larger for general trends.
+
+<Accordions>
+<Accordion title="Using pixels" id="no-annot">
+
+Uses k-means to identify the most representative subset of pixels.
+
+<ImageZoom alt="Home page" src={fgc_no_sp} className="!my-0 rounded-sm" />
+_Phases = 2, Number of representative points = 5, iterations = 10, Regularization = 1, smooth regularization = 0.5, window size = 3, Tolerance=0.01_
+</Accordion>
+
+<Accordion title="Using superpixels" id="with-annot">
+
+Uses k-means to identify the most representative subset of superpixels.
+
+<ImageZoom alt="Home page" src={fgc_sp} className="!my-0 rounded-sm" />
+_Phases = 2, Number of representative points = 5, iterations = 10, Regularization = 1, smooth regularization = 0.5, window size = 3, Tolerance=0.01_
+
+</Accordion>
+
+</Accordions>

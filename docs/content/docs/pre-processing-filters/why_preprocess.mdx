@@ -1,0 +1,85 @@
+---
+title: Why Preprocessing Filters?
+description: Theory for the most relevant filters in Annotat3D.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { InlineMath, BlockMath } from 'react-katex'
+import 'katex/dist/katex.min.css'
+
+import kernel from "@/public/assets/kernel.png";
+import FiltersandKernel from "@/public/assets/filters_and_kernels.png"
+import OpenFilters from "@/public/assets/open_preprocess_filters.png";
+import ImagePreview from "@/public/assets/screencasts/preview_of_an_image.gif";
+
+Preprocessing filters play a crucial role in image segmentation by improving image quality and making the segmentation process easier. 
+Noisy images with low contrast are typically harder to segment, so these filters are primarily used for noise removal and contrast enhancement.
+
+### Annotat3D Algorithms for Noise Removal and Edge Contrast Enhancement
+
+ Linear Filters for Noise Removal:
+- **Mean Filter**
+- **Gaussian Filter**
+
+ Non-linear Filters for Noise Removal:
+- **BM3D**
+- **Median Filter**
+- **Non-Local Means**
+- **Anisotropic Diffusion**
+
+ Contrast Enhancement:
+- **Unsharp Mask**
+
+### Preprocessing Tools
+
+To apply a filter, click on the third tab and select the smoothing option. As shown in the image below.
+
+<ImageZoom alt="kernel" src={OpenFilters} className="!my-0 rounded-sm" />
+
+After that, you can change the filter parameter and click on preview, and disable the previw clicking in the eye icon, near the brush list.
+
+<ImageZoom alt="kernel" src={ImagePreview} className="!my-0 rounded-sm" />
+
+## Introduction for filters
+
+### What is a spatial filter?
+
+Consider a function g(x, y), where x and y are the spatial coordinates. In a image, the value of g will be proportional to the number of photons
+that arrive at the detector. This detector is composed of a sensor array.
+
+Spatial filtering in 2D is a transformation performed on the 2D image, g(x,y) considering the neighboring elements of an arbitrary point (x₀,y₀). 
+The image is scanned until all its points have undergone the transformation. This transformation can be written as f(x,y) = T[g(x,y)]. Linear filter 
+is a particular case where the transformation T[g(x,y)] is linear.
+
+### How does it work?
+
+<ImageZoom alt="kernel" src={kernel} className="!my-0 rounded-sm" />
+_Kernel convolution in an image, where the kernel is of size 3x3._
+
+In the diagram above, a **3x3 kernel** is used to perform a transformation on the image. The kernel is a small matrix (or filter) that moves across the image, applying a specific weight to the neighboring pixels of each pixel it covers. These weights are represented by the kernel elements, denoted as \( w \), which are multiplied by the pixel values they overlap with in the input image.
+
+The resulting value of each pixel in the output image is calculated by summing up all the weighted neighboring pixel values. The process is called **convolution**, and it produces a new value for each pixel based on its local neighborhood.
+
+### The Convolution Formula:
+
+The operation performed by the kernel can be expressed mathematically as:
+
+<InlineMath>
+  {`f(i,j) = w_{-1,-1} \\cdot g(i-1,j-1) + w_{0,-1} \\cdot g(i,j-1) + 
+  w_{-1,0} \\cdot g(i-1,j) + w_{0,0} \\cdot g(i,j) + \\dots + 
+  w_{1,1} \\cdot g(i+1,j+1)`}
+</InlineMath>
+
+Here:
+- g(i, j) is the input pixel value in the image,
+- f(i, j) is the output pixel value,
+- w represents the weights in the kernel,
+- The indices (i, j) refer to the position of the pixel being processed.
+
+This formula means that each pixels new value is determined by multiplying the surrounding pixels by the corresponding weights in the kernel, then summing the results.
+Different weights gives differents linear filters. Below are the examples with different kernels with different weights and its output.
+
+<ImageZoom alt="kernel" src={FiltersandKernel} className="!my-0 rounded-sm" />
+_Kernel convolution in an image with different weights._
+

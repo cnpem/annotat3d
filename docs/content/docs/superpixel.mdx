@@ -1,0 +1,34 @@
+---
+title: Superpixel
+description: Superpixel option for annotat3D.
+---
+import { Callout } from "fumadocs-ui/components/callout";
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import waterpixel from "@/public/assets/screenshots/waterpixel.png"
+
+<ImageZoom alt="kernel" src={waterpixel} className="!my-0 rounded-sm" />
+
+Waterpixels (or superpixel) serve as a crucial preprocessing step, grouping pixels into homogeneous
+regions while balancing compactness and boundary adherence, enhancing the time performance of subsequent segmentation algorithms.
+
+  **Reference:**
+ 
+    GONÇALVES, Henrique M. et al. cudaIFT: 180x Faster Image Foresting Transform for Waterpixel Estimation using CUDA. In: VISIGRAPP (4: VISAPP). 2019. p. 395-404.
+
+<Callout>
+  Accepted image types are: `uint8`, `uint16`, and `int32`.
+</Callout>
+
+### Parameters
+
+`Method`: Waterpixel 2D, applied in area, for each slice, or 3D applied in the volume.
+
+`Seed distance`: Seed distance defines the spacing between the initial seeds in a regular grid. 
+The seed pixels initiate the superpixel formation, and their distance from each other 
+controls the resolution of the Waterpixels. Smaller values lead to a higher number of seeds, resulting in smaller and more numerous Waterpixels. 
+Conversely, larger values result in larger, fewer superpixels.
+
+ `Compactness`: Compactness refers to how uniformly shaped and clustered the resulting Waterpixels are.
+In Waterpixel estimation, compactness is controlled by a parameter that adjusts the trade-off between maintaining compact regions versus adhering closely 
+to the object boundaries. A lower value allows the watershed algorithm to follow object boundaries more closely, 
+whereas a higher value pushes it toward generating more uniformly shaped Waterpixels.

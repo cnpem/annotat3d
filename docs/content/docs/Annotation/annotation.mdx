@@ -1,0 +1,73 @@
+---
+title: Annotation basics
+description: Annotation of slices in the web app.
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import Annotat3Dflux from "@/public/assets/Annotat3D_flux.png";
+import NewLabel from "@/public/assets/screencasts/new_label_and_color.gif";
+import BrushSize from "@/public/assets/screencasts/change_brush_size.gif";
+import EraseAnnot from "@/public/assets/screencasts/erase_annotation.gif";
+import UndoAnnot from "@/public/assets/screencasts/undo_annotations.gif";
+import SequentialLabel from "@/public/assets/screencasts/sequential_label.gif";
+import DeleteAll from "@/public/assets/screencasts/delete_all.gif";
+import VizAnnotLabel from "@/public/assets/screencasts/eye_image_label.gif";
+
+
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+
+Annotation is the crucial part of the process where the user will create a sample that represents the class for each desired label. As of the writing
+of this documentation, Annotat3D only has manual annotation tool, however in the near future auxiliary tools for annotation will be implemented.
+
+<ImageZoom alt="Home page" src={Annotat3Dflux} className="!my-0 rounded-sm" />
+_Basic annnotation workflow._
+
+## Annotation Tools
+
+### Basic Annotation
+
+<Accordions>
+<Accordion title="Create a new label" id="new-label">
+On the annotation sidebar, you can create new labels by clicking the ADD button. Change the color for each new annotation label at will.
+By default there is a label (unremovable) called background, and in the inference the vizualization of this labelmap will be hidden.
+<ImageZoom alt="Home page" src={NewLabel} className="!my-0 rounded-sm" />
+</Accordion>
+
+<Accordion title="Change brush size" id="brush-size">
+In clicking the "+" or "-" button you add brushsize in steps, by holding it, it will increase faster or decrease faster.
+<ImageZoom alt="Home page" src={BrushSize} className="!my-0 rounded-sm" />
+</Accordion>
+
+<Accordion title="Erase annotations" id="erase-annotation">
+In the brushlist, there is the eraser options for erasing specific parts of the label.
+<ImageZoom alt="Home page" src={EraseAnnot} className="!my-0 rounded-sm" />
+</Accordion>
+
+<Accordion title="Undo Annotations at will" id="undo-annotation">
+Made a mistake in the annotation? While Erasing? No problem, just hit the red "undo" button under the label table.
+Unfurtonely, there is no undo "undo" (i.e redo) yet.
+<ImageZoom alt="Home page" src={UndoAnnot} className="!my-0 rounded-sm" />
+</Accordion>
+
+<Accordion title="Hide specific label and annotation" id="label-hide">
+To help in the annotation process it's possible to hide one label (its annotation and label image) by clicking in the eye button, next to
+the name and color of the label.
+<ImageZoom alt="Home page" src={VizAnnotLabel} className="!my-0 rounded-sm" />
+</Accordion>
+
+<Accordion title="Easily create multiple labels" id="seq-label">
+By checkmarking the option of "sequential label", you can create multiple new labels!
+<ImageZoom alt="Home page" src={SequentialLabel} className="!my-0 rounded-sm" />
+</Accordion>
+
+<Accordion title="Delete all labels" id="delete-all">
+Click on the red button "Delete all labels" to delete all annotation and inference labels!
+This can't be undone, its <span className="text-red-600 dark:text-red-400">IRREVERSIBLE</span>.
+<ImageZoom alt="Home page" src={DeleteAll} className="!my-0 rounded-sm" />
+</Accordion>
+
+</Accordions>
+
+
+

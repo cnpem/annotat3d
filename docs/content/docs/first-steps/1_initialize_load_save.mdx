@@ -1,0 +1,117 @@
+---
+title: Initialize, load and save shortcut
+description: First steps for loading files and opening Annotat3D.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import InitialPage from "@/public/assets/Annotat_page.png";
+import OpenPage from "@/public/assets/screenshots/open_annotat_page.png";
+import LoadFiles from "@/public/assets/screenshots/lauch_annotat3d.png";
+import { File, Files } from "fumadocs-ui/components/files";
+import { Callout } from "fumadocs-ui/components/callout";
+import ReloadImage from "@/public/assets/load_raw_types.gif"
+import FilenameTester from '@/FilenameTester';
+
+<Steps>
+
+  <Step>
+  ## Sign in
+  Please make sure you have access to the CNPEM internal network or the VPN. 
+  Also that you have the necessary permissions to create jobs on the cluster. 
+  You will need a CNPEM account to access the Annotat3D Web App and know the 
+  SLURM queues you are allowed to use.
+
+  With that settled you can log into the [Annotat3D](https://annotat3d.lnls.br)
+  with your CNPEM email address and password.
+
+  <ImageZoom alt="Home page" src={InitialPage} className="!my-0 rounded-sm" />
+
+  </Step>
+
+  <Step>
+  ## Create a new instance (or open an old one)
+
+  After signing in, you can create a new job to run an instance of the software tools clicking in "new instance".
+  Or you can see the logs and open unclosed instances clicking in the job in the "Recent Jobs" section.
+
+  <ImageZoom alt="Home page" src={OpenPage} className="!my-0 rounded-sm" />
+
+  </Step>
+
+  <Step>
+  ## Load files
+
+  <ImageZoom alt="Home page" src={LoadFiles} className="!my-0 rounded-sm" />
+
+  To open a new instance you will require to load an image, stored at ibira (where all the  beamline data is stored) and to select a folder where you will save the
+  files generated while using the application, the output folder, you can use your home (at '/ibira/lnls/labs/tepui/home/user.name/').
+  
+  Currently, Annotat3D only has support to open raw and tiff files.
+
+  **Note**: In case of raw images, it is important to point out that, in order to
+  infer the image properties, the file must contain necessary information (size
+  XxYxZ and bitdepth and data type), for example:
+
+  <Files>
+    <File name="this_is_my_float_file_200x200x100_32bits.raw" />
+    <File name="this_is_my_int_file_200x200x100_int32.raw" />
+    <File name="this_is_my_uint_file_200x200x100_16b.raw" />
+    <File name="this_is_my_uint_file_200x200x100_uint32.raw" />
+  </Files>
+
+  <FilenameTester />
+
+
+  <Callout>
+    For python users, the numpy array shape, given my array.shape, is (Z,Y,X). Therefore, in the name the order is inverted.
+  </Callout>
+
+  </Step>
+
+  <Step>
+  ### Select a job
+
+  In job settings there is a list of available HPC to send jobs, select the appropried HPC to alloc a new job.
+  After everything is set, hit the 'submmit' button.
+
+  </Step>
+
+  <Step>
+  ### Load inside the app
+
+  In the case where the image doesn't load because of wrong dimensions in file name or something similar, you can manually load the image. First go to the top left,
+  then select load files, click on load images, input the dimensions (you can also check if the path of the file is correct) and click on load!.
+
+  <ImageZoom alt="Home page" src={ReloadImage} className="!my-0 rounded-sm" />
+
+  </Step>
+
+  <Step>
+  ### Shortcut for saving annotations and auto save of annotations
+
+  Annotat3D provides convenient options for saving annotations, including an **auto-save feature** and a **manual save shortcut**.
+
+  #### Auto-Save Feature
+
+  After every **50 consecutive annotations** (including erasures), Annotat3D will automatically save a checkpoint file
+  in the selected workspace. The file is saved with the following naming convention:
+
+  <Files>
+    <File name="Annotation_Checkpoint_name_of_loaded_image.pkl" />
+  </Files>
+
+  #### Manual Save Shortcut
+
+  You can also manually save your annotations at any time by pressing `Ctrl + S`. The file will be saved with a timestamped name. 
+  For example, if the current date is 27th January 2025 and the time is 10:04:23, the file will be saved as:
+
+  <Files>
+    <File name="Annot_name_of_loaded_image_10h04m23s_27_jan_2025.pkl" />
+  </Files>
+
+  </Step>
+  
+
+
+</Steps>

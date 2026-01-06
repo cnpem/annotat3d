@@ -1,0 +1,25 @@
+---
+title: Non Local Means
+description: Relevant information about Gaussian Filter
+---
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import NLM from "@/public/assets/screencasts/nlm.gif";
+
+### Description
+
+The Non-Local Means (NLM) filter is another advanced technique for image denoising that works by comparing patches of the image instead of 
+just individual pixels. This approach allows the filter to preserve fine textures and details while effectively reducing noise.
+
+<ImageZoom alt="Home page" src={NLM} className="!my-0 rounded-sm" />
+_Sigma = 0, h = 500, Big window = 21, Small window = 5_
+
+### Parameters
+
+`Sigma`: Controls the sensitivity of the Gaussian weighting based on pixel intensity differences. Lower values lead to sharper results, while higher values increase smoothing.
+
+`h`: A parameter that controls the degree of similarity between pixel patches. Higher values result in greater similarity requirements for considering patches as similar.
+
+`Big Window`: The size of the search neighborhood for comparing pixel patches in the Non-Local Means algorithm. Larger windows consider more distant pixels for comparison.
+
+`Small Window`: Defines the local neighborhood size used for computing the similarity between patches. It affects how much surrounding pixel information is considered in the similarity comparison.
