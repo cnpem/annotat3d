@@ -1,0 +1,243 @@
+# 
+# Title: HPCCM two-stage recipe for the Annotat3DWeb project.
+# 
+# Description:
+# Base stage for development (build tools, CUDA, Conda, etc.) and production stage (runtime only,
+# copies built frontend/backend artifacts from base).
+# 
+# Usage:
+#   python3 hpccm-annotat3d.py --format docker --stage base > Dockerfile.base
+#   python3 hpccm-annotat3d.py --format docker --stage production --base_image base.sif > Dockerfile.production
+#   python3 hpccm-annotat3d.py --format singularity --stage base > base.def
+#   python3 hpccm-annotat3d.py --format singularity --stage production --base_image base.sif > production.def
+# 
+
+# NOTE: this definition file depends on features only available in
+# Singularity 3.2 and later.
+BootStrap: docker
+From: nvcr.io/nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+Stage: base
+%post
+    . /.singularity.d/env/10-docker*.sh
+
+%labels
+    maintainer 'Data Science and Management Group <gcd.lnls.br>'
+    version 11.8.0-cudnn8-ubuntu22.04-py39
+
+%environment
+    export CC=gcc
+    export CUDA_HOME=/usr/local/cuda
+    export CXX=g++
+%post
+    export CC=gcc
+    export CUDA_HOME=/usr/local/cuda
+    export CXX=g++
+
+%environment
+    export CUDA_TOOLKIT_PATH=$CUDA_HOME
+    export NODE_VERSION=20.12.2
+    export NVM_DIR=/opt/nvm
+%post
+    export CUDA_TOOLKIT_PATH=$CUDA_HOME
+    export NODE_VERSION=20.12.2
+    export NVM_DIR=/opt/nvm
+
+%environment
+    export CPATH=/usr/include/hdf5/serial/:$CUDA_HOME/include
+    export HDF5_DIR=/usr/local/hdf5
+    export LD_LIBRARY_PATH=/usr/local/hdf5/lib:/usr/local/openmpi/lib:$LD_LIBRARY_PATH
+    export NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
+    export PATH=/opt/conda/bin:/usr/local/openmpi/bin:$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+%post
+    export CPATH=/usr/include/hdf5/serial/:$CUDA_HOME/include
+    export HDF5_DIR=/usr/local/hdf5
+    export LD_LIBRARY_PATH=/usr/local/hdf5/lib:/usr/local/openmpi/lib:$LD_LIBRARY_PATH
+    export NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
+    export PATH=/opt/conda/bin:/usr/local/openmpi/bin:$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+
+%post
+    ln -sf $CUDA_HOME/lib64/*.* /usr/lib/
+    ln -sf $CUDA_HOME/include/*.* /usr/include/
+
+%post
+    apt-get update -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        autoconf \
+        autoconf-archive \
+        automake \
+        binutils \
+        build-essential \
+        bzip2 \
+        ca-certificates \
+        coreutils \
+        curl \
+        doxygen \
+        environment-modules \
+        expect \
+        fontconfig \
+        gdb \
+        gfortran \
+        git \
+        gzip \
+        ibacm \
+        libgl1 \
+        libgl1-mesa-dev \
+        libglib2.0-0 \
+        libhdf5-* \
+        libnetcdf-dev \
+        libnss3 \
+        libopenmpi-dev \
+        libssl-dev \
+        libtool \
+        libxss1 \
+        make \
+        openjdk-8-jdk \
+        openmpi-bin \
+        openssh-client \
+        patch \
+        pciutils \
+        pkg-config \
+        qperf \
+        tar \
+        tcl \
+        unzip \
+        vim \
+        wget \
+        xz-utils \
+        zip \
+        zlib1g-dev
+    rm -rf /var/lib/apt/lists/*
+
+# GNU compiler
+%post
+    apt-get update -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        g++-9 \
+        gcc-9 \
+        gfortran-9
+    rm -rf /var/lib/apt/lists/*
+%post
+    cd /
+    update-alternatives --install /usr/bin/g++ g++ $(which g++-9) 30
+    update-alternatives --install /usr/bin/gcc gcc $(which gcc-9) 30
+    update-alternatives --install /usr/bin/gcov gcov $(which gcov-9) 30
+    update-alternatives --install /usr/bin/gfortran gfortran $(which gfortran-9) 30
+
+# CMake version 3.23.3
+%post
+    apt-get update -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        make \
+        wget
+    rm -rf /var/lib/apt/lists/*
+%post
+    cd /
+    mkdir -p /opt/annotat3d && wget -q -nc --no-check-certificate -P /opt/annotat3d https://github.com/Kitware/CMake/releases/download/v3.23.3/cmake-3.23.3-linux-x86_64.sh
+    mkdir -p /usr/local
+    /bin/sh /opt/annotat3d/cmake-3.23.3-linux-x86_64.sh --prefix=/usr/local --skip-license
+    rm -rf /opt/annotat3d/cmake-3.23.3-linux-x86_64.sh
+%environment
+    export PATH=/usr/local/bin:$PATH
+%post
+    export PATH=/usr/local/bin:$PATH
+
+# OpenMPI version 4.1.0
+%post
+    apt-get update -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        bzip2 \
+        file \
+        hwloc \
+        libnuma-dev \
+        make \
+        openssh-client \
+        perl \
+        tar \
+        wget
+    rm -rf /var/lib/apt/lists/*
+%post
+    cd /
+    mkdir -p /opt/annotat3d && wget -q -nc --no-check-certificate -P /opt/annotat3d https://www.open-mpi.org/software/ompi/v4.1/downloads/openmpi-4.1.0.tar.bz2
+    mkdir -p /opt/annotat3d && tar -x -f /opt/annotat3d/openmpi-4.1.0.tar.bz2 -C /opt/annotat3d -j
+    cd /opt/annotat3d/openmpi-4.1.0 &&  CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/openmpi --disable-getpwuid --enable-orterun-prefix-by-default --with-cuda --with-verbs
+    make -j$(nproc)
+    make -j$(nproc) install
+    rm -rf /opt/annotat3d/openmpi-4.1.0 /opt/annotat3d/openmpi-4.1.0.tar.bz2
+%environment
+    export LD_LIBRARY_PATH=/usr/local/openmpi/lib:$LD_LIBRARY_PATH
+    export PATH=/usr/local/openmpi/bin:$PATH
+%post
+    export LD_LIBRARY_PATH=/usr/local/openmpi/lib:$LD_LIBRARY_PATH
+    export PATH=/usr/local/openmpi/bin:$PATH
+
+%post
+    wget -q --no-check-certificate -O /opt/annotat3d/hdf5-1.10.7.tar.gz https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.gz
+    gzip -cd /opt/annotat3d/hdf5-1.10.7.tar.gz | tar xvf - -C /opt/annotat3d
+    cd /opt/annotat3d/hdf5-1.10.7 && CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/hdf5 --enable-cxx --enable-fortran
+    make -j$(nproc)
+    make -j$(nproc) install
+    rm -rf /opt/annotat3d/hdf5-1.10.7 /opt/annotat3d/hdf5-1.10.7.tar.gz
+
+# Anaconda
+%post
+    apt-get update -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        ca-certificates \
+        wget
+    rm -rf /var/lib/apt/lists/*
+%post
+    cd /
+    mkdir -p /opt/annotat3d && wget -q -nc --no-check-certificate -P /opt/annotat3d http://repo.anaconda.com/miniconda/Miniconda3-py39_24.3.0-0-Linux-x86_64.sh
+    bash /opt/annotat3d/Miniconda3-py39_24.3.0-0-Linux-x86_64.sh -b -p /opt/conda
+    /opt/conda/bin/conda init
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+    . /opt/conda/etc/profile.d/conda.sh
+    conda activate base
+    conda config --add channels conda-forge --add channels nvidia
+    /opt/conda/bin/conda clean -afy
+    rm -rf /opt/annotat3d/Miniconda3-py39_24.3.0-0-Linux-x86_64.sh
+
+%post
+    python3 -m pip install --upgrade pip setuptools wheel build pyclean
+
+%files
+    . /opt/annotat3d
+
+%post
+    python3 -m pip install numpy==1.22.3
+    python3 -m pip install SharedArray
+    python3 -m pip install /opt/annotat3d/backend/external/wheels/*.whl
+
+# pip
+%files
+    backend/requirements.txt /opt/annotat3d/requirements.txt
+%post
+    cd /
+    pip3 --no-cache-dir install -r /opt/annotat3d/requirements.txt
+    rm -rf /opt/annotat3d/requirements.txt
+
+# pip
+%files
+    backend/requirements-dev.txt /opt/annotat3d/requirements-dev.txt
+%post
+    cd /
+    pip3 --no-cache-dir install -r /opt/annotat3d/requirements-dev.txt
+    rm -rf /opt/annotat3d/requirements-dev.txt
+
+%post
+    cd /opt/annotat3d/backend
+    export MAKEFLAGS='-j64'
+    python3 setup.py build_ext -j64 bdist_wheel
+
+%post
+    mkdir -p $NVM_DIR
+    wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+    . $NVM_DIR/nvm.sh
+    nvm install v$NODE_VERSION
+    nvm alias default v$NODE_VERSION
+    nvm use default
+    npm install -g ionic yarn serve
+
+%post
+    cd /opt/annotat3d
+    yarn install
