@@ -44,9 +44,10 @@ build-to-production:
     environment:
         name: production
     rules:
+        - if: '$CI_COMMIT_TAG'
         - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
         - if: '$CI_COMMIT_BRANCH == "staging"'
-        - if: '$CI_COMMIT_TAG'
+        - when: never
     tags:
         - x86_64
         - cuda11
@@ -70,8 +71,9 @@ deploy-to-production:
         - cuda11
         - docker
     rules:
-        - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
         - if: '$CI_COMMIT_TAG'
+        - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+        - when: never
     needs:
         - job: build-to-production
           artifacts: true
@@ -83,6 +85,7 @@ push-to-dockerhub:
         - docker:20.10.16-dind
     before_script:
         - apk add --no-cache python3 py3-pip
+        - pip3 install --no-cache-dir hpccm
     script:
         # Login to Docker Hub
         - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
@@ -96,15 +99,15 @@ push-to-dockerhub:
         - docker build -t $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:latest -f container/Dockerfile.local .
 
         # Tag with Git tag (vX.Y.Z)
-        - docker tag $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:latest \
-                     $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$CI_COMMIT_TAG
+        - docker tag $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:latest $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$CI_COMMIT_TAG
 
         # Push to Docker Hub
         - docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:latest
         - docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:$CI_COMMIT_TAG
     rules:
-        - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
         - if: '$CI_COMMIT_TAG'
+        - when: never
+    needs: []
     tags:
         - x86_64
         - cuda11
